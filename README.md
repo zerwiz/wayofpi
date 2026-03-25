@@ -89,7 +89,7 @@ bun install
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
 | **extension-picker**    | `extensions/extension-picker.ts`    | `/extensions` lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. `/remember` and `/memory` for cross-session notes |
-| **session-memory**     | `extensions/session-memory.ts`     | Prepends a rolling recap of this session into the system prompt before each model call so short follow-ups stay tied to earlier user goals. `/sessionmemory` toggles      |
+| **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
 
 ---
 

@@ -13,6 +13,10 @@ Earlier work is not backfilled; entries start from when this file was added.
 - `.pi/extensions/themeMap.ts` symlink so auto-loaded extensions resolve `./themeMap.ts` (loader uses the symlink path, not the target directory).
 - Bowser skill path: `.pi/skills/bowser/SKILL.md` (Pi requires parent directory to match skill `name`).
 
+### Changed
+
+- `session-memory` extension: read current chat’s persisted JSONL via `getSessionFile()`, inject path/id and dialogue recap; compaction/branch summaries included; explicit rules so replies like `1` select the prior numbered option.
+
 ### Added
 
 - Root `CHANGELOG.md` for tracking future playground changes.
