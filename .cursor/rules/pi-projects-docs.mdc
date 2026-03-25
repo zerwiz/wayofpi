@@ -1,0 +1,20 @@
+---
+description: Every new project — REPO_INDEX + projects/_template; scanner agent writes under ~/.pi/projects
+alwaysApply: true
+---
+
+# Pi project documentation (`projects/`)
+
+When work is **non-trivial**, **multi-session**, or needs **handoff**, use **`projects/<slug>/`** under **`/home/zerwiz/.pi/projects/`** as the **canonical on-disk place** for project-specific docs (not chat-only memory).
+
+## On every new codebase or sustained effort
+
+1. **Orient** — Open **`docs/REPO_INDEX.md`** so you know how this playground is structured (extensions, `.pi/`, `agent/`, `docs/`, etc.).
+2. **Bootstrap** — Create **`/home/zerwiz/.pi/projects/<slug>/`** from **`projects/_template/`** (copy **contents** of `_template`, not the folder name). Use a **short lowercase hyphenated** slug (repo name, path-derived id, or feature name).
+3. **Populate** — Fill **`README.md`**, **`00-OVERVIEW.md`**, **`01-CONTEXT.md`** from a quick scan of the **target workspace** (README, manifest files, top-level dirs). Or **`dispatch_agent`** the **`project-scanner`** specialist (team **`new-project`** in **`teams.yaml`**) with the **absolute path** to that workspace.
+4. **Maintain** at minimum: **`README.md`** (goal, links, **Last updated**), **`01-CONTEXT.md`**, and append **`02-DECISIONS.md`** when choosing between real alternatives.
+5. **Update** **`00-OVERVIEW.md`** when scope changes; use **`03-NOTES.md`** / **`04-TASKS.md`** as needed.
+6. **Never** store secrets, API keys, or raw `.env` contents—use placeholders and link to local-only config.
+7. **Link** to the real repo’s README instead of duplicating it; keep `projects/` **handoff-sized**.
+
+Full layout: **[projects/README.md](projects/README.md)**. Scanner agent def: **`.pi/agents/project-scanner.md`**.

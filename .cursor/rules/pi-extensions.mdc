@@ -26,6 +26,16 @@ Official reference: [extensions.md](https://github.com/badlogic/pi-mono/blob/mai
 - **npm / git Pi packages**: declare in `agent/settings.json` (`npm:…`, `git:…`); entrypoints come from each package’s `package.json` → `pi.extensions`. See `extensions/extension-picker.ts` for discovery patterns.
 - **Single file from disk**: add an absolute path to `extensions` in settings (per upstream docs), or vendor into `extensions/` and use the shim pattern.
 
+## Related docs (agents, tools, skills)
+
+When behavior touches **LLM tools**, **skills**, **agent defs**, or **teams**, align wording with:
+
+- **[docs/TOOLS.md](docs/TOOLS.md)** — built-ins, **`registerTool`**, agent **`tools:`** filters  
+- **[docs/SKILLS.md](docs/SKILLS.md)** — skills vs extensions (markdown workflows, not TS)  
+- **[docs/AGENTS.md](docs/AGENTS.md)** — agent `.md` format, scan paths, orchestration overview  
+- **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)** — **`teams.yaml`**, presets, **`dispatch_agent`**, team slash commands  
+- **[docs/CONCEPTS.md](docs/CONCEPTS.md)** — single-page comparison of tools / extensions / agents / skills  
+
 ## Security
 
 Extensions run with your user permissions; only load sources you trust.

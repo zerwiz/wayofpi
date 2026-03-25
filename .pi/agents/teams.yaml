@@ -4,7 +4,19 @@ full:
   - builder
   - reviewer
   - documenter
+  - project-scanner
   - red-team
+
+# Bootstrap Pi-side docs under ~/.pi/projects/<slug>/ from projects/_template
+new-project:
+  - project-scanner
+
+# Ralph HTML ticket queue — dispatcher can pull scout/planner/reviewer before or after ralph
+ralph:
+  - ralph
+  - scout
+  - planner
+  - reviewer
 
 plan-build:
   - planner
@@ -14,6 +26,7 @@ plan-build:
 info:
   - scout
   - documenter
+  - project-scanner
   - reviewer
 
 frontend:

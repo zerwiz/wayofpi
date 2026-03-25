@@ -7,7 +7,7 @@ Upstream canonical docs:
 - [packages.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/packages.md) — npm/git Pi packages
 - [extensions.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md) — extension API, events, examples
 
-Related: [skills.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/skills.md) (skills differ from extensions; skills are markdown/workflows, extensions are TypeScript).
+Related: **[SKILLS.md](SKILLS.md)**, **[CONCEPTS.md](CONCEPTS.md)** (skills vs agents vs extensions vs tools), **[TOOLS.md](TOOLS.md)** (built-ins + `registerTool`). Upstream: [skills.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/skills.md) — skills differ from extensions (markdown/workflows vs TypeScript).
 
 ---
 
@@ -103,6 +103,15 @@ The **real** module lives in `extensions/`, so imports like `./themeMap.ts` reso
 4. Run Pi from repo root and **`/reload`**, or test with  
    `pi -e extensions/my-feature.ts`
 5. Update `README.md` extension table and `CHANGELOG.md` if the feature is user-facing.
+
+### Related playground extensions
+
+| Extension | Implementation | Notes |
+|-----------|----------------|--------|
+| **session-saver** | `extensions/sessions/index.ts` | Auto-save + `/save` / `/list` / `/show` / `/load`; see `extensions/sessions/README.md` and `config.json`. |
+| **agent-forge** | `extensions/agent-forge.ts` | `forge_create` writes `extensions/forge-*.ts`; add shim + `/reload` to load new tools. |
+| **chronicle** | `extensions/chronicle.ts` | Ledger under `.pi/chronicle/`; specs in `specs/agent-workflow.md`. |
+| **dynamic-loader** | `extensions/dynamic-loader.ts` | `/extension-hint` for `pi -e` stacks. |
 
 ---
 

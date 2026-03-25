@@ -1,0 +1,123 @@
+# Repository index — systems, folders, and key files
+
+This is a **map** of the Pi extension playground: **what each area is for** and **where it lives**.  
+**Playground root** on this machine: **`/home/zerwiz/.pi`** (same as the Git repo root when you `cd` here).
+
+For narrative docs, start at **[README.md](README.md)** (this folder) or root **[README.md](../README.md)**.
+
+---
+
+## 1. Top-level layout (repo root)
+
+| Path (under `/home/zerwiz/.pi/`) | Purpose |
+|----------------------------------|---------|
+| **`extensions/`** | **Source** for Pi extensions (TypeScript, one main file per extension). Pi does **not** auto-load from here alone—see **`.pi/extensions/`** shims. |
+| **`.pi/`** | **Project-local Pi workspace**: settings, shims, agents, skills, themes, rules consumed when you run Pi from this directory. |
+| **`agent/`** | Pi **agent install** slice next to the project: **`AGENTS.md`** (context for the model), optional **`settings.json`**, **`sessions/`** (JSONL chats—**gitignored**). |
+| **`projects/`** | **Per-effort documentation** Pi maintains while working on other codebases or long tasks. See **`projects/README.md`**. |
+| **`projects/_template/`** | **Copy contents** into `projects/<slug>/` when starting a new tracked effort. **`project-scanner`** agent automates scan + fill (see **`.pi/agents/project-scanner.md`**, team **`new-project`**). |
+| **`docs/`** | Human-written guides (memory, extensions, agents, integrations, **this index**). |
+| **`specs/`** | Feature **specifications** for extensions; may be ahead of or beside the code—check status banners in each file. |
+| **`.cursor/rules/`** | Cursor rules: **`pi-extensions-context.mdc`** (always-on), **`pi-extensions.mdc`** (extension `*.ts`), **`pi-projects-docs.mdc`** (project docs), **`pi-docs-core.mdc`** (`docs/TOOLS.md`, `SKILLS.md`, `AGENTS.md`, `AGENT_TEAMS.md`). |
+| **`justfile`** | **`just`** recipes: Pi stacks, Honcho/Hermes helpers, extension launchers. |
+| **`package.json`** / **`bun.lock`** | Node/Bun dependencies for the repo (extensions dev). |
+| **`CLAUDE.md`** | Short **agent conventions** (Bun, `just`, shim pattern). |
+| **`README.md`** | Main **boot doc**: prerequisites, extension table, structure overview. |
+| **[`TOOLS.md`](../TOOLS.md)** (repo root) | TypeScript-style signatures for **core built-in tools**; narrative: **[TOOLS.md](TOOLS.md)**. |
+| **`THEME.md`**, **`TOOLS.md`**, **`COMPARISON.md`**, etc. | Reference / comparison markdown at repo root. |
+| **`images/`** | Static assets (e.g. README logo). |
+| **`storage/`** | Local extension picker / state (**`last-extension.json`**); some subtrees **gitignored**. |
+| **`tmp/`** | Scratch (typically gitignored or empty). |
+
+---
+
+## 2. `.pi/` — Pi workspace (project)
+
+| Path | Purpose |
+|------|---------|
+| **`.pi/settings.json`** | Theme, extension list, prompts, packages—**what Pi loads** for this project. |
+| **`.pi/extensions/*.ts`** | **Shims** only: `export { default } from "../../extensions/…"`. Pi loads **these** as extensions. **Do not** put non-extensions (e.g. `themeMap.ts`) here. |
+| **`.pi/agents/`** | **Agent definitions** (`.md` personas), **`teams.yaml`**, **`agent-chain.yaml`**, **`teams-presets.json`**, **`pi-pi/`** experts. |
+| **`.pi/skills/`** | **Skills** (`<name>/SKILL.md`), e.g. **`bowser/`**, **`ralph/`**. Discovered by Pi per **[SKILLS.md](SKILLS.md)**. |
+| **`.pi/themes/`** | JSON themes (e.g. for **theme-cycler**). |
+| **`.pi/damage-control-rules.yaml`** | Rules for **damage-control** extension (paths / bash patterns). |
+| **`.pi/agent-sessions/`** | Ephemeral state for **subagent / team** sessions (**gitignored**). |
+| **`.pi/storage/sessions/`** | **Session-saver** JSON snapshots (**gitignored**). |
+| **`.pi/chronicle/ledger.json`** | **Chronicle** workflow ledger (**gitignored** in default setup). |
+
+---
+
+## 3. `projects/` and `projects/_template/`
+
+**Role:** On-disk **documentation** for work Pi does on a **named effort** (not Pi runtime config).
+
+| Path | Purpose |
+|------|---------|
+| **`/home/zerwiz/.pi/projects/README.md`** | Rules: when to create `projects/<slug>/`, slug naming, agent behavior pointers. |
+| **`/home/zerwiz/.pi/projects/_template/README.md`** | Template **index** for a new slug (goal, links, file table). |
+| **`.../_template/00-OVERVIEW.md`** | Scope, success criteria. |
+| **`.../_template/01-CONTEXT.md`** | Paths, stack, commands, env. |
+| **`.../_template/02-DECISIONS.md`** | Dated decisions log. |
+| **`.../_template/03-NOTES.md`** | Scratch notes. |
+| **`.../_template/04-TASKS.md`** | Checklist / next steps. |
+| **`projects/<slug>/`** | **Your copies** after duplicating `_template/`; optional **`attachments/`** per **`projects/README.md`**. |
+
+Rule file: **`.cursor/rules/pi-projects-docs.mdc`**.
+
+---
+
+## 4. `agent/` (next to repo)
+
+| Path | Purpose |
+|------|---------|
+| **`agent/AGENTS.md`** | Injected into Pi **[Context]** for this agent dir—policy, pointers to **`docs/`**. |
+| **`agent/sessions/`** | **Chat JSONL** and session data (**gitignored**—do not commit transcripts). |
+| **`agent/settings.json`** | May override or extend Pi settings for this install (if present). |
+| **`agent/auth.json`** | Credentials (**gitignored** template pattern in `.gitignore`). |
+
+---
+
+## 5. `docs/` — documentation index
+
+All guides are listed in **`docs/README.md`**. Highlights:
+
+| Area | Doc |
+|------|-----|
+| Memory | **[AGENT_MEMORY.md](AGENT_MEMORY.md)**, **[SYSTEM.md](SYSTEM.md)** |
+| Extensions | **[EXTENSIONS.md](EXTENSIONS.md)** |
+| Agents / teams | **[AGENTS.md](AGENTS.md)**, **[AGENT_TEAMS.md](AGENT_TEAMS.md)** |
+| Skills / tools / concepts | **[SKILLS.md](SKILLS.md)**, **[TOOLS.md](TOOLS.md)**, **[CONCEPTS.md](CONCEPTS.md)** |
+| Hermes / Honcho | **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)**, **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**, **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)** |
+
+---
+
+## 6. Ephemeral or sensitive (typical gitignore)
+
+Do not assume these are in Git; they are **local runtime** or private:
+
+- **`agent/sessions/`**, **`agent/run-history.jsonl`**, **`agent/bin/`**
+- **`.pi/agent-sessions/`**
+- **`.pi/storage/sessions/`**
+- **`.pi/chronicle/ledger.json`**
+- **`storage/sessions/`** (under repo root)
+- **`.env`**, **`agent/auth.json`**
+
+See **`.gitignore`** for the authoritative list.
+
+---
+
+## 7. Quick path cheatsheet
+
+```text
+/home/zerwiz/.pi/extensions/<name>.ts     # extension source
+/home/zerwiz/.pi/.pi/extensions/<name>.ts # shim Pi loads
+/home/zerwiz/.pi/.pi/settings.json        # Pi project settings
+/home/zerwiz/.pi/.pi/agents/              # agent .md + YAML
+/home/zerwiz/.pi/.pi/skills/<skill>/SKILL.md
+/home/zerwiz/.pi/projects/_template/      # copy → projects/<slug>/
+/home/zerwiz/.pi/docs/                    # guides + REPO_INDEX.md
+/home/zerwiz/.pi/specs/                   # extension specs
+/home/zerwiz/.pi/agent/AGENTS.md          # Pi context file
+```
+
+If this repo is checked out elsewhere, replace **`/home/zerwiz/.pi`** with your clone path.

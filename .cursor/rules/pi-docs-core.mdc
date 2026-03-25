@@ -1,0 +1,30 @@
+---
+description: Editing core Pi docs — tools, skills, agents, agent-teams (accuracy and cross-links)
+globs:
+  - docs/TOOLS.md
+  - docs/SKILLS.md
+  - docs/AGENTS.md
+  - docs/AGENT_TEAMS.md
+alwaysApply: false
+---
+
+# Core Pi docs (this playground)
+
+You are editing one of **`docs/TOOLS.md`**, **`docs/SKILLS.md`**, **`docs/AGENTS.md`**, or **`docs/AGENT_TEAMS.md`**.
+
+## Keep consistent
+
+1. **Terminology** — Use the same distinctions as **[docs/CONCEPTS.md](docs/CONCEPTS.md)** (tools vs extensions vs agents vs skills). Do not describe skills as “registering tools” or agents as “extensions.”
+2. **Cross-links** — When you add a section that overlaps another guide, link to it (e.g. TOOLS ↔ EXTENSIONS `registerTool`; AGENTS ↔ AGENT_TEAMS for `teams.yaml` / presets; SKILLS ↔ upstream `skills.md` / **REPO_INDEX** for paths).
+3. **Paths** — Project layout and **`extensions/`** vs **`.pi/extensions/`** shims: **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** and **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**.
+4. **Repo truth** — If you document behavior (e.g. `dispatch_agent`, team tools), verify against **`extensions/agent-team.ts`** (or the relevant extension) so the markdown matches the code.
+5. **Index** — After substantive additions, update **[docs/README.md](docs/README.md)** if a new major section deserves a one-line table row.
+
+## Quick map
+
+| File | Primary topic |
+|------|----------------|
+| **TOOLS.md** | Built-ins, extension tools, agent `tools:` allowlists |
+| **SKILLS.md** | `SKILL.md` discovery, `/skill:name`, authoring |
+| **AGENTS.md** | Agent `.md` defs, scan paths, `system-select` / `agent-chain` |
+| **AGENT_TEAMS.md** | `teams.yaml`, presets, `dispatch_agent`, slash commands |

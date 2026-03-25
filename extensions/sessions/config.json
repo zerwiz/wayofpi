@@ -10,14 +10,8 @@
   "settings": {
     "autoSave": true,
     "storagePath": ".pi/storage/sessions",
-    "fileFormat": "json",
-    "maxFileSize": 10000,
-    "compression": false,
-    "dateFormat": "ISO",
     "includeMetadata": true,
-    "pruneOlderThan": "30d",
-    "notificationOnSave": true,
-    "logLevel": "info"
+    "notificationOnSave": true
   },
   "commands": [
     {

@@ -1,5 +1,7 @@
 # Specification: The Chronicle (agent-workflow)
 
+> **Status (phase 1 implemented):** `extensions/chronicle.ts` keeps a ledger at **`.pi/chronicle/ledger.json`**, optional workflow graph **`.pi/chronicle/workflow.json`**, tools `chronicle_status`, `chronicle_snapshot`, `chronicle_transition`, and `/chronicle`. Sub-agent spawning, timeline widget, and diff view from this spec are **not** in v1.
+
 ## 1. Overview
 **The Chronicle** is a temporal orchestration extension for the Pi Coding Agent. It enables long-running, state-aware workflows that span multiple sessions and personas. Unlike traditional linear agents, The Chronicle manages a formal **State Machine** where each stage of a project is handled by a specialized agent persona, with the extension acting as a persistent "State Supervisor."
 
@@ -7,7 +9,7 @@
 
 ### 2.1 The Supervisor Model
 The Chronicle operates as a non-working supervisor that delegates tasks to worker agents.
-- **The Ledger**: A persistent JSON file (`.pi/chronicle/sessions/<uuid>.json`) that tracks the project state, file snapshots, and transition history.
+- **The Ledger** (full spec): per-session files under `.pi/chronicle/sessions/<uuid>.json`. **v1 implementation** uses a single **`.pi/chronicle/ledger.json`** plus optional **`workflow.json`** (see status note above).
 - **State Isolation**: Each state is executed by a fresh Pi sub-agent process with a specialized system prompt, preventing "persona leakage" and ensuring clean tool contexts.
 - **Context Handover**: When transitioning, the Supervisor extracts a "Snapshot" (modified files, key discoveries, pending tasks) and injects it into the next agent's starting context.
 

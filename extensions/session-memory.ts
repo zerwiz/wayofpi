@@ -15,6 +15,7 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { existsSync, readFileSync } from "node:fs";
+import { CHAT_AGENT_LABEL, CHAT_USER_LABEL } from "./chatLabels.ts";
 import { applyExtensionDefaults } from "./themeMap.ts";
 
 const OPENING_MAX_MESSAGES = 4;
@@ -24,7 +25,7 @@ const TAIL_USER_CHARS = 650;
 const TAIL_ASSIST_CHARS = 1100;
 const MAX_JSONL_FILE_CHARS = 12000;
 
-const FOLLOW_UP_RULES = `Follow-up shorthand (critical): If the latest user message is only digits (e.g. "1", "2") or a minimal token ("yes", "y", "ok") and your immediately previous assistant message offered a numbered or listed choice, treat the user as selecting that option and act on it—do not ask what they want again. Example: if you listed "1. Read the file … 2. …" and the user sends "1", perform option 1 (e.g. read the path) without further clarification.`;
+const FOLLOW_UP_RULES = `Follow-up shorthand (critical): If the latest message from ${CHAT_USER_LABEL} is only digits (e.g. "1", "2") or a minimal token ("yes", "y", "ok") and your immediately previous ${CHAT_AGENT_LABEL} message offered a numbered or listed choice, treat ${CHAT_USER_LABEL} as selecting that option and act on it—do not ask what they want again. Example: if you listed "1. Read the file … 2. …" and ${CHAT_USER_LABEL} sends "1", perform option 1 (e.g. read the path) without further clarification.`;
 
 function extractMessageText(entry: { message?: { content?: unknown } }): string {
 	const msg = entry.message;
@@ -139,8 +140,15 @@ function truncate(s: string, max: number): string {
 	return s.slice(0, max) + "...";
 }
 
-function formatTurn(role: string, text: string): string {
-	return `${role.toUpperCase()}:\n${text}`;
+function labelForTurn(role: "user" | "assistant", early: boolean): string {
+	if (early) {
+		return role === "user" ? `${CHAT_USER_LABEL} (early)` : `${CHAT_AGENT_LABEL} (early)`;
+	}
+	return role === "user" ? CHAT_USER_LABEL : CHAT_AGENT_LABEL;
+}
+
+function formatTurn(role: "user" | "assistant", text: string, early = false): string {
+	return `${labelForTurn(role, early)}:\n${text}`;
 }
 
 function buildRecapFromTurns(turns: Turn[]): string | null {
@@ -150,7 +158,7 @@ function buildRecapFromTurns(turns: Turn[]): string | null {
 		const blocks = turns.map((t) => {
 			const cap = t.role === "user" ? TAIL_USER_CHARS : TAIL_ASSIST_CHARS;
 			const chunk = truncate(t.text.replace(/\s+/g, " ").trim(), cap);
-			return formatTurn(t.role, chunk);
+			return formatTurn(t.role, chunk, false);
 		});
 		return `Full session so far (short thread):\n${blocks.join("\n\n")}`;
 	}
@@ -163,7 +171,7 @@ function buildRecapFromTurns(turns: Turn[]): string | null {
 		for (const t of opening) {
 			const cap = t.role === "user" ? OPENING_MAX_CHARS : Math.floor(OPENING_MAX_CHARS * 1.2);
 			const chunk = truncate(t.text.replace(/\s+/g, " ").trim(), cap);
-			const line = formatTurn(t.role === "user" ? "User (early)" : "Assistant (early)", chunk);
+			const line = formatTurn(t.role, chunk, true);
 			openerLines.push(line);
 		}
 		parts.push(`Session start (anchors vague follow-ups like \"do that\"):\n${openerLines.join("\n\n")}`);
@@ -176,7 +184,7 @@ function buildRecapFromTurns(turns: Turn[]): string | null {
 		const t = tailSource[i];
 		const cap = t.role === "user" ? TAIL_USER_CHARS : TAIL_ASSIST_CHARS;
 		const chunk = truncate(t.text.replace(/\s+/g, " ").trim(), cap);
-		const block = formatTurn(t.role, chunk);
+		const block = formatTurn(t.role, chunk, false);
 		if (tailChars + block.length > TAIL_BUDGET_CHARS) break;
 		tailPieces.push(block);
 		tailChars += block.length + 2;

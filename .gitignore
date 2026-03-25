@@ -17,6 +17,10 @@ agent/run-history.jsonl
 agent/bin/
 storage/sessions/
 
+# Session saver + Chronicle local state (may contain chat / workflow data)
+.pi/storage/sessions/
+.pi/chronicle/ledger.json
+
 .playwright-cli/
 
 tmp/

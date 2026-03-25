@@ -1,48 +1,36 @@
 # Specification: Agent Forge (Evolutionary Tooling)
 
+> **Status (v1 implemented):** Phase-1 code lives in `extensions/agent-forge.ts`. It registers LLM tools `forge_list` and `forge_create`, maintains `extensions/forge-registry.json`, and writes `extensions/forge-*.ts` modules. After creating a forge module, add a shim under `.pi/extensions/` and `/reload` so Pi loads the new default export (Pi does not hot-load extensions).
+
 ## 1. Overview
 **Agent Forge** is an evolutionary extension for the Pi Coding Agent. It enables the agent to expand its own capabilities by dynamically generating, validating, and loading new TypeScript tools on demand. Instead of a static set of capabilities, Agent Forge turns the agent into a meta-developer that builds its own infrastructure.
 
 ## 2. Core Architecture
 
-### 2.1 The Toolbox
-All evolved tools are stored in the `extensions/` directory with a specific naming pattern:
-- `extensions/forge-<name>.ts`: The executable TypeScript logic.
-- `extensions/forge-<name>.json`: Metadata, including the tool's description and TypeBox parameters schema.
-- `extensions/forge-registry.json`: A central manifest for fast tool discovery during the `before_agent_start` hook.
+### 2.1 The Toolbox (v1)
+- **`extensions/forge-<slug>.ts`**: Generated extension module (one `registerTool`, one string param `input`).
+- **`extensions/forge-registry.json`**: Manifest listing forged tools (name, file path, description, `createdAt`).
 
-### 2.2 The Proxy Model
-Unlike `agent-team` which spawns new processes, Agent Forge uses a **Hybrid Proxy Model**:
-1. **Dynamic Loading**: Uses `jiti` (Pi's internal runtime) to load forged tools into the existing process.
-2. **Context Sharing**: Forged tools have direct access to the `ExtensionAPI`, allowing them to interact with the UI, notify the user, and use the existing toolset (read/write/bash).
-3. **Zero Overhead**: Execution is instantaneous as it happens within the same Node.js/Bun runtime.
+> Spec-only (not v1): per-tool **`forge-<name>.json`** metadata files and **`before_agent_start`** auto-discovery.
 
-## 3. Core Tools
+### 2.2 Execution model (v1)
+Forged tools are normal Pi extensions: after **`forge_create`**, add a **`.pi/extensions/`** shim + **`settings.json`** entry, then **`/reload`**. They run in-process like any other extension; there is no separate `jiti` “proxy execute” path in v1.
 
-### 3.1 `forge_tool`
-- **Purpose**: Generates a new tool or updates an existing one.
-- **Inputs**: `name`, `description`, `parametersSchema`, and `logic` (the TypeScript body).
-- **Process**:
-    1. Wraps `logic` in a standard tool template.
-    2. Writes `.ts` and `.json` files to `extensions/`.
-    3. **Pre-flight Check**: Attempts to load the tool via `jiti`. If it fails (syntax error), it reports the error to the agent for "Self-Healing".
-    4. Updates `forge-registry.json`.
+## 3. Core Tools (v1 — implemented names)
 
-### 3.2 `use_forge_tool`
-- **Purpose**: Executes a previously forged tool.
-- **Process**:
-    1. Resolves the tool from the registry.
-    2. Dynamically imports the `.ts` file.
-    3. Passes arguments to the tool's `execute` function.
-    4. Handles runtime errors gracefully, offering to "debug" the tool if it crashes.
+### 3.1 `forge_create` (implements “forge_tool” intent)
+- Writes `extensions/forge-<slug>.ts` (default export registers one `registerTool` with one string parameter `input`).
+- `executeBody` is pasted into the generated `execute` function; must return Pi tool result shape.
+- Updates `forge-registry.json`.
 
-### 3.3 `list_forge`
-- **Purpose**: Lists all available evolved tools and their descriptions.
+### 3.2 Loading forged tools
+- Pi loads extensions at startup only. After `forge_create`, add `.pi/extensions/forge-x.ts` shim + `settings.json` entry, then **`/reload`** (or restart Pi). There is no in-process `use_forge_tool` in v1.
 
-## 4. Safety & Self-Healing
-- **Sandboxing**: Forged tools are restricted to a "Core Library" of imports (fs, path, child_process, typebox).
-- **Versioning**: Each `forge_tool` call creates a `.bak` of the previous version.
-- **Self-Healing**: If `use_forge_tool` or `forge_tool`'s pre-flight check fails, the agent is provided with the stack trace and the source code to perform an immediate fix.
+### 3.3 `forge_list`
+- Reads `forge-registry.json` and lists registered forged tools.
+
+## 4. Safety & Self-Healing (spec; mostly not v1)
+- **Sandboxing**, **`.bak` versioning**, and **jiti pre-flight / self-healing** are **not** implemented in v1; forged files are plain TypeScript the model must get right. Prefer small `executeBody` snippets and review before **`/reload`**.
 
 ## 5. UI Integration
 - **Forge Widget**: A dedicated dashboard element showing:
@@ -63,7 +51,7 @@ export const metadata = {
   parameters: Type.Object({ ... })
 };
 
-export async function execute(params: any, pi: ExtensionAPI, ctx: any) {
+export async function execute(params: any, pi:_EXTENSION_API, ctx: any) {
   // Logic goes here
 }
 ```

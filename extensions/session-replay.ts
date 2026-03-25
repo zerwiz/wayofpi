@@ -1,4 +1,5 @@
 import { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { CHAT_AGENT_LABEL, CHAT_USER_LABEL } from "./chatLabels.ts";
 import { applyExtensionDefaults } from "./themeMap.ts";
 import { 
   Box, Text, Markdown, Container, Spacer, 
@@ -166,7 +167,7 @@ export default function(pi: ExtensionAPI) {
                 if (role === "user") {
                     items.push({
                         type: "user",
-                        title: "User Prompt",
+                        title: CHAT_USER_LABEL,
                         content: text,
                         timestamp: ts,
                         elapsed,
@@ -174,7 +175,7 @@ export default function(pi: ExtensionAPI) {
                 } else if (role === "assistant") {
                     items.push({
                         type: "assistant",
-                        title: "Assistant",
+                        title: CHAT_AGENT_LABEL,
                         content: text,
                         timestamp: ts,
                         elapsed,

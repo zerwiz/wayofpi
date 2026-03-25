@@ -1,5 +1,7 @@
 # Session Saver Extension Documentation
 
+> **This playground:** Canonical, up-to-date behavior is **[`extensions/sessions/README.md`](../extensions/sessions/README.md)** and **[`extensions/sessions/index.ts`](../extensions/sessions/index.ts)**. The text below is generic / legacy; paths like `~/.pi/extensions/` may not match this repo (which uses **`extensions/`** + **`.pi/extensions/`** shims).
+
 The **Session Saver** extension automatically stores chat sessions to separate files after each user and AI input, enabling you to review, analyze, or export conversations later.
 
 ---
@@ -311,7 +313,7 @@ To add custom storage backends (e.g., cloud storage, database), create a module 
 }
 ```
 
-See the `~/.pi/extensions/dynamic-loader.ts` for examples of custom modules.
+In this repo, see **`extensions/dynamic-loader.ts`** (`/extension-hint`) for stacked `pi -e` examples — not a storage backend.
 
 ---
 

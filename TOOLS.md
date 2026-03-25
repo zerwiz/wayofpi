@@ -1,3 +1,5 @@
+Narrative guide (built-ins, extensions, restrictions): **[docs/TOOLS.md](docs/TOOLS.md)**. Comparison with other Pi concepts: **[docs/CONCEPTS.md](docs/CONCEPTS.md)**.
+
 ```ts
 // Read the contents of a file. Supports text files and images. Output is truncated to 2000 lines or 50KB.
 function read(

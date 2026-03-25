@@ -1,6 +1,8 @@
 # pi-vs-cc
 
-A collection of [Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent) customized instances. _Why?_ To showcase what it looks like to hedge against the leader in the agentic coding market, Claude Code. Here we showcase how you can customize the UI, agent orchestration tools, safety auditing, and cross-agent integrations. 
+A collection of [Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent) customized instances. _Why?_ To showcase what it looks like to hedge against the leader in the agentic coding market, Claude Code. Here we showcase how you can customize the UI, agent orchestration tools, safety auditing, and cross-agent integrations.
+
+**This repository also includes:** a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **`project-scanner`** and **`ralph`** agents/skills/extensions for onboarding and HTML ticket queues, and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
 
 <div align="center">
   <img src="./images/pi-logo.png" alt="pi-vs-cc" width="700">
@@ -69,6 +71,25 @@ bun install
 
 ---
 
+## Documentation
+
+Full index: **[docs/README.md](docs/README.md)**. Highlights:
+
+| Topic | Doc |
+| ----- | --- |
+| **Repo map** (folders, gitignored paths, `projects/_template`) | **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** |
+| **Skills** (discovery, `/skill:name`, authoring) | **[docs/SKILLS.md](docs/SKILLS.md)** |
+| **Tools** (built-ins + `registerTool` + agent allowlists) | **[docs/TOOLS.md](docs/TOOLS.md)** |
+| **Skills vs agents vs extensions vs tools** | **[docs/CONCEPTS.md](docs/CONCEPTS.md)** |
+| **Agents** + **agent-team** | **[docs/AGENTS.md](docs/AGENTS.md)**, **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)** |
+| **Memory** (JSONL, session-memory, saver, `/remember`) | **[docs/AGENT_MEMORY.md](docs/AGENT_MEMORY.md)**, **[docs/SYSTEM.md](docs/SYSTEM.md)** |
+| **Extensions** (shims, checklist) | **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** |
+| **Hermes** / **Honcho** (cross-session memory, local Docker) | **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**, **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)**, **[docs/Hermes_Honcho_connection.md](docs/Hermes_Honcho_connection.md)** |
+| **Per-project markdown** | **[projects/README.md](projects/README.md)** |
+| **Changes** | **[CHANGELOG.md](CHANGELOG.md)** |
+
+---
+
 ## Extensions
 
 | Extension               | File                                | Description                                                                                                                                                |
@@ -81,7 +102,7 @@ bun install
 | **tool-counter-widget** | `extensions/tool-counter-widget.ts` | Live-updating above-editor widget showing per-tool call counts with background colors                                                                      |
 | **subagent-widget**     | `extensions/subagent-widget.ts`     | `/sub <task>` command that spawns background Pi subagents; each gets its own streaming live-progress widget                                                |
 | **tilldone**            | `extensions/tilldone.ts`            | Task discipline system — define tasks before starting work; tracks completion state across steps; shows persistent task list in footer with live progress  |
-| **agent-team**          | `extensions/agent-team.ts`          | Dispatcher-only orchestrator: the primary agent delegates all work to named specialist agents via `dispatch_agent`; shows a grid dashboard                 |
+| **agent-team**          | `extensions/agent-team.ts`          | Dispatcher: `dispatch_agent` + **team_*** tools — add/remove/**replace** members, **reload** `.md` defs from disk, switch teams, save/load **`.pi/agents/teams-presets.json`**; grid; **`.pi/agents/teams.yaml`** |
 | **system-select**       | `extensions/system-select.ts`       | `/system` command to interactively switch between agent personas/system prompts from `.pi/agents/`, `.claude/agents/`, `.gemini/agents/`, `.codex/agents/` |
 | **damage-control**      | `extensions/damage-control.ts`      | Real-time safety auditing — intercepts dangerous bash patterns and enforces path-based access controls from `.pi/damage-control-rules.yaml`                |
 | **agent-chain**         | `extensions/agent-chain.ts`         | Sequential pipeline orchestrator — chains multiple agents where each step's output feeds into the next step's prompt; use `/chain` to select and run       |
@@ -89,7 +110,12 @@ bun install
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
 | **extension-picker**    | `extensions/extension-picker.ts`    | **`/extensions`** lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. In the slash menu, **`/ex`** filters to this command. `/remember` and `/memory` for cross-session notes |
-| **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
+| **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Recap lines use **`zerwis`** (you) / **`pi`** (agent)—change in **`extensions/chatLabels.ts`**. Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
+| **session-saver**     | `extensions/sessions/index.ts`     | Auto-save user/assistant turns to JSON; **`/save`**, **`/list`**, **`/show`**, **`/load`** (`.jsonl` uses `switchSession`). See `extensions/sessions/README.md` |
+| **dynamic-loader**    | `extensions/dynamic-loader.ts`     | **`/extension-hint`** — prints stacked **`pi -e`** suggestions for this playground (`PLAYGROUND_BASES` optional) |
+| **agent-forge**       | `extensions/agent-forge.ts`       | LLM tools **`forge_list`** / **`forge_create`** write `extensions/forge-*.ts` and update **`forge-registry.json`**; shim + **`/reload`** to load new tools |
+| **chronicle**         | `extensions/chronicle.ts`         | Workflow ledger **`.pi/chronicle/ledger.json`**, optional **`workflow.json`**; tools **`chronicle_*`** and **`/chronicle`** (phase 1; no sub-agent spawning) |
+| **ralph**            | `extensions/ralph.ts`            | **Ralph** queue: **`todo/` → `inprogress/` → `done/`**; tool **`ralph_queue_status`**; **`/ralph`**; skill **`/skill:ralph`**; team **`ralph`** (**`ralph`**, **`scout`**, **`planner`**, **`reviewer`**) so the dispatcher can delegate exploration/plan/review around HTML tickets |
 
 ---
 
@@ -145,7 +171,23 @@ just ext-agent-chain        # Sequential pipeline orchestrator with step chainin
 just ext-pi-pi              # Meta-agent that builds Pi agents using parallel experts
 just ext-session-replay     # Scrollable timeline overlay of session history
 just ext-theme-cycler       # Theme cycler + minimal footer
-just all                    # Open every extension in its own terminal window
+just ext-extension-picker   # /extensions package picker + minimal
+just ext-session-memory     # JSONL recap in system prompt + minimal
+just ext-session-saver        # Auto-save snapshots + /save /list /show /load
+just ext-chronicle          # Workflow ledger + chronicle_* tools
+just ext-agent-forge        # forge_list / forge_create
+just ext-dynamic-loader     # /extension-hint for pi -e stacks
+just ext-ralph              # Ralph queue: ralph_queue_status + /ralph (todo → inprogress → done)
+just all                    # Interactive multi-select (just pi-e) to stack extensions
+```
+
+**Honcho / Hermes** (optional — expects `~/honcho-server` and local Hermes venv paths; adjust in `justfile`):
+
+```bash
+just honcho-up              # Docker: database, redis, api, deriver
+just honcho-up-api          # API-only stack (lighter)
+just honcho-status          # curl Honcho HTTP
+just hermes-honcho-status   # Hermes ↔ Honcho check
 ```
 
 The `open` recipe allows you to spin up a new terminal window with any combination of stacked extensions (omit `.ts`):
@@ -158,26 +200,43 @@ just open purpose-gate minimal tool-counter-widget
 
 ## Project Structure
 
+Indexed in **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** (paths, purposes, gitignored dirs, **`projects/_template`** files).
+
 ```
 pi-vs-cc/
-├── extensions/          # Pi extension source files (.ts) — one file per extension
-├── specs/               # Feature specifications for extensions
+├── agent/               # Pi agent dir: AGENTS.md (context), sessions/ (gitignored)
+├── docs/                # Guides: REPO_INDEX, SKILLS, TOOLS, AGENTS, integrations, …
+├── extensions/          # Pi extension source (.ts) — one file per extension
+├── projects/            # Per-codebase notes: projects/<slug>/ (copy from _template/)
+│   └── _template/       # README + 00–04 markdown for new slugs
+├── specs/               # Extension specifications
+├── .cursor/rules/       # Cursor rules (extensions, project docs, core docs)
 ├── .pi/
-│   ├── agent-sessions/  # Ephemeral session files (gitignored)
-│   ├── agents/          # Agent definitions for team and chain extensions
-│   │   ├── pi-pi/       # Expert agents for the pi-pi meta-agent
-│   │   ├── agent-chain.yaml # Pipeline definition for agent-chain
-│   │   ├── teams.yaml   # Team definition for agent-team
-│   │   └── *.md         # Individual agent persona/system prompts
-│   ├── skills/          # Custom skills
-│   ├── themes/          # Custom themes (.json) used by theme-cycler
-│   ├── damage-control-rules.yaml # Path/command rules for safety auditing
-│   └── settings.json    # Pi workspace settings
-├── justfile             # just task definitions
-├── CLAUDE.md            # Conventions and tooling reference (for agents)
-├── THEME.md             # Color token conventions for extension authors
-└── TOOLS.md             # Built-in tool function signatures available in extensions
+│   ├── extensions/      # Shims: export from ../../extensions/… (Pi loads these)
+│   ├── agent-sessions/  # Ephemeral specialist sessions (gitignored)
+│   ├── agents/          # Agent .md, teams.yaml, teams-presets.json, agent-chain.yaml
+│   │   ├── pi-pi/       # Experts for pi-pi meta-agent
+│   │   └── …            # e.g. ralph.md, project-scanner.md, planner.md
+│   ├── skills/          # SKILL.md trees (e.g. bowser/, ralph/)
+│   ├── themes/          # Custom themes (.json)
+│   ├── storage/         # Session-saver snapshots (gitignored)
+│   ├── chronicle/       # Chronicle ledger (gitignored)
+│   ├── damage-control-rules.yaml
+│   └── settings.json    # Loaded extensions list + theme + prompts
+├── images/
+├── justfile
+├── CLAUDE.md
+├── THEME.md
+└── TOOLS.md             # Core built-in tool signatures (see also docs/TOOLS.md)
 ```
+
+### `projects/` and new codebases
+
+For **every new repo or sustained effort**, Pi agents should read **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**, then create **`projects/<slug>/`** from **`projects/_template/`** under this playground (paths are **`…/pi/projects/`** on disk). **`project-scanner`** (agent-team team **`new-project`**) can scan a workspace and fill those files. See **`.cursor/rules/pi-projects-docs.mdc`** and **`projects/README.md`**.
+
+### Ralph (HTML queue)
+
+**Ralph** implements **`todo/` → `inprogress/` → `done/`** with **`.txt`** tickets and **one HTML file** per task: extension **`extensions/ralph.ts`** (**`ralph_queue_status`**, **`/ralph`**), skill **`/skill:ralph`**, agent **`ralph`**. Team **`ralph`** also lists **`scout`**, **`planner`**, and **`reviewer`** so the **agent-team** dispatcher can **`dispatch_agent`** them when Ralph needs repo exploration, planning, or review (Ralph returns **`RALPH_ESCALATE`** if blocked in headless mode). Use **`just ext-ralph`** with **`minimal`**.
 
 ---
 
@@ -192,7 +251,8 @@ The `subagent-widget` extension allows you to offload isolated tasks to backgrou
 ### Agent Teams (`/team`)
 The `agent-team` orchestrator operates as a dispatcher. Instead of answering prompts directly, the primary agent reviews your request, selects a specialist from a defined roster, and delegates the work via a `dispatch_agent` tool.
 - Teams are configured in `.pi/agents/teams.yaml` where each top-level key is a team name containing a list of agent names (e.g., `frontend: [planner, builder, bowser]`).
-- Individual agent personas (e.g., `builder.md`, `reviewer.md`) live in `.pi/agents/`.
+- **Built-in teams** include **`new-project`** (**`project-scanner`** only) for bootstrapping **`projects/<slug>/`**, and **`ralph`** (**`ralph`**, **`scout`**, **`planner`**, **`reviewer`**) for HTML tickets plus helpers; **`full`** and **`info`** rosters also list **`project-scanner`**. See **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)**.
+- Individual agent personas (e.g., `builder.md`, `reviewer.md`, `project-scanner.md`, `ralph.md`) live in `.pi/agents/`.
 - **pi-pi Meta-Agent**: The `pi-pi` team specifically delegates tasks to specialized Pi framework experts (`ext-expert.md`, `theme-expert.md`, `tui-expert.md`) located in `.pi/agents/pi-pi/` to build high-quality Pi extensions using parallel research.
   - **Web Crawling Fallbacks**: To ingest the latest framework documentation dynamically, these experts use `firecrawl` as their default modern page crawler, but are explicitly programmed to safely fall back to the native `curl` baked into their bash toolset if Firecrawl fails or is unavailable.
 
@@ -219,12 +279,23 @@ The `damage-control` extension provides real-time security hooks to prevent cata
 
 Companion docs cover the conventions used across all extensions in this repo:
 
+- **[docs/README.md](docs/README.md)** — Master index of all guides in `docs/`.
+- **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** — What lives in each folder (`extensions/`, `.pi/`, `projects/`, `agent/`, …).
+- **[docs/AGENTS.md](docs/AGENTS.md)** — Agent markdown definitions, where Pi scans them, and how `system-select`, `agent-team`, and `agent-chain` use them.
+- **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)** — Agent-team dispatcher: `teams.yaml`, `teams-presets.json`, `dispatch_agent`, team tools, slash commands.
+- **[docs/AGENT_MEMORY.md](docs/AGENT_MEMORY.md)** — How agent memory works: JSONL, session-memory, session-saver, `/remember`, AGENTS.md, troubleshooting.
+- **[docs/SYSTEM.md](docs/SYSTEM.md)** — Memory (`session-memory` vs `session-saver`), context, specs vs code, and agent behavior (run tools; don’t invent command output).
 - **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** — How Pi extensions work upstream, how **this repo** uses `extensions/` + `.pi/extensions/` shims, creating new extensions, and integrating npm/git packages (for humans and agents).
+- **[docs/SKILLS.md](docs/SKILLS.md)** — Skills (`SKILL.md`): where Pi discovers them, progressive disclosure, `/skill:name`, authoring, and how they differ from extensions and agents.
+- **[docs/CONCEPTS.md](docs/CONCEPTS.md)** — Skills vs agents vs extensions vs tools (definitions, table, when to use which).
+- **[docs/TOOLS.md](docs/TOOLS.md)** — Tools: built-ins, `registerTool`, agent allowlists, safety; complements root **`TOOLS.md`** signatures.
 - **[COMPARISON.md](COMPARISON.md)** — Feature-by-feature comparison of Claude Code vs Pi Agent across 12 categories (design philosophy, tools, hooks, SDK, enterprise, and more).
 - **[PI_VS_OPEN_CODE.md](PI_VS_OPEN_CODE.md)** — Architectural comparison of Pi Agent vs OpenCode (open-source Claude Code alternative) focusing on extension capabilities, event lifecycle, and UI customization.
 - **[RESERVED_KEYS.md](RESERVED_KEYS.md)** — Pi reserved keybindings, overridable keys, and safe keys for extension authors.
 - **[THEME.md](THEME.md)** — Color language: which Pi theme tokens (`success`, `accent`, `warning`, `dim`, `muted`) map to which UI roles, with examples.
-- **[TOOLS.md](TOOLS.md)** — Function signatures for the built-in tools available inside extensions (`read`, `bash`, `edit`, `write`).
+- **[TOOLS.md](TOOLS.md)** — Function signatures for the built-in tools available inside extensions (`read`, `bash`, `edit`, `write`). Narrative: **[docs/TOOLS.md](docs/TOOLS.md)**.
+
+**Cursor (this repo):** **`.cursor/rules/`** — `pi-extensions-context.mdc` (always-on), `pi-extensions.mdc` (when editing `extensions/`), `pi-projects-docs.mdc` (project onboarding + `projects/`), `pi-docs-core.mdc` (when editing core concept docs).
 
 ---
 
@@ -253,7 +324,7 @@ Side-by-side comparison of lifecycle hooks in [Claude Code](https://docs.anthrop
 
 ## Resources
 
-## Pi Documentation
+### Pi upstream
 
 | Doc                                                                                                     | Description                        |
 | ------------------------------------------------------------------------------------------------------- | ---------------------------------- |
@@ -269,6 +340,11 @@ Side-by-side comparison of lifecycle hooks in [Claude Code](https://docs.anthrop
 | [settings.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/settings.md)     | Configuration                      |
 | [compaction.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/compaction.md) | Context compaction                 |
 
+### Changelog
+
+See **[CHANGELOG.md](CHANGELOG.md)** for notable playground updates (extensions, docs, agents, rules).
+
+---
 
 ## Master Agentic Coding
 > Prepare for the future of software engineering
