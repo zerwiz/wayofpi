@@ -1,0 +1,22 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+*.swp
+*.swo
+
+# API keys — never commit real credentials
+.env
+agent/auth.json
+
+.pi/agent-sessions/
+
+# Local Pi agent state (machine-specific; do not publish chat logs)
+agent/sessions/
+agent/run-history.jsonl
+agent/bin/
+storage/sessions/
+
+.playwright-cli/
+
+tmp/

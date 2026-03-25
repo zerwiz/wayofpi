@@ -1,0 +1,21 @@
+{
+  "models": [
+    {
+      "id": "unsloth-qwen2.5-coder-32b:latest",
+      "provider": "ollama",
+      "name": "Qwen 2.5 Coder 32B",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "qwen3-14b-claude-sonnet-4.5-high-reasoning-distill-q4-k-m:latest",
+      "provider": "ollama",
+      "name": "Claude-Distill 14B",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    }
+  ],
+  "tools": {
+    "enabled": true
+  }
+}

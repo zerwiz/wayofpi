@@ -1,0 +1,11 @@
+{
+  "theme": "synthwave",
+  "prompts": [
+    "../.claude/commands"
+  ],
+  "extensions": [
+    ".pi/extensions/minimal.ts",
+    ".pi/extensions/session-memory.ts",
+    ".pi/extensions/extension-picker.ts"
+  ]
+}

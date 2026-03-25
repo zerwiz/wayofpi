@@ -1,0 +1,48 @@
+{
+  "providers": {
+    "ollama": {
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "baseUrl": "http://localhost:11434/v1",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "qwen3.5:9b"
+        },
+        {
+          "id": "qwen3.5"
+        },
+        {
+          "id": "qwen3.5-35b"
+        },
+        {
+          "id": "unsloth-qwen2.5-coder-32b:latest"
+        },
+        {
+          "id": "qwen3-14b-claude-sonnet-4.5-high-reasoning-distill-q4-k-m:latest"
+        },
+        {
+          "id": "deepseek-coder-v2:latest"
+        },
+        {
+          "id": "lfm2-24b:latest"
+        },
+        {
+          "id": "deepseek-r1-8b:latest"
+        },
+        {
+          "_launch": true,
+          "contextWindow": 204800,
+          "id": "minimax-m2.5:cloud",
+          "input": [
+            "text"
+          ],
+          "reasoning": true
+        }
+      ]
+    }
+  }
+}

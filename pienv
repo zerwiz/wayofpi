@@ -1,0 +1,52 @@
+#!/bin/bash
+# PI Environment Configuration
+# This script sets up PI to use local Ollama models globally
+
+# Source the environment file if it exists
+if [ -f ~/.pi/.env ]; then
+    source ~/.pi/.env
+fi
+
+# Set Ollama defaults if not already configured
+export OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434}"
+export OLLAMA_API_KEY="${OLLAMA_API_KEY:-ollama-local}"
+
+# Set PI project path
+export PI_PROJECT_PATH="${PI_PROJECT_PATH:-$(dirname $0)/.pi}"
+
+# Update PI project from internet if needed
+if [ ! -f "$PI_PROJECT_PATH/package.json" ]; then
+    echo "Fetching PI project from internet..."
+    curl -sL https://github.com/badlogic/pi-mono/archive/refs/heads/main.tar.gz | tar -xz -C ~/.pi --strip-components=1 pi-mono-main
+fi
+
+# Source the just recipes
+if [ -f "$PI_PROJECT_PATH/justfile" ]; then
+    eval "$(just -f $PI_PROJECT_PATH/justfile completion bash)" 2>/dev/null || true
+fi
+
+# Add PI commands to PATH if not already present
+export PATH="$PI_PROJECT_PATH:$PATH"
+
+# Add PI commands to bash completion
+if command -v complete &> /dev/null; then
+    complete -f pi
+    complete -F _pi pi
+fi
+
+# Function to run PI with current environment
+pi() {
+    if [ -f "$PI_PROJECT_PATH/justfile" ]; then
+        just -f "$PI_PROJECT_PATH/justfile" pi "$@"
+    else
+        echo "Error: PI project not found or justfile missing"
+        return 1
+    fi
+}
+
+# Export this script for other shells to source
+export -f pi
+
+echo "PI environment initialized for Ollama models"
+echo "Available models:"
+ollama list --no-modal 2>/dev/null || echo "  (starting Ollama...)"
