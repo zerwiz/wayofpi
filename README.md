@@ -88,7 +88,7 @@ bun install
 | **pi-pi**               | `extensions/pi-pi.ts`               | Meta-agent that builds Pi agents using parallel research experts for documentation                                                                         |
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
-| **extension-picker**    | `extensions/extension-picker.ts`    | `/ext` or `/extensions` lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. `/remember` and `/memory` for cross-session notes |
+| **extension-picker**    | `extensions/extension-picker.ts`    | **`/extensions`** lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. In the slash menu, **`/ex`** filters to this command. `/remember` and `/memory` for cross-session notes |
 | **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
 
 ---
@@ -100,7 +100,7 @@ bun install
 
 Pi discovers extensions only under `~/.pi/agent/extensions/` or **project** `.pi/extensions/`, not the repo-root `extensions/` directory (see [upstream docs](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md#extension-locations)).
 
-This repo keeps implementations in **`extensions/`** and adds **thin `.pi/extensions/*.ts` shims** that `export { default } from "../../extensions/…"`. That way Pi only loads real extensions (with a default factory); helper modules like **`themeMap.ts` are not placed under `.pi/extensions/`** (Pi would try to load them as extensions and fail). Entries are listed in **`.pi/settings.json`**. After editing code, run **`/reload`** in Pi.
+This repo keeps implementations in **`extensions/`** and adds **thin `.pi/extensions/*.ts` shims** that `export { default } from "../../extensions/…"`. That way Pi only loads real extensions (with a default factory); helper modules like **`themeMap.ts` are not placed under `.pi/extensions/`** (Pi would try to load them as extensions and fail). Entries are listed in **`.pi/settings.json`**. After editing code, run **`/reload`** in Pi. Use **`/extensions`** for the package picker (typing **`/ex`** narrows the menu).
 
 Skills belong in **`.pi/skills/<skill-name>/SKILL.md`** (directory name must match frontmatter `name`).
 

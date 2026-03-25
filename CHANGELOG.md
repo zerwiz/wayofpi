@@ -14,6 +14,10 @@ Earlier work is not backfilled; entries start from when this file was added.
 - `.cursor/rules/pi-extensions-context.mdc` — Always-on pointer to `docs/EXTENSIONS.md`.
 - `docs/EXTENSIONS.md` — Extension guide (upstream + local shim pattern + integration checklist).
 - README link under Extension Author Reference.
+- Root `CHANGELOG.md` for tracking future playground changes.
+- `extensions/session-memory.ts` and `just ext-session-memory`: reinject recent USER/ASSISTANT turns into the system prompt; `/sessionmemory` on|off|status.
+- README row for **session-memory**.
+- **Auto-load:** `.pi/extensions/` shims + `extensions` list in `.pi/settings.json` so Pi discovers this playground without `pi -e` (repo-root `extensions/` alone is not scanned by Pi).
 
 ### Fixed
 
@@ -22,15 +26,8 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Changed
 
-- `extension-picker`: register `/ext` so autocomplete matches when typing `/ext` (previously only `/extensions…`).
+- `extension-picker`: single slash command **`/extensions`** only; removed `/ext`, `/extention`, `/extentions` duplicates (prefix `/ex` still narrows the menu).
 - `session-memory` extension: read current chat’s persisted JSONL via `getSessionFile()`, inject path/id and dialogue recap; compaction/branch summaries included; explicit rules so replies like `1` select the prior numbered option.
-
-### Added
-
-- Root `CHANGELOG.md` for tracking future playground changes.
-- `extensions/session-memory.ts` and `just ext-session-memory`: reinject recent USER/ASSISTANT turns into the system prompt; `/sessionmemory` on|off|status.
-- README row for **session-memory**.
-- **Auto-load:** `.pi/extensions/` shims + `extensions` list in `.pi/settings.json` so Pi discovers this playground without `pi -e` (repo-root `extensions/` alone is not scanned by Pi).
 
 ## [2026-03-25]
 
