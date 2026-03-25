@@ -9,7 +9,8 @@ Pi Coding Agent extension examples and experiments.
 
 ## Project Structure
 - `extensions/` — Pi extension source files (.ts); symlinked from `.pi/extensions/` so Pi auto-discovers them per [extension locations](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md#extension-locations)
-- `.pi/extensions/` — Symlinks into `../extensions/*.ts` (auto-load + `/reload`)
+- `.pi/extensions/` — Symlinks into `../extensions/*.ts` plus `themeMap.ts` (same dir as entrypoints so `./themeMap.ts` resolves)
+- `.pi/skills/<name>/SKILL.md` — Skills (folder name must match frontmatter `name`)
 - `specs/` — Feature specifications
 - `.pi/agents/` — Agent definitions for agent-team extension
 - `.pi/agent-sessions/` — Ephemeral session files (gitignored)

@@ -8,6 +8,11 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Fixed
+
+- `.pi/extensions/themeMap.ts` symlink so auto-loaded extensions resolve `./themeMap.ts` (loader uses the symlink path, not the target directory).
+- Bowser skill path: `.pi/skills/bowser/SKILL.md` (Pi requires parent directory to match skill `name`).
+
 ### Added
 
 - Root `CHANGELOG.md` for tracking future playground changes.
