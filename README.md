@@ -100,7 +100,7 @@ bun install
 
 Pi discovers extensions only under `~/.pi/agent/extensions/` or **project** `.pi/extensions/`, not the repo-root `extensions/` directory (see [upstream docs](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md#extension-locations)).
 
-This repo keeps sources in `extensions/` and **symlinks** them into `.pi/extensions/`, with entries in `.pi/settings.json`, so commands like **`/ext`**, **`/extention`**, **`/sessionmemory`**, and **`/extensions`** load when you start `pi` from this project. Imports such as `./themeMap.ts` resolve from `.pi/extensions/`, so **`themeMap.ts` is symlinked there** as well as the entrypoint `*.ts` files. After editing an extension, run **`/reload`** in Pi.
+This repo keeps implementations in **`extensions/`** and adds **thin `.pi/extensions/*.ts` shims** that `export { default } from "../../extensions/…"`. That way Pi only loads real extensions (with a default factory); helper modules like **`themeMap.ts` are not placed under `.pi/extensions/`** (Pi would try to load them as extensions and fail). Entries are listed in **`.pi/settings.json`**. After editing code, run **`/reload`** in Pi.
 
 Skills belong in **`.pi/skills/<skill-name>/SKILL.md`** (directory name must match frontmatter `name`).
 

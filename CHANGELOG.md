@@ -10,7 +10,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Fixed
 
-- `.pi/extensions/themeMap.ts` symlink so auto-loaded extensions resolve `./themeMap.ts` (loader uses the symlink path, not the target directory).
+- `.pi/extensions/`: replace symlinks + `themeMap.ts` with **re-export shims** only. Pi loads every `*.ts` in that folder as an extension; `themeMap.ts` is a helper and must not live there (was error: “does not export a valid factory function”).
 - Bowser skill path: `.pi/skills/bowser/SKILL.md` (Pi requires parent directory to match skill `name`).
 
 ### Changed
@@ -23,7 +23,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 - Root `CHANGELOG.md` for tracking future playground changes.
 - `extensions/session-memory.ts` and `just ext-session-memory`: reinject recent USER/ASSISTANT turns into the system prompt; `/sessionmemory` on|off|status.
 - README row for **session-memory**.
-- **Auto-load fix:** symlinks under `.pi/extensions/` and `extensions` list in `.pi/settings.json` so Pi discovers this playground without `pi -e` (repo-root `extensions/` alone is not scanned by Pi).
+- **Auto-load:** `.pi/extensions/` shims + `extensions` list in `.pi/settings.json` so Pi discovers this playground without `pi -e` (repo-root `extensions/` alone is not scanned by Pi).
 
 ## [2026-03-25]
 
