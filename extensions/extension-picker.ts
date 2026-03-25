@@ -6,7 +6,7 @@
  * `extensions/*.ts` in the current project when present.
  *
  * Commands:
- *   /extensions, /extentions, /extention — pick an extension; saves `pi -e <path>` to storage
+ *   /ext, /extensions, /extentions, /extention — pick an extension; saves `pi -e <path>` to storage
  *   /remember <text>         — append a line to cross-session memory
  *   /memory                  — show recent cross-session memory (tail)
  *
@@ -280,7 +280,7 @@ export default function (pi: ExtensionAPI) {
 		const agentDir = agentDirWithSettings(ctx.cwd);
 		const nPkg = parseSettingsPackages(agentDir).length;
 		ctx.ui.notify(
-			`Extension picker: ${entries.length} entries (${nPkg} package(s) + project). Try /extensions`,
+			`Extension picker: ${entries.length} entries (${nPkg} package(s) + project). Try /ext or /extensions`,
 			"info",
 		);
 	});
@@ -292,6 +292,11 @@ export default function (pi: ExtensionAPI) {
 
 	pi.registerCommand("extensions", {
 		description: "Pick a package extension; saves pi -e command for next launch",
+		handler: pickerHandler,
+	});
+
+	pi.registerCommand("ext", {
+		description: "Extension picker (short; same as /extensions)",
 		handler: pickerHandler,
 	});
 

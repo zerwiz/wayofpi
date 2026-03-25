@@ -88,7 +88,7 @@ bun install
 | **pi-pi**               | `extensions/pi-pi.ts`               | Meta-agent that builds Pi agents using parallel research experts for documentation                                                                         |
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
-| **extension-picker**    | `extensions/extension-picker.ts`    | `/extensions` lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. `/remember` and `/memory` for cross-session notes |
+| **extension-picker**    | `extensions/extension-picker.ts`    | `/ext` or `/extensions` lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. `/remember` and `/memory` for cross-session notes |
 | **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
 
 ---
@@ -100,7 +100,7 @@ bun install
 
 Pi discovers extensions only under `~/.pi/agent/extensions/` or **project** `.pi/extensions/`, not the repo-root `extensions/` directory (see [upstream docs](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md#extension-locations)).
 
-This repo keeps sources in `extensions/` and **symlinks** them into `.pi/extensions/`, with entries in `.pi/settings.json`, so commands like **`/extention`**, **`/sessionmemory`**, and **`/extensions`** load when you start `pi` from this project. Imports such as `./themeMap.ts` resolve from `.pi/extensions/`, so **`themeMap.ts` is symlinked there** as well as the entrypoint `*.ts` files. After editing an extension, run **`/reload`** in Pi.
+This repo keeps sources in `extensions/` and **symlinks** them into `.pi/extensions/`, with entries in `.pi/settings.json`, so commands like **`/ext`**, **`/extention`**, **`/sessionmemory`**, and **`/extensions`** load when you start `pi` from this project. Imports such as `./themeMap.ts` resolve from `.pi/extensions/`, so **`themeMap.ts` is symlinked there** as well as the entrypoint `*.ts` files. After editing an extension, run **`/reload`** in Pi.
 
 Skills belong in **`.pi/skills/<skill-name>/SKILL.md`** (directory name must match frontmatter `name`).
 

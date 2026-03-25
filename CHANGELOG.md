@@ -15,6 +15,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Changed
 
+- `extension-picker`: register `/ext` so autocomplete matches when typing `/ext` (previously only `/extensions…`).
 - `session-memory` extension: read current chat’s persisted JSONL via `getSessionFile()`, inject path/id and dialogue recap; compaction/branch summaries included; explicit rules so replies like `1` select the prior numbered option.
 
 ### Added
