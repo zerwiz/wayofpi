@@ -1,0 +1,8 @@
+---
+description: This repo is a Pi extension playground — use the extension guide when adding features
+alwaysApply: true
+---
+
+# Pi extensions (short)
+
+When you add or change **Pi** behavior (TUI, slash commands, hooks, tools), read **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)**. Implement under **`extensions/`**; add a one-line re-export under **`.pi/extensions/`** and list it in **`.pi/settings.json`** — never put **`themeMap.ts`** or non-extensions in **`.pi/extensions/`**. After edits, the user should run **`/reload`** in Pi. Full checklist and upstream links are in the doc.

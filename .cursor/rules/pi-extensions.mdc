@@ -1,0 +1,31 @@
+---
+description: Pi Coding Agent extensions in this repo — create, wire, and integrate packages
+globs:
+  - extensions/**/*.ts
+  - .pi/extensions/**/*.ts
+alwaysApply: false
+---
+
+# Pi extensions (this playground)
+
+Official reference: [extensions.md](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md) (Pi runs TypeScript via jiti; `export default function (pi: ExtensionAPI) { … }`).
+
+## When adding or changing extensions
+
+1. **Implement** the real module under `extensions/<name>.ts` (or a subfolder with helpers). Match style of existing files: types from `@mariozechner/pi-coding-agent`, `./themeMap.ts` for `applyExtensionDefaults(import.meta.url, ctx)` in `session_start` where appropriate.
+2. **Register** `registerTool`, `registerCommand`, and `registerShortcut` at the **top level** of the extension function (not inside async handlers), or Pi may drop them.
+3. **Auto-load (project)**  
+   - Add a **shim** only: `.pi/extensions/<name>.ts` containing  
+     `export { default } from "../../extensions/<name>.ts";`  
+   - **Never** put `themeMap.ts` or other helpers under `.pi/extensions/` — Pi loads **every** `*.ts` there as an extension and will error if there is no valid default factory.
+4. **Register in** `.pi/settings.json` under `"extensions": [ ".pi/extensions/…" ]` (paths relative to repo root). Run **`/reload`** in Pi after edits.
+5. **Quick test** without editing settings: `pi -e extensions/<name>.ts` (optionally stack `-e`).
+
+## Integrating others’ work
+
+- **npm / git Pi packages**: declare in `agent/settings.json` (`npm:…`, `git:…`); entrypoints come from each package’s `package.json` → `pi.extensions`. See `extensions/extension-picker.ts` for discovery patterns.
+- **Single file from disk**: add an absolute path to `extensions` in settings (per upstream docs), or vendor into `extensions/` and use the shim pattern.
+
+## Security
+
+Extensions run with your user permissions; only load sources you trust.

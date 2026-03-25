@@ -8,6 +8,13 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Added
+
+- `.cursor/rules/pi-extensions.mdc` — File-scoped rule when editing `extensions/` or `.pi/extensions/`.
+- `.cursor/rules/pi-extensions-context.mdc` — Always-on pointer to `docs/EXTENSIONS.md`.
+- `docs/EXTENSIONS.md` — Extension guide (upstream + local shim pattern + integration checklist).
+- README link under Extension Author Reference.
+
 ### Fixed
 
 - `.pi/extensions/`: replace symlinks + `themeMap.ts` with **re-export shims** only. Pi loads every `*.ts` in that folder as an extension; `themeMap.ts` is a helper and must not live there (was error: “does not export a valid factory function”).

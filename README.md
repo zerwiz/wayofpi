@@ -219,6 +219,7 @@ The `damage-control` extension provides real-time security hooks to prevent cata
 
 Companion docs cover the conventions used across all extensions in this repo:
 
+- **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** — How Pi extensions work upstream, how **this repo** uses `extensions/` + `.pi/extensions/` shims, creating new extensions, and integrating npm/git packages (for humans and agents).
 - **[COMPARISON.md](COMPARISON.md)** — Feature-by-feature comparison of Claude Code vs Pi Agent across 12 categories (design philosophy, tools, hooks, SDK, enterprise, and more).
 - **[PI_VS_OPEN_CODE.md](PI_VS_OPEN_CODE.md)** — Architectural comparison of Pi Agent vs OpenCode (open-source Claude Code alternative) focusing on extension capabilities, event lifecycle, and UI customization.
 - **[RESERVED_KEYS.md](RESERVED_KEYS.md)** — Pi reserved keybindings, overridable keys, and safe keys for extension authors.
