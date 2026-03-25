@@ -232,6 +232,20 @@ function formatPiCommand(paths: string[]): string {
 	return `pi ${parts.join(" ")}`;
 }
 
+/** Prefer stacking minimal.ts so the new session has a normal footer and looks “open”. */
+function launchCommandForEntry(absPath: string, cwd: string): string {
+	const minimal = join(cwd, "extensions/minimal.ts");
+	if (existsSync(minimal)) {
+		return formatPiCommand([minimal, absPath]);
+	}
+	return formatPiCommand([absPath]);
+}
+
+const PICKER_FOOTER = `How this works:
+• This menu does NOT open another app—it only builds a shell command.
+• Quit Pi completely, open a fresh terminal tab, paste the command, and press Enter. Your terminal becomes the Pi UI (fullscreen TUI), not a separate window.
+• If nothing appears, confirm \`pi\` is on PATH and the terminal is interactive (not a subshell running inside Pi).`;
+
 async function runPicker(ctx: ExtensionContext, entries: ExtEntry[]) {
 	if (!ctx.hasUI) return;
 	if (entries.length === 0) {
@@ -240,17 +254,19 @@ async function runPicker(ctx: ExtensionContext, entries: ExtEntry[]) {
 	}
 
 	const options = entries.map((e) => e.display);
-	const choice = await ctx.ui.select("Extensions (restart Pi with command below)", options);
+	const choice = await ctx.ui.select("Pick extension → copy launch command (read help after)", options);
 	if (choice === undefined) return;
 
 	const idx = options.indexOf(choice);
 	const entry = entries[idx];
-	const cmd = formatPiCommand([entry.absPath]);
+	const cmd = launchCommandForEntry(entry.absPath, ctx.cwd);
+	const cmdSingle = formatPiCommand([entry.absPath]);
 
 	const payload = JSON.stringify(
 		{
 			path: entry.absPath,
 			piCommand: cmd,
+			piCommandExtensionOnly: cmdSingle,
 			pickedAt: new Date().toISOString(),
 		},
 		null,
@@ -262,7 +278,18 @@ async function runPicker(ctx: ExtensionContext, entries: ExtEntry[]) {
 		/* ignore */
 	}
 
-	ctx.ui.notify(`${cmd}\n\nSaved: ${lastExtPath()}`, "info");
+	const lines = [
+		"Run this after you QUIT Pi (new terminal tab is easiest):",
+		"",
+		cmd,
+		"",
+		`(Extension only, no minimal footer: ${cmdSingle})`,
+		"",
+		`Saved: ${lastExtPath()}`,
+		"",
+		PICKER_FOOTER,
+	];
+	ctx.ui.notify(lines.join("\n"), "info");
 }
 
 export default function (pi: ExtensionAPI) {

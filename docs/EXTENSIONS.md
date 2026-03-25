@@ -120,6 +120,18 @@ Declared under `agent/settings.json` → `packages`. Each package’s `package.j
 
 ---
 
+## Extension picker (`/extensions`): what it does not do
+
+The **picker does not open a second UI** and cannot switch your *current* Pi session to another extension.
+
+1. You choose an entry; Pi shows a **notify** with a **`pi -e …` shell command** (and saves `storage/last-extension.json`).
+2. **Quit Pi**, use a **new terminal tab**, run that command. The **terminal becomes Pi** (TUI). There is no separate desktop window.
+3. If you run `pi -e …` **while Pi is still running** or from a broken TTY, you may see no interface—quit Pi first.
+
+The picker prefers **`pi -e extensions/minimal.ts -e …/your-extension.ts`** when this repo’s `extensions/minimal.ts` exists so the new session has a normal footer.
+
+---
+
 ## Security and trust
 
 Extensions are arbitrary code with your user privileges. Only install or vendor extensions from sources you trust.
