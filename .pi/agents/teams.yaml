@@ -3,29 +3,47 @@ full:
   - planner
   - builder
   - reviewer
+  - code-documenter
   - documenter
+  - indexer
   - project-scanner
-  - red-team
+  - ralph
+
+# Single-member team: Pi dispatcher sends prompts to external Hermes CLI; reply on stdout
+hermes:
+  - hermes
+
+# Single-member: build INDEX.md map at requested path
+index:
+  - indexer
 
 # Bootstrap Pi-side docs under ~/.pi/projects/<slug>/ from projects/_template
 new-project:
   - project-scanner
+  - indexer
 
-# Ralph HTML ticket queue — dispatcher can pull scout/planner/reviewer before or after ralph
+# Ralph HTML ticket queue — dispatcher can pull scout/planner/builder/reviewer/code-documenter/documenter around ralph
 ralph:
   - ralph
   - scout
   - planner
+  - builder
   - reviewer
+  - code-documenter
+  - documenter
 
 plan-build:
   - planner
   - builder
   - reviewer
+  - code-documenter
 
 info:
   - scout
+  - code-documenter
   - documenter
+  - indexer
+  - hermes
   - project-scanner
   - reviewer
 

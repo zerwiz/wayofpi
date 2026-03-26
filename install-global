@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Install global Pi playground shortcuts (~/.local/bin). Does NOT require `just`.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$ROOT/scripts/install-ppi-global.sh"

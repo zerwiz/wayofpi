@@ -74,7 +74,7 @@ export default function (pi: ExtensionAPI) {
 						`/ralph status — counts + next ticket\n` +
 						`/ralph prompt — inject one-task instructions\n` +
 						`Tool: ralph_queue_status · Skill: /skill:ralph · Agent: ralph\n` +
-						`Team ralph: ralph + scout + planner + reviewer (dispatcher can dispatch helpers)`,
+						`Team ralph: ralph + scout + planner + builder + reviewer + code-documenter + documenter (dispatcher can dispatch helpers)`,
 					"info",
 				);
 				return;

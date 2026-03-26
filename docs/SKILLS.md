@@ -14,6 +14,20 @@ For **memory vs skills**, see **[AGENT_MEMORY.md](AGENT_MEMORY.md)** §7. Upstre
 
 ---
 
+## Skills in this repository (`.pi/skills/`)
+
+| `name` | Path | Summary |
+| ------ | ---- | ------- |
+| **bowser** | [`.pi/skills/bowser/SKILL.md`](../.pi/skills/bowser/SKILL.md) | Playwright CLI — headless browsing, sessions, screenshots, scraping (`allowed-tools: Bash`). |
+| **find-skills** | [`.pi/skills/find-skills/SKILL.md`](../.pi/skills/find-skills/SKILL.md) | Audit gaps vs **`.pi/skills/`**, **find + validate** on **[skills.sh](https://skills.sh/)** / **`npx skills`**, then **implement** into **`.pi/skills/`** and update **`docs/SKILLS.md`**. |
+| **github** | [`.pi/skills/github/SKILL.md`](../.pi/skills/github/SKILL.md) | **GitHub** remotes, **branches**, **`git worktree`** — parallel agents each in their own path on the same repo. |
+| **indexer** | [`.pi/skills/indexer/SKILL.md`](../.pi/skills/indexer/SKILL.md) | Build **`INDEX.md`**: folder map + what each important file does (handoff for other agents). |
+| **ralph** | [`.pi/skills/ralph/SKILL.md`](../.pi/skills/ralph/SKILL.md) | **Ralph** queue: `todo/` → `inprogress/` → `done/`, one HTML file per `.txt` ticket; delegation via agent-team. |
+
+Add a folder **`.pi/skills/<name>/SKILL.md`** (frontmatter **`name`** must match the directory) to register another skill. Pi also loads skills from packages and global paths (§2).
+
+---
+
 ## 1. How skills work (progressive disclosure)
 
 1. **Discovery** — Pi scans the skill locations (see §2) and collects each skill’s **`name`** and **`description`** from frontmatter.
@@ -44,7 +58,7 @@ Pi merges skills from several places (first wins on **name collisions**, with a 
 
 Disable automatic discovery with **`--no-skills`** (explicit `--skill` paths can still load).
 
-**This repo** includes an example project skill: **[`.pi/skills/bowser/SKILL.md`](../.pi/skills/bowser/SKILL.md)** (`name: bowser`) for Playwright CLI workflows.
+**This repo** includes project skills such as **[`.pi/skills/bowser/SKILL.md`](../.pi/skills/bowser/SKILL.md)** (`bowser`), **[`.pi/skills/find-skills/SKILL.md`](../.pi/skills/find-skills/SKILL.md)** (`find-skills`), **[`.pi/skills/github/SKILL.md`](../.pi/skills/github/SKILL.md)** (`github`), **[`.pi/skills/indexer/SKILL.md`](../.pi/skills/indexer/SKILL.md)** (`indexer`), and **[`.pi/skills/ralph/SKILL.md`](../.pi/skills/ralph/SKILL.md)** (`ralph`).
 
 ### 2.1 Skills from Claude / Codex / Gemini layouts
 

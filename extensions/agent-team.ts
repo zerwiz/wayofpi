@@ -1,11 +1,12 @@
 /**
  * Agent Team — Dispatcher-only orchestrator with grid dashboard
  *
- * The primary Pi agent has NO codebase tools. It can ONLY delegate work
- * to specialist agents via the `dispatch_agent` tool. Each specialist
- * maintains its own Pi session for cross-invocation memory.
+ * The primary Pi agent delegates implementation via `dispatch_agent` and has
+ * read-only repo tools (`read`, `ls`, `grep`) to verify specialists' outputs.
+ * Grid cards show per-specialist context % and last-run token totals (prompt / completion)
+ * from the JSON subprocess stream. Each specialist maintains its own Pi session.
  *
- * Loads agent definitions from agents/*.md, .claude/agents/*.md, .pi/agents/*.md.
+ * Loads agent definitions from agents/, .claude/agents/, .pi/agents/ recursively (all nested `*.md` files).
  * Teams are defined in .pi/agents/teams.yaml — on boot a select dialog lets
  * you pick which team to work with. Only team members are available for dispatch.
  *
@@ -34,8 +35,9 @@ import { Type } from "@sinclair/typebox";
 import { Text, type AutocompleteItem, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { spawn } from "child_process";
 import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "fs";
-import { join, resolve } from "path";
+import { join } from "path";
 import { applyExtensionDefaults } from "./themeMap.ts";
+import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
 
 // ── Types ────────────────────────────────────────
 
@@ -47,6 +49,26 @@ interface AgentDef {
 	file: string;
 }
 
+/** Normalize provider usage objects from JSON stream (`message_end` / `agent_end`). */
+function usageInOut(u: unknown): { input: number; output: number } | null {
+	if (!u || typeof u !== "object") return null;
+	const o = u as Record<string, unknown>;
+	const input =
+		typeof o.input === "number"
+			? o.input
+			: typeof o.prompt_tokens === "number"
+				? o.prompt_tokens
+				: null;
+	const output =
+		typeof o.output === "number"
+			? o.output
+			: typeof o.completion_tokens === "number"
+				? o.completion_tokens
+				: null;
+	if (input == null && output == null) return null;
+	return { input: input ?? 0, output: output ?? 0 };
+}
+
 interface AgentState {
 	def: AgentDef;
 	status: "idle" | "running" | "done" | "error";
@@ -55,6 +77,9 @@ interface AgentState {
 	elapsed: number;
 	lastWork: string;
 	contextPct: number;
+	/** Sum of token usage events for the last completed subprocess dispatch (in/out). */
+	lastRunTokensIn: number;
+	lastRunTokensOut: number;
 	sessionFile: string | null;
 	runCount: number;
 	timer?: ReturnType<typeof setInterval>;
@@ -64,6 +89,11 @@ interface AgentState {
 
 function displayName(name: string): string {
 	return name.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+function fmtTok(n: number): string {
+	if (n < 1000) return `${n}`;
+	return `${(n / 1000).toFixed(1)}k`;
 }
 
 // ── Teams YAML Parser ────────────────────────────
@@ -157,18 +187,13 @@ function scanAgentDirs(cwd: string): AgentDef[] {
 	const seen = new Set<string>();
 
 	for (const dir of dirs) {
-		if (!existsSync(dir)) continue;
-		try {
-			for (const file of readdirSync(dir)) {
-				if (!file.endsWith(".md")) continue;
-				const fullPath = resolve(dir, file);
-				const def = parseAgentFile(fullPath);
-				if (def && !seen.has(def.name.toLowerCase())) {
-					seen.add(def.name.toLowerCase());
-					agents.push(def);
-				}
+		for (const fullPath of collectAgentMarkdownFiles(dir)) {
+			const def = parseAgentFile(fullPath);
+			if (def && !seen.has(def.name.toLowerCase())) {
+				seen.add(def.name.toLowerCase());
+				agents.push(def);
 			}
-		} catch {}
+		}
 	}
 
 	return agents;
@@ -412,6 +437,8 @@ export default function (pi: ExtensionAPI) {
 				elapsed: 0,
 				lastWork: "",
 				contextPct: 0,
+				lastRunTokensIn: 0,
+				lastRunTokensOut: 0,
 				sessionFile: existsSync(sessionFile) ? sessionFile : null,
 				runCount: 0,
 			});
@@ -451,6 +478,17 @@ export default function (pi: ExtensionAPI) {
 		const ctxLine = theme.fg("dim", ctxStr);
 		const ctxVisible = ctxStr.length;
 
+		const tokStr =
+			state.status === "running"
+				? state.lastRunTokensIn + state.lastRunTokensOut > 0
+					? `↓${fmtTok(state.lastRunTokensIn)} ↑${fmtTok(state.lastRunTokensOut)} …`
+					: "tok …"
+				: state.lastRunTokensIn + state.lastRunTokensOut > 0
+					? `↓${fmtTok(state.lastRunTokensIn)} ↑${fmtTok(state.lastRunTokensOut)}`
+					: "tok —";
+		const tokLine = theme.fg("dim", tokStr);
+		const tokVisible = tokStr.length;
+
 		const workRaw = state.task
 			? (state.lastWork || state.task)
 			: state.def.description;
@@ -468,6 +506,7 @@ export default function (pi: ExtensionAPI) {
 			border(" " + nameStr, 1 + nameVisible),
 			border(" " + statusLine, 1 + statusVisible),
 			border(" " + ctxLine, 1 + ctxVisible),
+			border(" " + tokLine, 1 + tokVisible),
 			border(" " + workLine, 1 + workVisible),
 			theme.fg("dim", bot),
 		];
@@ -497,7 +536,7 @@ export default function (pi: ExtensionAPI) {
 						const cards = rowAgents.map(a => renderCard(a, colWidth, theme));
 
 						while (cards.length < cols) {
-							cards.push(Array(6).fill(" ".repeat(colWidth)));
+							cards.push(Array(7).fill(" ".repeat(colWidth)));
 						}
 
 						const cardHeight = cards[0].length;
@@ -523,7 +562,12 @@ export default function (pi: ExtensionAPI) {
 		agentName: string,
 		task: string,
 		ctx: any,
-	): Promise<{ output: string; exitCode: number; elapsed: number }> {
+	): Promise<{
+		output: string;
+		exitCode: number;
+		elapsed: number;
+		usage?: { input: number; output: number };
+	}> {
 		const key = agentName.toLowerCase();
 		const state = agentStates.get(key);
 		if (!state) {
@@ -531,6 +575,7 @@ export default function (pi: ExtensionAPI) {
 				output: `Agent "${agentName}" not found. Available: ${Array.from(agentStates.values()).map(s => displayName(s.def.name)).join(", ")}`,
 				exitCode: 1,
 				elapsed: 0,
+				usage: undefined,
 			});
 		}
 
@@ -539,6 +584,7 @@ export default function (pi: ExtensionAPI) {
 				output: `Agent "${displayName(state.def.name)}" is already running. Wait for it to finish.`,
 				exitCode: 1,
 				elapsed: 0,
+				usage: undefined,
 			});
 		}
 
@@ -547,6 +593,8 @@ export default function (pi: ExtensionAPI) {
 		state.toolCount = 0;
 		state.elapsed = 0;
 		state.lastWork = "";
+		state.lastRunTokensIn = 0;
+		state.lastRunTokensOut = 0;
 		state.runCount++;
 		updateWidget();
 
@@ -616,17 +664,41 @@ export default function (pi: ExtensionAPI) {
 							updateWidget();
 						} else if (event.type === "message_end") {
 							const msg = event.message;
-							if (msg?.usage && contextWindow > 0) {
-								state.contextPct = ((msg.usage.input || 0) / contextWindow) * 100;
-								updateWidget();
+							const pair = msg?.usage ? usageInOut(msg.usage) : null;
+							if (pair) {
+								state.lastRunTokensIn += pair.input;
+								state.lastRunTokensOut += pair.output;
 							}
+							if (msg?.usage && contextWindow > 0) {
+								const inp = usageInOut(msg.usage)?.input ?? (msg.usage as { input?: number }).input ?? 0;
+								state.contextPct = (inp / contextWindow) * 100;
+							}
+							updateWidget();
 						} else if (event.type === "agent_end") {
 							const msgs = event.messages || [];
+							let sumIn = 0;
+							let sumOut = 0;
+							for (const m of msgs) {
+								const mm = m as { role?: string; usage?: unknown };
+								if (mm.role === "assistant" && mm.usage) {
+									const p = usageInOut(mm.usage);
+									if (p) {
+										sumIn += p.input;
+										sumOut += p.output;
+									}
+								}
+							}
+							if (sumIn + sumOut > 0) {
+								state.lastRunTokensIn = sumIn;
+								state.lastRunTokensOut = sumOut;
+							}
 							const last = [...msgs].reverse().find((m: any) => m.role === "assistant");
 							if (last?.usage && contextWindow > 0) {
-								state.contextPct = ((last.usage.input || 0) / contextWindow) * 100;
-								updateWidget();
+								const inp =
+									usageInOut(last.usage)?.input ?? (last.usage as { input?: number }).input ?? 0;
+								state.contextPct = (inp / contextWindow) * 100;
 							}
+							updateWidget();
 						}
 					} catch {}
 				}
@@ -659,8 +731,12 @@ export default function (pi: ExtensionAPI) {
 				state.lastWork = full.split("\n").filter((l: string) => l.trim()).pop() || "";
 				updateWidget();
 
+				const tok =
+					state.lastRunTokensIn + state.lastRunTokensOut > 0
+						? ` · ↓${fmtTok(state.lastRunTokensIn)} ↑${fmtTok(state.lastRunTokensOut)} tok`
+						: "";
 				ctx.ui.notify(
-					`${displayName(state.def.name)} ${state.status} in ${Math.round(state.elapsed / 1000)}s`,
+					`${displayName(state.def.name)} ${state.status} in ${Math.round(state.elapsed / 1000)}s${tok}`,
 					state.status === "done" ? "success" : "error"
 				);
 
@@ -668,6 +744,10 @@ export default function (pi: ExtensionAPI) {
 					output: full,
 					exitCode: code ?? 1,
 					elapsed: state.elapsed,
+					usage:
+						state.lastRunTokensIn + state.lastRunTokensOut > 0
+							? { input: state.lastRunTokensIn, output: state.lastRunTokensOut }
+							: undefined,
 				});
 			});
 
@@ -680,6 +760,10 @@ export default function (pi: ExtensionAPI) {
 					output: `Error spawning agent: ${err.message}`,
 					exitCode: 1,
 					elapsed: Date.now() - startTime,
+					usage:
+						state.lastRunTokensIn + state.lastRunTokensOut > 0
+							? { input: state.lastRunTokensIn, output: state.lastRunTokensOut }
+							: undefined,
 				});
 			});
 		});
@@ -714,7 +798,11 @@ export default function (pi: ExtensionAPI) {
 					: result.output;
 
 				const status = result.exitCode === 0 ? "done" : "error";
-				const summary = `[${agent}] ${status} in ${Math.round(result.elapsed / 1000)}s`;
+				const tok =
+					result.usage && (result.usage.input > 0 || result.usage.output > 0)
+						? ` · ↓${fmtTok(result.usage.input)} ↑${fmtTok(result.usage.output)} tok`
+						: "";
+				const summary = `[${agent}] ${status} in ${Math.round(result.elapsed / 1000)}s${tok}`;
 
 				return {
 					content: [{ type: "text", text: `${summary}\n\n${truncated}` }],
@@ -725,6 +813,7 @@ export default function (pi: ExtensionAPI) {
 						elapsed: result.elapsed,
 						exitCode: result.exitCode,
 						fullOutput: result.output,
+						usage: result.usage,
 					},
 				};
 			} catch (err: any) {
@@ -767,8 +856,14 @@ export default function (pi: ExtensionAPI) {
 			const icon = details.status === "done" ? "✓" : "✗";
 			const color = details.status === "done" ? "success" : "error";
 			const elapsed = typeof details.elapsed === "number" ? Math.round(details.elapsed / 1000) : 0;
+			const u = details.usage as { input?: number; output?: number } | undefined;
+			const tok =
+				u && (u.input || u.output)
+					? theme.fg("dim", ` ↓${fmtTok(u.input || 0)} ↑${fmtTok(u.output || 0)}`)
+					: "";
 			const header = theme.fg(color, `${icon} ${details.agent}`) +
-				theme.fg("dim", ` ${elapsed}s`);
+				theme.fg("dim", ` ${elapsed}s`) +
+				tok;
 
 			if (options.expanded && details.fullOutput) {
 				const output = details.fullOutput.length > 4000
@@ -792,6 +887,9 @@ export default function (pi: ExtensionAPI) {
 		"team_load_preset",
 		"team_delete_preset",
 	] as const;
+
+	/** Built-ins so the dispatcher can confirm files after a specialist run (not write/edit/bash). */
+	const DISPATCHER_VERIFY_TOOLS = ["read", "ls", "grep"] as const;
 
 	pi.registerTool({
 		name: "team_list",
@@ -1105,8 +1203,12 @@ export default function (pi: ExtensionAPI) {
 
 		return {
 			systemPrompt: `You are a dispatcher agent. You coordinate specialist agents to accomplish tasks.
-You do NOT have direct access to the codebase. You MUST delegate all work through
-agents using the dispatch_agent tool.
+You MUST delegate implementation work through the dispatch_agent tool — you do not
+use write, edit, or bash yourself.
+
+You **do** have **read**, **ls**, and **grep** to **verify** files specialists claim
+to have created or changed, and to **show** the user excerpts or paths before saying
+work is done.
 
 ## Active Team: ${activeTeamName}
 Members: ${teamMembers}
@@ -1130,8 +1232,9 @@ You can ONLY dispatch to agents listed below. Do not attempt to dispatch to agen
 - Summarize the outcome for the user
 
 ## Rules
-- NEVER try to read, write, or execute code directly — you have no such tools
-- ALWAYS use dispatch_agent to get work done (team tools only adjust who you can dispatch)
+- NEVER use **write**, **edit**, or **bash** — delegate those to specialists
+- Use **read** / **ls** / **grep** only to **verify** or **quote** outputs (paths, snippets)
+- ALWAYS use dispatch_agent for implementation (team tools only adjust who you can dispatch)
 - You can chain agents: use scout to explore, then builder to implement
 - You can dispatch the same agent multiple times with different tasks
 - Keep tasks focused — one clear objective per dispatch
@@ -1171,8 +1274,8 @@ ${agentCatalog}`,
 			activateTeam(teamNames[0]);
 		}
 
-		// Lock down to dispatcher-only (tool already registered at top level)
-		pi.setActiveTools(["dispatch_agent", ...TEAM_TOOLS]);
+		// Dispatcher: dispatch + team mgmt + read-only verify (so "Tool read not found" cannot happen)
+		pi.setActiveTools(["dispatch_agent", ...TEAM_TOOLS, ...DISPATCHER_VERIFY_TOOLS]);
 
 		_ctx.ui.setStatus("agent-team", `Team: ${activeTeamName} (${agentStates.size})`);
 		const members = Array.from(agentStates.values()).map(s => displayName(s.def.name)).join(", ");
@@ -1185,7 +1288,7 @@ ${agentCatalog}`,
 			`/agents-team-add/remove/replace  Edit active roster\n` +
 			`/agents-reload            Rescan agent .md\n` +
 			`/agents-preset-save/load/list/delete  Saved presets\n` +
-			`Tools: + team_member_replace, team_reload_agents`,
+				`Tools: dispatch + team_* + read, ls, grep (verify only)`,
 			"info",
 		);
 		updateWidget();

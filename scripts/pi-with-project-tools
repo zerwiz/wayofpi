@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Run `pi` with *project-root* legacy tools enabled (opt-in).
+#
+# New Pi versions warn when a project contains a root `tools/` directory because
+# legacy "custom tools" were migrated to extensions. Some projects still keep
+# a `tools/` folder. This wrapper lets you opt-in per run:
+#
+# - Keep tools disabled by renaming `tools/` -> `tools.off/` (recommended).
+# - Launch Pi via this script; it will symlink `tools/` -> `tools.off/` for the
+#   duration of the Pi session, then remove the symlink on exit.
+#
+# Usage:
+#   ./scripts/pi-with-project-tools [pi-args...]
+#   ~/.pi/scripts/pi-with-project-tools -e extensions/minimal.ts
+#
+set -euo pipefail
+
+cleanup() {
+  # Only remove symlink we created.
+  if [[ -L "tools" && -n "${_PI_TOOLS_SYMLINK_CREATED:-}" ]]; then
+    rm -f "tools"
+  fi
+}
+trap cleanup EXIT INT TERM
+
+if [[ -e "tools" && ! -L "tools" ]]; then
+  echo "pi-with-project-tools: 'tools/' already exists (not a symlink)."
+  echo "To make tools opt-in (and avoid Pi warnings by default):"
+  echo "  mv tools tools.off"
+  echo "Then launch Pi via this script."
+  exit 2
+fi
+
+if [[ -d "tools.off" && ! -e "tools" ]]; then
+  ln -s "tools.off" "tools"
+  _PI_TOOLS_SYMLINK_CREATED=1
+fi
+
+exec pi "$@"
+

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Deprecated path: prefer ~/.local/bin/pi-e → scripts/ppi (via install-ppi-global.sh).
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$DIR/ppi" pi-e "$@"

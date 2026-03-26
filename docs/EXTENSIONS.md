@@ -70,6 +70,55 @@ Using **`pi -e ./path/to/ext.ts`** is for ad-hoc runs; discovery + `.pi/settings
 | `.pi/settings.json` | Lists `".pi/extensions/…"` entries to load with the project. |
 | `agent/settings.json` | Model, **`packages`** (`npm:…`, `git:…`) for community Pi packages. |
 
+### Extension modules in `extensions/` (inventory)
+
+Each row is a **`export default function (pi: ExtensionAPI)`** entrypoint unless noted. Load with **`pi -e extensions/<file>.ts`** (or nested path); use **`just ext-<name>`** / **`just open …`** where defined in the **`justfile`**.
+
+| File | Role |
+| ---- | ---- |
+| **`agent-chain.ts`** | Sequential pipelines from **`.pi/agents/agent-chain.yaml`**; tool **`run_chain`**, **`/chain`**. |
+| **`agent-forge.ts`** | **`forge_list`**, **`forge_create`** → writes **`extensions/forge-*.ts`** + **`forge-registry.json`**. |
+| **`agent-team.ts`** | Dispatcher + **`dispatch_agent`** + **`team_*`** tools; grid UI; **`/agents-*`** commands. |
+| **`chronicle.ts`** | Workflow ledger **`.pi/chronicle/`**; **`chronicle_*`** tools, **`/chronicle`**. |
+| **`cross-agent.ts`** | Discovers **`.claude/`**, **`.gemini/`**, **`.codex/`** commands, skills, agents. |
+| **`damage-control.ts`** | Bash/file policy from **`.pi/damage-control-rules.yaml`**. |
+| **`dynamic-loader.ts`** | **`/extension-hint`** for stacked **`pi -e`** lines. |
+| **`extension-picker.ts`** | **`/extensions`**, **`/remember`**, **`/memory`**. |
+| **`minimal.ts`** | Compact footer (model + context meter). |
+| **`pi-pi.ts`** | Meta-agent; **`query_experts`**. |
+| **`purpose-gate.ts`** | Session intent gate + widget. |
+| **`pure-focus.ts`** | Hides footer / status chrome. |
+| **`ralph.ts`** | **Ralph** queue dirs + **`ralph_queue_status`**, **`/ralph`**. |
+| **`session-memory.ts`** | Injects **`<session_memory>`** recap; **`/sessionmemory`**. |
+| **`session-replay.ts`** | Session timeline overlay. |
+| **`sessions/index.ts`** | **Session saver** — auto-save, **`/save`** **`/list`** **`/show`** **`/load`**. |
+| **`subagent-widget.ts`** | **`subagent_*`** tools, **`/sub`**, background widgets. |
+| **`system-select.ts`** | **`/system`** agent persona picker. |
+| **`theme-cycler.ts`** | **`/theme`**, Ctrl+X / Ctrl+Q. |
+| **`tilldone.ts`** | **`tilldone`** tool (gates other tools), footer/widget, **`.pi/tilldone-checklist.md`**. |
+| **`tool-counter.ts`** | Rich footer (tokens, costs, tool counts). |
+| **`tool-counter-widget.ts`** | Above-editor tool-count widget. |
+
+**Not** Pi extension factories (helpers / submodules): **`themeMap.ts`**, **`chatLabels.ts`**, **`sessions/batch-runner.ts`**, **`sessions/theme-lib/`**.
+
+### Shims under `.pi/extensions/` (project auto-load)
+
+Listed in **`.pi/settings.json`** → **`extensions`** (paths relative to repo root). *Current repo snapshot:*
+
+| Shim | Loads |
+| ---- | ----- |
+| **`minimal.ts`** | **`extensions/minimal.ts`** |
+| **`theme-cycler.ts`** | **`extensions/theme-cycler.ts`** (**`/theme`**, Ctrl+X / Ctrl+Q) |
+| **`session-memory.ts`** | **`extensions/session-memory.ts`** |
+| **`extension-picker.ts`** | **`extensions/extension-picker.ts`** |
+| **`session-saver.ts`** | **`extensions/sessions/index.ts`** |
+| **`chronicle.ts`** | **`extensions/chronicle.ts`** |
+| **`agent-forge.ts`** | **`extensions/agent-forge.ts`** |
+| **`dynamic-loader.ts`** | **`extensions/dynamic-loader.ts`** |
+| **`ralph.ts`** | **`extensions/ralph.ts`** |
+
+Other modules in **`extensions/`** may still be used via **`just`** recipes or manual **`pi -e`** stacks if they are not shimmed. After adding a shim entry, run **`/reload`** in Pi.
+
 ### Why shims exist
 
 Pi scans **every** `*.ts` file under `.pi/extensions/` and expects each file to be a **valid extension** (default export factory).
@@ -104,14 +153,13 @@ The **real** module lives in `extensions/`, so imports like `./themeMap.ts` reso
    `pi -e extensions/my-feature.ts`
 5. Update `README.md` extension table and `CHANGELOG.md` if the feature is user-facing.
 
-### Related playground extensions
+### Deep dives
 
-| Extension | Implementation | Notes |
-|-----------|----------------|--------|
-| **session-saver** | `extensions/sessions/index.ts` | Auto-save + `/save` / `/list` / `/show` / `/load`; see `extensions/sessions/README.md` and `config.json`. |
-| **agent-forge** | `extensions/agent-forge.ts` | `forge_create` writes `extensions/forge-*.ts`; add shim + `/reload` to load new tools. |
-| **chronicle** | `extensions/chronicle.ts` | Ledger under `.pi/chronicle/`; specs in `specs/agent-workflow.md`. |
-| **dynamic-loader** | `extensions/dynamic-loader.ts` | `/extension-hint` for `pi -e` stacks. |
+| Topic | Location |
+| ----- | -------- |
+| Session saver | **`extensions/sessions/README.md`**, **`config.json`** |
+| Agent forge | **`forge-registry.json`**, shim + **`/reload`** after **`forge_create`** |
+| Chronicle / workflow spec | **`specs/agent-workflow.md`**, **`.pi/chronicle/`** |
 
 ---
 

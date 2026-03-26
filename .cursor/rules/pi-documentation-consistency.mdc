@@ -1,0 +1,68 @@
+---
+description: Keep docs consistent — structure, terminology, cross-links, and index updates (docs/, README, CHANGELOG)
+globs:
+  - docs/**/*.md
+  - README.md
+  - CHANGELOG.md
+  - agent/AGENTS.md
+  - CLAUDE.md
+  - projects/README.md
+  - scripts/README.md
+alwaysApply: false
+---
+
+# Documentation consistency (Pi playground)
+
+You are editing **human-facing documentation** in this repo. Follow these rules so guides stay **consistent**, **accurate**, and **easy to navigate**.
+
+## Hub and entry points
+
+1. **`docs/README.md`** — Central index of guides. When you add or rename a **substantive** doc under **`docs/`**, add a **one-line table row** (title + purpose) unless it is clearly internal/noise.
+2. **`docs/REPO_INDEX.md`** — Folder/file map of the repo; update when you introduce a **new top-level area** or path that agents rely on.
+3. **Root `README.md`** — Boot doc; link new **user-facing** workflows here only when they matter for onboarding (not every tiny note).
+
+## Terminology (do not mix)
+
+Use the same vocabulary as **[docs/CONCEPTS.md](docs/CONCEPTS.md)**:
+
+| Term | Meaning here |
+|------|----------------|
+| **Extension** | TypeScript in **`extensions/`**, loaded via **`.pi/extensions/`** shims |
+| **Skill** | **`SKILL.md`** under **`.pi/skills/<name>/`**, invoked with **`/skill:name`** |
+| **Agent** | Persona **`.md`** under **`.pi/agents/`**, **`dispatch_agent`**, teams |
+| **Tool** | Built-in or **`registerTool`** — see **[docs/TOOLS.md](docs/TOOLS.md)** |
+
+Do **not** call skills “extensions” or agents “tools.”
+
+## Core concept docs (stricter rules)
+
+When touching **`docs/TOOLS.md`**, **`docs/SKILLS.md`**, **`docs/AGENTS.md`**, **`docs/AGENT_TEAMS.md`**, or **`docs/TUI.md`**, also follow **`.cursor/rules/pi-docs-core.mdc`** (verify against code when documenting behavior).
+
+## Style
+
+1. **Headings** — Use logical `##` / `###` hierarchy; one H1 per file (title) or start at `##` if the file is a chapter.
+2. **Paths** — Wrap paths, commands, and filenames in **backticks** (`extensions/foo.ts`, `.pi/settings.json`). Prefer repo-relative paths; for machine-specific examples, use **`/home/zerwiz/.pi/...`** only where **`REPO_INDEX.md`** already does.
+3. **Links** — Use **relative** links between repo files (`[Title](AGENTS.md)` from `docs/`). For external URLs, full `https://` string.
+4. **Tables** — Prefer markdown tables for inventories (extensions, agents, env vars); keep columns aligned in source for readability.
+5. **Code blocks** — Fenced blocks with a language tag when useful (`bash`, `json`, `yaml`, `text`). One command per line in copy-paste examples; no ellipses.
+6. **Tone** — Clear, direct, complete sentences. Avoid filler and engagement bait. No “§” in user-facing text.
+
+## Accuracy
+
+1. **Repo truth** — Commands, paths, and extension names must match the tree. If unsure, **read** the file or **`grep`** before stating behavior.
+2. **Versions** — When mentioning Pi CLI or extension versions, tie them to **`CHANGELOG.md`** or “verify against your install” if volatile.
+3. **Secrets** — Never paste real API keys or tokens; use placeholders (`sk-...`, `...`) and point to **`.env.sample`**.
+
+## Changelog
+
+Edits to **`CHANGELOG.md`** follow **[Keep a Changelog](https://keepachangelog.com/)** style already used: **`## [Unreleased]`**, **`### Added` / `### Changed` / `### Fixed`**, present tense, concrete bullets.
+
+## Duplication
+
+Prefer **one canonical doc** and **link** to it. Do not copy large blocks between **`README.md`** and **`docs/`**—summarize and link.
+
+## After substantive edits
+
+- **Index** — **`docs/README.md`** row if new guide.
+- **Cross-links** — Related docs (e.g. EXTENSIONS ↔ TOOLS, AGENTS ↔ AGENT_TEAMS).
+- **Optional** — If behavior changed, **one line** in **`CHANGELOG.md`** under **[Unreleased]** when the change is user-visible.

@@ -103,10 +103,25 @@ You can use both: Pi for coding-agent sessions in this repo, Hermes for flows wh
 
 ---
 
-## 7. Related docs
+## 7. Pi agent `hermes` (talk to Hermes from Pi)
+
+This repo defines a Pi specialist **`hermes`** ([`.pi/agents/hermes.md`](../.pi/agents/hermes.md)) for **agent-team** / **`dispatch_agent`**. It runs the **Hermes CLI** in **non-interactive** mode:
+
+```bash
+"$HOME/.hermes/hermes-agent/venv/bin/hermes" chat -q 'Your message' -Q
+```
+
+Hermes prints its **reply on stdout** (and often a **`session_id:`** line). The Pi agent relays that output to the user. For a **continued** Hermes thread, pass **`--resume SESSION_ID`** from the prior run.
+
+Teams: **`hermes`** (solo), and **`hermes`** is on team **`info`** in **`.pi/agents/teams.yaml`**. Team **`full`** uses **`ralph`** instead of **`hermes`**; switch to **`hermes`** or **`info`** to **`dispatch_agent` `hermes`**, or add **`hermes`** to the active roster. Hermes must be installed and configured separately; this does not embed Hermes inside Pi.
+
+---
+
+## 8. Related docs
 
 | Doc | Topic |
 |-----|--------|
 | **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** | Server, Docker, SDK config, dreaming/deriver |
 | **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)** | Short combined quick reference |
 | **[AGENT_MEMORY.md](AGENT_MEMORY.md)** | Pi memory layers |
+| **[AGENTS.md](AGENTS.md)** | Agent inventory including **`hermes`** |

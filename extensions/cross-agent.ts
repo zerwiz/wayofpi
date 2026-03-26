@@ -14,6 +14,7 @@ import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, basename } from "node:path";
 import { homedir } from "node:os";
 import { applyExtensionDefaults } from "./themeMap.ts";
+import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
 import { wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 
 // --- Synthwave palette ---
@@ -127,12 +128,11 @@ function scanAgents(dir: string): Discovered[] {
 	if (!existsSync(dir)) return [];
 	const items: Discovered[] = [];
 	try {
-		for (const file of readdirSync(dir)) {
-			if (!file.endsWith(".md")) continue;
-			const raw = readFileSync(join(dir, file), "utf-8");
+		for (const fullPath of collectAgentMarkdownFiles(dir)) {
+			const raw = readFileSync(fullPath, "utf-8");
 			const { fields } = parseFrontmatter(raw);
 			items.push({
-				name: fields.name || basename(file, ".md"),
+				name: fields.name || basename(fullPath, ".md"),
 				description: fields.description || "",
 				content: raw,
 			});

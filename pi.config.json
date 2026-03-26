@@ -1,18 +1,165 @@
 {
   "models": [
     {
-      "id": "unsloth-qwen2.5-coder-32b:latest",
+      "id": "google/gemma-3-4b-it:free",
+      "provider": "openrouter",
+      "name": "Gemma 3 4B (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "google/gemma-3n-e2b-it:free",
+      "provider": "openrouter",
+      "name": "Gemma 3n E2B (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "meta-llama/llama-3.3-70b-instruct:free",
+      "provider": "openrouter",
+      "name": "Llama 3.3 70B Instruct (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "meta-llama/llama-3.2-3b-instruct:free",
+      "provider": "openrouter",
+      "name": "Llama 3.2 3B Instruct (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "qwen/qwen3-4b:free",
+      "provider": "openrouter",
+      "name": "Qwen3 4B (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "qwen/qwen3-coder:free",
+      "provider": "openrouter",
+      "name": "Qwen3 Coder (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "openai/gpt-oss-20b:free",
+      "provider": "openrouter",
+      "name": "GPT-OSS 20B (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "mistralai/mistral-small-3.1-24b-instruct:free",
+      "provider": "openrouter",
+      "name": "Mistral Small 3.1 24B (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "nvidia/nemotron-nano-9b-v2:free",
+      "provider": "openrouter",
+      "name": "Nemotron Nano 9B v2 (OpenRouter free)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "google/gemini-3-flash-preview",
+      "provider": "openrouter",
+      "name": "Gemini 3 Flash (OpenRouter)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "anthropic/claude-sonnet-4",
+      "provider": "openrouter",
+      "name": "Claude Sonnet 4 (OpenRouter)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "openai/gpt-4o-mini",
+      "provider": "openrouter",
+      "name": "GPT-4o mini (via OpenRouter)",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "OPENROUTER_API_KEY"
+    },
+    {
+      "id": "qwen3.5:9b-32k",
       "provider": "ollama",
-      "name": "Qwen 2.5 Coder 32B",
+      "name": "Qwen 3.5 9B (32K)",
       "baseUrl": "http://localhost:11434/v1",
       "apiKey": "ollama"
     },
     {
-      "id": "qwen3-14b-claude-sonnet-4.5-high-reasoning-distill-q4-k-m:latest",
+      "id": "qwen3.5:9b",
       "provider": "ollama",
-      "name": "Claude-Distill 14B",
+      "name": "Qwen 3.5 9B",
       "baseUrl": "http://localhost:11434/v1",
       "apiKey": "ollama"
+    },
+    {
+      "id": "qwen2.5-coder:14b-instruct",
+      "provider": "ollama",
+      "name": "Qwen 2.5 Coder 14B Instruct",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "unsloth-qwen3-30b:latest",
+      "provider": "ollama",
+      "name": "Unsloth Qwen3 30B",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "qwen2.5-coder:latest",
+      "provider": "ollama",
+      "name": "Qwen 2.5 Coder",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "llama3.1:latest",
+      "provider": "ollama",
+      "name": "Llama 3.1",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "qwen-7b-gpu:latest",
+      "provider": "ollama",
+      "name": "Qwen 7B GPU",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "nemotron-3-nano:4b",
+      "provider": "ollama",
+      "name": "Nemotron 3 Nano 4B",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "unsloth-r1-8b:latest",
+      "provider": "ollama",
+      "name": "Unsloth R1 8B",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "ds-r1-8b:latest",
+      "provider": "ollama",
+      "name": "DeepSeek R1 8B",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    },
+    {
+      "id": "gpt-4o-mini",
+      "provider": "openai",
+      "name": "GPT-4o mini (OpenAI)",
+      "baseUrl": "https://api.openai.com/v1",
+      "apiKey": "OPENAI_API_KEY"
     }
   ],
   "tools": {

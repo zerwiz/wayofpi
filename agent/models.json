@@ -10,39 +10,56 @@
       },
       "models": [
         {
-          "id": "qwen3.5:9b"
+          "id": "qwen3.5:9b-32k",
+          "name": "Qwen 3.5 9B (32K ctx)"
         },
         {
-          "id": "qwen3.5"
+          "id": "qwen3.5:9b",
+          "name": "Qwen 3.5 9B"
         },
         {
-          "id": "qwen3.5-35b"
+          "id": "qwen2.5-coder:14b-instruct",
+          "name": "Qwen 2.5 Coder 14B Instruct"
         },
         {
-          "id": "unsloth-qwen2.5-coder-32b:latest"
+          "id": "unsloth-qwen3-30b:latest",
+          "name": "Unsloth Qwen3 30B"
         },
         {
-          "id": "qwen3-14b-claude-sonnet-4.5-high-reasoning-distill-q4-k-m:latest"
+          "id": "qwen2.5-coder:latest",
+          "name": "Qwen 2.5 Coder"
         },
         {
-          "id": "deepseek-coder-v2:latest"
+          "id": "llama3.1:latest",
+          "name": "Llama 3.1"
         },
         {
-          "id": "lfm2-24b:latest"
+          "id": "qwen-7b-gpu:latest",
+          "name": "Qwen 7B (GPU)"
         },
         {
-          "id": "deepseek-r1-8b:latest"
+          "id": "nemotron-3-nano:4b",
+          "name": "Nemotron 3 Nano 4B"
         },
         {
-          "_launch": true,
-          "contextWindow": 204800,
-          "id": "minimax-m2.5:cloud",
-          "input": [
-            "text"
-          ],
-          "reasoning": true
+          "id": "unsloth-r1-8b:latest",
+          "name": "Unsloth R1 8B"
+        },
+        {
+          "id": "ds-r1-8b:latest",
+          "name": "DeepSeek R1 8B"
         }
       ]
+    },
+    "openrouter": {
+      "api": "openai-completions",
+      "apiKey": "OPENROUTER_API_KEY",
+      "baseUrl": "https://openrouter.ai/api/v1"
+    },
+    "openai": {
+      "api": "openai-completions",
+      "apiKey": "OPENAI_API_KEY",
+      "baseUrl": "https://api.openai.com/v1"
     }
   }
 }

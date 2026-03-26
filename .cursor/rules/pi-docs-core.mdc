@@ -5,12 +5,13 @@ globs:
   - docs/SKILLS.md
   - docs/AGENTS.md
   - docs/AGENT_TEAMS.md
+  - docs/TUI.md
 alwaysApply: false
 ---
 
 # Core Pi docs (this playground)
 
-You are editing one of **`docs/TOOLS.md`**, **`docs/SKILLS.md`**, **`docs/AGENTS.md`**, or **`docs/AGENT_TEAMS.md`**.
+You are editing one of **`docs/TOOLS.md`**, **`docs/SKILLS.md`**, **`docs/AGENTS.md`**, **`docs/AGENT_TEAMS.md`**, or **`docs/TUI.md`**.
 
 ## Keep consistent
 
@@ -28,3 +29,4 @@ You are editing one of **`docs/TOOLS.md`**, **`docs/SKILLS.md`**, **`docs/AGENTS
 | **SKILLS.md** | `SKILL.md` discovery, `/skill:name`, authoring |
 | **AGENTS.md** | Agent `.md` defs, scan paths, `system-select` / `agent-chain` |
 | **AGENT_TEAMS.md** | `teams.yaml`, presets, `dispatch_agent`, slash commands |
+| **TUI.md** | Reserved keys, thinking/tools toggles, link to `RESERVED_KEYS.md` |

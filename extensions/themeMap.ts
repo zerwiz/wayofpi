@@ -141,3 +141,9 @@ export function applyExtensionDefaults(fileUrl: string, ctx: ExtensionContext): 
 	applyExtensionTheme(fileUrl, ctx);
 	applyExtensionTitle(ctx);
 }
+
+// No-op extension factory so Pi accepts this helper as a valid extension.
+// Real extensions import and call applyExtensionDefaults in their session_start.
+export default function _themeMapExtension(): void {
+  // intentionally empty
+}

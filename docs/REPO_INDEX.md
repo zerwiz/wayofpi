@@ -3,7 +3,7 @@
 This is a **map** of the Pi extension playground: **what each area is for** and **where it lives**.  
 **Playground root** on this machine: **`/home/zerwiz/.pi`** (same as the Git repo root when you `cd` here).
 
-For narrative docs, start at **[README.md](README.md)** (this folder) or root **[README.md](../README.md)**.
+For narrative docs, start at **[README.md](README.md)** (this folder) or root **[README.md](../README.md)**. For an explanation of what “the playground” means here, see **[PLAYGROUND.md](PLAYGROUND.md)**.
 
 ---
 
@@ -18,8 +18,10 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 | **`projects/_template/`** | **Copy contents** into `projects/<slug>/` when starting a new tracked effort. **`project-scanner`** agent automates scan + fill (see **`.pi/agents/project-scanner.md`**, team **`new-project`**). |
 | **`docs/`** | Human-written guides (memory, extensions, agents, integrations, **this index**). |
 | **`specs/`** | Feature **specifications** for extensions; may be ahead of or beside the code—check status banners in each file. |
-| **`.cursor/rules/`** | Cursor rules: **`pi-extensions-context.mdc`** (always-on), **`pi-extensions.mdc`** (extension `*.ts`), **`pi-projects-docs.mdc`** (project docs), **`pi-docs-core.mdc`** (`docs/TOOLS.md`, `SKILLS.md`, `AGENTS.md`, `AGENT_TEAMS.md`). |
+| **`.cursor/rules/`** | Cursor rules: **`pi-extensions-context.mdc`** (always-on), **`pi-extensions.mdc`** (extension `*.ts`), **`pi-projects-docs.mdc`** (project docs), **`pi-docs-core.mdc`** (core concept docs), **`pi-documentation-consistency.mdc`** (`docs/**/*.md`, README, CHANGELOG, etc.). |
 | **`justfile`** | **`just`** recipes: Pi stacks, Honcho/Hermes helpers, extension launchers. |
+| **`install-global`** | Executable: symlinks **`ppi`** / **`pi-e`** / **`ppi-*`** into **`~/.local/bin`** — **no `just` required** (same as **`scripts/install-ppi-global.sh`**). |
+| **`scripts/`** | **`ppi`** launcher + **`install-ppi-global.sh`** → global **`PATH`** shortcuts for all `just` recipes; see **[scripts/README.md](../scripts/README.md)**. |
 | **`package.json`** / **`bun.lock`** | Node/Bun dependencies for the repo (extensions dev). |
 | **`CLAUDE.md`** | Short **agent conventions** (Bun, `just`, shim pattern). |
 | **`README.md`** | Main **boot doc**: prerequisites, extension table, structure overview. |
@@ -38,12 +40,13 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 | **`.pi/settings.json`** | Theme, extension list, prompts, packages—**what Pi loads** for this project. |
 | **`.pi/extensions/*.ts`** | **Shims** only: `export { default } from "../../extensions/…"`. Pi loads **these** as extensions. **Do not** put non-extensions (e.g. `themeMap.ts`) here. |
 | **`.pi/agents/`** | **Agent definitions** (`.md` personas), **`teams.yaml`**, **`agent-chain.yaml`**, **`teams-presets.json`**, **`pi-pi/`** experts. |
-| **`.pi/skills/`** | **Skills** (`<name>/SKILL.md`), e.g. **`bowser/`**, **`ralph/`**. Discovered by Pi per **[SKILLS.md](SKILLS.md)**. |
+| **`.pi/skills/`** | **Skills** (`<name>/SKILL.md`), e.g. **`bowser/`**, **`github/`**, **`indexer/`**, **`ralph/`**. Discovered by Pi per **[SKILLS.md](SKILLS.md)**. |
 | **`.pi/themes/`** | JSON themes (e.g. for **theme-cycler**). |
 | **`.pi/damage-control-rules.yaml`** | Rules for **damage-control** extension (paths / bash patterns). |
 | **`.pi/agent-sessions/`** | Ephemeral state for **subagent / team** sessions (**gitignored**). |
 | **`.pi/storage/sessions/`** | **Session-saver** JSON snapshots (**gitignored**). |
 | **`.pi/chronicle/ledger.json`** | **Chronicle** workflow ledger (**gitignored** in default setup). |
+| **`.pi/tilldone-checklist.md`** | **TillDone** extension: auto-generated task checklist (checkbox markdown). **Overwritten** when the **`tilldone`** tool changes state; tool state is authoritative. |
 
 ---
 
@@ -73,6 +76,7 @@ Rule file: **`.cursor/rules/pi-projects-docs.mdc`**.
 | **`agent/AGENTS.md`** | Injected into Pi **[Context]** for this agent dir—policy, pointers to **`docs/`**. |
 | **`agent/sessions/`** | **Chat JSONL** and session data (**gitignored**—do not commit transcripts). |
 | **`agent/settings.json`** | May override or extend Pi settings for this install (if present). |
+| **`agent/models.json`** | **Ollama** (`ollama list`) + merged **OpenRouter** (`OPENROUTER_API_KEY`); see [`models.md`](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/models.md). |
 | **`agent/auth.json`** | Credentials (**gitignored** template pattern in `.gitignore`). |
 
 ---
@@ -85,7 +89,8 @@ All guides are listed in **`docs/README.md`**. Highlights:
 |------|-----|
 | Memory | **[AGENT_MEMORY.md](AGENT_MEMORY.md)**, **[SYSTEM.md](SYSTEM.md)** |
 | Extensions | **[EXTENSIONS.md](EXTENSIONS.md)** |
-| Agents / teams | **[AGENTS.md](AGENTS.md)**, **[AGENT_TEAMS.md](AGENT_TEAMS.md)** |
+| Agents / teams | **[AGENTS.md](AGENTS.md)**, **[AGENT_TEAMS.md](AGENT_TEAMS.md)**, **[HOW_TO_USE_AGENTS.md](HOW_TO_USE_AGENTS.md)** |
+| Planning | **[PLAN_AWESOME_CODEX_SUBAGENTS.md](PLAN_AWESOME_CODEX_SUBAGENTS.md)** (Codex subagents → Pi), **[PLAN_AGENT_MODEL_ROUTING.md](PLAN_AGENT_MODEL_ROUTING.md)** (model routing) |
 | Skills / tools / concepts | **[SKILLS.md](SKILLS.md)**, **[TOOLS.md](TOOLS.md)**, **[CONCEPTS.md](CONCEPTS.md)** |
 | Hermes / Honcho | **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)**, **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**, **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)** |
 
