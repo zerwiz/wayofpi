@@ -16,6 +16,7 @@
  * - Widget:  prominent "current task" display (the inprogress task)
  * - Status:  compact summary in the status line
  * - /tilldone:  interactive overlay with full task details
+ * - Disk: `.pi/tilldone-checklist.md` — Markdown checklists synced for handoffs / `read`
  *
  * Usage: pi -e extensions/tilldone.ts
  */
@@ -25,6 +26,8 @@ import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-cod
 import { DynamicBorder } from "@mariozechner/pi-coding-agent";
 import { Container, matchesKey, Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { applyExtensionDefaults } from "./themeMap.ts";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -53,6 +56,85 @@ const TillDoneParams = Type.Object({
 	description: Type.Optional(Type.String({ description: "List description (for new-list)" })),
 	id: Type.Optional(Type.Number({ description: "Task ID (for toggle/remove/update)" })),
 });
+
+const TILLDONE_CHECKLIST_FILENAME = "tilldone-checklist.md";
+
+function escapeChecklistText(s: string): string {
+	return s.replace(/\r?\n/g, " ").trim();
+}
+
+function renderTillDoneChecklistMd(
+	cwd: string,
+	taskList: Task[],
+	title: string | undefined,
+	description: string | undefined,
+	nextTaskId: number,
+): string {
+	const iso = new Date().toISOString();
+	const lines: string[] = [
+		"# TillDone checklist",
+		"",
+		"> **Auto-generated** by the **`tilldone`** extension whenever the task list changes. Use this file for planning, session handoffs, and checkbox-style progress. **The TillDone tool state is authoritative** — this file is overwritten on each update; do not treat manual checkbox edits as syncing back into TillDone.",
+		"",
+		`- **Updated (UTC):** ${iso}`,
+		`- **Workspace:** \`${cwd}\``,
+		`- **Next task id:** ${nextTaskId}`,
+		"",
+	];
+
+	if (title) {
+		lines.push(`## List: ${title}`, "");
+	}
+	if (description) {
+		lines.push(description, "");
+	}
+
+	lines.push(
+		"## Legend",
+		"",
+		"- `[x]` — done",
+		"- `[ ]` — idle",
+		"- **▶ in progress** — the active task (at most one)",
+		"",
+		"## Tasks",
+		"",
+	);
+
+	if (taskList.length === 0) {
+		lines.push("*No tasks. Use `tilldone add` or `tilldone new-list`.*", "");
+	} else {
+		const sorted = [...taskList].sort((a, b) => a.id - b.id);
+		for (const t of sorted) {
+			const text = escapeChecklistText(t.text);
+			if (t.status === "done") {
+				lines.push(`- [x] **#${t.id}** ${text}`);
+			} else if (t.status === "inprogress") {
+				lines.push(`- [ ] **▶ in progress · #${t.id}** ${text}`);
+			} else {
+				lines.push(`- [ ] **#${t.id}** ${text}`);
+			}
+		}
+		lines.push("");
+	}
+
+	const done = taskList.filter((t) => t.status === "done").length;
+	const active = taskList.filter((t) => t.status === "inprogress").length;
+	const idle = taskList.filter((t) => t.status === "idle").length;
+
+	lines.push(
+		"## Progress summary",
+		"",
+		"| Status | Count |",
+		"|--------|-------|",
+		`| Done | ${done} |`,
+		`| In progress | ${active} |`,
+		`| Idle | ${idle} |`,
+		`| **Total** | **${taskList.length}** |`,
+		"",
+	);
+
+	return lines.join("\n");
+}
 
 // ── Status helpers ─────────────────────────────────────────────────────
 
@@ -162,6 +244,18 @@ export default function (pi: ExtensionAPI) {
 	let listTitle: string | undefined;
 	let listDescription: string | undefined;
 	let nudgedThisCycle = false;
+
+	const syncTillDoneChecklistToDisk = (ctx: ExtensionContext) => {
+		try {
+			const cwd = ctx.cwd;
+			mkdirSync(join(cwd, ".pi"), { recursive: true });
+			const outPath = join(cwd, ".pi", TILLDONE_CHECKLIST_FILENAME);
+			const md = renderTillDoneChecklistMd(cwd, tasks, listTitle, listDescription, nextId);
+			writeFileSync(outPath, md, "utf-8");
+		} catch {
+			/* readonly fs or invalid cwd */
+		}
+	};
 
 	// ── Snapshot for details ───────────────────────────────────────────
 
@@ -295,6 +389,7 @@ export default function (pi: ExtensionAPI) {
 
 		refreshWidget(ctx);
 		refreshFooter(ctx);
+		syncTillDoneChecklistToDisk(ctx);
 	};
 
 	// ── State reconstruction from session ──────────────────────────────
@@ -330,10 +425,18 @@ export default function (pi: ExtensionAPI) {
 	pi.on("session_fork", async (_event, ctx) => reconstructState(ctx));
 	pi.on("session_tree", async (_event, ctx) => reconstructState(ctx));
 
-	// ── Blocking gate ──────────────────────────────────────────────────
+	// ── Blocking gate (opt-in via env) ─────────────────────────────────
+
+	const enforceGate = process.env.TILLDONE_ENFORCE === "1";
 
 	pi.on("tool_call", async (event, _ctx) => {
+		// Always allow the tilldone tool itself.
 		if (event.toolName === "tilldone") return { block: false };
+
+		// By default, do not block tools – only enforce if user explicitly opts in.
+		if (!enforceGate) {
+			return { block: false };
+		}
 
 		const pending = tasks.filter((t) => t.status !== "done");
 		const active = tasks.filter((t) => t.status === "inprogress");
@@ -341,19 +444,22 @@ export default function (pi: ExtensionAPI) {
 		if (tasks.length === 0) {
 			return {
 				block: true,
-				reason: "🚫 No TillDone tasks defined. You MUST use `tilldone new-list` or `tilldone add` to define your tasks before using any other tools. Plan your work first!",
+				reason:
+					"🚫 No TillDone tasks defined. You MUST use `tilldone new-list` or `tilldone add` to define your tasks before using any other tools. Plan your work first!",
 			};
 		}
 		if (pending.length === 0) {
 			return {
 				block: true,
-				reason: "🚫 All TillDone tasks are done. You MUST use `tilldone add` for new tasks or `tilldone new-list` to start a fresh list before using any other tools.",
+				reason:
+					"🚫 All TillDone tasks are done. You MUST use `tilldone add` for new tasks or `tilldone new-list` to start a fresh list before using any other tools.",
 			};
 		}
 		if (active.length === 0) {
 			return {
 				block: true,
-				reason: "🚫 No task is in progress. You MUST use `tilldone toggle` to mark a task as inprogress before doing any work.",
+				reason:
+					"🚫 No task is in progress. You MUST use `tilldone toggle` to mark a task as inprogress before doing any work.",
 			};
 		}
 
@@ -397,7 +503,8 @@ export default function (pi: ExtensionAPI) {
 			"Actions: new-list (text=title, description), add (text or texts[] for batch), toggle (id) — cycles idle→inprogress→done, remove (id), update (id + text), list, clear. " +
 			"Always toggle a task to inprogress before starting work on it, and to done when finished. " +
 			"Use new-list to start a themed list with a title and description. " +
-			"IMPORTANT: If the user's new request does not fit the current list's theme, use clear to wipe the slate and new-list to start fresh.",
+			"IMPORTANT: If the user's new request does not fit the current list's theme, use clear to wipe the slate and new-list to start fresh. " +
+			"A Markdown checklist is written to `.pi/tilldone-checklist.md` on each update (for handoffs; tool state is authoritative).",
 		parameters: TillDoneParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {

@@ -1,0 +1,18 @@
+{
+  "extensions": [
+    "/home/zerwiz/.pi/.pi/extensions/minimal.ts",
+    "/home/zerwiz/.pi/.pi/extensions/session-memory.ts",
+    "/home/zerwiz/.pi/.pi/extensions/session-saver.ts",
+    "/home/zerwiz/.pi/.pi/extensions/agent-team.ts",
+    "/home/zerwiz/.pi/.pi/extensions/system-select.ts",
+    "/home/zerwiz/.pi/.pi/extensions/ralph.ts",
+    "/home/zerwiz/.pi/.pi/extensions/chronicle.ts",
+    "/home/zerwiz/.pi/.pi/extensions/damage-control.ts"
+  ],
+  "skills": [
+    "/home/zerwiz/.pi/.pi/skills"
+  ],
+  "prompts": [
+    "/home/zerwiz/.pi/.claude/commands"
+  ]
+}

@@ -34,14 +34,26 @@ Your **Pi build** may expose **additional** built-ins (often behind flags or def
 
 ---
 
-## 3. Extension-registered tools
+## 3. Extension-registered tools (this repo)
 
-Extensions call **`pi.registerTool({ … })`** to add **LLM-callable** tools (name, description, parameters, handler). Examples in this repo include **`agent-team`** (`dispatch_agent`, `team_*`, …), **`chronicle`**, **`agent-forge`**, etc.
+Extensions call **`pi.registerTool({ … })`** to add **LLM-callable** tools. They register when the extension loads and only appear if that extension is active.
 
-- **Lifecycle:** Registered when the extension loads; available while that extension is active.
-- **Discovery:** The model only sees tools Pi attaches to the **active tool set** for the session.
+| Extension module | Tool names |
+| ---------------- | ---------- |
+| **`extensions/tilldone.ts`** | **`tilldone`** |
+| **`extensions/chronicle.ts`** | **`chronicle_status`**, **`chronicle_snapshot`**, **`chronicle_transition`** |
+| **`extensions/ralph.ts`** | **`ralph_queue_status`** |
+| **`extensions/agent-team.ts`** | **`dispatch_agent`**, **`team_list`**, **`team_member_add`**, **`team_member_remove`**, **`team_member_replace`**, **`team_reload_agents`**, **`team_activate`**, **`team_save_preset`**, **`team_load_preset`**, **`team_delete_preset`** |
+| **`extensions/agent-forge.ts`** | **`forge_list`**, **`forge_create`** — forged tools are separate `extensions/forge-*.ts` modules after **`forge_create`** + shim + **`/reload`** (each registers one dynamically named tool). |
+| **`extensions/agent-chain.ts`** | **`run_chain`** |
+| **`extensions/pi-pi.ts`** | **`query_experts`** |
+| **`extensions/subagent-widget.ts`** | **`subagent_create`**, **`subagent_continue`**, **`subagent_remove`**, **`subagent_list`** |
 
-Authoring details: **[EXTENSIONS.md](EXTENSIONS.md)** (table under “Through `ExtensionAPI`”).
+**Other extension files** in this playground (**`cross-agent`**, **`damage-control`**, **`dynamic-loader`**, **`extension-picker`**, **`minimal`**, **`purpose-gate`**, **`pure-focus`**, **`session-memory`**, **`session-replay`**, **`sessions/index`**, **`system-select`**, **`theme-cycler`**, **`tool-counter`**, **`tool-counter-widget`**) do **not** register additional LLM tools in the current code (commands, hooks, UI, or policy only).
+
+*When you add **`registerTool`** to an extension, update this table.*
+
+Authoring: **[EXTENSIONS.md](EXTENSIONS.md)**.
 
 ---
 
@@ -53,7 +65,7 @@ Authoring details: **[EXTENSIONS.md](EXTENSIONS.md)** (table under “Through `E
 tools: read,grep,find,ls
 ```
 
-Orchestration extensions (**`agent-team`**, **`agent-chain`**, **`system-select`**, …) use this to spawn or switch sessions so a specialist **cannot** call tools outside that set (pattern varies by extension; see **[AGENTS.md](AGENTS.md)**).
+Orchestration extensions (**`agent-team`**, **`agent-chain`**, **`system-select`**, …) use this to spawn or switch sessions so a specialist **cannot** call tools outside that set (pattern varies by extension; see **[AGENTS.md](AGENTS.md)**). The **`agent-team`** **dispatcher** (main session) additionally gets built-in **`read`**, **`ls`**, and **`grep`** via **`setActiveTools`** for **verification** after a specialist run—see **[AGENT_TEAMS.md](AGENT_TEAMS.md)** §4.
 
 That does **not** define a new tool—it **filters** which existing tools the session may use.
 

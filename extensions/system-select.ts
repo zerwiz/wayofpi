@@ -2,7 +2,7 @@
  * System Select — Switch the system prompt via /system
  *
  * Scans .pi/agents/, .claude/agents/, .gemini/agents/, .codex/agents/
- * (project-local and global) for agent definition .md files.
+ * (project-local and global) recursively for agent definition .md files.
  *
  * /system opens a select dialog to pick a system prompt. The selected
  * agent's body is prepended to Pi's default instructions so tool usage
@@ -13,10 +13,11 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join, basename } from "node:path";
 import { homedir } from "node:os";
 import { applyExtensionDefaults } from "./themeMap.ts";
+import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
 
 interface AgentDef {
 	name: string;
@@ -41,12 +42,11 @@ function scanAgents(dir: string, source: string): AgentDef[] {
 	if (!existsSync(dir)) return [];
 	const agents: AgentDef[] = [];
 	try {
-		for (const file of readdirSync(dir)) {
-			if (!file.endsWith(".md")) continue;
-			const raw = readFileSync(join(dir, file), "utf-8");
+		for (const fullPath of collectAgentMarkdownFiles(dir)) {
+			const raw = readFileSync(fullPath, "utf-8");
 			const { fields, body } = parseFrontmatter(raw);
 			agents.push({
-				name: fields.name || basename(file, ".md"),
+				name: fields.name || basename(fullPath, ".md"),
 				description: fields.description || "",
 				tools: fields.tools ? fields.tools.split(",").map((t) => t.trim()) : [],
 				body: body.trim(),

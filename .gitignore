@@ -24,3 +24,12 @@ storage/sessions/
 .playwright-cli/
 
 tmp/
+
+# Local / vendored reference dumps (import scripts may use a path outside the repo)
+ref/
+
+# Pi UI state under repo root (not `.pi/storage/`)
+storage/
+
+# Chronicle ledger at repo root (session metadata)
+chronicle/

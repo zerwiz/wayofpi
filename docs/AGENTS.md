@@ -19,25 +19,75 @@ Example (truncated):
 ```markdown
 ---
 name: planner
-description: Architecture and implementation planning
-tools: read,grep,find,ls
+description: Writes structured plans under plans/ for other agents to read
+tools: read,write,edit,grep,find,ls,bash
 ---
-You are a planner agent. Analyze requirements...
+You are a planner agent. Analyze requirements, recon the repo, then write plans/PLAN-…md …
 ```
 
 This is **not** the same as a Pi **extension** (`.ts` code) or a **skill** (`SKILL.md` workflow). Agents are **prompt + metadata** consumed by orchestration extensions. See **[CONCEPTS.md](CONCEPTS.md)** for a four-way comparison including **tools**; **[TOOLS.md](TOOLS.md)** for how tool allowlists relate to built-ins and extensions.
 
-### Built-in specialist: `project-scanner`
+### Agent inventory (`.pi/agents/`)
 
-**File:** `.pi/agents/project-scanner.md`
+| `name` | File | Summary |
+| ------ | ---- | ------- |
+| **planner** | [`planner.md`](../.pi/agents/planner.md) | Writes **`plans/PLAN-YYYYMMDD-<slug>.md`** (structured steps, handoff); tools include **`write`/`edit`**. |
+| **builder** | [`builder.md`](../.pi/agents/builder.md) | Implementation and code generation. |
+| **scout** | [`scout.md`](../.pi/agents/scout.md) | Fast recon and codebase exploration (no file edits). |
+| **reviewer** | [`reviewer.md`](../.pi/agents/reviewer.md) | Code review and quality checks (no direct edits). |
+| **documenter** | [`documenter.md`](../.pi/agents/documenter.md) | **Reads** existing docs, reconciles with code, **`edit`**/**`write`** to keep READMEs and **`docs/`** current. |
+| **code-documenter** | [`code-documenter.md`](../.pi/agents/code-documenter.md) | **Reads** source, **reviews** for a doc pass; **`edit`**/**`write`** **comments / TSDoc / technical `.md` only**—no logic or tests. |
+| **red-team** | [`red-team.md`](../.pi/agents/red-team.md) | Security and adversarial testing (no direct edits). |
+| **plan-reviewer** | [`plan-reviewer.md`](../.pi/agents/plan-reviewer.md) | Critiques and validates implementation plans. |
+| **bowser** | [`bowser.md`](../.pi/agents/bowser.md) | Playwright CLI / headless browser automation (`skills: playwright-bowser`). |
+| **hermes** | [`hermes.md`](../.pi/agents/hermes.md) | **`bash`** invokes **Hermes CLI** (`hermes chat -q … -Q`); relays **stdout** reply. Teams **`hermes`**, **`info`** (not **`full`**—see **`.pi/agents/teams.yaml`**). See **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** §7. |
+| **project-scanner** | [`project-scanner.md`](../.pi/agents/project-scanner.md) | Scans a workspace and fills **`projects/<slug>/`** in this repo from **`projects/_template/`** (teams **`new-project`**, **`full`**, **`info`**). |
+| **indexer** | [`indexer.md`](../.pi/agents/indexer.md) | Writes **`INDEX.md`** at a requested path: tree + per-file purpose map; skill [`indexer/SKILL.md`](../.pi/skills/indexer/SKILL.md); teams **`index`**, **`full`**, **`info`**, **`new-project`**. |
+| **ralph** | [`ralph.md`](../.pi/agents/ralph.md) | **HTML ticket queue** `todo→inprogress→done`; may **`RALPH_ESCALATE`** to **`scout`/`planner`/`builder`/`reviewer`/`code-documenter`/`documenter`**; skill [`ralph/SKILL.md`](../.pi/skills/ralph/SKILL.md); extension **`ralph_queue_status`**. |
 
-Bootstraps **`/home/zerwiz/.pi/projects/<slug>/`** from **`projects/_template/`** after scanning a user-supplied workspace (README, manifests, layout). Use at the **start of every new codebase** tracked in Pi, or follow the same steps manually per **`.cursor/rules/pi-projects-docs.mdc`**. Teams: **`new-project`** (scanner only); also listed under **`full`** and **`info`**.
+#### Domain specialist agents (ported into `.pi/agents/`)
 
-### Built-in specialist: `ralph`
+This repo includes a library of **domain specialist agents** under **`.pi/agents/domain-specialists/`**, organized by the 01–10 category folders:
 
-**File:** `.pi/agents/ralph.md`
+- `01-core-development`
+- `02-language-specialists`
+- `03-infrastructure`
+- `04-quality-security`
+- `05-data-ai`
+- `06-developer-experience`
+- `07-specialized-domains`
+- `08-business-product`
+- `09-meta-orchestration`
+- `10-research-analysis`
 
-Processes **`.txt`** tickets in **`todo/` → `inprogress/` → `done/`**, producing **one HTML file** per ticket with minimal filesystem scope. Team **`ralph`** also includes **`scout`**, **`planner`**, **`reviewer`** for dispatcher-assisted exploration, planning, and review; Ralph may emit **`RALPH_ESCALATE`** when blocked in headless mode. Extension: **`ralph_queue_status`**, **`/ralph`**. See **`.pi/skills/ralph/SKILL.md`**.
+Each agent file is a normal Pi agent markdown with:
+
+- `name`: prefixed to avoid collisions (examples: `infra-azure-infra-engineer`, `lang-erlang-expert`, `quality-code-reviewer`)
+- `description`: short summary
+- `tools`: mapped from the agent’s sandbox intent
+- Body: the agent’s **full instruction text** (so it keeps working even if the `ref/` folder is deleted)
+
+**How to use:**
+
+- With **`system-select`**: run `/system` and pick a specialist agent by `name`.
+- With **`agent-team`**: add the specialist agent `name` into `teams.yaml` rosters/presets so the dispatcher can call them.
+
+**`pi-pi/` meta-experts** (used by the **`pi-pi`** team; `dispatch_agent` targets by **`name`**):
+
+| `name` | File | Summary |
+| ------ | ---- | ------- |
+| **pi-orchestrator** | [`pi-pi/pi-orchestrator.md`](../.pi/agents/pi-pi/pi-orchestrator.md) | Coordinates experts and builds Pi components. |
+| **ext-expert** | [`pi-pi/ext-expert.md`](../.pi/agents/pi-pi/ext-expert.md) | Extensions: tools, events, commands, shortcuts, state. |
+| **theme-expert** | [`pi-pi/theme-expert.md`](../.pi/agents/pi-pi/theme-expert.md) | Themes: JSON tokens, vars, distribution. |
+| **tui-expert** | [`pi-pi/tui-expert.md`](../.pi/agents/pi-pi/tui-expert.md) | TUI components, widgets, overlays, footers. |
+| **prompt-expert** | [`pi-pi/prompt-expert.md`](../.pi/agents/pi-pi/prompt-expert.md) | Prompt templates: `.md` format, `/template`, discovery. |
+| **config-expert** | [`pi-pi/config-expert.md`](../.pi/agents/pi-pi/config-expert.md) | `settings.json`, providers, models, packages, keybindings. |
+| **cli-expert** | [`pi-pi/cli-expert.md`](../.pi/agents/pi-pi/cli-expert.md) | Pi CLI flags, env, non-interactive modes. |
+| **keybinding-expert** | [`pi-pi/keybinding-expert.md`](../.pi/agents/pi-pi/keybinding-expert.md) | Shortcuts, `registerShortcut`, `keybindings.json`. |
+| **skill-expert** | [`pi-pi/skill-expert.md`](../.pi/agents/pi-pi/skill-expert.md) | Skills: `SKILL.md`, validation, `/skill:name`. |
+| **agent-expert** | [`pi-pi/agent-expert.md`](../.pi/agents/pi-pi/agent-expert.md) | Agent `.md` frontmatter, `teams.yaml`, agent-team sessions. |
+
+Rosters reference these `name` values in **`.pi/agents/teams.yaml`**; see **[AGENT_TEAMS.md](AGENT_TEAMS.md)**. YAML/JSON there (e.g. **`agent-chain.yaml`**) are **not** agents—they are pipeline/team config.
 
 ---
 
@@ -49,7 +99,11 @@ Extensions that scan the filesystem typically look under the **project cwd** (th
 |-----------|-------------|
 | **`agents/`** | Repo-root agent markdown (if present) |
 | **`.claude/agents/`** | Shared with Claude-style layouts |
-| **`.pi/agents/`** | **Primary** location in this playground (e.g. `planner.md`, `teams.yaml`) |
+| **`.pi/agents/`** | **Primary** location in this playground (e.g. `planner.md`, `teams.yaml`, and subfolders like **`domain-specialists/`**) |
+
+`agent-team`, `agent-chain`, `system-select`, and `cross-agent` scan these directories **recursively** for `*.md` agent files (nested paths like `.pi/agents/domain-specialists/03-infrastructure/infra-azure-infra-engineer.md` are loaded).
+
+**Path check:** If your repo root is `~/.pi`, agent files live under **`~/.pi/.pi/agents/`** (note the inner **`.pi`**). That is **not** the same as repo-root **`~/agents/`** (some setups use a top-level `agents/` folder instead).
 
 Some extensions also consult **global** paths under the user home (e.g. **`system-select`** may include `.claude/agents/`, `.gemini/agents/`, `.codex/agents/`).
 

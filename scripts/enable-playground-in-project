@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Opt-in: use this Pi playground's extensions/skills/prompts in another project.
+#
+# It creates <project>/.pi/settings.json pointing at /home/zerwiz/.pi resources.
+# Safe behavior:
+# - If <project>/.pi/settings.json already exists, we do NOT overwrite it.
+#   We instead write <project>/.pi/settings.playground.json for manual merge.
+#
+# Usage:
+#   ~/.pi/scripts/enable-playground-in-project [/abs/path/to/project]
+#
+set -euo pipefail
+
+PLAYGROUND="/home/zerwiz/.pi"
+TARGET="${1:-$PWD}"
+
+if ! command -v pi >/dev/null 2>&1; then
+  echo "enable-playground-in-project: 'pi' is not on PATH" >&2
+  exit 127
+fi
+
+if [[ ! -d "$TARGET" ]]; then
+  echo "enable-playground-in-project: target is not a directory: $TARGET" >&2
+  exit 2
+fi
+
+mkdir -p "$TARGET/.pi"
+
+OUT="$TARGET/.pi/settings.json"
+ALT="$TARGET/.pi/settings.playground.json"
+
+payload() {
+  cat <<EOF
+{
+  "extensions": [
+    "${PLAYGROUND}/.pi/extensions/minimal.ts",
+    "${PLAYGROUND}/.pi/extensions/session-memory.ts",
+    "${PLAYGROUND}/.pi/extensions/session-saver.ts",
+    "${PLAYGROUND}/.pi/extensions/agent-team.ts",
+    "${PLAYGROUND}/.pi/extensions/system-select.ts",
+    "${PLAYGROUND}/.pi/extensions/ralph.ts",
+    "${PLAYGROUND}/.pi/extensions/chronicle.ts",
+    "${PLAYGROUND}/.pi/extensions/damage-control.ts"
+  ],
+  "skills": [
+    "${PLAYGROUND}/.pi/skills"
+  ],
+  "prompts": [
+    "${PLAYGROUND}/.claude/commands"
+  ]
+}
+EOF
+}
+
+if [[ -f "$OUT" ]]; then
+  payload > "$ALT"
+  echo "Wrote: $ALT"
+  echo "Note: $OUT already exists; merge manually if desired."
+  exit 0
+fi
+
+payload > "$OUT"
+echo "Wrote: $OUT"

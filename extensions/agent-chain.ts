@@ -26,8 +26,9 @@ import { Type } from "@sinclair/typebox";
 import { Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { spawn } from "child_process";
 import { readFileSync, existsSync, readdirSync, mkdirSync, unlinkSync } from "fs";
-import { join, resolve } from "path";
+import { join } from "path";
 import { applyExtensionDefaults } from "./themeMap.ts";
+import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
 
 // ── Types ────────────────────────────────────────
 
@@ -169,17 +170,12 @@ function scanAgentDirs(cwd: string): Map<string, AgentDef> {
 	const agents = new Map<string, AgentDef>();
 
 	for (const dir of dirs) {
-		if (!existsSync(dir)) continue;
-		try {
-			for (const file of readdirSync(dir)) {
-				if (!file.endsWith(".md")) continue;
-				const fullPath = resolve(dir, file);
-				const def = parseAgentFile(fullPath);
-				if (def && !agents.has(def.name.toLowerCase())) {
-					agents.set(def.name.toLowerCase(), def);
-				}
+		for (const fullPath of collectAgentMarkdownFiles(dir)) {
+			const def = parseAgentFile(fullPath);
+			if (def && !agents.has(def.name.toLowerCase())) {
+				agents.set(def.name.toLowerCase(), def);
 			}
-		} catch {}
+		}
 	}
 
 	return agents;

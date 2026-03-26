@@ -44,3 +44,4 @@ These appeared in an earlier snapshot of this doc—**replace** with yours:
 
 - **[docs/README.md](README.md)** — full doc index  
 - Root **`justfile`** — `honcho-*`, `hermes-*` recipes  
+- **Pi agent `hermes`** — **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** §7 (**`dispatch_agent`**, **`hermes chat -q`**)

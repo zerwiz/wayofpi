@@ -9,6 +9,11 @@ default:
 pi:
     pi
 
+# 1b. Pi with model cycle: OpenRouter :free first, then OpenRouter paid, Ollama, OpenAI last
+#     (Pi /model sorts providers A–Z so openai appears before openrouter; --models fixes Ctrl+P order.)
+pi-cycle-or-free-first:
+    pi --models "openrouter/google/gemma-3-4b-it:free,openrouter/google/gemma-3n-e2b-it:free,openrouter/meta-llama/llama-3.3-70b-instruct:free,openrouter/qwen/qwen3-4b:free,openrouter/openai/gpt-oss-20b:free,openrouter/google/gemini-3-flash-preview,openrouter/anthropic/claude-sonnet-4,ollama/qwen3.5:9b,openai/gpt-4o-mini"
+
 # 2. Pure focus pi: strip footer and status line entirely
 ext-pure-focus:
     pi -e extensions/pure-focus.ts
@@ -127,6 +132,10 @@ hermes-honcho-setup:
 
 # utils
 
+# Symlink ppi / pi-e / ppi-* into ~/.local/bin (same as ./install-global at repo root)
+install-global:
+    @./scripts/install-ppi-global.sh
+
 # pi-e: interactive multi-select for stacked `pi -e ...` in one session
 #
 # Use: `just pi-e`
@@ -136,6 +145,7 @@ pi-e:
     set -euo pipefail
 
     options=(
+        "enable-playground-resources|__ENABLE_PLAYGROUND__"
         "pure-focus|extensions/pure-focus.ts"
         "minimal|extensions/minimal.ts"
         "theme-cycler|extensions/theme-cycler.ts"
@@ -185,6 +195,12 @@ pi-e:
     add_file() {
         local f="$1"
         if [[ -z "$f" ]]; then return; fi
+        # Pseudo-option: enable this playground's resources (extensions/skills/prompts)
+        # in the current project by writing .pi/settings.json (opt-in).
+        if [[ "$f" == "__ENABLE_PLAYGROUND__" ]]; then
+            "$HOME/.pi/scripts/enable-playground-in-project" "$PWD"
+            return
+        fi
         if [[ -z "${seen[$f]+x}" ]]; then
             seen["$f"]=1
             pi_args+=(-e "$f")

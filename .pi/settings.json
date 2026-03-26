@@ -5,12 +5,14 @@
   ],
   "extensions": [
     ".pi/extensions/minimal.ts",
+    ".pi/extensions/theme-cycler.ts",
     ".pi/extensions/session-memory.ts",
     ".pi/extensions/extension-picker.ts",
     ".pi/extensions/session-saver.ts",
     ".pi/extensions/chronicle.ts",
     ".pi/extensions/agent-forge.ts",
     ".pi/extensions/dynamic-loader.ts",
-    ".pi/extensions/ralph.ts"
+    ".pi/extensions/ralph.ts",
+    ".pi/extensions/github-management.ts"
   ]
 }
