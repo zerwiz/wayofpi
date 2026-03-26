@@ -1,12 +1,14 @@
-# pi-vs-cc
+# Pi extension playground
 
-A collection of [Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent) customized instances. _Why?_ To showcase what it looks like to hedge against the leader in the agentic coding market, Claude Code. Here we showcase how you can customize the UI, agent orchestration tools, safety auditing, and cross-agent integrations.
+This repo is a **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** workspace: extensions, skills, agents, and docs for customizing the **UI**, **agent orchestration**, **safety auditing**, and **cross-agent** integrations.
 
-**This repository also includes:** a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **`project-scanner`** and **`ralph`** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for **branches + git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
+**This repository also includes:** a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **project-scanner** and **ralph** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for branches + **git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
 
-<div align="center">
-  <img src="./images/pi-logo.png" alt="pi-vs-cc" width="700">
-</div>
+<p align="center">
+  <img src="./images/pi-logo.svg" alt="Pi Coding Agent extension playground" width="520">
+  <br>
+  <strong>Pi extension playground</strong>
+</p>
 
 ---
 
@@ -91,8 +93,10 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 
 | Topic | Doc |
 | ----- | --- |
+| **Playground vs other repos** (opt-in toolbox) | **[docs/PLAYGROUND.md](docs/PLAYGROUND.md)** |
 | **TUI** (thinking toggle, tools expand, keyboard shortcuts) | **[docs/TUI.md](docs/TUI.md)** |
 | **Repo map** (folders, gitignored paths, `projects/_template`) | **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** |
+| **How to use** agents / extensions / skills / tools | **[docs/HOW_TO_USE_AGENTS.md](docs/HOW_TO_USE_AGENTS.md)**, **[docs/HOW_TO_USE_EXTENSIONS.md](docs/HOW_TO_USE_EXTENSIONS.md)**, **[docs/HOW_TO_USE_SKILLS.md](docs/HOW_TO_USE_SKILLS.md)**, **[docs/HOW_TO_USE_TOOLS.md](docs/HOW_TO_USE_TOOLS.md)** |
 | **Skills** (discovery, `/skill:name`, authoring) | **[docs/SKILLS.md](docs/SKILLS.md)** |
 | **Tools** (built-ins + `registerTool` + agent allowlists) | **[docs/TOOLS.md](docs/TOOLS.md)** |
 | **Skills vs agents vs extensions vs tools** | **[docs/CONCEPTS.md](docs/CONCEPTS.md)** |
@@ -113,20 +117,21 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 | ----------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **pure-focus**          | `extensions/pure-focus.ts`          | Removes the footer bar and status line entirely — pure distraction-free mode                                                                               |
 | **minimal**             | `extensions/minimal.ts`             | Compact footer showing model name and a 10-block context usage meter `[###-------] 30%`                                                                    |
-| **cross-agent**         | `extensions/cross-agent.ts`         | Scans `.claude/`, `.gemini/`, `.codex/` dirs for commands, skills, and agents and registers them in Pi                                                     |
+| **cross-agent**         | `extensions/cross-agent.ts`         | Scans `.claude/`, `.gemini/`, `.codex/` dirs for commands, skills, and agents; also lists **`.pi/agents/`** recursively for `@name` discovery                                           |
 | **purpose-gate**        | `extensions/purpose-gate.ts`        | Prompts you to declare session intent on startup; shows a persistent purpose widget and blocks prompts until answered                                      |
 | **tool-counter**        | `extensions/tool-counter.ts`        | Rich two-line footer: model + context meter + token/cost stats on line 1, cwd/branch + per-tool call tally on line 2                                       |
 | **tool-counter-widget** | `extensions/tool-counter-widget.ts` | Live-updating above-editor widget showing per-tool call counts with background colors                                                                      |
 | **subagent-widget**     | `extensions/subagent-widget.ts`     | `/sub <task>` command that spawns background Pi subagents; each gets its own streaming live-progress widget                                                |
 | **tilldone**            | `extensions/tilldone.ts`            | Task discipline — **`tilldone`** tool gates other tools; footer + widget; writes **`.pi/tilldone-checklist.md`** (Markdown `- [ ]` / `- [x]`) on each update for handoffs and agent **`read`** |
-| **agent-team**          | `extensions/agent-team.ts`          | Dispatcher: `dispatch_agent` + **team_*** tools — add/remove/**replace** members, **reload** `.md` defs from disk, switch teams, save/load **`.pi/agents/teams-presets.json`**; grid; **`.pi/agents/teams.yaml`** |
-| **system-select**       | `extensions/system-select.ts`       | `/system` command to interactively switch between agent personas/system prompts from `.pi/agents/`, `.claude/agents/`, `.gemini/agents/`, `.codex/agents/` |
+| **agent-team**          | `extensions/agent-team.ts`          | Dispatcher: `dispatch_agent` + **team_*** tools — add/remove/**replace** members, **reload** nested **`.md`** agent defs (recursive scan of `agents/`, `.claude/agents/`, `.pi/agents/`), switch teams, save/load **`.pi/agents/teams-presets.json`**; grid; **`.pi/agents/teams.yaml`** |
+| **system-select**       | `extensions/system-select.ts`       | **`/system`** — interactive switch between agent personas from `.pi/agents/` (recursive), `.claude/agents/`, `.gemini/agents/`, `.codex/agents/` |
 | **damage-control**      | `extensions/damage-control.ts`      | Real-time safety auditing — intercepts dangerous bash patterns and enforces path-based access controls from `.pi/damage-control-rules.yaml`                |
-| **agent-chain**         | `extensions/agent-chain.ts`         | Sequential pipeline orchestrator — chains multiple agents where each step's output feeds into the next step's prompt; use `/chain` to select and run       |
+| **agent-chain**         | `extensions/agent-chain.ts`         | Sequential pipeline orchestrator — chains multiple agents where each step's output feeds into the next step's prompt; **recursive** agent `.md` scan; use **`/chain`** to select and run |
 | **pi-pi**               | `extensions/pi-pi.ts`               | Meta-agent that builds Pi agents using parallel research experts for documentation                                                                         |
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
 | **extension-picker**    | `extensions/extension-picker.ts`    | **`/extensions`** lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. In the slash menu, **`/ex`** filters to this command. `/remember` and `/memory` for cross-session notes |
+| **github-management**   | `extensions/github-management.ts`   | Thin Pi shim around the **`ghm`** helper — unified **`git` + `gh`** workflows (see **`.pi/tools/github-management.js`**, **`.pi/extensions/github-management.ts`**) |
 | **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Recap lines use **`zerwis`** (you) / **`pi`** (agent)—change in **`extensions/chatLabels.ts`**. Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
 | **session-saver**     | `extensions/sessions/index.ts`     | Auto-save user/assistant turns to JSON; **`/save`**, **`/list`**, **`/show`**, **`/load`** (`.jsonl` uses `switchSession`). See `extensions/sessions/README.md` |
 | **dynamic-loader**    | `extensions/dynamic-loader.ts`     | **`/extension-hint`** — prints stacked **`pi -e`** suggestions for this playground (`PLAYGROUND_BASES` optional) |
@@ -143,9 +148,9 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 
 Pi discovers extensions only under `~/.pi/agent/extensions/` or **project** `.pi/extensions/`, not the repo-root `extensions/` directory (see [upstream docs](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md#extension-locations)).
 
-This repo keeps implementations in **`extensions/`** and adds **thin `.pi/extensions/*.ts` shims** that `export { default } from "../../extensions/…"`. That way Pi only loads real extensions (with a default factory); helper modules like **`themeMap.ts` are not placed under `.pi/extensions/`** (Pi would try to load them as extensions and fail). Entries are listed in **`.pi/settings.json`**. After editing code, run **`/reload`** in Pi. Use **`/extensions`** for the package picker (typing **`/ex`** narrows the menu).
+This repo keeps implementations in **`extensions/`** and adds **thin `.pi/extensions/*.ts` shims** that `export { default } from "../../extensions/…"`. Shared helpers (e.g. **`extensions/agent-dir-scan.ts`**) stay **outside** **`.pi/extensions/`**—only shims and real extension factories belong there. Entries are listed in **`.pi/settings.json`**. After editing code, run **`/reload`** in Pi. Use **`/extensions`** for the package picker (typing **`/ex`** narrows the menu).
 
-Skills belong in **`.pi/skills/<skill-name>/SKILL.md`** (directory name must match frontmatter `name`).
+Skills belong in **`.pi/skills/<skill-name>/SKILL.md`** (directory name must match frontmatter **`name`**). Global skills from **`npx skills add`** often land in **`~/.agents/skills/`**—Pi merges those too; see **[docs/SKILLS.md](docs/SKILLS.md)** §2.
 
 ### Run a single extension
 
@@ -243,7 +248,7 @@ just open purpose-gate minimal tool-counter-widget
 Indexed in **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** (paths, purposes, gitignored dirs, **`projects/_template`** files).
 
 ```
-pi-vs-cc/
+project/
 ├── agent/               # Pi agent dir: AGENTS.md (context), sessions/ (gitignored)
 ├── docs/                # Guides: REPO_INDEX, SKILLS, TOOLS, AGENTS, integrations, …
 ├── extensions/          # Pi extension source (.ts) — one file per extension
@@ -251,13 +256,15 @@ pi-vs-cc/
 │   └── _template/       # README + 00–04 markdown for new slugs
 ├── specs/               # Extension specifications
 ├── .cursor/rules/       # Cursor rules (extensions, project docs, core docs)
+├── scripts/             # ppi, pi-e, import-domain-specialists.cjs, playground scripts — see scripts/README.md
 ├── .pi/
 │   ├── extensions/      # Shims: export from ../../extensions/… (Pi loads these)
 │   ├── agent-sessions/  # Ephemeral specialist sessions (gitignored)
 │   ├── agents/          # Agent .md, teams.yaml, teams-presets.json, agent-chain.yaml
+│   │   ├── domain-specialists/   # Category trees of specialist .md (recursive scan)
 │   │   ├── pi-pi/       # Experts for pi-pi meta-agent
 │   │   └── …            # e.g. ralph.md, project-scanner.md, planner.md
-│   ├── skills/          # SKILL.md trees (e.g. bowser/, github/, ralph/)
+│   ├── skills/          # SKILL.md trees (bowser/, find-skills/, github/, indexer/, ralph/, …)
 │   ├── themes/          # Custom themes (.json)
 │   ├── storage/         # Session-saver snapshots (gitignored)
 │   ├── chronicle/       # Chronicle ledger (gitignored)
@@ -389,6 +396,6 @@ See **[CHANGELOG.md](CHANGELOG.md)** for notable playground updates (extensions,
 ## Master Agentic Coding
 > Prepare for the future of software engineering
 
-Learn tactical agentic coding patterns with [Tactical Agentic Coding](https://agenticengineer.com/tactical-agentic-coding?y=pivscc)
+Learn tactical agentic coding patterns with [Tactical Agentic Coding](https://agenticengineer.com/tactical-agentic-coding)
 
 Follow the [IndyDevDan YouTube channel](https://www.youtube.com/@indydevdan) to improve your agentic coding advantage.
