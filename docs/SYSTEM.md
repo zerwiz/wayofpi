@@ -10,7 +10,7 @@ If you edit behavior, keep this file aligned with **`extensions/session-memory.t
 
 | Path (typical) | Role |
 |----------------|------|
-| **Repository root** (often `~/.../pi-vs-cc` or `~/.pi`) | Pi **project** root when you `cd` here and launch Pi |
+| **Repository root** (often `~/.pi` or your clone path) | Pi **project** root when you `cd` here and launch Pi |
 | **`extensions/`** | Real extension source (TypeScript) |
 | **`.pi/extensions/*.ts`** | One-line shims so Pi auto-loads implementations from `extensions/` |
 | **`.pi/settings.json`** | Project theme, prompts, and **ordered extension list** |

@@ -1,10 +1,10 @@
 ---
-description: Load foundational context for the pi-vs-cc codebase
+description: Load foundational context for the Pi extension playground
 ---
 
 # Purpose
 
-Orient yourself in pi-vs-cc — a collection of Pi coding agent extensions and agent specs that progressively demonstrate TUI customization, event hooks, widgets, subagent orchestration, and multi-agent teams.
+Orient yourself in this repo — a Pi Coding Agent extension playground: extensions and agent specs that demonstrate TUI customization, event hooks, widgets, subagent orchestration, and multi-agent teams.
 
 ## Workflow
 

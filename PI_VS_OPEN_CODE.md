@@ -75,7 +75,7 @@ This is the other dimension where Pi is in a different category entirely.
 
 **OpenCode's TUI is polished but closed.** It's built with Bubble Tea (Go) and the Ink React renderer, and it looks great out of the box. But you can't inject custom UI components, widgets, or overlays into it from a plugin. What you see is what you get.
 
-**Pi's TUI is a canvas.** The extensions API gives you full control over every UI surface — header, footer, status line, widgets above/below the editor, fullscreen overlays, and interactive dialogs. The pi-vs-claude-code repo demonstrates this with 16 extensions that completely transform the agent experience.
+**Pi's TUI is a canvas.** The extensions API gives you full control over every UI surface — header, footer, status line, widgets above/below the editor, fullscreen overlays, and interactive dialogs. This extension playground demonstrates this with many extensions that transform the agent experience.
 
 ### Registration APIs
 
@@ -113,7 +113,7 @@ The thesis isn't "Pi is better." It's "Pi is more controllable." OpenCode has re
 
 ## Concrete Examples: What Pi's Control Enables
 
-These aren't theoretical. They're actual extensions in the pi-vs-claude-code repo.
+These aren't theoretical. They're actual extensions in this repository.
 
 ### 1. Purpose Gate (Input Interception + Dynamic System Prompts + Custom Widgets)
 Forces the engineer to declare session intent before any work begins. Uses `input` to block all prompts until purpose is set, `before_agent_start` to inject purpose into the system prompt on every turn, and `setWidget` to display it persistently.
