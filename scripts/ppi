@@ -19,6 +19,10 @@ done
 SCRIPT_DIR="$(cd -P "$(dirname "$_script")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 export PI_PLAYGROUND="$ROOT"
+# Directory the user was in before ppi `cd` (e.g. app repo). Used by `just pi-e` options 1–2
+# and by `workspace-boundary` so the model knows the app vs the playground clone.
+export PI_E_PROJECT_DIR="${PI_E_PROJECT_DIR:-$PWD}"
+export PI_USER_PROJECT_DIR="${PI_USER_PROJECT_DIR:-$PI_E_PROJECT_DIR}"
 cd "$ROOT"
 
 # Load repo .env into the environment (API keys, Ollama, etc.) before just/pi.

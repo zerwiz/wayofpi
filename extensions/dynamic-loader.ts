@@ -18,6 +18,7 @@ const PLAYGROUND_BASES = [
 	"agent-team",
 	"agent-chain",
 	"pi-pi",
+	"pi-doctor",
 	"tilldone",
 	"extension-picker",
 	"session-memory",

@@ -128,6 +128,7 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 | **damage-control**      | `extensions/damage-control.ts`      | Real-time safety auditing — intercepts dangerous bash patterns and enforces path-based access controls from `.pi/damage-control-rules.yaml`                |
 | **agent-chain**         | `extensions/agent-chain.ts`         | Sequential pipeline orchestrator — chains multiple agents where each step's output feeds into the next step's prompt; **recursive** agent `.md` scan; use **`/chain`** to select and run |
 | **pi-pi**               | `extensions/pi-pi.ts`               | Meta-agent that builds Pi agents using parallel research experts for documentation                                                                         |
+| **pi-doctor**           | `extensions/pi-doctor.ts`           | **`/doctor`** — toolchain and playground health checks (**bun**, **just**, Pi on PATH, **`.env`**, **`agent/`** + **`.pi/`** JSON, extension shims, skills, optional Ollama if configured) |
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
 | **extension-picker**    | `extensions/extension-picker.ts`    | **`/extensions`** lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. In the slash menu, **`/ex`** filters to this command. `/remember` and `/memory` for cross-session notes |
@@ -199,6 +200,7 @@ just ext-session-saver        # Auto-save snapshots + /save /list /show /load
 just ext-chronicle          # Workflow ledger + chronicle_* tools
 just ext-agent-forge        # forge_list / forge_create
 just ext-dynamic-loader     # /extension-hint for pi -e stacks
+just ext-pi-doctor          # /doctor — playground + toolchain health checks
 just ext-ralph              # Ralph queue: ralph_queue_status + /ralph (todo → inprogress → done)
 just all                    # Interactive multi-select (just pi-e) to stack extensions
 ```
@@ -220,7 +222,8 @@ Then (with **`~/.local/bin`** on **`PATH`**):
 |---------|--------|
 | **`ppi`** | `just --list` |
 | **`ppi ext-agent-team`** | same as `just ext-agent-team` in this repo |
-| **`pi-e`** / **`ppi pi-e`** | interactive extension stacker |
+| **`ppi-ext-pi-doctor`** | Pi + **pi-doctor** + minimal → run **`/doctor`** in the TUI |
+| **`pi-e`** / **`ppi pi-e`** | **1** = full Pi (**`extensions[]`** from linked settings); **2** = project-scoped (**only** stacked **`-e`** + wired agents/skills); **3+** = extension entries; **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** keeps JSON extensions even in scoped mode |
 | **`ppi-pi`** | plain Pi (`just pi`) — does **not** replace the real **`pi`** binary |
 | **`ppi-honcho-up`**, **`ppi-hermes-status`**, … | other `justfile` recipes |
 

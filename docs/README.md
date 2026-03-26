@@ -7,7 +7,7 @@ Purpose: onboarding and **accurate** descriptions of how this Pi extension playg
 | Document | Contents |
 |----------|-----------|
 | **[REPO_INDEX.md](REPO_INDEX.md)** | **Repo map:** what each top-level folder and **`.pi/`** subtree is for; **`projects/_template`** file list; gitignored paths; path cheatsheet (`/home/zerwiz/.pi/...`) |
-| **[PLAYGROUND.md](PLAYGROUND.md)** | What “the playground” is — reusable Pi toolbox vs per-project config; how to opt-in from other repos |
+| **[PLAYGROUND.md](PLAYGROUND.md)** | What “the playground” is — **`pi-e`** **FULL (1)** vs **project-scoped (2)**; opt-in from other repos; see **`.cursor/rules/pi-pi-e-playground-modes.mdc`** |
 | **[AGENTS.md](AGENTS.md)** | Agent **definitions** (`.md` + frontmatter), scan paths, integration: `system-select`, `agent-team`, `agent-chain`, sessions |
 | **[HOW_TO_USE_AGENTS.md](HOW_TO_USE_AGENTS.md)** | **Practical agent usage guide** — which agent to use when, commands (`/system`, `agent-team` teams, `/ralph`), and example workflows |
 | **[AGENT_TEAMS.md](AGENT_TEAMS.md)** | **Agent-team** extension: `teams.yaml`, presets, `dispatch_agent`, team tools, slash commands; **grid vs footer context %**; **limits / truncation / missing files** |

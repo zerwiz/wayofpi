@@ -8,17 +8,57 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Changed
+
+- **Docs + Cursor** — **`docs/PLAYGROUND.md`** adds a canonical **`pi-e`** modes table; **`docs/EXTENSIONS.md`**, **`docs/README.md`**, **`docs/REPO_INDEX.md`**, and **`pi-extensions-context.mdc`** cross-link **``.cursor/rules/pi-pi-e-playground-modes.mdc`** (always-on rule for FULL vs project-scoped **`pi-e`**).
+
 ### Fixed
 
 - **GitHub** — default branch is **`main`** (was **`feat/playground-updates`**, which blocked branch deletes and confused PR banners). Historical feature branches **`feat/agents-skills-and-scan-2026-03-26`**, **`feat/rebrand-pi-extension-playground`**, **`feat/playground-ralph-docs`**, and **`feat/playground-updates`** are **restored on the remote** at their original tip commits for anyone who wants them alongside **`main`**.
 
 ### Added
 
+- **`playground-portal`** agent (**.pi/agents/playground-portal.md**), teams **`playground-portal`** (solo) + roster entries on **`new-project`**, **`full`**, **`info`** — ports extensions/skills from **`PI_PLAYGROUND`** into the **app repo**; pairs with **`pi-e` option 2** / **`scripts/init-project-local-pi-env.sh`**.
+
+- **`scripts/init-project-local-pi-env.sh`** + **`pi-e` option 2** — scaffolds **project-local** **`<project>/.pi/`** (empty **`extensions[]`**, **skills** dir, marker **`.project-local-pi`**).
+
+- **`scripts/render-playground-project-settings.py`** — **`enable-playground-in-project`** uses it to mirror the playground **`.pi/settings.json`** into another project with **absolute paths**, **`skills`**, and **`themes`** dirs.
+
+- **`pi-doctor`** extension (**`extensions/pi-doctor.ts`**, shim **`.pi/extensions/pi-doctor.ts`**) — slash **`/doctor`** reports toolchain and config health (bun, just, Pi on PATH, **`agent/`** / **`.pi/`** JSON, extension paths from settings, skills, optional Ollama when **`models.json`** uses it). Recipe **`just ext-pi-doctor`**; global **`ppi-ext-pi-doctor`** after **`./install-global`**; **`pi-e`** / **`ppi pi-e`** includes **pi-doctor**; **`dynamic-loader`** **`/extension-hint pi-doctor`**.
+
 - **`scripts/pi-with-env`** — runs **`pi`** after sourcing repo **`.env`** (for launches that bypass **`ppi`** / **`just`**).
 
 - **OpenRouter** — **`agent/models.json`** **`openrouter`** provider (**`OPENROUTER_API_KEY`**, OpenAI-compatible **`https://openrouter.ai/api/v1`**); sample models in **`pi.config.json`**; README **OpenRouter** subsection; **`.env.sample`** note; **`docs/REPO_INDEX.md`** **`agent/models.json`** row.
 
+### Added
+
+- **`workspace-boundary`** extension — **`before_agent_start`** injects **`<workspace_boundary>`** (user app vs **`~/.pi/agent`** vs **`PI_PLAYGROUND`**); **`session_start`** **notify** if **`PI_USER_PROJECT_DIR`** ≠ **`ctx.cwd`**. Shim in **`.pi/extensions/`**; listed first in **`.pi/settings.json`**. **`PI_USER_PROJECT_DIR`** set by **`ppi`** and **`pi-launch-from-project.sh`** (canonical abs path).
+
 ### Changed
+
+- **`just pi-e`** — **Option 1 (FULL)** keeps **`extensions[]`** from **`settings.json`** (full playground). **Option 2** or menu **`3+` / `all`** clears **`extensions[]`** for that run (**`PIE_KEEP_SETTINGS_EXTENSIONS=1`** overrides). Greedy digit split (**`scripts/pi-e-expand-selection.py`**). **Option 2** uses **`init-project-local-pi-env.sh <project> <playground>`** (wired agents/skills); auto **`minimal`** skipped when **option 1** ran (JSON stack already complete).
+
+- **`scripts/init-project-local-pi-env.sh`** — Optional second argument **`<playground-root>`** ( **`pi-e` option 2**): **`link-playground-agent-trees.sh`**, **`render-project-wired-playground-settings.py`**, **`.playground-from`**. One-arg CLI unchanged (local-only).
+
+- **`scripts/enable-playground-in-project`** — Shares **`link-playground-agent-trees.sh`** with wired init.
+
+- **`scripts/sanitize-linked-playground-settings.py`** + **`pi-launch-from-project.sh`** — When extensions are **not** cleared, if **`.pi/.playground-from`** exists, strip **`pi-pi.ts`** ( **`PI_SKIP_LINKED_SETTINGS_SANITIZE=1`** to skip).
+
+- **`render-playground-project-settings.py`** — **FULL** merge no longer auto-adds **`pi-pi.ts`** (opt in via **`just ext-pi-pi`** or **`pi-e`**). Re-run **enable** or trim **`settings.json`** in linked apps that still list it.
+
+- **`pi-e`** — Menu **2** is **wired project-local** (LEAN removed from **`pi-e`**; use **`PLAYGROUND_LINK_LEAN=1`** with **`enable-playground-in-project`** for a lighter full-settings link). Option **1** remains **FULL**.
+
+- **`just pi-e`** — Launches **`scripts/pi-launch-from-project.sh`**: **`cwd`** = **`PI_E_PROJECT_DIR`**, **`-e`** paths absolute to the playground; if **option 1** or **2** ran (`LINK_SELECTED`), defaults **`PI_SHADOW_LEGACY_PROJECT_TOOLS=1`** for **`./tools`** (restored on exit; **0** to disable).
+
+- **`scripts/render-playground-project-settings.py`** — **Option 1 / enable** now emits the **full** extension list: **`.pi/settings.json`** paths + all **`.pi/extensions/*.ts`** + **`extensions/*.ts`** factories (no duplicate shim/root), so every playground extension is loadable in a linked project.
+
+- **`scripts/enable-playground-in-project`** — Resolves the playground from the script location; **`pi`** on PATH is optional (warning only). After writing **`settings.json`**, symlinks **`.pi/agents`**, **`.claude/commands`**, **`.pi/damage-control-rules.yaml`** when missing. Writes **`<project>/.pi/.playground-from`**.
+
+- **`scripts/disable-playground-in-project`** — Removes those symlinks when they resolve under the recorded playground root; **`.playground-from`** + **rg** legacy fallback unchanged.
+
+- **`scripts/ppi`** — Sets **`PI_E_PROJECT_DIR`** to the pre-**`cd`** working directory so **`just pi-e`** setup options (**1–2**) and **`enable-playground-in-project`** target the user’s app repo, not the playground root.
+
+- **`justfile`** **`pi-e`** — Menu: **1** playground **FULL**, **2** project-local init, **3+** extensions; **`all`** skips pseudo-options; playground opt-in scripts invoked with **`PLAYGROUND_ROOT`** and **`PROJECT_DIR`**.
 
 - **`agent/models.json`** — Provider order **`ollama`** → **`openrouter`** → **`openai`** (native **`OPENAI_API_KEY`** merge only).
 

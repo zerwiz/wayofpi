@@ -36,6 +36,7 @@ recipes=(
 	ext-chronicle
 	ext-agent-forge
 	ext-dynamic-loader
+	ext-pi-doctor
 	ext-ralph
 	honcho-up
 	honcho-up-api

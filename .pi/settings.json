@@ -4,6 +4,7 @@
     "../.claude/commands"
   ],
   "extensions": [
+    ".pi/extensions/workspace-boundary.ts",
     ".pi/extensions/minimal.ts",
     ".pi/extensions/theme-cycler.ts",
     ".pi/extensions/session-memory.ts",
@@ -13,6 +14,7 @@
     ".pi/extensions/agent-forge.ts",
     ".pi/extensions/dynamic-loader.ts",
     ".pi/extensions/ralph.ts",
-    ".pi/extensions/github-management.ts"
+    ".pi/extensions/github-management.ts",
+    ".pi/extensions/pi-doctor.ts"
   ]
 }

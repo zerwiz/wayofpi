@@ -104,7 +104,11 @@ ext-agent-forge:
 ext-dynamic-loader:
     pi -e extensions/dynamic-loader.ts -e extensions/minimal.ts
 
-# 23. Ralph: todo/inprogress/done ticket queue + ralph_queue_status + /ralph
+# 23. Pi doctor: /doctor health checks (bun, configs, extensions, skills)
+ext-pi-doctor:
+    pi -e extensions/pi-doctor.ts -e extensions/minimal.ts
+
+# 24. Ralph: todo/inprogress/done ticket queue + ralph_queue_status + /ralph
 ext-ralph:
     pi -e extensions/ralph.ts -e extensions/minimal.ts
 
@@ -139,13 +143,17 @@ install-global:
 # pi-e: interactive multi-select for stacked `pi -e ...` in one session
 #
 # Use: `just pi-e`
-# Input: numbers separated by space/comma (e.g. `2 4 18`) or `all`
+# Input: numbers separated by space/comma (e.g. `1 3 17`) or `all`
 pi-e:
     #!/usr/bin/env bash
     set -euo pipefail
 
+    PLAYGROUND_ROOT="{{justfile_directory()}}"
+    PROJECT_DIR="${PI_E_PROJECT_DIR:-$PWD}"
+
     options=(
-        "enable-playground-resources|__ENABLE_PLAYGROUND__"
+        "enable-playground FULL (all playground extensions + skills/themes — busy UI)|__ENABLE_PLAYGROUND__"
+        "project-local .pi + playground agents/skills/themes (extensions[] empty — stack via menu)|__PROJECT_LOCAL_PI__"
         "pure-focus|extensions/pure-focus.ts"
         "minimal|extensions/minimal.ts"
         "theme-cycler|extensions/theme-cycler.ts"
@@ -167,10 +175,14 @@ pi-e:
         "chronicle|extensions/chronicle.ts"
         "agent-forge|extensions/agent-forge.ts"
         "dynamic-loader|extensions/dynamic-loader.ts"
+        "pi-doctor|extensions/pi-doctor.ts"
     )
 
-    echo "Pick one or more extensions to launch (stacked in a single Pi session)."
-    echo "Enter numbers separated by space/comma (e.g. 1 3 18) or type 'all'."
+    echo "Pick one or more items (stacked in one Pi session)."
+    echo "  1 = FULL playground (extensions[] from linked settings — full Pi power)"
+    echo "  2 = project-scoped (wired agents/skills; only menu -e modules load, not the whole JSON list)"
+    echo "Enter numbers separated by space/comma (e.g. 1  or  2 12 5) or type 'all'. Greedy digit split (e.g. 112 -> 11,2)."
+    echo "(Options 1–2 apply to: $PROJECT_DIR — set PI_E_PROJECT_DIR if you ran plain just pi-e.)"
     echo
 
     for i in "${!options[@]}"; do
@@ -191,6 +203,8 @@ pi-e:
 
     declare -A seen=()
     pi_args=()
+    LINK_SELECTED=0
+    PLAYGROUND_FULL_ENABLE=0
 
     add_file() {
         local f="$1"
@@ -198,7 +212,14 @@ pi-e:
         # Pseudo-option: enable this playground's resources (extensions/skills/prompts)
         # in the current project by writing .pi/settings.json (opt-in).
         if [[ "$f" == "__ENABLE_PLAYGROUND__" ]]; then
-            "$HOME/.pi/scripts/enable-playground-in-project" "$PWD"
+            "$PLAYGROUND_ROOT/scripts/enable-playground-in-project" "$PROJECT_DIR"
+            LINK_SELECTED=1
+            PLAYGROUND_FULL_ENABLE=1
+            return
+        fi
+        if [[ "$f" == "__PROJECT_LOCAL_PI__" ]]; then
+            "$PLAYGROUND_ROOT/scripts/init-project-local-pi-env.sh" "$PROJECT_DIR" "$PLAYGROUND_ROOT"
+            LINK_SELECTED=1
             return
         fi
         if [[ -z "${seen[$f]+x}" ]]; then
@@ -210,20 +231,25 @@ pi-e:
     if [[ "${sel}" == "all" ]]; then
         for opt in "${options[@]}"; do
             IFS='|' read -r _label file <<< "$opt"
+            [[ "$file" == __* ]] && continue
             add_file "$file"
         done
     else
+        n_opts="${#options[@]}"
+        EXPAND="$PLAYGROUND_ROOT/scripts/pi-e-expand-selection.py"
         for token in $sel; do
             if [[ "$token" =~ ^[0-9]+$ ]]; then
-                idx=$((token-1))
-                if (( idx >= 0 && idx < ${#options[@]} )); then
-                    IFS='|' read -r _label file <<< "${options[$idx]}"
-                    add_file "$file"
-                else
-                    echo "Ignoring out-of-range selection: $token"
-                fi
+                while IFS= read -r num; do
+                    [[ -z "$num" ]] && continue
+                    idx=$((num - 1))
+                    if (( idx >= 0 && idx < n_opts )); then
+                        IFS='|' read -r _label file <<< "${options[$idx]}"
+                        add_file "$file"
+                    else
+                        echo "Ignoring out-of-range selection: $num"
+                    fi
+                done < <(python3 "$EXPAND" "$n_opts" "$token")
             else
-                # Allow selecting by label (best-effort match)
                 for opt in "${options[@]}"; do
                     IFS='|' read -r label file <<< "$opt"
                     if [[ "$label" == "$token" ]]; then
@@ -235,21 +261,50 @@ pi-e:
         done
     fi
 
-    # If user didn't choose a base footer, default to `minimal` (unless they picked pure-focus).
+    # If user didn't choose a base footer, default to `minimal` unless an extension
+    # already brings its own chrome (pure-focus hides chrome; agent-team is grid UI).
     has_pure_focus=false
+    has_agent_team=false
     for f in "${!seen[@]}"; do
         if [[ "$f" == "extensions/pure-focus.ts" ]]; then
             has_pure_focus=true
         fi
+        if [[ "$f" == "extensions/agent-team.ts" ]]; then
+            has_agent_team=true
+        fi
     done
 
-    if ! $has_pure_focus; then
+    # Option 1 (FULL): merged settings.json already lists extensions — skip auto minimal.
+    if ! $PLAYGROUND_FULL_ENABLE && ! $has_pure_focus && ! $has_agent_team; then
         add_file "extensions/minimal.ts"
     fi
 
+    # Option 1 = full Pi (keep extensions[] from settings). Option 2 / extension picks /
+    # `all` = CLI stack only (clear extensions[] for this run). PIE_KEEP_SETTINGS_EXTENSIONS=1
+    # always keeps JSON extensions (even with option 2 / picks).
+    if [[ "${PIE_KEEP_SETTINGS_EXTENSIONS:-0}" == "1" ]]; then
+        export PIE_CLEAR_SETTINGS_EXTENSIONS=0
+    elif [[ "$PLAYGROUND_FULL_ENABLE" == "1" ]]; then
+        export PIE_CLEAR_SETTINGS_EXTENSIONS=0
+    else
+        export PIE_CLEAR_SETTINGS_EXTENSIONS=1
+    fi
+
+    # Run Pi in PROJECT_DIR with absolute -e paths; when playground link (option 1 or 2) ran,
+    # default to shadowing ./tools for this session so upstream Pi skips legacy-tools nag.
+    if [[ "$LINK_SELECTED" == 1 ]]; then
+        export PI_SHADOW_LEGACY_PROJECT_TOOLS="${PI_SHADOW_LEGACY_PROJECT_TOOLS:-1}"
+    fi
     echo
-    echo "Launching: pi ${pi_args[*]}"
-    exec pi "${pi_args[@]}"
+    if [[ "$PIE_CLEAR_SETTINGS_EXTENSIONS" == 1 ]]; then
+        echo "Project-scoped: ignoring extensions[] in .pi/settings.json for this Pi run (restored on exit) — only your -e list loads."
+    elif [[ "$PLAYGROUND_FULL_ENABLE" == 1 ]]; then
+        echo "FULL link: using extensions[] from .pi/settings.json (full playground) plus any -e you selected."
+    else
+        echo "PIE_KEEP_SETTINGS_EXTENSIONS=1: merging extensions[] from .pi/settings.json with your -e list."
+    fi
+    echo "Launching from $PROJECT_DIR: pi ${pi_args[*]}"
+    exec "$PLAYGROUND_ROOT/scripts/pi-launch-from-project.sh" "$PROJECT_DIR" "$PLAYGROUND_ROOT" "${pi_args[@]}"
 
 # Open pi with one or more stacked extensions in a new terminal: just open minimal tool-counter
 open +exts:
@@ -289,4 +344,5 @@ all-open:
     just open chronicle minimal
     just open agent-forge minimal
     just open dynamic-loader minimal
+    just open pi-doctor minimal
     just open ralph minimal

@@ -7,6 +7,7 @@ full:
   - documenter
   - indexer
   - project-scanner
+  - playground-portal
   - ralph
 
 # Single-member team: Pi dispatcher sends prompts to external Hermes CLI; reply on stdout
@@ -21,6 +22,7 @@ index:
 new-project:
   - project-scanner
   - indexer
+  - playground-portal
 
 # Ralph HTML ticket queue — dispatcher can pull scout/planner/builder/reviewer/code-documenter/documenter around ralph
 ralph:
@@ -45,7 +47,12 @@ info:
   - indexer
   - hermes
   - project-scanner
+  - playground-portal
   - reviewer
+
+# Port playground extensions/skills into the current app repo
+playground-portal:
+  - playground-portal
 
 frontend:
   - planner

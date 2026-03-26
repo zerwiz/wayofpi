@@ -86,9 +86,11 @@ Each row is a **`export default function (pi: ExtensionAPI)`** entrypoint unless
 | **`extension-picker.ts`** | **`/extensions`**, **`/remember`**, **`/memory`**. |
 | **`minimal.ts`** | Compact footer (model + context meter). |
 | **`pi-pi.ts`** | Meta-agent; **`query_experts`**. |
+| **`pi-doctor.ts`** | **`/doctor`** — health checks (toolchain, **`agent/`**, **`.pi/`**, extensions, skills). |
 | **`purpose-gate.ts`** | Session intent gate + widget. |
 | **`pure-focus.ts`** | Hides footer / status chrome. |
 | **`ralph.ts`** | **Ralph** queue dirs + **`ralph_queue_status`**, **`/ralph`**. |
+| **`workspace-boundary.ts`** | **`<workspace_boundary>`** — user app (**`PI_USER_PROJECT_DIR`**) vs tool **cwd** vs **`PI_PLAYGROUND`** / global **`~/.pi/agent`**. |
 | **`session-memory.ts`** | Injects **`<session_memory>`** recap; **`/sessionmemory`**. |
 | **`session-replay.ts`** | Session timeline overlay. |
 | **`sessions/index.ts`** | **Session saver** — auto-save, **`/save`** **`/list`** **`/show`** **`/load`**. |
@@ -107,6 +109,7 @@ Listed in **`.pi/settings.json`** → **`extensions`** (paths relative to repo r
 
 | Shim | Loads |
 | ---- | ----- |
+| **`workspace-boundary.ts`** | **`extensions/workspace-boundary.ts`** |
 | **`minimal.ts`** | **`extensions/minimal.ts`** |
 | **`theme-cycler.ts`** | **`extensions/theme-cycler.ts`** (**`/theme`**, Ctrl+X / Ctrl+Q) |
 | **`session-memory.ts`** | **`extensions/session-memory.ts`** |
@@ -115,6 +118,7 @@ Listed in **`.pi/settings.json`** → **`extensions`** (paths relative to repo r
 | **`chronicle.ts`** | **`extensions/chronicle.ts`** |
 | **`agent-forge.ts`** | **`extensions/agent-forge.ts`** |
 | **`dynamic-loader.ts`** | **`extensions/dynamic-loader.ts`** |
+| **`pi-doctor.ts`** | **`extensions/pi-doctor.ts`** |
 | **`ralph.ts`** | **`extensions/ralph.ts`** |
 
 Other modules in **`extensions/`** may still be used via **`just`** recipes or manual **`pi -e`** stacks if they are not shimmed. After adding a shim entry, run **`/reload`** in Pi.
@@ -174,6 +178,10 @@ Declared under `agent/settings.json` → `packages`. Each package’s `package.j
 - **Vendor:** copy the file (and any local imports) under `extensions/`, fix imports, add a shim + settings entry.
 - **Absolute path:** add the file path to `extensions` in settings (upstream-supported).
 - **Symlink:** possible for the **real** file under `extensions/`; avoid symlinks under `.pi/extensions/` unless you know Pi will only see shims (helpers must not be in `.pi/extensions/`).
+
+### From another repo via this playground (`pi-e`)
+
+**`ppi pi-e`** / **`just pi-e`** runs Pi with **cwd** in your app repo while **`-e`** paths resolve to this clone. **Option 1 (FULL)** keeps the merged **`extensions[]`** in that repo’s **`.pi/settings.json`**. **Option 2** (or extension-only menu picks) temporarily clears **`extensions[]`** for that session so only the stacked **`-e`** list loads; skills/agents can still point at the playground — see **[PLAYGROUND.md](PLAYGROUND.md)** and **`.cursor/rules/pi-pi-e-playground-modes.mdc`**.
 
 ---
 

@@ -1,0 +1,19 @@
+---
+description: pi-e option 1 vs 2 — FULL vs project-scoped; env flags; where docs live
+alwaysApply: true
+---
+
+# `pi-e` and playground link modes
+
+When changing **`just pi-e`**, **`scripts/pi-launch-from-project.sh`**, **`init-project-local-pi-env.sh`**, **`enable-playground-in-project`**, **`render-project-wired-playground-settings.py`**, **`link-playground-agent-trees.sh`**, or user-facing text about **`ppi pi-e`** / **`PIE_*`**:
+
+| Goal | Menu | `extensions[]` at Pi runtime | Main setup |
+|------|------|------------------------------|------------|
+| **Full playground** | **1** (FULL) | **Keep** merged list in **`<project>/.pi/settings.json`**. | **`enable-playground-in-project`** |
+| **Project-scoped** | **2**, or **3+** / **`all`** without **1** | **Clear for session** (**`PIE_CLEAR_SETTINGS_EXTENSIONS=1`**) — only stacked **`-e`** (+ auto **`minimal`** when applicable). | **2**: **`init-project-local-pi-env.sh <project> <playground>`** (+ wired skills/agents) |
+
+- **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** — never clear JSON **`extensions[]`** (overrides scoped behavior).
+- **`justfile`** sets **`PLAYGROUND_FULL_ENABLE=1`** when option **1** runs; that chooses keep vs clear together with **`PIE_KEEP_*`**.
+- **Canonical doc:** **[docs/PLAYGROUND.md](../../docs/PLAYGROUND.md)** (full narrative). **Scripts:** **[scripts/README.md](../../scripts/README.md)**.
+
+Do **not** document options **1** and **2** as both clearing **`extensions[]`** — **1** is full Pi from linked settings; **2** is selective TS modules with playground agents/skills paths.

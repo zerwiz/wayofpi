@@ -18,7 +18,7 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 | **`projects/_template/`** | **Copy contents** into `projects/<slug>/` when starting a new tracked effort. **`project-scanner`** agent automates scan + fill (see **`.pi/agents/project-scanner.md`**, team **`new-project`**). |
 | **`docs/`** | Human-written guides (memory, extensions, agents, integrations, **this index**). |
 | **`specs/`** | Feature **specifications** for extensions; may be ahead of or beside the code—check status banners in each file. |
-| **`.cursor/rules/`** | Cursor rules: **`pi-extensions-context.mdc`** (always-on), **`pi-extensions.mdc`** (extension `*.ts`), **`pi-projects-docs.mdc`** (project docs), **`pi-docs-core.mdc`** (core concept docs), **`pi-documentation-consistency.mdc`** (`docs/**/*.md`, README, CHANGELOG, etc.). |
+| **`.cursor/rules/`** | Cursor rules: **`pi-extensions-context.mdc`** (always-on), **`pi-pi-e-playground-modes.mdc`** (**`pi-e`** option **1** vs **2**, env flags), **`pi-extensions.mdc`** (extension `*.ts`), **`pi-projects-docs.mdc`** (project docs), **`pi-docs-core.mdc`** (core concept docs), **`pi-documentation-consistency.mdc`** (`docs/**/*.md`, README, CHANGELOG, etc.). |
 | **`justfile`** | **`just`** recipes: Pi stacks, Honcho/Hermes helpers, extension launchers. |
 | **`install-global`** | Executable: symlinks **`ppi`** / **`pi-e`** / **`ppi-*`** into **`~/.local/bin`** — **no `just` required** (same as **`scripts/install-ppi-global.sh`**). |
 | **`scripts/`** | **`ppi`** launcher + **`install-ppi-global.sh`** → global **`PATH`** shortcuts for all `just` recipes; see **[scripts/README.md](../scripts/README.md)**. |
