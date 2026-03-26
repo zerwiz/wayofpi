@@ -10,7 +10,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Fixed
 
-- **GitHub** — default branch is **`main`** again (was **`feat/playground-updates`**, which blocked deleting stale branches and confused the “Compare & pull request” banners). Removed merged remote branches **`feat/playground-ralph-docs`** and **`feat/playground-updates`** after the switch.
+- **GitHub** — default branch is **`main`** (was **`feat/playground-updates`**, which blocked branch deletes and confused PR banners). Historical feature branches **`feat/agents-skills-and-scan-2026-03-26`**, **`feat/rebrand-pi-extension-playground`**, **`feat/playground-ralph-docs`**, and **`feat/playground-updates`** are **restored on the remote** at their original tip commits for anyone who wants them alongside **`main`**.
 
 ### Added
 
