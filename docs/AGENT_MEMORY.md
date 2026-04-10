@@ -16,8 +16,13 @@ For project layout and agent *behavior* rules (tools vs invented output), see **
 | **Cross-session memory (picker)** | Freeform markdown you append | Across Pi runs (global storage) | `~/.pi/storage/agent-memory.md` via `/remember`, `/memory` |
 | **AGENTS.md** | Static instructions in **[Context]** | Until you edit the file | `agent/AGENTS.md` next to your Pi agent |
 | **Skills** | Markdown workflows the model can open | Repo / package | e.g. `.pi/skills/<name>/SKILL.md` |
+| **Honcho mirror (optional)** | After each turn, **copies** user/assistant text to a local Honcho API for **Hermes** / search / deriver — **not** read back into Pi’s prompt by default | Separate service (Honcho) | `extensions/honcho-mirror.ts`; see **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §9, **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)** |
 
-Nothing here is a hidden vector database: it is **files**, **prompt text**, and **Pi’s session model**.
+Nothing here is a hidden vector database: it is **files**, **prompt text**, and **Pi’s session model**. **Honcho** does **not** replace any row in the table above: Pi still relies on these layers for **every** turn even when the mirror is **on**.
+
+### Honcho connected — still use this doc
+
+If **`honcho-mirror`** is enabled (**default** in this playground’s **`.pi/settings.json`**), treat Honcho as a **side channel**: your coding transcripts are also sent to Honcho for cross-client / long-term store. **session-memory**, **JSONL**, **`/remember`**, and **compaction** behave the same; turning Honcho off (or API down) does not remove Pi memory.
 
 ---
 
@@ -66,6 +71,19 @@ The injected rules ask the model to treat bare replies like **`1`** or **`yes`**
 - It does **not** run tools, subagents, or searches.  
 - It does **not** replace reading the repo: the recap is **truncated** and can be **stale** if the file changed unexpectedly—re-read files when precision matters.  
 - Toggle: **`/sessionmemory`** (`on` | `off` | `status`).
+
+### 3.1 Local models & context pressure (`context-local-hints`)
+
+**File:** `extensions/context-local-hints.ts` (shim `.pi/extensions/context-local-hints.ts`), listed after **`session-memory`** in **`.pi/settings.json`**.
+
+For **Ollama** (and any provider in **`PI_CONTEXT_HINT_PROVIDERS`**, comma-separated) or any model whose **`baseUrl`** looks like **localhost** / **127.0.0.1** / **`:11434`**, each turn adds **`<context_awareness>`** to the system prompt with:
+
+- Configured **`contextWindow`**, Pi’s **`getContextUsage()`** line when present, **message count** on the in-memory branch, and a **very rough** token estimate (chars÷4 — not authoritative).
+- Recovery hints: **`/remember`**, session JSONL **compaction**, **session saver** **`/save`** / **`/load`**, shorter reads, fresh chat + recap.
+
+**Command:** **`/context-hint`** (`status` | `on` | `off`) — same digest in a banner.
+
+This does **not** free context magically; it nudges the **model** to acknowledge limits and points **you** at the same levers as the rest of this doc.
 
 ---
 
@@ -129,8 +147,10 @@ It does **not** auto-update from chat—it is **hand-edited** policy and onboard
 | File | Role |
 |------|------|
 | `extensions/session-memory.ts` | Prompt injection / recap |
+| `extensions/context-local-hints.ts` | Local/Ollama context-pressure block + **`/context-hint`** |
 | `extensions/chatLabels.ts` | `zerwis` / `pi` labels |
 | `extensions/sessions/index.ts` | Snapshots + `/load` `.jsonl` |
 | `extensions/extension-picker.ts` | `/remember`, `/memory`, global md |
+| `extensions/honcho-mirror.ts` | Optional **copy** of turns to Honcho; does not replace layers above |
 | `agent/AGENTS.md` | Static agent instructions |
 | `docs/SYSTEM.md` | Broader system + agent conduct |

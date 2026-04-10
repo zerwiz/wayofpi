@@ -25,6 +25,10 @@ storage/sessions/
 
 tmp/
 
+# Way of Pi upstream sync (extract + optional mirror)
+.tmp-wop-upstream/
+vendor/wop-upstream/
+
 # Local / vendored reference dumps (import scripts may use a path outside the repo)
 ref/
 

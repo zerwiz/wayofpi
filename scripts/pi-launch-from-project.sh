@@ -16,7 +16,8 @@
 #   PIE_CLEAR_SETTINGS_EXTENSIONS — when 1, backup .pi/settings.json and set extensions[]
 #     to [] for this run (restore on exit). pi-e uses this for option 2 / extension picks
 #     (project-scoped); option 1 (FULL) keeps JSON extensions. PIE_KEEP_SETTINGS_EXTENSIONS=1
-#     always keeps settings extensions.
+#     always keeps settings extensions. If Pi dies before EXIT, run `pi-e backup` (or `restore`)
+#     from the app repo — scripts/ppi recovers .pi/.settings.json.pi-e-restore (and tools shadow).
 #
 set -euo pipefail
 

@@ -44,10 +44,10 @@ just pi
 
 | | **Option 1 — FULL** | **Option 2 — project-scoped** |
 |--|---------------------|--------------------------------|
-| **Intent** | Full Pi / full merged playground in that app repo. | Only the extensions you pick from the menu; agents + skills still tied to the playground clone. |
-| **`settings.json`** | Written by **`enable-playground-in-project`** — fat **`extensions[]`**. | Written by **`init-project-local-pi-env.sh <app> <playground>`** — **`extensions": []`**, absolute **skills / themes / prompts** + symlinks. |
-| **At `pi` launch** | **`extensions[]` is used** (not cleared). No auto-**`minimal`** (JSON stack already complete). | **`extensions[]` cleared for this run only** (restored on exit); only **`-e`** stack loads (**`PIE_CLEAR_SETTINGS_EXTENSIONS=1`**). |
-| **Escape hatch** | N/A for full behavior. | **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** keeps JSON **`extensions[]`** even in scoped mode. |
+| **Intent** | Writes/merges linked **`settings.json`** (when missing). | Wired **`.pi/`** + playground paths; stack TS from menu. |
+| **`settings.json` on disk** | **`enable-playground-in-project`** → fat **`extensions[]`** (or **`settings.playground.json`** if a file already exists). | **`init-project-local-pi-env.sh <app> <playground>`** — **`extensions": []`**, skills/themes/prompts + symlinks. |
+| **At `pi` launch** | **Only `1` and/or `2` alone:** keep **`extensions[]`** (full Pi). **`1` or `2` plus any menu line ≥3** (e.g. **`1 12`**): **clear for this run** — only your **`-e`** stack (+ auto **`minimal`** if needed). | Same clear behavior whenever you add menu lines **3+** (or **`all`**). |
+| **Escape hatch** | **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** keeps JSON **`extensions[]`** even when you also picked extension lines. | Same. |
 
 Rule for editors/agents: **`.cursor/rules/pi-pi-e-playground-modes.mdc`**.
 
@@ -57,9 +57,9 @@ Rule for editors/agents: **`.cursor/rules/pi-pi-e-playground-modes.mdc`**.
 
 **`PLAYGROUND_LINK_LEAN=1`** with **`scripts/enable-playground-in-project`** links **skills**, **themes**, **prompts**, **agents** symlinks, and **damage-control**, but only merges extension paths **already listed** in the playground **`.pi/settings.json`** (no auto-scan of every **`extensions/*.ts`** factory). There is **no** separate **`pi-e`** menu line for this — run the script with that env var from your app repo when you want a lighter link than **FULL**.
 
-**`pi-e` option 1 (FULL):** Pi loads **`extensions[]` from** **`<project>/.pi/settings.json`** (full merged playground list) — **full Pi power** for that app. You can still add extra **`-e`** lines from the menu; optional **`minimal`** is **not** auto-appended (the JSON stack already includes it). **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** is only needed if you want to force merging JSON extensions in other modes.
+**`pi-e` option 1 (FULL)** runs **`enable-playground-in-project`**. If your selection is **only** **`1`** (and optionally **`2`**): Pi uses the merged **`extensions[]`** in **`.pi/settings.json`** — **full playground power**. If you add **any menu extension** (line **3+**, e.g. **`1 12`**), that run clears **`extensions[]`** for Pi only (restored on exit) so **only** the **`-e`** modules you chose load — FULL setup still lands on disk for the next session. Use **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** to **merge** JSON extensions **and** your **`-e`** picks in one run.
 
-**`pi-e` option 2 (project-scoped):** **`extensions[]` is cleared for that Pi run only** (restored on exit) so only the **`-e`** modules you picked load (plus auto **`minimal`** when you omit pure-focus / agent-team). **`settings.json`** still carries **skills**, **themes**, **prompts**, and **symlinked agents** from the wired playground so **agent-team** and skills behave like the main repo without pulling in every TS extension. Concatenated digits split greedily (e.g. **`112`** → **11** then **2**); use spaces for **`1`** + **12** (agent-team).
+**`pi-e` option 2** plus menu lines **3+**: same **clear-for-session** behavior; skills/agents paths stay wired. Concatenated digits split greedily (e.g. **`112`** → **11** then **2**); use spaces when stacking setup + extensions (e.g. **`1`** + **`12`**). **agent-team** and **agent-team (build-orchestra)** are separate lines — the latter loads **`agent-team-build-orchestra.ts`** (initial team **`build-orchestra`**). Choosing **either agent-team variant** or **agent-chain** **prepends** **`session-memory`** and **`context-local-hints`** if not already selected.
 
 **`ppi pi-e` → option 2** creates **`<project>/.pi/`** via **`init-project-local-pi-env.sh <project> <playground>`**: symlinks **`.pi/agents`**, **`.claude/commands`**, **`.pi/damage-control-rules.yaml`**, **`.playground-from`**, and **`settings.json`** with **`extensions": []`** plus absolute playground **skills / themes / prompts** and **`<project>/.pi/skills`**. Standalone **`init-project-local-pi-env.sh` /abs/project** (one argument) is **local-only** (no playground symlinks).
 

@@ -34,7 +34,7 @@ This is **not** the same as a Pi **extension** (`.ts` code) or a **skill** (`SKI
 | **planner** | [`planner.md`](../.pi/agents/planner.md) | Writes **`plans/PLAN-YYYYMMDD-<slug>.md`** (structured steps, handoff); tools include **`write`/`edit`**. |
 | **builder** | [`builder.md`](../.pi/agents/builder.md) | Implementation and code generation. |
 | **scout** | [`scout.md`](../.pi/agents/scout.md) | Fast recon and codebase exploration (no file edits). |
-| **reviewer** | [`reviewer.md`](../.pi/agents/reviewer.md) | Code review and quality checks (no direct edits). |
+| **reviewer** | [`reviewer.md`](../.pi/agents/reviewer.md) | Code review and quality checks (no direct edits). When **`github-management`** is loaded: **`github_pr_*`** for PR diff/checks/review/inline suggestions. |
 | **documenter** | [`documenter.md`](../.pi/agents/documenter.md) | **Reads** existing docs, reconciles with code, **`edit`**/**`write`** to keep READMEs and **`docs/`** current. |
 | **code-documenter** | [`code-documenter.md`](../.pi/agents/code-documenter.md) | **Reads** source, **reviews** for a doc pass; **`edit`**/**`write`** **comments / TSDoc / technical `.md` only**—no logic or tests. |
 | **red-team** | [`red-team.md`](../.pi/agents/red-team.md) | Security and adversarial testing (no direct edits). |
@@ -43,8 +43,9 @@ This is **not** the same as a Pi **extension** (`.ts` code) or a **skill** (`SKI
 | **hermes** | [`hermes.md`](../.pi/agents/hermes.md) | **`bash`** invokes **Hermes CLI** (`hermes chat -q … -Q`); relays **stdout** reply. Teams **`hermes`**, **`info`** (not **`full`**—see **`.pi/agents/teams.yaml`**). See **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** §7. |
 | **project-scanner** | [`project-scanner.md`](../.pi/agents/project-scanner.md) | Scans a workspace and fills **`projects/<slug>/`** in this repo from **`projects/_template/`** (teams **`new-project`**, **`full`**, **`info`**). |
 | **playground-portal** | [`playground-portal.md`](../.pi/agents/playground-portal.md) | Ports extensions/skills/shims from the playground clone (**`PI_PLAYGROUND`**) into the **current app repo**’s **`.pi/`** and **`extensions/`** when the user wants playground behavior **inside that project** (teams **`playground-portal`**, **`new-project`**, **`full`**, **`info`**; **`pi-e` option 2** scaffolds local **`.pi/`**). |
-| **indexer** | [`indexer.md`](../.pi/agents/indexer.md) | Writes **`INDEX.md`** at a requested path: tree + per-file purpose map; skill [`indexer/SKILL.md`](../.pi/skills/indexer/SKILL.md); teams **`index`**, **`full`**, **`info`**, **`new-project`**. |
+| **indexer** | [`indexer.md`](../.pi/agents/indexer.md) | Writes **`INDEX.md`** at a requested path: tree + per-file purpose map; skill [`indexer/SKILL.md`](../.pi/skills/indexer/SKILL.md); teams **`index`**, **`info`**, **`new-project`** (not **`full`**). |
 | **ralph** | [`ralph.md`](../.pi/agents/ralph.md) | **HTML ticket queue** `todo→inprogress→done`; may **`RALPH_ESCALATE`** to **`scout`/`planner`/`builder`/`reviewer`/`code-documenter`/`documenter`**; skill [`ralph/SKILL.md`](../.pi/skills/ralph/SKILL.md); extension **`ralph_queue_status`**. |
+| **web-searcher** | [`web-searcher.md`](../.pi/agents/web-searcher.md) | **`web_search`** + **`web_fetch`** only (+ **`read`** for local files); team **`info`**. Tools come from **`pi-web-access`** (default for many setups) or playground **`web-tools`** — not both. |
 
 #### Domain specialist agents (ported into `.pi/agents/`)
 
@@ -122,11 +123,12 @@ Pi may inject **`agent/AGENTS.md`** (next to your Pi agent install) into session
 
 **File:** `extensions/system-select.ts`
 
-- **`/system`** opens a picker of agent `.md` files.
+- **`/system`** opens a **flat** picker of all agent `.md` files (every scanned tree).
+- **`/agent`** opens a **domain-first** picker: **Reset**, **Core** (agents not under **`domain-specialists/`**), **All agents** (same flat list as **`/system`**), then one row per **`domain-specialists/<category>/`** folder (e.g. **`03-infrastructure`**) with a count; second step lists only specialists in that scope.
 - The chosen agent’s **body** is merged into the **main** session’s system prompt (you stay one agent, different persona).
 - Can restrict tools when the frontmatter declares them.
 
-**Use when:** you want **one** chat with a different “hat,” not parallel subagents.
+**Use when:** you want **one** chat with a different “hat,” not parallel subagents. Prefer **`/agent`** to browse **domain specialists** by category.
 
 ### 3.3 `agent-team` extension
 

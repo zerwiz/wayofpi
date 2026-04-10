@@ -1,6 +1,7 @@
 # Claude Code vs Pi Agent — Feature Comparison
 
-> Pi v0.52.10 vs Claude Code (Feb 2026)
+> Pi v0.52.10 vs Claude Code (Feb 2026)  
+> **See also (Pi-centric gaps, this playground):** [docs/CLAUDE_CODE_VS_PI_GAPS.md](docs/CLAUDE_CODE_VS_PI_GAPS.md)
 
 ---
 
@@ -56,8 +57,8 @@
 | System Prompt Size       | ~10,000+ tokens (extensive tool descriptions, behavioral rules, safety guardrails)                                         | ~200 tokens (minimal — trusts frontier models to code without hand-holding)                                                                         | Pi          |
 | Default Tools            | 10+ (Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, NotebookEdit, Task)                                         | 4 (read, write, edit, bash) + 3 optional (grep, find, ls)                                                                                           | Both        |
 | Agent Architecture       | Monorepo TypeScript CLI — single package with built-in tool execution, sub-agents, and team coordination                   | 4-package monorepo (pi-ai, pi-agent-core, pi-tui, pi-coding-agent) — modular separation of LLM abstraction, agent loop, TUI, and CLI                | Both        |
-| Sub-Agent Support        | Native Task tool — 7 parallel sub-agents, permission inheritance, typed agent roles (Explore, Plan, Bash, general-purpose) | None built-in, but available through extension that spawns separate pi processes in single/parallel/chain modes with different models per sub-agent | Claude Code |
-| Agent Teams              | Native team coordination (lead + workers, shared task lists, message passing, broadcast)                                   | None built-in, but achievable through SDK orchestration scripts or RPC mode driving multiple pi processes                                           | Claude Code |
+| Sub-Agent Support        | Native Task tool — 7 parallel sub-agents, permission inheritance, typed agent roles (Explore, Plan, Bash, general-purpose) | **Upstream Pi:** none built-in. **This playground:** **`agent-team`** / related extensions spawn separate Pi processes with **`dispatch_agent`**, presets, and per-subagent models | Claude Code |
+| Agent Teams              | Native team coordination (lead + workers, shared task lists, message passing, broadcast)                                   | **Upstream Pi:** none built-in. **This playground:** **`agent-team`** + **`.pi/agents/teams.yaml`** (dispatcher + specialists); not the same API as Claude Code’s Task tool | Claude Code |
 | Default Permission Model | 5 modes (default, plan, acceptEdits, bypassPermissions, dontAsk) — deny-first with filesystem/network sandbox              | None by default ("YOLO mode") — runs everything without asking. Permission-gate extension available but opt-in                                      | Claude Code |
 | Memory File              | CLAUDE.md (project root, nested dirs, user-level) — auto-loaded, hierarchical                                              | AGENTS.md — similar convention, compatible with ~/.claude/skills cross-tool standard                                                                | Tie         |
 | Cost Visibility          | Available via /cost command, customizable via statusline configuration                                                     | Immediately visible in footer by default, further customizable via extensions and getSessionStats() API                                             | Tie         |
@@ -195,8 +196,8 @@
 
 | Feature                   | Claude Code                                          | Pi Agent                                                                       | Winner      |
 | ------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ | ----------- |
-| Sub-Agents                | Native Task tool, 7 parallel, permission inheritance | Subagent extension (single/parallel/chain modes), spawns separate pi processes | Claude Code |
-| Agent Teams               | Native team coordination (lead + workers)            | No built-in equivalent; use orchestration scripts                              | Claude Code |
+| Sub-Agents                | Native Task tool, 7 parallel, permission inheritance | **Upstream:** extensions / separate processes. **Playground:** **`agent-team`** `dispatch_agent`, parallel spawns | Claude Code |
+| Agent Teams               | Native team coordination (lead + workers)            | **Upstream:** orchestration/RPC. **Playground:** **`agent-team`** + **`.pi/agents/teams.yaml`** — extension-based, not native Task | Claude Code |
 | Multi-Model Orchestration | Not possible (single provider)                       | Different models per sub-agent (scout on flash, worker on opus)                | Pi          |
 
 ---

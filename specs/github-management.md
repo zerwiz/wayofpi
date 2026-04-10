@@ -1,35 +1,28 @@
 ## GitHub Management Extension (ghm) — Spec Snapshot
 
-**Status:** draft / partial implementation  
-**Entrypoints:** `extensions/github-management.ts`, `.pi/extensions/github-management.ts`, `.pi/tools/github-management.js`
+**Status:** PR workflow MVP (**typed tools** + **`/ghm`**)  
+**Entrypoints:** `extensions/github-management.ts`, `.pi/extensions/github-management.ts`, `scripts/github-management-cli.js`
 
 ### Purpose
 
-- Provide a unified **GitHub management helper** for Pi sessions.
-- Wrap common `git`/`gh` flows with a friendlier interface (`/ghm` command, `ghm_exec` tool, future standalone `ghm` CLI).
+- **Inside Pi:** typed **`github_pr_*`** tools for list/view/diff/checks/review and **inline comments** (including GitHub **suggested edits** via a **`suggestion`-labeled markdown code fence in **`body`**).
+- **Slash:** **`/ghm`** — `help`, `status`, `pr-list`, `pr-view [N]`, `pr-diff [--stat|--name-only|--patch] [N]`, `pr-checks [N]`.
+- **Legacy:** **`ghm_exec`** forwards to the same subcommands and returns **stdout as tool result** (not notify-only).
 
-### Current scope
+### Requirements
 
-- **Inside Pi**
-  - `/ghm help` — show high-level help text.
-  - `/ghm status` — run `git status -sb` in the current `ctx.cwd` and surface the result via `ctx.ui.notify`.
-  - `ghm_exec` tool — run the same commands from tools (arguments are forwarded to the same dispatcher).
-- **Shell shim**
-  - `.pi/tools/github-management.js` — prints usage and, if `pi` is on `PATH`, attempts to spawn `pi -e extensions/github-management.ts --cmd "<args>"`.
+- [GitHub CLI](https://cli.github.com/) **`gh`** on `PATH`, authenticated (`gh auth login`).
 
-### Planned scope (from PLAN-20260326-gh-management-tool.md)
+### Inline / suggestion comments
 
-- Rich command set: `login`, `logout`, `repo list`, `clone`, `push`, `pull`, `status`, `branch *`, `pr *`, `fork`, `help`.
-- Retry-aware handlers with structured error types and exit codes.
-- Shared output formatting (`chalk`, `ora`, table helpers).
-- Authentication helpers built on top of `gh auth status` / `gh auth token` and an `Octokit` client.
-- Test suite under `test/` plus documentation and troubleshooting notes.
+- **`github_pr_review_inline`** → `gh api repos/{owner}/{repo}/pulls/{n}/comments` with JSON **`commit_id`**, **`path`**, **`line`**, optional **`side`** (`RIGHT` default).
+- **`owner/repo`** from `gh repo view --json nameWithOwner` (session **`cwd`** must be the git repo).
 
-### Usage
+### Shell shim
 
-- **From Pi chat:** run `/ghm help` or `/ghm status`.
-- **From tools:** invoke `ghm_exec` with `{ "args": "status" }`.
-- **From shell (experimental):**
-  - Ensure `pi` is installed and on `PATH`.
-  - Run `node .pi/tools/github-management.js --help`.
+- `scripts/github-management-cli.js` — help + optional spawn of `pi -e …` (experimental).
 
+### Planned / not in scope
+
+- Full product parity with IDE-native PR UI (inline diff widgets) — terminal remains the surface; tools wrap **`gh`** / **REST**.
+- Rich standalone **`ghm` Node CLI** without Pi (see installer stub **`scripts/ghm-install.js`**).

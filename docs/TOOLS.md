@@ -48,6 +48,8 @@ Extensions call **`pi.registerTool({ … })`** to add **LLM-callable** tools. Th
 | **`extensions/agent-chain.ts`** | **`run_chain`** |
 | **`extensions/pi-pi.ts`** | **`query_experts`** |
 | **`extensions/subagent-widget.ts`** | **`subagent_create`**, **`subagent_continue`**, **`subagent_remove`**, **`subagent_list`** |
+| **`extensions/web-tools.ts`** | **`web_search`**, **`web_fetch`** |
+| **`extensions/github-management.ts`** | **`ghm_exec`**, **`github_pr_list`**, **`github_pr_view`**, **`github_pr_diff`**, **`github_pr_checks`**, **`github_pr_review_submit`**, **`github_pr_review_inline`** (requires **`gh`**) |
 
 **Other extension files** in this playground (**`cross-agent`**, **`damage-control`**, **`dynamic-loader`**, **`extension-picker`**, **`minimal`**, **`purpose-gate`**, **`pure-focus`**, **`session-memory`**, **`session-replay`**, **`sessions/index`**, **`system-select`**, **`theme-cycler`**, **`tool-counter`**, **`tool-counter-widget`**) do **not** register additional LLM tools in the current code (commands, hooks, UI, or policy only).
 

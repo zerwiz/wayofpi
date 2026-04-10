@@ -1,0 +1,59 @@
+---
+description: Way of Pi web UI — modular dock shell (movable regions, parity, no fixed layout assumptions)
+globs: apps/wayofpi-ui/**/*
+alwaysApply: false
+---
+
+# Way of Pi UI: modular dock shell
+
+Use this when changing **`apps/wayofpi-ui/`** layout, docking, or technical-shell chrome.
+
+## North star
+
+Treat **editor**, **horizontal tool/file strips**, **agent / session chat**, and the **primary sidebar** as the same class of thing: **docks** in a **modular** shell. The user may rearrange them; the codebase should not bake in a single permanent geometry as if it were the only valid UI.
+
+## Appearances and dock composition
+
+**Different appearances** (Pi playground / menu-driven profiles and extension stacks) should **use the same modular dock shell** and differ mainly by **which docks are shown by default**, **where they attach**, and **what tabs/tools/files** each strip or sidebar hosts—not by maintaining a separate hard-coded layout tree per profile.
+
+- **Aggregate / pseudo appearances** (e.g. busy “full playground” vs. lean “project-local Pi” with empty `extensions[]` and stack-via-menu) map to **density presets**: more sidebars, strips, and chat affordances vs. fewer default regions; still the same dock primitives and persistence model.
+- **Labeled extension appearances** (each menu line that resolves to a concrete `extensions/<name>.ts`—e.g. `minimal`, `pure-focus`, `agent-team`, `cross-agent`, …) should surface as **dock content and optional default layout**, not as one-off chrome that bypasses strips/sidebars.
+- **Simple vs technical** (and any future UI modes in the web app) should toggle or swap **dock presets / saved layout slices**, not fork the entire shell component hierarchy.
+
+When adding or wiring an appearance, prefer **versioned layout JSON + dock region config** (see `technicalLayoutStorage`) over JSX that encodes “this profile always looks like this fixed grid.” Canonical Pi menu → extension mapping lives in **`docs/PLAYGROUND.md`** and playground scripts; this rule only requires that the **web shell** express those differences through **modular docks**.
+
+## Visual parity (“equal docks”)
+
+Any region that is **tabs + body** (e.g. main editor column vs. a horizontal tool dock) should follow the **same structural pattern**: tab row, optional path/breadcrumb or title row where it makes sense, body. Avoid a pattern where one area looks like a full document surface and another looks like a downgrade-only “panel” unless the difference is an intentional, documented product choice.
+
+## Movability (product target)
+
+Design and persist layout so these become possible **without a rewrite**:
+
+- **Tool / file dock bands** can move relative to the editor (e.g. above vs. below the editor stack, or additional bands).
+- **Agent / session** can attach to **left**, **right**, or **bottom** (and future edges), not only one hard-coded side.
+- **Primary sidebar** (Explorer, etc.) can live on **left or right** (activity bar follows or mirrors as needed).
+
+Prefer **data-driven layout** (saved regions, split sizes, ordering) over JSX that hard-codes a single tree order when adding new features.
+
+## Multiplicity (product target)
+
+Users may want **several** horizontal dock strips (e.g. side-by-side or multiple stacked rows), each holding **mixed** tool panels and pinned files. **Do not** assume exactly two strips forever; avoid names and types that encode “only top and bottom” as a permanent ceiling unless the UI explicitly documents a temporary limitation.
+
+## Drag-and-drop
+
+**Tabs** (tools and files) should be **draggable** between compatible strips where the product allows it. When implementing drops, use a **single payload model** for strip entries (tool vs file) so all strips stay peers.
+
+## Implementation discipline
+
+- Persist layout in **versioned or migratable** JSON (localStorage or server) so dock geometry can evolve.
+- When full modular docking is not implemented yet, **do not** add layout logic that blocks future moves (e.g. unmovable wrappers, one-off CSS that only works for a single split).
+- If the current build only supports a **subset** (e.g. **one** horizontal strip under the editor, with legacy `strips.top` merged away), document that as **current limitation** in code comments or `docs/WOP_TECHNICAL_UI.md`, not as eternal architecture.
+
+## Related docs
+
+- Rule → functional build (rebuild / add / extend): `docs/WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md`.
+- Phased checklist: `docs/WOP_MODULAR_DOCKS_PLAN.md`.
+- Extension appearances → web views (planning): `docs/WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md`.
+- Technical UI notes: `docs/WOP_TECHNICAL_UI.md` (keep in sync when dock behavior or limits change).
+- Layout storage types: `apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts`.

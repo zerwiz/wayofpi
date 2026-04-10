@@ -105,22 +105,25 @@ Key experts:
 
 There are three main ways to use agents in this repo:
 
-### 3.1 `/system` — one persona in your main chat
+### 3.1 `/system` and `/agent` — one persona in your main chat
 
-- Command: **`/system`** (from `extensions/system-select.ts`).
+- Commands: **`/system`**, **`/agent`** (from `extensions/system-select.ts`).
 - Behavior:
-  - Opens a picker of agent `.md` files.
+  - **`/system`** — one flat picker of every discovered agent `.md`.
+  - **`/agent`** — first pick **domain** (`domain-specialists/<01–10-folder>/` with counts), **core** (non-domain), or **all agents**; second pick chooses the specialist.
   - Merges the chosen agent’s prompt into your **current** chat as the system prompt.
 - Use when:
   - You want **one hat at a time** (e.g. “be the planner for this conversation”).
+  - Prefer **`/agent`** to browse **domain specialists** by category (see **`.pi/agents/domain-specialists/`**).
 
 ### 3.2 `agent-team` — parallel specialists with a grid
 
 - Extension: `extensions/agent-team.ts`.
-- Command: usually exposed via a `just` recipe or stack like `ext-agent-team`.
+- Command: **`just ext-agent-team`** → **`agent-team.ts`** (default team = first entry in **`teams.yaml`**, usually **`full`**). **`just ext-builder-team`** → **`agent-team-build-orchestra.ts`** (separate extension; initial team **`build-orchestra`**, builder-orchestrator prompt + **`planner` / `reviewer` / `documenter` / `builder` + domain agents**). Both stacks include **`session-memory`** + **`context-local-hints`**. **`just ext-agent-chain`** for sequential pipelines. **`just pi-e`**: pick **agent-team** or **agent-team (build-orchestra)** as separate menu numbers.
 - Behavior:
   - Creates a **dispatcher** session and multiple **specialist** sub-sessions.
   - Uses **`.pi/agents/teams.yaml`** presets (e.g. `full`, `plan-build`, `ralph`, `info`, `pi-pi`).
+  - Optional **per-specialist models**: **`.pi/agents/agent-models.json`** or **`model:`** in agent frontmatter — see **`docs/AGENT_TEAMS.md`** §3.1.
 - Use when:
   - You want **scout → planner → builder → reviewer** style flows.
   - You want Ralph to supervise tickets while builder/doc agents work.

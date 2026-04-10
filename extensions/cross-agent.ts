@@ -6,12 +6,16 @@
  *   skills/        → listed as /skill:name (discovery only)
  *   agents/*.md    → listed as @name (discovery only)
  *
+ * Collision avoidance (same process.cwd() as Pi launch): does **not** register a command
+ * name if `extensions/<name>.ts` exists (playground extension wins). Does **not** register
+ * `skill:<name>` if `.pi/skills/<name>/SKILL.md` exists (project skill wins).
+ *
  * Usage: pi -e extensions/cross-agent.ts
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
-import { join, basename } from "node:path";
+import { basename, join } from "node:path";
 import { homedir } from "node:os";
 import { applyExtensionDefaults } from "./themeMap.ts";
 import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
@@ -124,6 +128,16 @@ function scanSkills(dir: string): Discovered[] {
 	return items;
 }
 
+/** Playground ships `extensions/<name>.ts` — avoid duplicate `/name` from .claude/commands. */
+function playgroundHasExtension(projectRoot: string, commandName: string): boolean {
+	return existsSync(join(projectRoot, "extensions", `${commandName}.ts`));
+}
+
+/** Project `.pi/skills/<name>/SKILL.md` is loaded by Pi — avoid duplicate `/skill:name` from ~/.claude/skills. */
+function playgroundHasProjectSkill(projectRoot: string, skillName: string): boolean {
+	return existsSync(join(projectRoot, ".pi", "skills", skillName, "SKILL.md"));
+}
+
 function scanAgents(dir: string): Discovered[] {
 	if (!existsSync(dir)) return [];
 	const items: Discovered[] = [];
@@ -181,6 +195,7 @@ export default function (pi: ExtensionAPI) {
 	for (const g of groups) {
 		for (const cmd of g.commands) {
 			if (seenCmds.has(cmd.name)) continue;
+			if (playgroundHasExtension(cwd, cmd.name)) continue;
 			seenCmds.add(cmd.name);
 			pi.registerCommand(cmd.name, {
 				description: `[${g.source}] ${cmd.description}`.slice(0, 120),
@@ -192,6 +207,7 @@ export default function (pi: ExtensionAPI) {
 		for (const skill of g.skills) {
 			const cmdName = `skill:${skill.name}`;
 			if (seenCmds.has(cmdName)) continue;
+			if (playgroundHasProjectSkill(cwd, skill.name)) continue;
 			seenCmds.add(cmdName);
 			pi.registerCommand(cmdName, {
 				description: `[${g.source}] ${skill.description}`.slice(0, 120),

@@ -656,6 +656,24 @@ Review Queue:
 
 ## System Commands
 
+### `/system`
+Pick any discovered agent **`.md`** persona in a **single flat list** (same scan as **`/agent`**: `agents/`, `.pi/agents/`, `.claude/agents/`, etc.). Merges that agent’s body into the main session system prompt; optional **`tools:`** allowlist in frontmatter.
+
+```bash
+/system
+```
+
+### `/agent`
+Two-step picker: choose **domain** (folders under **`.pi/agents/domain-specialists/`**, e.g. `03-infrastructure`), **core** agents (not under `domain-specialists/`), or **all agents** (flat, like **`/system`**), then pick the specialist to **activate** in this session.
+
+```bash
+/agent
+```
+
+**This playground:** domain specialists live under **`.pi/agents/domain-specialists/<01–10-folder>/`**. See **[AGENTS.md](../AGENTS.md)**.
+
+---
+
 ### `/help`
 Show help information.
 

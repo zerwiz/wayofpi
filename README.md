@@ -1,8 +1,10 @@
 # Pi extension playground
 
+**Source repository:** [github.com/zerwiz/wayofpi](https://github.com/zerwiz/wayofpi)
+
 This repo is a **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** workspace: extensions, skills, agents, and docs for customizing the **UI**, **agent orchestration**, **safety auditing**, and **cross-agent** integrations.
 
-**This repository also includes:** a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **project-scanner** and **ralph** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for branches + **git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
+**This repository also includes:** **[apps/wayofpi-ui/](apps/wayofpi-ui/)** (Way of Pi technical web shell — see **`apps/wayofpi-ui/README.md`**), **[docs/PLANNING.md](docs/PLANNING.md)** and **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** (Way of Pi product plan), a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **project-scanner** and **ralph** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for branches + **git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
 
 <p align="center">
   <img src="./images/pi-logo.svg" alt="Pi Coding Agent extension playground" width="520">
@@ -63,6 +65,8 @@ just pi           # .env is loaded automatically for every just recipe
 just ext-minimal  # works for all recipes, not just `pi`
 ```
 
+**Standard Pi (no project extensions):** Upstream Pi’s **minimal harness** skips loading **extensions / skills / themes / prompt templates** from **`settings.json`** when you pass [**`--no-extensions --no-skills --no-themes --no-prompt-templates`**](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/README.md) (see *CLI Reference* → *Resource Options*). This repo wraps that as **`scripts/pi-standard`** / **`just pi-standard`** / **`~/.local/bin/pi-standard`** (after **`install-global`**). A leading **`.`** is ignored if you type **`pi-standard .`**. Stock **`pi .`** does not treat **`.`** specially — it is not the same as standard mode.
+
 ---
 
 ## Installation
@@ -77,13 +81,21 @@ Pi is pointed at **local Ollama** (`http://localhost:11434/v1`) with **`agent/mo
 
 ### OpenRouter
 
-Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openrouter`** block in **`agent/models.json`** points at **`https://openrouter.ai/api/v1`** and merges with Pi’s **built-in OpenRouter model list**—use **`/model`** or e.g. **`--model openrouter/google/gemini-3-flash-preview`** (same pattern as **`extensions/agent-team.ts`** defaults). **`openai`** is listed **after** **`openrouter`** in **`agent/models.json`** (keys + merge) with **`OPENAI_API_KEY`** for the native OpenAI API.
+Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openrouter`** block in **`agent/models.json`** points at **`https://openrouter.ai/api/v1`** and merges with Pi’s **built-in OpenRouter model list**—use **`/model`** or e.g. **`--model openrouter/google/gemini-3-flash-preview`** (same pattern as **`extensions/agent-team.ts`** defaults). This playground does **not** register the native **`openai`** provider in **`agent/models.json`** or **`pi.config.json`** (no **`OPENAI_API_KEY`** required for the stock picker); add it back if you want **`api.openai.com`** models.
 
-**Provider order in the TUI:** Pi’s **`/model`** overlay sorts providers with **`localeCompare`**, so **`openai`** appears **before** **`openrouter`** (alphabetically). That cannot be changed from JSON alone; use **`just pi-cycle-or-free-first`** (or the same **`--models`** list) so **Ctrl+P** cycles **OpenRouter `:free` models first**, then other OpenRouter picks, **Ollama**, then **OpenAI** last.
+**Why `/model` (Ctrl+L) may not show Ollama first:** The picker sorts by **`provider` name** (see [`model-selector.ts` `sortModels`](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/modes/interactive/components/model-selector.ts)), so **`anthropic`**, **`google`**, and any other configured provider whose name sorts **before** **`ollama`** appears **above** your local models. Within one provider, order is the merge order from Pi’s registry (for **OpenRouter**, that is a very large catalog — **`pi.config.json` only adds/overrides entries, it does not reorder the full built-in list** in “all models” mode).
 
-**Free OpenRouter models first (reference list):** **`pi.config.json`** lists **`:free`** OpenRouter model ids **before** paid-route OpenRouter rows, then **Ollama**, then **`openai`** / **`gpt-4o-mini`**. Update ids if [OpenRouter](https://openrouter.ai/models) drops or renames a free tier.
+**Ollama → free OpenRouter → paid OpenRouter (scoped picker):** Run **`just pi-picker-ollama-free-or`**, which runs **`pi --models "$(bun scripts/pi-models-scoped-priority.ts)"`**. That limits **`/model`** to models you actually list: all **`ollama/*`** from **`agent/models.json`**, then **`:free`** OpenRouter rows from **`pi.config.json`**, then remaining OpenRouter rows there. Toggle **scoped \| all** with **Tab** in the picker if your Pi build supports it — scoped is the useful mode for this list. **`Ctrl+P`** cycles within the same **`--models`** set.
+
+**Reference ordering in git:** **`pi.config.json`** lists **Ollama** block first, then **OpenRouter `:free`**, then other **OpenRouter**; **`just pi-cycle-or-free-first`** is a hand-written **`--models`** chain (OpenRouter + Ollama; no native OpenAI).
 
 **Loading the key:** **`scripts/ppi`** and **`just`** (from this repo) source **`.env`** before launching **`pi`**, so **`ppi pi`**, **`just pi`**, and **`ppi-<recipe>`** pick up **`OPENROUTER_API_KEY`** automatically. For a bare **`pi`** command, use **`scripts/pi-with-env`** (see **`scripts/README.md`**).
+
+---
+
+## Way of Pi web UI
+
+From the repo root, run **`./start-wayofpi-ui.sh`** to start **`apps/wayofpi-ui`** in dev mode (Bun API on port **3333** + Vite on **5173**), wait until the page responds, then open your default browser (default URL **`http://localhost:5173/`**). The script prepends **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. It sources the repo **`.env`** when present and sets **`WOP_WORKSPACE`** to the playground root unless you already exported **`WOP_WORKSPACE`**. Override the opened URL with **`WOP_UI_URL`**. Full setup: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
 
 ---
 
@@ -103,11 +115,14 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 | **Agents** + **agent-team** | **[docs/AGENTS.md](docs/AGENTS.md)**, **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)** |
 | **Memory** (JSONL, session-memory, saver, `/remember`) | **[docs/AGENT_MEMORY.md](docs/AGENT_MEMORY.md)**, **[docs/SYSTEM.md](docs/SYSTEM.md)** |
 | **Extensions** (shims, checklist) | **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** |
-| **Hermes** / **Honcho** (cross-session memory, local Docker) | **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**, **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)**, **[docs/Hermes_Honcho_connection.md](docs/Hermes_Honcho_connection.md)** |
+| **Hermes** / **Honcho** / **Pi** (local AI) | **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**, **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)**, **[docs/HONCHO_CAPABILITIES.md](docs/HONCHO_CAPABILITIES.md)**, **[docs/HONCHO_OPERATIONS.md](docs/HONCHO_OPERATIONS.md)**, **[docs/Hermes_Honcho_connection.md](docs/Hermes_Honcho_connection.md)**, **[docs/PI_LOCAL_AI.md](docs/PI_LOCAL_AI.md)**, **[docs/HONCHO_LOCAL_AI.md](docs/HONCHO_LOCAL_AI.md)** |
 | **Per-project markdown** | **[projects/README.md](projects/README.md)** |
 | **Changes** | **[CHANGELOG.md](CHANGELOG.md)** |
 | **Porting Codex subagents** | **[docs/PLAN_AWESOME_CODEX_SUBAGENTS.md](docs/PLAN_AWESOME_CODEX_SUBAGENTS.md)** (from [awesome-codex-subagents](https://github.com/zerwiz/awesome-codex-subagents)) |
 | **Agent / model routing** | **[docs/PLAN_AGENT_MODEL_ROUTING.md](docs/PLAN_AGENT_MODEL_ROUTING.md)** |
+| **Way of Pi** (web UI plan + `WOP_*`) | **[docs/PLANNING.md](docs/PLANNING.md)**, **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** — dev: **`./start-wayofpi-ui.sh`**, **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** |
+| **Upstream Pi** (GitHub/npm check + mirror) | **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)** — **`just wop-upstream-check`**, **`just wop-upstream-sync`** |
+| **Way of Pi backlog** | **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)** |
 
 ---
 
@@ -123,7 +138,8 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 | **tool-counter-widget** | `extensions/tool-counter-widget.ts` | Live-updating above-editor widget showing per-tool call counts with background colors                                                                      |
 | **subagent-widget**     | `extensions/subagent-widget.ts`     | `/sub <task>` command that spawns background Pi subagents; each gets its own streaming live-progress widget                                                |
 | **tilldone**            | `extensions/tilldone.ts`            | Task discipline — **`tilldone`** tool gates other tools; footer + widget; writes **`.pi/tilldone-checklist.md`** (Markdown `- [ ]` / `- [x]`) on each update for handoffs and agent **`read`** |
-| **agent-team**          | `extensions/agent-team.ts`          | Dispatcher: `dispatch_agent` + **team_*** tools — add/remove/**replace** members, **reload** nested **`.md`** agent defs (recursive scan of `agents/`, `.claude/agents/`, `.pi/agents/`), switch teams, save/load **`.pi/agents/teams-presets.json`**; grid; **`.pi/agents/teams.yaml`** |
+| **agent-team**          | `extensions/agent-team.ts`          | Dispatcher: `dispatch_agent` + **team_*** tools — add/remove/**replace** members, **reload** nested **`.md`** agent defs (recursive scan of `agents/`, `.claude/agents/`, `.pi/agents/`), switch teams, save/load **`.pi/agents/teams-presets.json`**; grid; **`.pi/agents/teams.yaml`** — initial team = **first** YAML/preset key (e.g. **full**) |
+| **agent-team (build-orchestra)** | `extensions/agent-team-build-orchestra.ts` | Same dispatcher as **agent-team**; initial team **`build-orchestra`** (builder-orchestrator roster). Do not load with **agent-team.ts** in one session. |
 | **system-select**       | `extensions/system-select.ts`       | **`/system`** — interactive switch between agent personas from `.pi/agents/` (recursive), `.claude/agents/`, `.gemini/agents/`, `.codex/agents/` |
 | **damage-control**      | `extensions/damage-control.ts`      | Real-time safety auditing — intercepts dangerous bash patterns and enforces path-based access controls from `.pi/damage-control-rules.yaml`                |
 | **agent-chain**         | `extensions/agent-chain.ts`         | Sequential pipeline orchestrator — chains multiple agents where each step's output feeds into the next step's prompt; **recursive** agent `.md` scan; use **`/chain`** to select and run |
@@ -132,13 +148,14 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 | **session-replay**      | `extensions/session-replay.ts`      | Scrollable timeline overlay of session history - showcasing customizable dialog UI                                                                         |
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
 | **extension-picker**    | `extensions/extension-picker.ts`    | **`/extensions`** lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. In the slash menu, **`/ex`** filters to this command. `/remember` and `/memory` for cross-session notes |
-| **github-management**   | `extensions/github-management.ts`   | Thin Pi shim around the **`ghm`** helper — unified **`git` + `gh`** workflows (see **`.pi/tools/github-management.js`**, **`.pi/extensions/github-management.ts`**) |
+| **github-management**   | `extensions/github-management.ts`   | **`github_pr_*`** PR workflows (list/view/diff/checks/review + **inline suggested edits**), **`ghm_exec`**, **`/ghm`** — requires **[GitHub CLI](https://cli.github.com/)** (`gh`). |
 | **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Recap lines use **`zerwis`** (you) / **`pi`** (agent)—change in **`extensions/chatLabels.ts`**. Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
 | **session-saver**     | `extensions/sessions/index.ts`     | Auto-save user/assistant turns to JSON; **`/save`**, **`/list`**, **`/show`**, **`/load`** (`.jsonl` uses `switchSession`). See `extensions/sessions/README.md` |
 | **dynamic-loader**    | `extensions/dynamic-loader.ts`     | **`/extension-hint`** — prints stacked **`pi -e`** suggestions for this playground (`PLAYGROUND_BASES` optional) |
 | **agent-forge**       | `extensions/agent-forge.ts`       | LLM tools **`forge_list`** / **`forge_create`** write `extensions/forge-*.ts` and update **`forge-registry.json`**; shim + **`/reload`** to load new tools |
 | **chronicle**         | `extensions/chronicle.ts`         | Workflow ledger **`.pi/chronicle/ledger.json`**, optional **`workflow.json`**; tools **`chronicle_*`** and **`/chronicle`** (phase 1; no sub-agent spawning) |
 | **ralph**            | `extensions/ralph.ts`            | **Ralph** queue: **`todo/` → `inprogress/` → `done/`**; tool **`ralph_queue_status`**; **`/ralph`**; skill **`/skill:ralph`**; team **`ralph`** (**`ralph`**, **`scout`**, **`planner`**, **`builder`**, **`reviewer`**, **`code-documenter`**, **`documenter`**) |
+| **web-tools**        | `extensions/web-tools.ts`        | Opt-in (**`just ext-web-tools`** or add shim to **`settings.json`**). Omitted from default **`settings`** if you use npm **`pi-web-access`** (same tool names — do not load both). **`web_search`**, **`web_fetch`**. Agent **`web-searcher`**; team **`info`**. |
 
 ---
 
@@ -187,10 +204,11 @@ just ext-tool-counter       # Rich two-line footer with tool tally
 just ext-tool-counter-widget # Per-tool widget above the editor
 just ext-subagent-widget    # Subagent spawner with live progress widgets
 just ext-tilldone           # Task discipline system with live progress tracking
-just ext-agent-team         # Multi-agent orchestration grid dashboard
+just ext-agent-team         # session-memory + context-local-hints + agent-team.ts (default team = first in teams.yaml, often full)
+just ext-builder-team       # same stack but agent-team-build-orchestra.ts → initial team build-orchestra (builder orchestrator roster)
 just ext-system-select      # Agent persona switcher via /system command
 just ext-damage-control     # Safety auditing + minimal footer
-just ext-agent-chain        # Sequential pipeline orchestrator with step chaining
+just ext-agent-chain        # session-memory + context-local-hints + sequential pipeline orchestrator
 just ext-pi-pi              # Meta-agent that builds Pi agents using parallel experts
 just ext-session-replay     # Scrollable timeline overlay of session history
 just ext-theme-cycler       # Theme cycler + minimal footer
@@ -201,11 +219,14 @@ just ext-chronicle          # Workflow ledger + chronicle_* tools
 just ext-agent-forge        # forge_list / forge_create
 just ext-dynamic-loader     # /extension-hint for pi -e stacks
 just ext-pi-doctor          # /doctor — playground + toolchain health checks
+just ext-web-tools          # web_search + web_fetch (Brave key optional)
 just ext-ralph              # Ralph queue: ralph_queue_status + /ralph (todo → inprogress → done)
 just all                    # Interactive multi-select (just pi-e) to stack extensions
 ```
 
-### Global commands (`ppi`, `pi-e`, `ppi-*`)
+### Global commands on `PATH` (Pi playground + Hermes)
+
+**Pi** shortcuts: **`ppi`**, **`ppi-*`**, **`pi-e`**, **`pg-pi`**. **Hermes**: **`hermes-honcho-status`**, etc. (from this repo’s **`install-global`**). **Honcho** **`honcho-up`**, **`honcho-open-*`**: install from **`~/honcho-server/scripts/install-honcho-bin.sh`** — **[HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md#command-namespaces-system-first)**.
 
 Recipes are **`just`** targets; from outside this repo use **`scripts/ppi`**, which `cd`s here and runs **`just`**. One-time install puts shortcuts on your **`PATH`**:
 
@@ -221,22 +242,23 @@ Then (with **`~/.local/bin`** on **`PATH`**):
 | Command | Effect |
 |---------|--------|
 | **`ppi`** | `just --list` |
-| **`ppi ext-agent-team`** | same as `just ext-agent-team` in this repo |
+| **`ppi ext-agent-team`** | **`agent-team.ts`** — dispatcher grid; first **`teams.yaml`** team |
+| **`ppi ext-builder-team`** | **`agent-team-build-orchestra.ts`** — same UI; starts on **`build-orchestra`** |
 | **`ppi-ext-pi-doctor`** | Pi + **pi-doctor** + minimal → run **`/doctor`** in the TUI |
-| **`pi-e`** / **`ppi pi-e`** | **1** = full Pi (**`extensions[]`** from linked settings); **2** = project-scoped (**only** stacked **`-e`** + wired agents/skills); **3+** = extension entries; **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** keeps JSON extensions even in scoped mode |
+| **`pi-e`** / **`ppi pi-e`** | **1** alone (±**2**) → full **`extensions[]`** from JSON; **1 12** or any menu **3+** → only stacked **`-e`**; **`PIE_KEEP_SETTINGS_EXTENSIONS=1`** merges JSON + **`-e`** — **[docs/PLAYGROUND.md](docs/PLAYGROUND.md)** |
 | **`ppi-pi`** | plain Pi (`just pi`) — does **not** replace the real **`pi`** binary |
-| **`ppi-honcho-up`**, **`ppi-hermes-status`**, … | other `justfile` recipes |
 
-Details: **[scripts/README.md](scripts/README.md)**.
+Hermes **`just`** recipes: **`just hermes-honcho-status`**, **`just hermes-honcho-setup`**, … (or **`ppi-…`** / **`hermes-honcho-*`** on **`PATH`** after **`install-global`**). Details: **[scripts/README.md](scripts/README.md)**.
 
-**Honcho / Hermes** (optional — expects `~/honcho-server` and local Hermes venv paths; adjust in `justfile`):
+**Honcho** (optional — `~/honcho-server` clone):
 
 ```bash
-just honcho-up              # Docker: database, redis, api, deriver
-just honcho-up-api          # API-only stack (lighter)
-just honcho-status          # curl Honcho HTTP
-just hermes-honcho-status   # Hermes ↔ Honcho check
+cd ~/honcho-server && just honcho-up    # Docker: database, redis, api, deriver
+cd ~/honcho-server && just honcho-status
+./scripts/install-honcho-bin.sh         # ~/.local/bin: honcho-up, honcho-open-*, …
 ```
+
+**Hermes ↔ Honcho** check from the Pi repo: **`just hermes-honcho-status`** (expects local Hermes venv path in **`justfile`**).
 
 The `open` recipe allows you to spin up a new terminal window with any combination of stacked extensions (omit `.ts`):
 

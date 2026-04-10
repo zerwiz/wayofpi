@@ -2,6 +2,8 @@
 
 This playground documents the **interactive terminal UI** for [Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent). Exact labels may vary slightly by **Pi version**; reserved keys are also listed in the repo root **[`RESERVED_KEYS.md`](../RESERVED_KEYS.md)**.
 
+**Context footer:** **`minimal`**, **`agent-team`**, **`agent-chain`**, and **`pi-pi`** show **`[###-------] N%`** plus optional **`used/contextWindow ctx`** (when **`getContextUsage()`** exposes sizes) and session **`↓in ↑out`** totals from assistant usage — **`extensions/footer-context-stats.ts`**.
+
 ---
 
 ## 1. Thinking vs “what the assistant says”
@@ -30,7 +32,7 @@ There is **no single switch** in this repo’s docs that hides *everything* exce
 | Shortcut | Action |
 |----------|--------|
 | **Ctrl+P** / **Ctrl+Shift+P** | Cycle model forward / backward |
-| **Ctrl+L** | Open model picker |
+| **Ctrl+L** | Open model picker (sorts by **provider** name A→Z — e.g. **anthropic** / **google** before **ollama** unless you launch with a scoped **`--models`** list; **`just pi-picker-ollama-free-or`** in this repo) |
 | **/** | Command palette (slash commands) |
 | **!** / **!!** | Run bash (with / without extra context) |
 

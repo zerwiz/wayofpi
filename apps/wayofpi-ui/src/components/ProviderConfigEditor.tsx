@@ -1,0 +1,148 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { PI_MODEL_CONFIG_ENTRIES, type PiModelConfigPath } from "../constants/piModelConfigPaths";
+import { useFileEditor } from "../hooks/useFileEditor";
+
+function tryParseJson(text: string): { ok: true } | { ok: false; message: string } {
+	try {
+		JSON.parse(text);
+		return { ok: true };
+	} catch (e) {
+		const msg = e instanceof Error ? e.message : String(e);
+		return { ok: false, message: msg };
+	}
+}
+
+export function ProviderConfigEditor({
+	appearanceDark,
+	initialPath,
+	initialPathNonce = 0,
+	onInitialPathConsumed,
+	onAfterSave,
+}: {
+	appearanceDark: boolean;
+	/** When set (e.g. from menu), select this file and optionally clear via callback. */
+	initialPath?: PiModelConfigPath | null;
+	/** Bump when re-focusing the same path from the menu. */
+	initialPathNonce?: number;
+	onInitialPathConsumed?: () => void;
+	onAfterSave?: () => void;
+}) {
+	const [selected, setSelected] = useState<PiModelConfigPath>(() =>
+		initialPath && PI_MODEL_CONFIG_ENTRIES.some((e) => e.path === initialPath)
+			? initialPath
+			: PI_MODEL_CONFIG_ENTRIES[0].path,
+	);
+
+	useEffect(() => {
+		if (!initialPath) return;
+		const known = PI_MODEL_CONFIG_ENTRIES.some((e) => e.path === initialPath);
+		if (known) setSelected(initialPath);
+		onInitialPathConsumed?.();
+		// initialPathNonce lets the menu re-open the same file twice.
+	}, [initialPath, initialPathNonce, onInitialPathConsumed]);
+
+	const { content, setContent, loading, error, dirty, save, reload } = useFileEditor(selected, { autoSave: false });
+
+	const parseCheck = useMemo(() => tryParseJson(content), [content]);
+
+	const border = appearanceDark ? "border-slate-800" : "border-zinc-200";
+	const navBg = appearanceDark ? "bg-slate-950/80" : "bg-zinc-100";
+	const navBtn = appearanceDark
+		? "text-left text-slate-300 hover:bg-slate-800/80"
+		: "text-left text-zinc-800 hover:bg-white";
+	const navActive = appearanceDark ? "border-l-2 border-sky-500 bg-slate-900/90 text-white" : "border-l-2 border-sky-600 bg-white text-zinc-900";
+	const sub = appearanceDark ? "text-slate-500" : "text-zinc-500";
+	const ta = appearanceDark
+		? "border-slate-700 bg-slate-950 text-slate-200 placeholder:text-slate-600"
+		: "border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-400";
+
+	const onSave = useCallback(async () => {
+		if (!parseCheck.ok) return;
+		await save();
+		onAfterSave?.();
+	}, [parseCheck.ok, save, onAfterSave]);
+
+	return (
+		<div className={`flex min-h-[min(420px,50vh)] w-full flex-col overflow-hidden rounded-xl border md:flex-row ${border} ${appearanceDark ? "bg-slate-900/40" : "bg-white"}`}>
+			<nav className={`flex w-full shrink-0 flex-col border-b p-2 md:w-52 md:border-b-0 md:border-r ${border} ${navBg}`}>
+				<div className={`mb-2 px-2 text-[10px] font-bold uppercase tracking-wider ${sub}`}>Pi config</div>
+				<ul className="flex flex-row gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+					{PI_MODEL_CONFIG_ENTRIES.map((e) => {
+						const active = e.path === selected;
+						return (
+							<li key={e.id} className="shrink-0 md:w-full">
+								<button
+									type="button"
+									onClick={() => setSelected(e.path)}
+									className={`w-full rounded px-2 py-2 text-left text-xs font-semibold md:py-2.5 ${navBtn} ${active ? navActive : ""}`}
+									title={e.hint}
+								>
+									{e.label}
+									<span className={`mt-0.5 block font-mono text-[10px] font-normal opacity-80 ${sub}`}>{e.path}</span>
+								</button>
+							</li>
+						);
+					})}
+				</ul>
+				<p className={`mt-2 hidden px-2 text-[10px] leading-snug md:block ${sub}`}>
+					Edits are saved to the workspace over the API. Restart Pi or use <span className="font-mono">/models</span> where
+					applicable so the TUI reloads catalog changes.
+				</p>
+			</nav>
+			<div className="flex min-h-0 min-w-0 flex-1 flex-col">
+				<div className={`flex flex-wrap items-center gap-2 border-b px-3 py-2 ${border}`}>
+					<span className="font-mono text-[11px] text-sky-500">{selected}</span>
+					{loading ? <span className={`text-[11px] ${sub}`}>Loading…</span> : null}
+					{dirty ? <span className="text-[11px] font-bold text-amber-500">Modified</span> : null}
+					<div className="ml-auto flex flex-wrap gap-2">
+						<button
+							type="button"
+							onClick={() => void reload()}
+							disabled={loading}
+							className={
+								appearanceDark
+									? "rounded border border-slate-600 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+									: "rounded border border-zinc-300 px-2 py-1 text-[11px] text-zinc-800 hover:bg-zinc-100 disabled:opacity-40"
+							}
+						>
+							Revert
+						</button>
+						<button
+							type="button"
+							onClick={() => void onSave()}
+							disabled={loading || !dirty || !parseCheck.ok}
+							className="rounded border border-sky-600 bg-sky-600/90 px-2 py-1 text-[11px] font-bold text-white hover:bg-sky-600 disabled:opacity-40"
+						>
+							Save
+						</button>
+					</div>
+				</div>
+				{error ? (
+					<div
+						className={`mx-3 mt-2 rounded border px-2 py-2 font-mono text-[11px] ${
+							appearanceDark ? "border-red-900/60 bg-red-950/50 text-red-200" : "border-red-200 bg-red-50 text-red-900"
+						}`}
+					>
+						{error}
+					</div>
+				) : null}
+				{!parseCheck.ok ? (
+					<div
+						className={`mx-3 mt-2 rounded border px-2 py-2 font-mono text-[11px] ${
+							appearanceDark ? "border-amber-900/50 bg-amber-950/40 text-amber-100" : "border-amber-200 bg-amber-50 text-amber-950"
+						}`}
+					>
+						Invalid JSON — fix before save: {parseCheck.message}
+					</div>
+				) : null}
+				<textarea
+					value={content}
+					onChange={(e) => setContent(e.target.value)}
+					spellCheck={false}
+					className={`m-2 min-h-[280px] flex-1 resize-none rounded border p-3 font-mono text-[12px] leading-relaxed outline-none focus:border-sky-600 ${ta}`}
+					aria-label={`Edit ${selected}`}
+				/>
+			</div>
+		</div>
+	);
+}

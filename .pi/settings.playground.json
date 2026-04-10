@@ -1,18 +1,41 @@
 {
+  "theme": "synthwave",
+  "prompts": [
+    "/home/zerwiz/.pi/.claude/commands"
+  ],
   "extensions": [
+    "/home/zerwiz/.pi/.pi/extensions/agent-forge.ts",
+    "/home/zerwiz/.pi/.pi/extensions/chronicle.ts",
+    "/home/zerwiz/.pi/.pi/extensions/context-local-hints.ts",
+    "/home/zerwiz/.pi/.pi/extensions/dynamic-loader.ts",
+    "/home/zerwiz/.pi/.pi/extensions/extension-picker.ts",
+    "/home/zerwiz/.pi/.pi/extensions/github-management.ts",
+    "/home/zerwiz/.pi/.pi/extensions/honcho-mirror.ts",
     "/home/zerwiz/.pi/.pi/extensions/minimal.ts",
+    "/home/zerwiz/.pi/.pi/extensions/pi-doctor.ts",
+    "/home/zerwiz/.pi/.pi/extensions/ralph.ts",
     "/home/zerwiz/.pi/.pi/extensions/session-memory.ts",
     "/home/zerwiz/.pi/.pi/extensions/session-saver.ts",
-    "/home/zerwiz/.pi/.pi/extensions/agent-team.ts",
-    "/home/zerwiz/.pi/.pi/extensions/system-select.ts",
-    "/home/zerwiz/.pi/.pi/extensions/ralph.ts",
-    "/home/zerwiz/.pi/.pi/extensions/chronicle.ts",
-    "/home/zerwiz/.pi/.pi/extensions/damage-control.ts"
+    "/home/zerwiz/.pi/.pi/extensions/theme-cycler.ts",
+    "/home/zerwiz/.pi/.pi/extensions/web-tools.ts",
+    "/home/zerwiz/.pi/.pi/extensions/workspace-boundary.ts",
+    "/home/zerwiz/.pi/extensions/agent-chain.ts",
+    "/home/zerwiz/.pi/extensions/cross-agent.ts",
+    "/home/zerwiz/.pi/extensions/damage-control.ts",
+    "/home/zerwiz/.pi/extensions/footer-context-stats.ts",
+    "/home/zerwiz/.pi/extensions/pure-focus.ts",
+    "/home/zerwiz/.pi/extensions/purpose-gate.ts",
+    "/home/zerwiz/.pi/extensions/session-replay.ts",
+    "/home/zerwiz/.pi/extensions/subagent-widget.ts",
+    "/home/zerwiz/.pi/extensions/system-select.ts",
+    "/home/zerwiz/.pi/extensions/tilldone.ts",
+    "/home/zerwiz/.pi/extensions/tool-counter-widget.ts",
+    "/home/zerwiz/.pi/extensions/tool-counter.ts"
   ],
   "skills": [
     "/home/zerwiz/.pi/.pi/skills"
   ],
-  "prompts": [
-    "/home/zerwiz/.pi/.claude/commands"
+  "themes": [
+    "/home/zerwiz/.pi/.pi/themes"
   ]
 }

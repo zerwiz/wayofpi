@@ -10,10 +10,14 @@
  * Teams are defined in .pi/agents/teams.yaml — on boot a select dialog lets
  * you pick which team to work with. Only team members are available for dispatch.
  *
+ * **Default team:** first key in merged teams, unless **`PI_AGENT_TEAM_DEFAULT`** is set to a valid team
+ * name (e.g. `build-orchestra`). **`just ext-builder-team`** exports that for the builder-orchestrator roster.
+ *
  * Commands:
  *   /agents-team          — switch active team
  *   /agents-list          — list loaded agents
  *   /agents-grid N        — set column count (default 2)
+ *   /agents-stream [on|off|toggle] — grid stream detail ON by default; turn off to hide (also ctrl+shift+v)
  *   /agents-team-add A    — add agent A to active team (in-memory)
  *   /agents-team-remove A — remove agent A from active team (in-memory)
  *   /agents-team-replace FROM TO — swap one roster slot for another agent
@@ -22,12 +26,17 @@
  *   /agents-preset-load K — activate team/preset K
  *   /agents-preset-list   — list built-in + saved presets
  *   /agents-preset-delete K — delete saved preset K (not YAML teams)
+ *   /agents-models — show resolved Pi --model string per roster agent (overrides + frontmatter)
+ *
+ * Per-subagent models: optional **model** in agent .md frontmatter; optional **.pi/agents/agent-models.json**
+ * (agent name → model id, plus **default** for fallbacks). **dispatch_agent** accepts optional **model** for a one-shot override.
  *
  * LLM tools (dispatcher): team_list, team_member_add, team_member_remove,
  *   team_member_replace, team_reload_agents, team_activate, team_save_preset,
  *   team_load_preset, team_delete_preset
  *
- * Usage: pi -e extensions/agent-team.ts
+ * Usage: `pi -e extensions/agent-team.ts` (default team = first key in **`teams.yaml`**).
+ * For **build-orchestra** only, use **`extensions/agent-team-build-orchestra.ts`** or **`just ext-builder-team`**.
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -36,6 +45,7 @@ import { Text, type AutocompleteItem, truncateToWidth, visibleWidth } from "@mar
 import { spawn } from "child_process";
 import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "fs";
 import { join } from "path";
+import { footerContextStats } from "./footer-context-stats.ts";
 import { applyExtensionDefaults } from "./themeMap.ts";
 import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
 
@@ -45,11 +55,22 @@ interface AgentDef {
 	name: string;
 	description: string;
 	tools: string;
+	/** Optional Pi `--model` value (`provider/id`). Overrides session default when set. */
+	model?: string;
 	systemPrompt: string;
 	file: string;
 }
 
 /** Normalize provider usage objects from JSON stream (`message_end` / `agent_end`). */
+/** Extract streamed tool stdout from tool_execution_update JSON. */
+function partialToolOutput(ev: Record<string, unknown>): string {
+	const pr = ev.partialResult as { content?: Array<{ type?: string; text?: string }> } | undefined;
+	if (!pr?.content || !Array.isArray(pr.content)) return "";
+	return pr.content
+		.map((b) => (b?.type === "text" && typeof b.text === "string" ? b.text : ""))
+		.join("");
+}
+
 function usageInOut(u: unknown): { input: number; output: number } | null {
 	if (!u || typeof u !== "object") return null;
 	const o = u as Record<string, unknown>;
@@ -76,10 +97,16 @@ interface AgentState {
 	toolCount: number;
 	elapsed: number;
 	lastWork: string;
+	/** Latest model thinking preview (stream detail mode + --thinking minimal on sub-pi). */
+	lastThinking: string;
+	/** Current or last tool name from JSON stream (e.g. bash, read). */
+	lastTool: string;
 	contextPct: number;
 	/** Sum of token usage events for the last completed subprocess dispatch (in/out). */
 	lastRunTokensIn: number;
 	lastRunTokensOut: number;
+	/** Last Pi `--model` passed to this specialist (for grid). */
+	resolvedModel: string;
 	sessionFile: string | null;
 	runCount: number;
 	timer?: ReturnType<typeof setInterval>;
@@ -95,6 +122,9 @@ function fmtTok(n: number): string {
 	if (n < 1000) return `${n}`;
 	return `${(n / 1000).toFixed(1)}k`;
 }
+
+/** Built-in team with builder-orchestrator dispatcher prompt (`teams.yaml`). */
+const BUILD_ORCHESTRA_TEAM = "build-orchestra";
 
 // ── Teams YAML Parser ────────────────────────────
 
@@ -117,6 +147,7 @@ function parseTeamsYaml(raw: string): Record<string, string[]> {
 }
 
 const TEAM_PRESETS_FILE = "teams-presets.json";
+const AGENT_MODELS_FILE = "agent-models.json";
 
 interface TeamsPresetsFile {
 	version: 1;
@@ -146,6 +177,38 @@ function mergeTeamMaps(
 	return { ...yamlTeams, ...userPresets };
 }
 
+interface AgentModelsFile {
+	version: 1;
+	/** Agent name (lowercase ok) → full Pi model string e.g. openrouter/anthropic/claude-sonnet-4. Key `default` = fallback when no per-agent rule. */
+	models: Record<string, string>;
+}
+
+function loadAgentModelsFile(presetPath: string): Record<string, string> {
+	if (!existsSync(presetPath)) return {};
+	try {
+		const data = JSON.parse(readFileSync(presetPath, "utf-8")) as AgentModelsFile;
+		if (data && typeof data.models === "object" && data.models) {
+			const out: Record<string, string> = {};
+			for (const [k, v] of Object.entries(data.models)) {
+				if (typeof v === "string" && v.trim()) out[k.trim().toLowerCase()] = v.trim();
+			}
+			return out;
+		}
+	} catch {}
+	return {};
+}
+
+function unquoteFrontmatterField(raw: string): string {
+	let s = raw.trim();
+	if (
+		(s.startsWith('"') && s.endsWith('"')) ||
+		(s.startsWith("'") && s.endsWith("'"))
+	) {
+		s = s.slice(1, -1);
+	}
+	return s.trim();
+}
+
 // ── Frontmatter Parser ───────────────────────────
 
 function parseAgentFile(filePath: string): AgentDef | null {
@@ -164,10 +227,13 @@ function parseAgentFile(filePath: string): AgentDef | null {
 
 		if (!frontmatter.name) return null;
 
+		const modelRaw = frontmatter.model ? unquoteFrontmatterField(frontmatter.model) : "";
+
 		return {
-			name: frontmatter.name,
-			description: frontmatter.description || "",
-			tools: frontmatter.tools || "read,grep,find,ls",
+			name: unquoteFrontmatterField(frontmatter.name),
+			description: unquoteFrontmatterField(frontmatter.description || ""),
+			tools: unquoteFrontmatterField(frontmatter.tools || "read,grep,find,ls"),
+			...(modelRaw ? { model: modelRaw } : {}),
 			systemPrompt: match[2].trim(),
 			file: filePath,
 		};
@@ -211,10 +277,49 @@ export default function (pi: ExtensionAPI) {
 	let userTeamPresets: Record<string, string[]> = {};
 	let activeTeamName = "";
 	let gridCols = 2;
+	/** Default ON: taller cards, subagent `--thinking minimal`, stream thinking/tool into grid. `/agents-stream off` or ctrl+shift+v to hide. */
+	let gridStreamDetail = true;
 	let widgetCtx: any;
 	let sessionDir = "";
 	let extensionCwd = "";
 	let contextWindow = 0;
+	/** Per-agent + `default` overrides from `.pi/agents/agent-models.json`. */
+	let agentModelOverrides: Record<string, string> = {};
+	/** Primary session Pi model (`provider/id`); subagents fall back here if no override. */
+	let dispatcherSessionModel = "openrouter/google/gemini-3-flash-preview";
+
+	function agentModelsPathFor(cwd: string) {
+		return join(cwd, ".pi", "agents", AGENT_MODELS_FILE);
+	}
+
+	function reloadAgentModelOverrides(cwd: string) {
+		agentModelOverrides = loadAgentModelsFile(agentModelsPathFor(cwd));
+	}
+
+	function resolveSubagentModel(def: AgentDef, oneOff?: string | null): string {
+		const o = oneOff?.trim();
+		if (o) return o;
+		const key = def.name.toLowerCase();
+		const fromFile = agentModelOverrides[key];
+		if (fromFile) return fromFile;
+		if (def.model?.trim()) return def.model.trim();
+		const fallback = agentModelOverrides["default"];
+		if (fallback) return fallback;
+		return dispatcherSessionModel;
+	}
+
+	function formatSubagentModelsSection(): string {
+		if (agentStates.size === 0) return "";
+		const lines: string[] = [
+			"",
+			"**Subagent Pi models** (`pi --model`; priority: `dispatch_agent.model` → `.pi/agents/agent-models.json` → agent `model:` frontmatter → `default` in JSON → your session model):",
+		];
+		for (const s of agentStates.values()) {
+			lines.push(`- \`${s.def.name}\`: ${s.resolvedModel}`);
+		}
+		lines.push(`- *(dispatcher session)*: ${dispatcherSessionModel}`);
+		return lines.join("\n");
+	}
 
 	function reloadTeamsFromFiles(cwd: string) {
 		const teamsPath = join(cwd, ".pi", "agents", "teams.yaml");
@@ -246,6 +351,7 @@ export default function (pi: ExtensionAPI) {
 
 		// Load all agent definitions
 		allAgentDefs = scanAgentDirs(cwd);
+		reloadAgentModelOverrides(cwd);
 		reloadTeamsFromFiles(cwd);
 	}
 
@@ -330,6 +436,7 @@ export default function (pi: ExtensionAPI) {
 	function reloadAgentDefinitionsFromDisk(): { ok: boolean; message: string } {
 		if (!extensionCwd) return { ok: false, message: "Extension cwd not set." };
 		allAgentDefs = scanAgentDirs(extensionCwd);
+		reloadAgentModelOverrides(extensionCwd);
 		reloadTeamsFromFiles(extensionCwd);
 		const prev = activeTeamName;
 		if (prev && teams[prev]) {
@@ -436,9 +543,12 @@ export default function (pi: ExtensionAPI) {
 				toolCount: 0,
 				elapsed: 0,
 				lastWork: "",
+				lastThinking: "",
+				lastTool: "",
 				contextPct: 0,
 				lastRunTokensIn: 0,
 				lastRunTokensOut: 0,
+				resolvedModel: resolveSubagentModel(def),
 				sessionFile: existsSync(sessionFile) ? sessionFile : null,
 				runCount: 0,
 			});
@@ -451,9 +561,40 @@ export default function (pi: ExtensionAPI) {
 
 	// ── Grid Rendering ───────────────────────────
 
-	function renderCard(state: AgentState, colWidth: number, theme: any): string[] {
+	/** Word-wrap plain text to fixed line widths (cell interior; mostly ASCII agent blurbs). */
+	function wrapPlainToLines(s: string, lineWidth: number, maxLines: number): string[] {
+		const t = s.replace(/\s+/g, " ").trim();
+		if (!lineWidth || maxLines <= 0) return [];
+		if (!t) return [""];
+		const lines: string[] = [];
+		let cur = "";
+		for (const word of t.split(" ")) {
+			if (!word) continue;
+			if (lines.length >= maxLines) break;
+			const next = cur ? `${cur} ${word}` : word;
+			if (next.length <= lineWidth) {
+				cur = next;
+				continue;
+			}
+			if (cur) {
+				lines.push(truncateToWidth(cur, lineWidth));
+				cur = "";
+				if (lines.length >= maxLines) break;
+			}
+			if (lines.length >= maxLines) break;
+			if (word.length <= lineWidth) {
+				cur = word;
+			} else {
+				lines.push(truncateToWidth(word, lineWidth));
+			}
+		}
+		if (cur && lines.length < maxLines) lines.push(truncateToWidth(cur, lineWidth));
+		return lines.length ? lines.slice(0, maxLines) : [""];
+	}
+
+	function renderCard(state: AgentState, colWidth: number, theme: any, streamMode: boolean): string[] {
 		const w = colWidth - 2;
-		const truncate = (s: string, max: number) => s.length > max ? s.slice(0, max - 3) + "..." : s;
+		const innerTextW = Math.max(4, w - 1);
 
 		const statusColor = state.status === "idle" ? "dim"
 			: state.status === "running" ? "accent"
@@ -463,20 +604,23 @@ export default function (pi: ExtensionAPI) {
 			: state.status === "done" ? "✓" : "✗";
 
 		const name = displayName(state.def.name);
-		const nameStr = theme.fg("accent", theme.bold(truncate(name, w)));
-		const nameVisible = Math.min(name.length, w);
+		const namePlain = truncateToWidth(name, innerTextW);
+		const nameStr = theme.fg("accent", theme.bold(namePlain));
+		const nameVisible = visibleWidth(namePlain);
 
 		const statusStr = `${statusIcon} ${state.status}`;
 		const timeStr = state.status !== "idle" ? ` ${Math.round(state.elapsed / 1000)}s` : "";
-		const statusLine = theme.fg(statusColor, statusStr + timeStr);
-		const statusVisible = statusStr.length + timeStr.length;
+		const statusPlain = truncateToWidth(statusStr + timeStr, innerTextW);
+		const statusLine = theme.fg(statusColor, statusPlain);
+		const statusVisible = visibleWidth(statusPlain);
 
 		// Context bar: 5 blocks + percent
 		const filled = Math.ceil(state.contextPct / 20);
 		const bar = "#".repeat(filled) + "-".repeat(5 - filled);
 		const ctxStr = `[${bar}] ${Math.ceil(state.contextPct)}%`;
-		const ctxLine = theme.fg("dim", ctxStr);
-		const ctxVisible = ctxStr.length;
+		const ctxPlain = truncateToWidth(ctxStr, innerTextW);
+		const ctxLine = theme.fg("dim", ctxPlain);
+		const ctxVisible = visibleWidth(ctxPlain);
 
 		const tokStr =
 			state.status === "running"
@@ -486,30 +630,55 @@ export default function (pi: ExtensionAPI) {
 				: state.lastRunTokensIn + state.lastRunTokensOut > 0
 					? `↓${fmtTok(state.lastRunTokensIn)} ↑${fmtTok(state.lastRunTokensOut)}`
 					: "tok —";
-		const tokLine = theme.fg("dim", tokStr);
-		const tokVisible = tokStr.length;
+		const visTok = truncateToWidth(tokStr, innerTextW);
+		const tokLine = theme.fg("dim", visTok);
+		const tokVisible = visibleWidth(visTok);
 
 		const workRaw = state.task
 			? (state.lastWork || state.task)
 			: state.def.description;
-		const workText = truncate(workRaw, Math.min(50, w - 1));
-		const workLine = theme.fg("muted", workText);
-		const workVisible = workText.length;
+		const maxDescLines = streamMode ? 3 : 2;
+		const workLines = wrapPlainToLines(workRaw || "", innerTextW, maxDescLines);
 
-		const top = "┌" + "─".repeat(w) + "┐";
-		const bot = "└" + "─".repeat(w) + "┘";
+		const top = "╭" + "─".repeat(w) + "╮";
+		const bot = "╰" + "─".repeat(w) + "╯";
 		const border = (content: string, visLen: number) =>
 			theme.fg("dim", "│") + content + " ".repeat(Math.max(0, w - visLen)) + theme.fg("dim", "│");
 
-		return [
+		const modPlain = truncateToWidth(`⎆ ${state.resolvedModel}`, innerTextW);
+		const modLine = theme.fg("dim", modPlain);
+		const modVisible = visibleWidth(modPlain);
+
+		const lines: string[] = [
 			theme.fg("dim", top),
 			border(" " + nameStr, 1 + nameVisible),
+			border(" " + modLine, 1 + modVisible),
 			border(" " + statusLine, 1 + statusVisible),
 			border(" " + ctxLine, 1 + ctxVisible),
 			border(" " + tokLine, 1 + tokVisible),
-			border(" " + workLine, 1 + workVisible),
-			theme.fg("dim", bot),
 		];
+		if (streamMode) {
+			const toolPre = "⚙ ";
+			const toolAvail = Math.max(1, innerTextW - visibleWidth(toolPre));
+			const toolPlain = state.lastTool
+				? toolPre + truncateToWidth(state.lastTool, toolAvail)
+				: "—";
+			const thinkPre = "τ ";
+			const thinkAvail = Math.max(1, innerTextW - visibleWidth(thinkPre));
+			const thinkPlain = state.lastThinking
+				? thinkPre + truncateToWidth(state.lastThinking, thinkAvail)
+				: "—";
+			const toolStyled = theme.fg(state.lastTool ? "accent" : "dim", toolPlain);
+			const thinkStyled = theme.fg(state.lastThinking ? "muted" : "dim", thinkPlain);
+			lines.push(border(" " + toolStyled, 1 + visibleWidth(toolPlain)));
+			lines.push(border(" " + thinkStyled, 1 + visibleWidth(thinkPlain)));
+		}
+		for (const seg of workLines) {
+			const workSeg = theme.fg("muted", seg);
+			lines.push(border(" " + workSeg, 1 + visibleWidth(seg)));
+		}
+		lines.push(theme.fg("dim", bot));
+		return lines;
 	}
 
 	function updateWidget() {
@@ -531,21 +700,44 @@ export default function (pi: ExtensionAPI) {
 					const agents = Array.from(agentStates.values());
 					const rows: string[][] = [];
 
+					const wInner = Math.max(2, colWidth - 2);
+					const emptyCardLine =
+						theme.fg("dim", "│") + " ".repeat(wInner) + theme.fg("dim", "│");
 					for (let i = 0; i < agents.length; i += cols) {
 						const rowAgents = agents.slice(i, i + cols);
-						const cards = rowAgents.map(a => renderCard(a, colWidth, theme));
-
-						while (cards.length < cols) {
-							cards.push(Array(7).fill(" ".repeat(colWidth)));
+						const cards = rowAgents.map((a) =>
+							renderCard(a, colWidth, theme, gridStreamDetail),
+						);
+						const cardHeight = Math.max(...cards.map((c) => c.length), 1);
+						for (const card of cards) {
+							const need = cardHeight - card.length;
+							if (need <= 0) continue;
+							const bot = card.pop();
+							if (bot !== undefined) {
+								for (let k = 0; k < need; k++) card.push(emptyCardLine);
+								card.push(bot);
+							}
 						}
-
-						const cardHeight = cards[0].length;
+						const stubCard = (): string[] => {
+							const top = theme.fg("dim", "╭" + "─".repeat(wInner) + "╮");
+							const bot = theme.fg("dim", "╰" + "─".repeat(wInner) + "╯");
+							if (cardHeight < 2) return [top, bot];
+							return [top, ...Array(cardHeight - 2).fill(emptyCardLine), bot];
+						};
+						while (cards.length < cols) {
+							cards.push(stubCard());
+						}
 						for (let line = 0; line < cardHeight; line++) {
-							rows.push(cards.map(card => card[line] || ""));
+							rows.push(cards.map((card) => card[line] ?? ""));
 						}
 					}
 
-					const output = rows.map(cols => cols.join(" ".repeat(gap)));
+					const rule = theme.fg("dim", "─".repeat(Math.max(0, width)));
+					const title = theme.fg(
+						"accent",
+						truncateToWidth(` ◆ ${activeTeamName}`, width),
+					);
+					const output = [title, rule, ...rows.map(cols => cols.join(" ".repeat(gap)))];
 					text.setText(output.join("\n"));
 					return text.render(width);
 				},
@@ -562,6 +754,7 @@ export default function (pi: ExtensionAPI) {
 		agentName: string,
 		task: string,
 		ctx: any,
+		modelOverride?: string | null,
 	): Promise<{
 		output: string;
 		exitCode: number;
@@ -593,6 +786,8 @@ export default function (pi: ExtensionAPI) {
 		state.toolCount = 0;
 		state.elapsed = 0;
 		state.lastWork = "";
+		state.lastThinking = "";
+		state.lastTool = "";
 		state.lastRunTokensIn = 0;
 		state.lastRunTokensOut = 0;
 		state.runCount++;
@@ -604,9 +799,8 @@ export default function (pi: ExtensionAPI) {
 			updateWidget();
 		}, 1000);
 
-		const model = ctx.model
-			? `${ctx.model.provider}/${ctx.model.id}`
-			: "openrouter/google/gemini-3-flash-preview";
+		const model = resolveSubagentModel(state.def, modelOverride);
+		state.resolvedModel = model;
 
 		// Session file for this agent
 		const agentKey = state.def.name.toLowerCase().replace(/\s+/g, "-");
@@ -619,7 +813,7 @@ export default function (pi: ExtensionAPI) {
 			"--no-extensions",
 			"--model", model,
 			"--tools", state.def.tools,
-			"--thinking", "off",
+			"--thinking", gridStreamDetail ? "minimal" : "off",
 			"--append-system-prompt", state.def.systemPrompt,
 			"--session", agentSessionFile,
 		];
@@ -632,6 +826,7 @@ export default function (pi: ExtensionAPI) {
 		args.push(task);
 
 		const textChunks: string[] = [];
+		const thinkingChunks: string[] = [];
 
 		return new Promise((resolve) => {
 			const proc = spawn("pi", args, {
@@ -651,16 +846,49 @@ export default function (pi: ExtensionAPI) {
 					try {
 						const event = JSON.parse(line);
 						if (event.type === "message_update") {
-							const delta = event.assistantMessageEvent;
+							const delta = event.assistantMessageEvent as
+								| { type?: string; delta?: string }
+								| undefined;
 							if (delta?.type === "text_delta") {
 								textChunks.push(delta.delta || "");
 								const full = textChunks.join("");
 								const last = full.split("\n").filter((l: string) => l.trim()).pop() || "";
 								state.lastWork = last;
 								updateWidget();
+							} else if (delta?.type === "thinking_start") {
+								thinkingChunks.length = 0;
+								state.lastThinking = "";
+								updateWidget();
+							} else if (delta?.type === "thinking_delta") {
+								thinkingChunks.push(delta.delta || "");
+								const fullT = thinkingChunks.join("");
+								const tl = fullT.split("\n").filter((l: string) => l.trim());
+								state.lastThinking = (tl.length ? tl[tl.length - 1] : fullT.slice(-200)) || "";
+								updateWidget();
+							} else if (delta?.type === "thinking_end") {
+								updateWidget();
 							}
 						} else if (event.type === "tool_execution_start") {
 							state.toolCount++;
+							const te = event as { toolName?: string };
+							if (typeof te.toolName === "string" && te.toolName) {
+								state.lastTool = te.toolName;
+							}
+							updateWidget();
+						} else if (event.type === "tool_execution_update") {
+							const ev = event as Record<string, unknown>;
+							const out = partialToolOutput(ev);
+							if (out) {
+								const tail =
+									out.split("\n").filter((l: string) => l.trim()).pop() || out.slice(-120);
+								state.lastWork = `→ ${tail}`;
+								updateWidget();
+							}
+						} else if (event.type === "tool_execution_end") {
+							const te = event as { toolName?: string };
+							if (typeof te.toolName === "string" && te.toolName) {
+								state.lastTool = te.toolName;
+							}
 							updateWidget();
 						} else if (event.type === "message_end") {
 							const msg = event.message;
@@ -774,14 +1002,21 @@ export default function (pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "dispatch_agent",
 		label: "Dispatch Agent",
-		description: "Dispatch a task to a specialist agent. The agent will execute the task and return the result. Use the system prompt to see available agent names.",
+		description:
+			"Dispatch a task to a specialist agent. The agent will execute the task and return the result. Use the system prompt to see available agent names. Optional **model** sets Pi `--model` for that run only (otherwise agent-models.json, agent frontmatter model:, default key, then your session model).",
 		parameters: Type.Object({
 			agent: Type.String({ description: "Agent name (case-insensitive)" }),
 			task: Type.String({ description: "Task description for the agent to execute" }),
+			model: Type.Optional(
+				Type.String({
+					description:
+						"Optional one-shot Pi model (e.g. openrouter/anthropic/claude-3.5-sonnet). Overrides per-agent config for this dispatch only.",
+				}),
+			),
 		}),
 
 		async execute(_toolCallId, params, _signal, onUpdate, ctx) {
-			const { agent, task } = params as { agent: string; task: string };
+			const { agent, task, model } = params as { agent: string; task: string; model?: string };
 
 			try {
 				if (onUpdate) {
@@ -791,7 +1026,7 @@ export default function (pi: ExtensionAPI) {
 					});
 				}
 
-				const result = await dispatchAgent(agent, task, ctx);
+				const result = await dispatchAgent(agent, task, ctx, model ?? null);
 
 				const truncated = result.output.length > 8000
 					? result.output.slice(0, 8000) + "\n\n... [truncated]"
@@ -827,10 +1062,13 @@ export default function (pi: ExtensionAPI) {
 		renderCall(args, theme) {
 			const agentName = (args as any).agent || "?";
 			const task = (args as any).task || "";
+			const modelArg = (args as any).model as string | undefined;
 			const preview = task.length > 60 ? task.slice(0, 57) + "..." : task;
+			const mod = modelArg ? theme.fg("dim", ` · ${modelArg}`) : "";
 			return new Text(
 				theme.fg("toolTitle", theme.bold("dispatch_agent ")) +
 				theme.fg("accent", agentName) +
+				mod +
 				theme.fg("dim", " — ") +
 				theme.fg("muted", preview),
 				0, 0,
@@ -903,7 +1141,7 @@ export default function (pi: ExtensionAPI) {
 				? `${activeTeamName}: ${(teams[activeTeamName] || []).join(", ")}`
 				: "(none)";
 			const catalog = allAgentDefs.map((d) => `- ${d.name}: ${d.description.slice(0, 120)}`).join("\n");
-			const text = `**Teams**\n${formatTeamListText()}\n\n**Active:** ${active}\n\n**All agent definitions (scan):**\n${catalog || "(none)"}`;
+			const text = `**Teams**\n${formatTeamListText()}\n\n**Active:** ${active}\n\n**All agent definitions (scan):**\n${catalog || "(none)"}${formatSubagentModelsSection()}`;
 			return { content: [{ type: "text", text }], details: { teamCount: Object.keys(teams).length } };
 		},
 	});
@@ -1105,6 +1343,36 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	pi.registerCommand("agents-stream", {
+		description: "Grid stream detail (default ON): /agents-stream off to hide, on to show",
+		handler: async (args, ctx) => {
+			widgetCtx = ctx;
+			const a = args.trim().toLowerCase();
+			if (a === "on" || a === "1" || a === "true") gridStreamDetail = true;
+			else if (a === "off" || a === "0" || a === "false") gridStreamDetail = false;
+			else gridStreamDetail = !gridStreamDetail;
+			ctx.ui.notify(
+				`Agent grid stream detail: ${gridStreamDetail ? "ON" : "OFF"} ` +
+					`(default ON; subagent --thinking ${gridStreamDetail ? "minimal" : "off"}; ctrl+shift+v to toggle). Applies to new dispatches.`,
+				"info",
+			);
+			updateWidget();
+		},
+	});
+
+	pi.registerShortcut("ctrl+shift+v", {
+		description: "Toggle agent-team grid stream (default ON; hide compact cards)",
+		handler: async (ctx) => {
+			widgetCtx = ctx;
+			gridStreamDetail = !gridStreamDetail;
+			ctx.ui.notify(
+				`Agent grid stream: ${gridStreamDetail ? "ON" : "OFF"} (subagent --thinking ${gridStreamDetail ? "minimal" : "off"})`,
+				"info",
+			);
+			updateWidget();
+		},
+	});
+
 	pi.registerCommand("agents-team-add", {
 		description: "Add agent to active team: /agents-team-add <agentName>",
 		handler: async (args, ctx) => {
@@ -1151,6 +1419,20 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	pi.registerCommand("agents-models", {
+		description: "Show resolved Pi --model per roster agent (agent-models.json + frontmatter + session)",
+		handler: async (_args, ctx) => {
+			widgetCtx = ctx;
+			const p = agentModelsPathFor(ctx.cwd);
+			const hint = existsSync(p)
+				? p
+				: `${p} (missing — copy .pi/agents/agent-models.example.json)`;
+			const body = formatSubagentModelsSection().replace(/^\s+/, "") || "No active roster.";
+			ctx.ui.notify(`**${hint}**\n\n${body}`, "info");
+			updateWidget();
+		},
+	});
+
 	pi.registerCommand("agents-preset-save", {
 		description: "Save active roster as preset: /agents-preset-save <name> [overwrite]",
 		handler: async (args, ctx) => {
@@ -1194,15 +1476,59 @@ export default function (pi: ExtensionAPI) {
 	// ── System Prompt Override ───────────────────
 
 	pi.on("before_agent_start", async (_event, _ctx) => {
+		if (_ctx.model?.provider && _ctx.model?.id) {
+			dispatcherSessionModel = `${_ctx.model.provider}/${_ctx.model.id}`;
+		}
+		for (const s of agentStates.values()) {
+			s.resolvedModel = resolveSubagentModel(s.def);
+		}
+
 		// Build dynamic agent catalog from active team only
 		const agentCatalog = Array.from(agentStates.values())
-			.map(s => `### ${displayName(s.def.name)}\n**Dispatch as:** \`${s.def.name}\`\n${s.def.description}\n**Tools:** ${s.def.tools}`)
+			.map(
+				s =>
+					`### ${displayName(s.def.name)}\n**Dispatch as:** \`${s.def.name}\`\n**Pi model:** \`${s.resolvedModel}\` (override with \`dispatch_agent\` \`model\` for one shot)\n${s.def.description}\n**Tools:** ${s.def.tools}`,
+			)
 			.join("\n\n");
 
 		const teamMembers = Array.from(agentStates.values()).map(s => displayName(s.def.name)).join(", ");
 
+		const isBuildOrchestra = activeTeamName === BUILD_ORCHESTRA_TEAM;
+		const roleIntro = isBuildOrchestra
+			? `You are the **Builder orchestrator** (dispatcher). You route every implementation task to the **best specialist** on the roster: **planner**, **builder**, **reviewer**, **documenter**, or a **domain builder** (lang-*/infra-*/data-*). You coordinate outcomes; you do not implement code yourself.`
+			: `You are a dispatcher agent. You coordinate specialist agents to accomplish tasks.`;
+
+		const buildOrchestraWorkflow = isBuildOrchestra
+			? `
+
+## Builder-orchestra workflow (this team)
+You are the **lead builder / orchestrator** in chat: you **never** implement with write/edit/bash. You **coordinate** by dispatching:
+- **planner**, **reviewer**, **documenter** when needed (planning, quality gate, prose docs).
+- **builder** for **generic** implementation when no lang-*/infra-*/data-* is a better match.
+- A **domain specialist** (below) for **stack-specific** code, infra, or ML wiring.
+
+**Core roster** — use when the task fits (not every trivial step needs planner/reviewer/documenter):
+- **planner** — scope, trade-offs, or a multi-step plan before coding when things are ambiguous.
+- **builder** — general implementation when no domain agent is a clearly better fit.
+- **reviewer** — quality, security, and correctness before you claim work is done.
+- **documenter** — user-facing prose: README, changelog, handoff notes.
+
+**Domain builders** (spawn these for the specific code/problem — not every step needs one):
+- **lang-typescript-pro** — TypeScript, typings, Node TS services.
+- **lang-python-pro** — Python libraries, scripts, tooling.
+- **lang-rust-engineer** — Rust crates, systems / performance-sensitive code.
+- **lang-javascript-pro** — JavaScript-first or mixed JS/TS legacy.
+- **lang-react-specialist** — React components, hooks, UI work.
+- **lang-java-architect** — Java, JVM backends, enterprise patterns.
+- **infra-devops-engineer** — CI/CD, pipelines, release automation.
+- **infra-docker-expert** — Dockerfiles, Compose, container layout.
+- **data-ai-engineer** — ML/LLM app integration, data paths touching models.
+
+**Routing:** If the stack is unclear, **planner** first, then one domain builder. For small edits in a known language, go straight to that domain agent. After substantive edits, chain **reviewer**; use **documenter** when behavior changes need user-visible explanation.`
+			: "";
+
 		return {
-			systemPrompt: `You are a dispatcher agent. You coordinate specialist agents to accomplish tasks.
+			systemPrompt: `${roleIntro}
 You MUST delegate implementation work through the dispatch_agent tool — you do not
 use write, edit, or bash yourself.
 
@@ -1212,13 +1538,13 @@ work is done.
 
 ## Active Team: ${activeTeamName}
 Members: ${teamMembers}
-You can ONLY dispatch to agents listed below. Do not attempt to dispatch to agents outside this team.
+You can ONLY dispatch to agents listed below. Do not attempt to dispatch to agents outside this team.${buildOrchestraWorkflow}
 
 ## Team roster management (you have tools for this)
 - **team_list** — all teams (YAML + saved presets) and every scanned agent definition
 - **team_member_add** / **team_member_remove** — change the active team roster (in-memory; reflected immediately for dispatch)
 - **team_member_replace** — swap one roster slot from agent A to agent B (same as “change agent” for that slot)
-- **team_reload_agents** — rescan agent markdown from disk after you edit personas
+- **team_reload_agents** — rescan agent markdown from disk and reload \`.pi/agents/agent-models.json\` after you edit personas or model map
 - **team_activate** or **team_load_preset** — switch to another team or saved preset
 - **team_save_preset** — persist the current active roster under a name to \`.pi/agents/teams-presets.json\` (use **overwrite** if replacing)
 - **team_delete_preset** — remove a saved JSON preset (cannot remove teams that exist only in \`teams.yaml\`)
@@ -1238,6 +1564,7 @@ You can ONLY dispatch to agents listed below. Do not attempt to dispatch to agen
 - You can chain agents: use scout to explore, then builder to implement
 - You can dispatch the same agent multiple times with different tasks
 - Keep tasks focused — one clear objective per dispatch
+- **Subagent models:** specialists run as separate \`pi\` subprocesses with a resolved \`--model\` (see **Pi model** per agent below). Priority: optional \`dispatch_agent\` **model** (one dispatch only) → \`.pi/agents/agent-models.json\` (per-agent + **default** key) → agent .md frontmatter **model:** → your primary session model
 
 ## Agents
 
@@ -1255,6 +1582,10 @@ ${agentCatalog}`,
 		}
 		widgetCtx = _ctx;
 		contextWindow = _ctx.model?.contextWindow || 0;
+		dispatcherSessionModel =
+			_ctx.model?.provider && _ctx.model?.id
+				? `${_ctx.model.provider}/${_ctx.model.id}`
+				: "openrouter/google/gemini-3-flash-preview";
 
 		// Wipe old agent session files so subagents start fresh
 		const sessDir = join(_ctx.cwd, ".pi", "agent-sessions");
@@ -1268,10 +1599,22 @@ ${agentCatalog}`,
 
 		loadAgents(_ctx.cwd);
 
-		// Default to first team — use /agents-team to switch
+		// Default team: PI_AGENT_TEAM_DEFAULT if valid, else first YAML/preset key — /agents-team to switch
 		const teamNames = Object.keys(teams);
 		if (teamNames.length > 0) {
-			activateTeam(teamNames[0]);
+			const preferred = process.env.PI_AGENT_TEAM_DEFAULT?.trim();
+			let initial = teamNames[0];
+			if (preferred) {
+				if (teams[preferred]) {
+					initial = preferred;
+				} else {
+					_ctx.ui.notify(
+						`PI_AGENT_TEAM_DEFAULT="${preferred}" not in teams — using "${initial}".`,
+						"warning",
+					);
+				}
+			}
+			activateTeam(initial);
 		}
 
 		// Dispatcher: dispatch + team mgmt + read-only verify (so "Tool read not found" cannot happen)
@@ -1285,8 +1628,10 @@ ${agentCatalog}`,
 			`/agents-team             Select a team\n` +
 			`/agents-list             Active agents + status\n` +
 			`/agents-grid <1-6>       Grid columns\n` +
+			`/agents-stream [off]   Stream detail ON by default; hide if unwanted (ctrl+shift+v)\n` +
 			`/agents-team-add/remove/replace  Edit active roster\n` +
-			`/agents-reload            Rescan agent .md\n` +
+			`/agents-reload            Rescan agent .md + agent-models.json\n` +
+			`/agents-models            Resolved Pi --model per roster agent\n` +
 			`/agents-preset-save/load/list/delete  Saved presets\n` +
 				`Tools: dispatch + team_* + read, ls, grep (verify only)`,
 			"info",
@@ -1307,7 +1652,8 @@ ${agentCatalog}`,
 				const left = theme.fg("dim", ` ${model}`) +
 					theme.fg("muted", " · ") +
 					theme.fg("accent", activeTeamName);
-				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}% `);
+				const stats = footerContextStats(_ctx);
+				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}%${stats} `);
 				const pad = " ".repeat(Math.max(1, width - visibleWidth(left) - visibleWidth(right)));
 
 				return [truncateToWidth(left + pad + right, width)];

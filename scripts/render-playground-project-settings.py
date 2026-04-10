@@ -21,6 +21,10 @@ _SKIP_EXT_ROOT = frozenset({"themeMap.ts", "chatLabels.ts", "agent-dir-scan.ts"}
 # Full-link merge skips these factories (opt in via `just ext-pi-pi` or an explicit `pi-e` line).
 _FULL_MERGE_OPT_IN = frozenset({"pi-pi.ts"})
 
+# Do not auto-merge dispatcher / grid extensions into app repos — use `just ext-agent-team`,
+# `just ext-builder-team`, `just ext-agent-chain`, or `pi-e` instead.
+_FULL_MERGE_SKIP = frozenset({"agent-team.ts", "agent-team-build-orchestra.ts"})
+
 
 def _abs_under(base: str, *parts: str) -> str:
     return os.path.normpath(os.path.join(base, *parts))
@@ -71,6 +75,8 @@ def _merge_extension_paths(
             if not name.endswith(".ts") or name in _SKIP_EXT_ROOT:
                 continue
             if name in _FULL_MERGE_OPT_IN:
+                continue
+            if name in _FULL_MERGE_SKIP:
                 continue
             if name in shim_names:
                 continue

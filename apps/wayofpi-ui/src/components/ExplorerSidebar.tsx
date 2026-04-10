@@ -1,0 +1,131 @@
+import { ChevronDown, ChevronRight, FilePlus, FolderPlus } from "lucide-react";
+import { useState, type MouseEvent } from "react";
+import { FileTree } from "./FileTree";
+import type { TreeNode } from "../types/tree";
+
+export function ExplorerSidebar({
+	nodes,
+	rootLabel,
+	selectedPath,
+	secondarySelectedPath,
+	openInMainEditorPaths,
+	onSelectFile,
+	onSelectDirectory,
+	onNewFile,
+	onNewFolder,
+	loading,
+	error,
+	expandRevision,
+	pathsToExpand,
+}: {
+	nodes: TreeNode[];
+	rootLabel: string;
+	selectedPath: string | null;
+	secondarySelectedPath?: string | null;
+	openInMainEditorPaths?: readonly string[];
+	onSelectFile: (path: string, ev?: MouseEvent) => void;
+	onSelectDirectory?: (dirPath: string) => void;
+	onNewFile?: () => void;
+	onNewFolder?: () => void;
+	loading: boolean;
+	error: string | null;
+	expandRevision?: number;
+	pathsToExpand?: string[];
+}) {
+	const [outlineOpen, setOutlineOpen] = useState(false);
+	const [timelineOpen, setTimelineOpen] = useState(false);
+	const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
+
+	return (
+		<div className="flex min-h-0 min-w-0 w-full flex-1 flex-col border-r border-[#3c3c3c] bg-[#252526]">
+			<button
+				type="button"
+				onClick={() => setWorkspaceTreeOpen((o) => !o)}
+				className="flex shrink-0 w-full cursor-pointer items-center bg-[#2d2d2d] px-1 py-1 text-left text-[11px] font-bold uppercase text-[#cccccc] hover:bg-[#383838]"
+			>
+				{workspaceTreeOpen ? (
+					<ChevronDown size={14} className="mr-1 shrink-0" />
+				) : (
+					<ChevronRight size={14} className="mr-1 shrink-0" />
+				)}
+				<span className="truncate" title={rootLabel}>
+					{rootLabel || "WORKSPACE"}
+				</span>
+			</button>
+			{workspaceTreeOpen ? (
+				<div className="flex shrink-0 items-center justify-end gap-0.5 border-b border-[#3c3c3c] bg-[#252526] px-1 py-0.5">
+					<button
+						type="button"
+						title="New file"
+						onClick={() => onNewFile?.()}
+						disabled={!onNewFile}
+						className="rounded p-1 text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+					>
+						<FilePlus size={16} />
+					</button>
+					<button
+						type="button"
+						title="New folder"
+						onClick={() => onNewFolder?.()}
+						disabled={!onNewFolder}
+						className="rounded p-1 text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+					>
+						<FolderPlus size={16} />
+					</button>
+				</div>
+			) : null}
+			<div className="min-h-0 flex-1 overflow-y-auto py-1">
+				{!workspaceTreeOpen ? null : loading ? (
+					<div className="px-3 py-2 font-mono text-[12px] text-[#858585]">Loading tree…</div>
+				) : error ? (
+					<div className="px-3 py-2 font-mono text-[12px] text-[#f14c4c]">{error}</div>
+				) : (
+					<FileTree
+						nodes={nodes}
+						selectedPath={selectedPath}
+						secondarySelectedPath={secondarySelectedPath}
+						openInMainEditorPaths={openInMainEditorPaths}
+						onSelectFile={onSelectFile}
+						onSelectDirectory={onSelectDirectory}
+						expandRevision={expandRevision}
+						pathsToExpand={pathsToExpand}
+					/>
+				)}
+			</div>
+			<div className="shrink-0 border-t border-[#3c3c3c] bg-[#2d2d2d]">
+				<button
+					type="button"
+					onClick={() => setOutlineOpen((o) => !o)}
+					className="flex w-full cursor-pointer items-center px-1 py-1 text-left text-[11px] font-bold uppercase text-[#cccccc] hover:bg-[#383838]"
+				>
+					{outlineOpen ? <ChevronDown size={14} className="mr-1 shrink-0" /> : <ChevronRight size={14} className="mr-1 shrink-0" />}
+					OUTLINE
+				</button>
+				{outlineOpen ? (
+					<div className="border-t border-[#3c3c3c] px-3 py-2 font-mono text-[11px] text-[#858585]">
+						{selectedPath ? (
+							<span>Symbols for open file — not wired yet. File: {selectedPath}</span>
+						) : (
+							<span>Open a file to see outline (planned).</span>
+						)}
+					</div>
+				) : null}
+			</div>
+			<div className="shrink-0 border-t border-[#3c3c3c] bg-[#2d2d2d]">
+				<button
+					type="button"
+					onClick={() => setTimelineOpen((o) => !o)}
+					className="flex w-full cursor-pointer items-center px-1 py-1 text-left text-[11px] font-bold uppercase text-[#cccccc] hover:bg-[#383838]"
+				>
+					{timelineOpen ? <ChevronDown size={14} className="mr-1 shrink-0" /> : <ChevronRight size={14} className="mr-1 shrink-0" />}
+					TIMELINE
+				</button>
+				{timelineOpen ? (
+					<div className="border-t border-[#3c3c3c] px-3 py-2 font-mono text-[11px] text-[#858585]">
+						Git / local history — planned. Use your VCS outside the shell for now.
+					</div>
+				) : null}
+			</div>
+		</div>
+	);
+}

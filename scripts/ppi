@@ -45,15 +45,87 @@ run_just() {
 	exec just "$@"
 }
 
+# If Pi exits uncleanly after pi-e cleared extensions[] or shadowed ./tools, recovery files may remain.
+# Uses PI_E_PROJECT_DIR (cwd captured before ppi switches to the playground repo).
+pi_e_recover_project_if_stale() {
+	local project_dir pi_dir bak tdir did=0
+	project_dir="$(cd "${PI_E_PROJECT_DIR:-$PWD}" && pwd)"
+	pi_dir="$project_dir/.pi"
+	bak="$pi_dir/.settings.json.pi-e-restore"
+
+	if [[ -f "$bak" ]]; then
+		mkdir -p "$pi_dir"
+		mv -f "$bak" "$pi_dir/settings.json"
+		echo "pi-e: restored $pi_dir/settings.json from interrupted-session backup." >&2
+		did=1
+	fi
+
+	tdir="$project_dir/tools"
+	local stashes=()
+	shopt -s nullglob
+	stashes=( "$pi_dir"/.pi-tools-shadow.* )
+	shopt -u nullglob
+	if [[ ! -e "$tdir" && ${#stashes[@]} -eq 1 ]]; then
+		mv "${stashes[0]}" "$tdir"
+		echo "pi-e: restored ./tools from Pi session shadow (exit trap did not run)." >&2
+		did=1
+	elif [[ ! -e "$tdir" && ${#stashes[@]} -gt 1 ]]; then
+		echo "pi-e: warning — multiple $pi_dir/.pi-tools-shadow.* entries; fix ./tools manually." >&2
+	fi
+
+	if [[ "$did" -eq 0 ]]; then
+		echo "pi-e: no stale settings backup or tools shadow under $project_dir — opening picker." >&2
+	fi
+}
+
+pi_e_print_help() {
+	cat <<'EOF' >&2
+pi-e
+    Interactive extension picker (run from your app repo so PI_E_PROJECT_DIR is set correctly).
+
+pi-e backup
+pi-e restore
+    If Pi crashed or was killed after pi-e started a session, recover:
+      • .pi/settings.json from .pi/.settings.json.pi-e-restore
+      • ./tools from .pi/.pi-tools-shadow.* when ./tools is missing (single stash only)
+    Then opens the picker. After a normal Pi exit this runs automatically — use this when it did not.
+
+    Do not use while Pi is still running for the same project.
+
+pi-e help
+    This message.
+EOF
+}
+
+# First arg after `pi-e` / `ppi pi-e`.
+pi_e_dispatch_cli() {
+	case "${1:-}" in
+	backup|restore)
+		shift
+		pi_e_recover_project_if_stale
+		run_just pi-e "$@"
+		;;
+	help|-h|--help)
+		pi_e_print_help
+		exit 0
+		;;
+	esac
+	run_just pi-e "$@"
+}
+
 if [[ "$cmd" == "ppi" ]]; then
 	if [[ $# -eq 0 ]]; then
 		run_just --list
+	fi
+	if [[ "$1" == "pi-e" ]]; then
+		shift
+		pi_e_dispatch_cli "$@"
 	fi
 	run_just "$@"
 fi
 
 if [[ "$cmd" == "pi-e" ]]; then
-	run_just pi-e "$@"
+	pi_e_dispatch_cli "$@"
 fi
 
 if [[ "$cmd" == ppi-* ]]; then

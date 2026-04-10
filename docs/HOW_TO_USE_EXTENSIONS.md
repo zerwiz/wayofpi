@@ -155,7 +155,10 @@ These are the most important extensions in this playground and how you normally 
 The **`justfile`** defines helpful stacks, for example:
 
 - `just ext-minimal` → `pi -e extensions/minimal.ts`
-- `just ext-agent-team` → minimal footer + agent-team dispatcher
+- `just ext-agent-team` → session-memory + context-local-hints + **`agent-team.ts`** + theme-cycler (**no** minimal — grid has its own footer)
+- `just ext-builder-team` → same except **`agent-team-build-orchestra.ts`** (initial roster **`build-orchestra`**, not the first YAML team)
+- `just ext-agent-chain` → session-memory + context-local-hints + agent-chain + theme-cycler
+- **`just pi-e`**: **agent-team** vs **agent-team (build-orchestra)** are **different** menu lines, **immediately consecutive** — with the current **`pi-e`** list, **12** = agent-team and **13** = builder (**1–2** are setup). Greedy digit split accepts **`1213`** for both. Do not load both `.ts` entrypoints in one session.
 - `just ext-ralph` → minimal footer + Ralph queue
 - `just ext-theme-cycler` → minimal footer + theme cycler
 

@@ -2,12 +2,8 @@ full:
   - scout
   - planner
   - builder
-  - reviewer
-  - code-documenter
   - documenter
-  - indexer
-  - project-scanner
-  - playground-portal
+  - reviewer
   - ralph
 
 # Single-member team: Pi dispatcher sends prompts to external Hermes CLI; reply on stdout
@@ -40,8 +36,25 @@ plan-build:
   - reviewer
   - code-documenter
 
+# Builder-led orchestration: core planner / builder / reviewer / documenter + domain lang & infra specialists (dispatcher prompt routes stack → agent)
+build-orchestra:
+  - builder
+  - planner
+  - reviewer
+  - documenter
+  - lang-typescript-pro
+  - lang-python-pro
+  - lang-rust-engineer
+  - lang-javascript-pro
+  - lang-react-specialist
+  - lang-java-architect
+  - infra-devops-engineer
+  - infra-docker-expert
+  - data-ai-engineer
+
 info:
   - scout
+  - web-searcher
   - code-documenter
   - documenter
   - indexer

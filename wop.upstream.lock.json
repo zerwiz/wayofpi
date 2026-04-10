@@ -1,0 +1,13 @@
+{
+	"version": 1,
+	"comment": "Pinned upstream refs Way of Pi last synced or acknowledged. Update via: bun scripts/wop-pi-upstream.ts sync --source pi-mono --ref <tag> --apply",
+	"sources": {
+		"pi-mono": {
+			"lastCheckedRemoteRef": "v0.66.1"
+		},
+		"pi-coding-agent-npm": {
+			"npmLatest": "0.66.1",
+			"lastCheckedRemoteRef": "0.66.1"
+		}
+	}
+}

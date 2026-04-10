@@ -1,6 +1,8 @@
 # Hermes + Honcho — quick bridge
 
-**Hermes** (client) talks to **Honcho** (memory API) for **cross-session** recall. That is separate from **Pi**’s per-session JSONL and extensions in this repo.
+**Hermes** (client) talks to **Honcho** (memory API) for **cross-session** recall. **This page is only that Hermes ↔ Honcho link** — not Pi configuration.
+
+**Editing:** Honcho guides are **linked**—if you change this file, update the **rest of the set** too (**[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md#keeping-honcho-documentation-in-sync)**).
 
 Use the **split guides** for detail:
 
@@ -13,19 +15,16 @@ Use the **split guides** for detail:
 
 ## Minimal happy path
 
-1. **Start Honcho** — `just honcho-up` (from this repo) or `docker compose up -d database redis api deriver` in your **`honcho-server`** directory.
-2. **Check API** — `just honcho-status` or `curl http://localhost:18000/`.
+1. **Start Honcho** — `cd ~/honcho-server && just honcho-up` or `docker compose up -d database redis api deriver` in **`~/honcho-server`**.
+2. **Check API** — `cd ~/honcho-server && just honcho-status` or `curl http://localhost:18000/`.
 3. **Align configs** — Same URL in **`~/.honcho/config.json`** (`baseUrl`) and **`~/.hermes/config.yaml`** (`honcho.base_url`); `toolsets` includes **`honcho`**.
 4. **Verify Hermes** — `just hermes-honcho-status`; if broken, `just hermes-honcho-setup`.
 
 ---
 
-## Pi vs Hermes/Honcho
+## Out of scope: Pi
 
-- **Pi** (this playground): coding agent, **[AGENT_MEMORY.md](AGENT_MEMORY.md)**.
-- **Hermes + Honcho**: optional parallel stack for long-lived memory when using Hermes.
-
-No automatic sync between Pi chats and Honcho unless you add it.
+**Pi** does not use *this* Hermes YAML bridge. Pi-first local AI (memory, **honcho-mirror**, launchers) is **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)**. Pi-native memory alone: **[AGENT_MEMORY.md](AGENT_MEMORY.md)**. Honcho **server + mirror**: **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**. If **Hermes** and **Pi** share one Honcho, keep **`honcho.base_url`** / **`baseUrl`** and **workspace / peers** aligned across **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)**, **`~/.honcho/config.json`**, and Pi **`HONCHO_*`** env.
 
 ---
 

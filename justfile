@@ -3,16 +3,43 @@ set dotenv-load := true
 default:
     @just --list
 
+# Way of Pi — upstream Pi (GitHub / npm) availability + optional doc mirror; see scripts/wop-upstream/README.md
+wop-upstream-check:
+    bun scripts/wop-pi-upstream.ts check
+
+wop-upstream-sync *args:
+    bun scripts/wop-pi-upstream.ts sync {{args}}
+
 # g1
 
-# 1. default pi
+# 1. default pi (always load playground .env so OPENROUTER_API_KEY is set)
 pi:
-    pi
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    if [[ -f "$ROOT/.env" ]]; then
+        set -a
+        # shellcheck source=/dev/null
+        source "$ROOT/.env"
+        set +a
+    fi
+    exec pi "$@"
+
+# 1a. Standard Pi (upstream minimal harness): no project extension/skill/theme/prompt discovery — `scripts/pi-standard` (optional leading `.`)
+pi-standard *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    exec "$ROOT/scripts/pi-standard" "$@"
 
 # 1b. Pi with model cycle: OpenRouter :free first, then OpenRouter paid, Ollama, OpenAI last
-#     (Pi /model sorts providers A–Z so openai appears before openrouter; --models fixes Ctrl+P order.)
+#     (Legacy hand-built list; prefer `pi-picker-ollama-free-or` for Ollama-first picker + Ctrl+P.)
 pi-cycle-or-free-first:
-    pi --models "openrouter/google/gemma-3-4b-it:free,openrouter/google/gemma-3n-e2b-it:free,openrouter/meta-llama/llama-3.3-70b-instruct:free,openrouter/qwen/qwen3-4b:free,openrouter/openai/gpt-oss-20b:free,openrouter/google/gemini-3-flash-preview,openrouter/anthropic/claude-sonnet-4,ollama/qwen3.5:9b,openai/gpt-4o-mini"
+    pi --models "openrouter/google/gemma-3-4b-it:free,openrouter/google/gemma-3n-e2b-it:free,openrouter/meta-llama/llama-3.3-70b-instruct:free,openrouter/qwen/qwen3-4b:free,openrouter/google/gemini-3-flash-preview,openrouter/anthropic/claude-sonnet-4,ollama/qwen3.5:9b"
+
+# 1c. /model + Ctrl+P scoped to: Ollama (from agent/models.json) → OpenRouter :free → rest of OpenRouter from pi.config.json → OpenAI
+pi-picker-ollama-free-or:
+    pi --models "$(bun scripts/pi-models-scoped-priority.ts)"
 
 # 2. Pure focus pi: strip footer and status line entirely
 ext-pure-focus:
@@ -48,9 +75,13 @@ ext-tilldone:
 
 #g2
 
-# 10. Agent team: dispatcher orchestrator with team select and grid dashboard
+# 10. Agent team: dispatcher orchestrator with team select and grid dashboard (incl. build-orchestra roster)
 ext-agent-team:
-    pi -e extensions/agent-team.ts -e extensions/theme-cycler.ts
+    pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/agent-team.ts -e extensions/theme-cycler.ts
+
+# 10b. Builder-orchestra dispatcher (separate -e entry from ext-agent-team — starts on team build-orchestra)
+ext-builder-team:
+    pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/agent-team-build-orchestra.ts -e extensions/theme-cycler.ts
 
 # 11. System select: /system to pick an agent persona as system prompt
 ext-system-select:
@@ -62,7 +93,7 @@ ext-damage-control:
 
 # 13. Agent chain: sequential pipeline orchestrator
 ext-agent-chain:
-    pi -e extensions/agent-chain.ts -e extensions/theme-cycler.ts
+    pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/agent-chain.ts -e extensions/theme-cycler.ts
 
 #g3
 
@@ -86,7 +117,11 @@ ext-extension-picker:
 
 # 18. Session memory: reinject recent chat into system prompt (/sessionmemory)
 ext-session-memory:
-    pi -e extensions/session-memory.ts -e extensions/minimal.ts
+	pi -e extensions/session-memory.ts -e extensions/minimal.ts
+
+# 18b. Session memory + local context awareness only (+ minimal). For agent-team / agent-chain use those recipes (they include this stack).
+ext-context-local-hints:
+	pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/minimal.ts
 
 # 19. Session saver: auto-save + /save /list /show /load
 ext-session-saver:
@@ -108,23 +143,15 @@ ext-dynamic-loader:
 ext-pi-doctor:
     pi -e extensions/pi-doctor.ts -e extensions/minimal.ts
 
-# 24. Ralph: todo/inprogress/done ticket queue + ralph_queue_status + /ralph
+# 24. Web tools: web_search + web_fetch (Brave optional; pair with web-searcher agent)
+ext-web-tools:
+    pi -e extensions/web-tools.ts -e extensions/minimal.ts
+
+# 25. Ralph: todo/inprogress/done ticket queue + ralph_queue_status + /ralph
 ext-ralph:
     pi -e extensions/ralph.ts -e extensions/minimal.ts
 
-# honcho / hermes (cross-session memory + orchestration)
-honcho-up:
-    cd "$HOME/honcho-server" && docker compose up -d database redis api deriver
-
-honcho-up-api:
-    cd "$HOME/honcho-server" && docker compose up -d database redis api
-
-honcho-down:
-    cd "$HOME/honcho-server" && docker compose down
-
-honcho-status:
-    curl -sS --connect-timeout 2 http://localhost:18000/ || true
-
+# Hermes (Honcho stack / UI live in ~/honcho-server — see that repo’s justfile + scripts/install-honcho-bin.sh)
 hermes-status:
     "$HOME/.hermes/hermes-agent/venv/bin/hermes" status
 
@@ -136,6 +163,10 @@ hermes-honcho-setup:
 
 # utils
 
+# Ensure OpenRouter `:free` entries are grouped before other OpenRouter rows in pi.config.json
+normalize-pi-config-models:
+    python3 scripts/normalize-pi-config-model-order.py
+
 # Symlink ppi / pi-e / ppi-* into ~/.local/bin (same as ./install-global at repo root)
 install-global:
     @./scripts/install-ppi-global.sh
@@ -144,6 +175,7 @@ install-global:
 #
 # Use: `just pi-e`
 # Input: numbers separated by space/comma (e.g. `1 3 17`) or `all`
+# Keep "agent-team" and "agent-team (build-orchestra)" as consecutive options so the builder line is always N+1 after regular agent-team (e.g. 12 then 13 with the current list).
 pi-e:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -163,7 +195,9 @@ pi-e:
         "tool-counter-widget|extensions/tool-counter-widget.ts"
         "subagent-widget|extensions/subagent-widget.ts"
         "tilldone|extensions/tilldone.ts"
+        # Adjacent: standard dispatcher first, builder-orchestra next (do not insert other menu lines between these two).
         "agent-team|extensions/agent-team.ts"
+        "agent-team (build-orchestra)|extensions/agent-team-build-orchestra.ts"
         "system-select|extensions/system-select.ts"
         "damage-control|extensions/damage-control.ts"
         "agent-chain|extensions/agent-chain.ts"
@@ -179,8 +213,8 @@ pi-e:
     )
 
     echo "Pick one or more items (stacked in one Pi session)."
-    echo "  1 = FULL playground (extensions[] from linked settings — full Pi power)"
-    echo "  2 = project-scoped (wired agents/skills; only menu -e modules load, not the whole JSON list)"
+    echo "  1 = FULL playground (writes/merges settings; full extensions[] only if you pick 1 and/or 2 alone)"
+    echo "  2 = project-scoped (wired agents/skills; stack extensions from menu lines 3+)"
     echo "Enter numbers separated by space/comma (e.g. 1  or  2 12 5) or type 'all'. Greedy digit split (e.g. 112 -> 11,2)."
     echo "(Options 1–2 apply to: $PROJECT_DIR — set PI_E_PROJECT_DIR if you ran plain just pi-e.)"
     echo
@@ -205,6 +239,8 @@ pi-e:
     pi_args=()
     LINK_SELECTED=0
     PLAYGROUND_FULL_ENABLE=0
+    # Any menu line 3+ (real extension) or `all` — Pi should load only stacked -e, not full JSON.
+    HAD_MENU_EXTENSION=0
 
     add_file() {
         local f="$1"
@@ -229,6 +265,7 @@ pi-e:
     }
 
     if [[ "${sel}" == "all" ]]; then
+        HAD_MENU_EXTENSION=1
         for opt in "${options[@]}"; do
             IFS='|' read -r _label file <<< "$opt"
             [[ "$file" == __* ]] && continue
@@ -241,6 +278,9 @@ pi-e:
             if [[ "$token" =~ ^[0-9]+$ ]]; then
                 while IFS= read -r num; do
                     [[ -z "$num" ]] && continue
+                    if (( num >= 3 )); then
+                        HAD_MENU_EXTENSION=1
+                    fi
                     idx=$((num - 1))
                     if (( idx >= 0 && idx < n_opts )); then
                         IFS='|' read -r _label file <<< "${options[$idx]}"
@@ -253,12 +293,31 @@ pi-e:
                 for opt in "${options[@]}"; do
                     IFS='|' read -r label file <<< "$opt"
                     if [[ "$label" == "$token" ]]; then
+                        if [[ "$file" != __* ]]; then
+                            HAD_MENU_EXTENSION=1
+                        fi
                         add_file "$file"
                         break
                     fi
                 done
             fi
         done
+    fi
+
+    # agent-team / agent-chain: prepend session-memory + context-local-hints if missing.
+    if [[ -n "${seen[extensions/agent-team.ts]+x}" || -n "${seen[extensions/agent-team-build-orchestra.ts]+x}" || -n "${seen[extensions/agent-chain.ts]+x}" ]]; then
+        prepend=()
+        if [[ -z "${seen[extensions/session-memory.ts]+x}" ]]; then
+            prepend+=(-e "extensions/session-memory.ts")
+            seen["extensions/session-memory.ts"]=1
+        fi
+        if [[ -z "${seen[extensions/context-local-hints.ts]+x}" ]]; then
+            prepend+=(-e "extensions/context-local-hints.ts")
+            seen["extensions/context-local-hints.ts"]=1
+        fi
+        if [[ ${#prepend[@]} -gt 0 ]]; then
+            pi_args=("${prepend[@]}" "${pi_args[@]}")
+        fi
     fi
 
     # If user didn't choose a base footer, default to `minimal` unless an extension
@@ -269,22 +328,24 @@ pi-e:
         if [[ "$f" == "extensions/pure-focus.ts" ]]; then
             has_pure_focus=true
         fi
-        if [[ "$f" == "extensions/agent-team.ts" ]]; then
+        if [[ "$f" == "extensions/agent-team.ts" || "$f" == "extensions/agent-team-build-orchestra.ts" ]]; then
             has_agent_team=true
         fi
     done
 
-    # Option 1 (FULL): merged settings.json already lists extensions — skip auto minimal.
-    if ! $PLAYGROUND_FULL_ENABLE && ! $has_pure_focus && ! $has_agent_team; then
+    # Option 1 only (no menu extension lines): JSON already lists extensions — skip auto minimal.
+    # Option 1 + extension picks (e.g. 1 12): use CLI stack only; auto minimal unless pure-focus / agent-team.
+    if [[ "$PLAYGROUND_FULL_ENABLE" == "1" && "$HAD_MENU_EXTENSION" == "0" ]]; then
+        :
+    elif ! $has_pure_focus && ! $has_agent_team; then
         add_file "extensions/minimal.ts"
     fi
 
-    # Option 1 = full Pi (keep extensions[] from settings). Option 2 / extension picks /
-    # `all` = CLI stack only (clear extensions[] for this run). PIE_KEEP_SETTINGS_EXTENSIONS=1
-    # always keeps JSON extensions (even with option 2 / picks).
+    # Keep JSON extensions[] only for "setup only": 1 and/or 2 with no menu line 3+.
+    # 1 + 12 → clear for this run (link/settings on disk, but Pi loads only -e). PIE_KEEP_* overrides.
     if [[ "${PIE_KEEP_SETTINGS_EXTENSIONS:-0}" == "1" ]]; then
         export PIE_CLEAR_SETTINGS_EXTENSIONS=0
-    elif [[ "$PLAYGROUND_FULL_ENABLE" == "1" ]]; then
+    elif [[ "$PLAYGROUND_FULL_ENABLE" == "1" && "$HAD_MENU_EXTENSION" == "0" ]]; then
         export PIE_CLEAR_SETTINGS_EXTENSIONS=0
     else
         export PIE_CLEAR_SETTINGS_EXTENSIONS=1
@@ -297,11 +358,15 @@ pi-e:
     fi
     echo
     if [[ "$PIE_CLEAR_SETTINGS_EXTENSIONS" == 1 ]]; then
-        echo "Project-scoped: ignoring extensions[] in .pi/settings.json for this Pi run (restored on exit) — only your -e list loads."
-    elif [[ "$PLAYGROUND_FULL_ENABLE" == 1 ]]; then
-        echo "FULL link: using extensions[] from .pi/settings.json (full playground) plus any -e you selected."
-    else
+        if [[ "$PLAYGROUND_FULL_ENABLE" == "1" ]]; then
+            echo "FULL setup on disk, but you picked extension lines — only your -e stack loads this run (extensions[] cleared until exit)."
+        else
+            echo "Project-scoped: ignoring extensions[] in .pi/settings.json for this run (restored on exit) — only your -e list loads."
+        fi
+    elif [[ "${PIE_KEEP_SETTINGS_EXTENSIONS:-0}" == "1" ]]; then
         echo "PIE_KEEP_SETTINGS_EXTENSIONS=1: merging extensions[] from .pi/settings.json with your -e list."
+    elif [[ "$PLAYGROUND_FULL_ENABLE" == "1" ]]; then
+        echo "FULL link only (no menu extension lines 3+): using extensions[] from .pi/settings.json (full playground)."
     fi
     echo "Launching from $PROJECT_DIR: pi ${pi_args[*]}"
     exec "$PLAYGROUND_ROOT/scripts/pi-launch-from-project.sh" "$PROJECT_DIR" "$PLAYGROUND_ROOT" "${pi_args[@]}"
@@ -334,10 +399,11 @@ all-open:
     just open tool-counter-widget minimal
     just open subagent-widget pure-focus theme-cycler
     just open tilldone theme-cycler
-    just open agent-team theme-cycler
+    just open session-memory context-local-hints agent-team theme-cycler
+    just open session-memory context-local-hints agent-team-build-orchestra theme-cycler
     just open system-select minimal theme-cycler
     just open damage-control minimal theme-cycler
-    just open agent-chain theme-cycler
+    just open session-memory context-local-hints agent-chain theme-cycler
     just open pi-pi theme-cycler
     just open extension-picker minimal
     just open sessions/index minimal

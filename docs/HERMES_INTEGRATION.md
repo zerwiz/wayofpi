@@ -1,6 +1,10 @@
 # Hermes integration (with Honcho memory)
 
-**Hermes** is a separate agent/CLI stack from **Pi**. This doc covers how **Hermes** is configured to use **Honcho** as a **cross-session memory** backend (profiles, search, context, conclusions)—so Hermes can recall structured notes across runs. It does **not** replace Pi’s per-chat **JSONL** transcript; it complements it when you work in Hermes.
+**Hermes** is a separate agent/CLI stack from **Pi**.
+
+**Editing (Honcho-related sections):** Keep in sync with all other Honcho docs—**[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md#keeping-honcho-documentation-in-sync)**.
+
+This doc covers how **Hermes** is configured to use **Honcho** as a **cross-session memory** backend (profiles, search, context, conclusions)—so Hermes can recall structured notes across runs. It does **not** replace Pi’s per-chat **JSONL** transcript; it complements it when you work in Hermes.
 
 For the **Honcho server** (Docker, API, SDK config), see **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**. For a one-page overview of both sides, see **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)**.
 
@@ -77,7 +81,7 @@ From the playground **`justfile`** (paths assume Hermes venv under **`~/.hermes/
 | **`just hermes-honcho-status`** | `hermes honcho status` — good sanity check that Hermes sees Honcho |
 | **`just hermes-honcho-setup`** | `hermes honcho setup` — repair / re-init path when connection or config drift |
 
-Start Honcho before expecting these to succeed: **`just honcho-up`** or **`just honcho-up-api`**.
+Start Honcho before expecting these to succeed: **`cd ~/honcho-server && just honcho-up`** or **`just honcho-up-api`** (from **`~/honcho-server`**).
 
 ---
 
@@ -88,7 +92,7 @@ Start Honcho before expecting these to succeed: **`just honcho-up`** or **`just 
 | **Pi** | Session **JSONL**, optional **session-memory** / **session-saver** / **`/remember`**—see **[AGENT_MEMORY.md](AGENT_MEMORY.md)**. |
 | **Hermes + Honcho** | **Cross-session** structured memory via Honcho API. |
 
-You can use both: Pi for coding-agent sessions in this repo, Hermes for flows where you want Honcho-backed recall. There is no automatic sync between Pi transcripts and Honcho unless you build one.
+You can use both: Pi for coding-agent sessions in this repo, Hermes for CLI flows—with **Honcho** as shared memory when Pi’s **honcho-mirror** extension is loaded (default in this playground’s **`.pi/settings.json`**) and Hermes has the **honcho** toolset. Pi **still** uses **[AGENT_MEMORY.md](AGENT_MEMORY.md)** for its own session context; mirroring does not replace that. Align **`baseUrl`** / workspace. Disable Pi mirroring with **`PI_HONCHO_MIRROR=0`**; see **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §9.
 
 ---
 
@@ -122,6 +126,8 @@ Teams: **`hermes`** (solo), and **`hermes`** is on team **`info`** in **`.pi/age
 | Doc | Topic |
 |-----|--------|
 | **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** | Server, Docker, SDK config, dreaming/deriver |
-| **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)** | Short combined quick reference |
+| **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)** | Hermes ↔ Honcho bridge (not Pi) |
+| **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)** | Pi-first local AI (memory, mirror, `hermes` agent) |
+| **[HONCHO_LOCAL_AI.md](HONCHO_LOCAL_AI.md)** | Pi + Hermes + Honcho stack patterns |
 | **[AGENT_MEMORY.md](AGENT_MEMORY.md)** | Pi memory layers |
 | **[AGENTS.md](AGENTS.md)** | Agent inventory including **`hermes`** |

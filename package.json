@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "description": "Pi Coding Agent extension playground",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zerwiz/wayofpi.git"
+  },
   "dependencies": {
     "yaml": "^2.8.0"
   }

@@ -21,6 +21,7 @@ import { Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { spawn } from "child_process";
 import { readdirSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { join, resolve } from "path";
+import { footerContextStats } from "./footer-context-stats.ts";
 import { applyExtensionDefaults } from "./themeMap.ts";
 
 // ── Types ────────────────────────────────────────
@@ -623,7 +624,8 @@ Ask specific questions about what you need to BUILD. Each expert will return doc
 					: done > 0
 					? theme.fg("success", ` ✓ ${done} done`)
 					: "";
-				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}% `);
+				const stats = footerContextStats(_ctx);
+				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}%${stats} `);
 				const pad = " ".repeat(Math.max(1, width - visibleWidth(left) - visibleWidth(mid) - visibleWidth(right)));
 
 				return [truncateToWidth(left + mid + pad + right, width)];

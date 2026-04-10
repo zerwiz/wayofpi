@@ -10,13 +10,93 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Changed
 
+- **`apps/wayofpi-ui`** — **Upper horizontal tool dock removed**; a single **tool/file strip** remains **under the editor stack**. Legacy **`strips.top`** is merged into **`bottom`** (`collapseTopToolDockIntoBottom` in **`technicalLayoutStorage.ts`**). Docs: **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**, **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)**, **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)**.
+
+### Added
+
+- **`apps/wayofpi-ui`** — **Team Pulse** tab (**`ChatPanel`**) shows an **agent-team–style** roster grid (Pi TUI card parity: status, context bar, tokens, optional stream lines) from **`teams.yaml`** + **`/api/agents`**; live multi-agent streams still planned per **[docs/WOP_MULTI_AGENT_WEBSOCKET.md](docs/WOP_MULTI_AGENT_WEBSOCKET.md)**. **`AgentTeamPulseGrid.tsx`**.
+
+- **Docs** — **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)** (phased TODO: dock parity, **N** strips, movable agent + primary sidebar, layout graph); **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** updated for **`DockStripEntry`** / **`activeIndexBySlot`**; **[docs/PLANNING.md](docs/PLANNING.md)**, **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)**, **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**, **[docs/README.md](docs/README.md)** cross-links.
+
+- **Docs** — **[docs/WOP_GENERATED_FILES_AND_LINE_PARITY.md](docs/WOP_GENERATED_FILES_AND_LINE_PARITY.md)** (Cursor `.cursorignore` / `.cursorindexingignore`, Zed/Git `linguist-*`, doc ↔ code line parity, `wayofpi-ui` binary/image handling); indexed from **[docs/README.md](docs/README.md)** and linked from **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**.
+
+- **Way of Pi planning docs** — **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** (canonical web + headless Pi plan), **[docs/PLANNING.md](docs/PLANNING.md)** (hub), **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**, **[docs/WOP_UI_MANIFEST.md](docs/WOP_UI_MANIFEST.md)**, **[docs/WOP_MULTI_AGENT_WEBSOCKET.md](docs/WOP_MULTI_AGENT_WEBSOCKET.md)**, **[docs/WOP_SAFE_CUSTOMIZATION.md](docs/WOP_SAFE_CUSTOMIZATION.md)**; indexed from **[docs/README.md](docs/README.md)** and **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**.
+
+- **`apps/wayofpi-ui`** — **Simple** vs **Technical** UI toggle (top bar); **`wayofpi.uiMode`** in `localStorage` (default **Simple**). Technical restores activity bar, explorer, bottom panel, and dense status details.
+
+- **`./start-wayofpi-ui.sh`** (repo root) — Starts **`apps/wayofpi-ui`** dev servers and opens the default browser when Vite is ready; sources repo **`.env`**, defaults **`WOP_WORKSPACE`** to the playground root, prepends **`~/.bun/bin`** to **`PATH`**. **`README.md`**, **`apps/wayofpi-ui/README.md`**.
+
+- **Planning** — **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** and **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**: **critical** requirement to **rename Way of Pi backend** files, packages, and log/service identifiers so they are **not** named **`pi`** / **`ppi`** in ways that confuse them with **upstream Pi**; production checklist + backlog note.
+
+- **Way of Pi upstream sync** — **`scripts/wop-pi-upstream.ts`**: **`check`** queries **`badlogic/pi-mono`** tags and **`@mariozechner/pi-coding-agent`** npm **`latest`** vs **`wop.upstream.lock.json`**; **`sync --apply`** downloads a tag and copies configured subtrees into **`vendor/wop-upstream/`** with **`pathRewrites`** (gitignored). **`just wop-upstream-check`**, **`just wop-upstream-sync`**. Docs **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)**, **`scripts/wop-upstream/README.md`**, **`scripts/README.md`**.
+
+- **Docs** — **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)** aggregates missing Way of Pi / **`apps/wayofpi-ui`** / script work; indexed from **`docs/README.md`**, **`docs/PLANNING.md`**, **`docs/REPO_INDEX.md`**, root **`README.md`**.
+
+### Fixed
+
+- **`scripts/render-playground-project-settings.py`** — Full playground merge **no longer** auto-adds **`agent-team.ts`** / **`agent-team-build-orchestra.ts`** to linked app **`settings.json`**; use **`just ext-agent-team`** / **`ext-builder-team`** / **`pi-e`**. Remove those paths from an existing linked project’s **`.pi/settings.json`** once if they were merged earlier.
+
+- **`.pi/extensions/agent-team-build-orchestra.ts`** shim **removed** — Pi scans **`.pi/extensions/*.ts`** and was loading the builder roster on plain **`pi`** / **`just pi`** even when it was omitted from **`extensions[]`**. Builder orchestration remains via **`just ext-builder-team`** / **`pi-e`**. **`docs/EXTENSIONS.md`** (shim table + note about not auto-shimming agent-team).
+
+### Changed
+
+- **`apps/wayofpi-ui`** — Shell **accent color** shifted from VS Code blue to **orange** (`#ea580c` / `#c2410c` hover). **`GET /api/file`** returns **base64** for **images** and other **binary** files; UI shows a **scrollable image preview** or a binary notice. Text editor: **wheel events** on the textarea **scroll** the shared gutter+editor region (fixes scroll when the pointer is over the buffer).
+
+- **Project origin** — Canonical upstream is **[zerwiz/wayofpi](https://github.com/zerwiz/wayofpi)** (`git` **`origin`**, root **`package.json`** **`repository`**, **`README.md`**, **`docs/PLANNING.md`**, **`docs/REPO_INDEX.md`**).
+
+- **`just pi`** — Bash wrapper **sources playground `.env`** before **`exec pi`** so **`OPENROUTER_API_KEY`** is always set when launching via **`just`**. **`agent/auth.json`** (gitignored) may also hold an **`openrouter`** API key for bare **`pi`** / Pi auth storage. **`docs/REPO_INDEX.md`**.
+
+- **`scripts/normalize-pi-config-model-order.py`** + **`just normalize-pi-config-models`** — Keep OpenRouter **`:free`** rows before other OpenRouter in **`pi.config.json`** (repair interleaving). **`scripts/README.md`**.
+
+- **`agent/models.json`**, **`pi.config.json`**, **`just pi-cycle-or-free-first`** — Dropped native **`openai`** provider and all **`openai/*`** OpenRouter rows so **`/model`** stays Ollama + OpenRouter-only without **`OPENAI_API_KEY`**. **`README.md`**.
+
+### Added
+
+- **`scripts/pi-standard`**, **`just pi-standard`**, **`install-global`** → **`~/.local/bin/pi-standard`**, **`ppi-pi-standard`** — Runs Pi with **`--no-extensions --no-skills --no-themes --no-prompt-templates`** (upstream [CLI Reference](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/README.md)); sources playground **`.env`**; optional leading **`.`** dropped. **`scripts/README.md`**, **`README.md`**.
+
+- **`scripts/ppi`** — **`pi-e backup`** and **`pi-e restore`** recover an interrupted **`pi-e`** / **`pi-launch-from-project`** session: restore **`.pi/settings.json`** from **`.pi/.settings.json.pi-e-restore`**, and **`./tools`** from a single **`.pi/.pi-tools-shadow.*`** if **`./tools`** is missing; then run **`just pi-e`**. **`pi-e help`** lists usage. **`scripts/README.md`**, **`pi-launch-from-project.sh`** header comment.
+
+- **`extensions/context-local-hints.ts`** — For **Ollama** / **`PI_CONTEXT_HINT_PROVIDERS`** / localhost **`:11434`**, injects **`<context_awareness>`** each turn; **`/context-hint`**. Shim **`.pi/extensions/context-local-hints.ts`**, default **`.pi/settings.json`**. Docs **`AGENT_MEMORY.md`**, **`EXTENSIONS.md`**; **`just ext-context-local-hints`**.
+- **`extensions/agent-team-build-orchestra.ts`** + shim — separate **`pi -e`** from **`agent-team.ts`**; initial team **`build-orchestra`**. **`just ext-builder-team`**, **`pi-e`** **agent-team (build-orchestra)**. Do **not** load both agent-team variants in one session. **`docs/AGENT_TEAMS.md`**, **`EXTENSIONS.md`**, **`PLAYGROUND.md`**, **`README.md`**.
+
+### Changed
+
+- **`extensions/agent-team.ts`** — optional **`PI_AGENT_TEAM_DEFAULT`** for **`agent-team.ts`** only; builder default moved to **`agent-team-build-orchestra.ts`**. **`docs/AGENT_TEAMS.md`**, **`HOW_TO_USE_AGENTS.md`**, **`README.md`**.
+
+- **`justfile`** — **`ext-builder-team`** uses **`agent-team-build-orchestra.ts`**; **`pi-e`** new menu line; prepend **session-memory** + **context-local-hints** when **agent-team**, **agent-team-build-orchestra**, or **agent-chain** is chosen; **`all-open`** includes builder stack. **`docs/PLAYGROUND.md`**, **`HOW_TO_USE_EXTENSIONS.md`**, **`README.md`**.
+
+- **`pi.config.json`** — **Ollama** first, then OpenRouter (**all `:free` ids** from a live API sync — **26** at generation time — then curated **paid/preview**: Gemini 2.5/3.1, Claude Sonnet/Opus, GPT‑4o/4.1, DeepSeek, Mistral Large, Qwen, Llama 3.1 70B, Grok 4 fast), then **OpenAI** direct. Order is for humans / **`pi-models-scoped-priority.ts`**; **`/model`** global sort unchanged. Re-sync free ids occasionally via [OpenRouter `/api/v1/models`](https://openrouter.ai/api/v1/models) (`:free` in `id`).
+- **`just pi-picker-ollama-free-or`** + **`scripts/pi-models-scoped-priority.ts`** — Scoped **`pi --models`** list: Ollama from **`agent/models.json`**, then OpenRouter free / rest from **`pi.config.json`**, then OpenAI. **`README.md`**, **`docs/TUI.md`**, **`scripts/README.md`** explain why **`/model`** shows other providers before **ollama**.
+
+- **`extensions/agent-team.ts`** — Per-subagent **`--model`** (**`model:`** frontmatter, **`.pi/agents/agent-models.json`**, optional **`dispatch_agent`** **`model`**); grid **`⎆`** line + rounded cards + **`◆`** team header; **`/agents-models`**; **`build-orchestra`** Builder-orchestrator prompt. Example **`.pi/agents/agent-models.example.json`**. **`docs/AGENT_TEAMS.md`**.
+- **`.pi/agents/teams.yaml`** — Team **`build-orchestra`** ( **`builder`**, **`planner`**, **`reviewer`**, **`documenter`**, plus domain specialists). **`docs/AGENT_TEAMS.md`**.
+- **`extensions/cross-agent.ts`** — Do not register **`/<name>`** from **`.claude`/`…`/commands** if **`extensions/<name>.ts`** exists (fixes duplicate **`/ralph`** when **`~/.claude/commands/ralph.md`** is present). Skip **`/skill:<name>`** if **`.pi/skills/<name>/SKILL.md`** exists. **`docs/EXTENSIONS.md`**.
+
+- **`extensions/system-select.ts`** — **`/agent`**: two-step UI to pick **`domain-specialists/<category>/`** then a specialist, or core / flat list; agents carry **`domainCategory`** from path. **`/system`** unchanged (flat). Docs **`AGENTS.md`**, **`docs/commands/REFERENCE.md`**.
+
+- **Footer context readout** — **`extensions/footer-context-stats.ts`**; **`minimal`**, **`agent-team`**, **`agent-chain`**, **`pi-pi`** append **`used/contextWindow ctx`** (best-effort from **`getContextUsage()`**) and **`↓` / `↑`** session token totals after the **`[###---] N%`** bar. **`docs/AGENT_TEAMS.md`**, **`docs/TUI.md`**.
+
+- **`extensions/github-management.ts`** — PR-focused **`github_pr_list`**, **`github_pr_view`**, **`github_pr_diff`**, **`github_pr_checks`**, **`github_pr_review_submit`**, **`github_pr_review_inline`** (REST inline + suggested edits); **`ghm_exec`** returns text; **`/ghm`** adds **`pr-*`** subcommands. Docs **`TOOLS.md`**, **`EXTENSIONS.md`**, **`README.md`**, **`specs/github-management.md`**, **`.pi/skills/github/SKILL.md`**, **`CLAUDE_CODE_VS_PI_GAPS.md`**; **`reviewer`** agent **`tools:`** updated.
+
+- **`extensions/web-tools.ts`** — **`web_search`** tries providers in **`WEB_TOOLS_SEARCH_ORDER`** (default `gemini,brave,duckduckgo`): Gemini *Grounding with Google Search* when **`GEMINI_API_KEY`** is set (**`WEB_TOOLS_GEMINI_MODEL`**, default **`gemini-2.0-flash`**), then Brave, then DuckDuckGo. **`web_fetch`**: **`WEB_TOOLS_FETCH_BACKEND`** `http` (default) \| `gemini` \| `fallback`. **`.env.sample`**, **`web-searcher`** agent, **`README`**, **`docs/EXTENSIONS.md`**.
+
+- **`extensions/agent-team.ts`** — Grid **stream detail** (**thinking + tool** lines) **ON by default**; **`/agents-stream off`** or **`ctrl+shift+v`** to hide. **`docs/AGENT_TEAMS.md`**.
+
+- **`.pi/agents/teams.yaml`** — Team **`full`** no longer includes **`indexer`** (smaller default squad; use **`index`**, **`info`**, or **`new-project`** for **`INDEX.md`**). Docs **`AGENT_TEAMS.md`**, **`AGENTS.md`**, **`agent/AGENTS.md`** updated.
+
 - **Docs + Cursor** — **`docs/PLAYGROUND.md`** adds a canonical **`pi-e`** modes table; **`docs/EXTENSIONS.md`**, **`docs/README.md`**, **`docs/REPO_INDEX.md`**, and **`pi-extensions-context.mdc`** cross-link **``.cursor/rules/pi-pi-e-playground-modes.mdc`** (always-on rule for FULL vs project-scoped **`pi-e`**).
 
 ### Fixed
 
+- **`just pi-e`** — **`1 12`** no longer loads the whole merged **`extensions[]`**; picks on menu **3+** force **`PIE_CLEAR_SETTINGS_EXTENSIONS=1`**. Removed **`if ! \$PLAYGROUND_FULL_ENABLE`** (**`1: command not found`**). **Option 1** (±**2**) **only** still uses full JSON.
+
 - **GitHub** — default branch is **`main`** (was **`feat/playground-updates`**, which blocked branch deletes and confused PR banners). Historical feature branches **`feat/agents-skills-and-scan-2026-03-26`**, **`feat/rebrand-pi-extension-playground`**, **`feat/playground-ralph-docs`**, and **`feat/playground-updates`** are **restored on the remote** at their original tip commits for anyone who wants them alongside **`main`**.
 
 ### Added
+
+- **`extensions/web-tools.ts`** + shim **`.pi/extensions/web-tools.ts`** — tools **`web_search`** (Brave API if **`BRAVE_SEARCH_API_KEY`** / **`BRAVE_API_KEY`**, else DuckDuckGo HTML) and **`web_fetch`**; agent **`.pi/agents/web-searcher.md`**; team **`info`** roster; **`.pi/settings.json`**, **`just ext-web-tools`**, **`.env.sample`**. Docs: **`EXTENSIONS.md`**, **`TOOLS.md`**, **`AGENTS.md`**, **`AGENT_TEAMS.md`**, **`README.md`**.
+
+- **`docs/CLAUDE_CODE_VS_PI_GAPS.md`** — Pi-centric gap analysis vs [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview); links **[COMPARISON.md](COMPARISON.md)** (multi-agent rows updated for **`agent-team`** / **`.pi/agents/teams.yaml`**).
 
 - **`playground-portal`** agent (**.pi/agents/playground-portal.md**), teams **`playground-portal`** (solo) + roster entries on **`new-project`**, **`full`**, **`info`** — ports extensions/skills from **`PI_PLAYGROUND`** into the **app repo**; pairs with **`pi-e` option 2** / **`scripts/init-project-local-pi-env.sh`**.
 

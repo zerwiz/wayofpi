@@ -1,12 +1,13 @@
 /**
  * Minimal — Model name + context meter in a compact footer
  *
- * Shows model ID and a 10-block context usage bar: [###-------] 30%
+ * Shows model ID and a 10-block context usage bar: [###-------] 30% · 12k/128k ctx · ↓4k ↑1k
  *
  * Usage: pi -e extensions/minimal.ts
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { footerContextStats } from "./footer-context-stats.ts";
 import { applyExtensionDefaults } from "./themeMap.ts";
 import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 
@@ -24,7 +25,8 @@ export default function (pi: ExtensionAPI) {
 				const bar = "#".repeat(filled) + "-".repeat(10 - filled);
 
 				const left = theme.fg("dim", ` ${model}`);
-				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}% `);
+				const stats = footerContextStats(ctx);
+				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}%${stats} `);
 				const pad = " ".repeat(Math.max(1, width - visibleWidth(left) - visibleWidth(right)));
 
 				return [truncateToWidth(left + pad + right, width)];

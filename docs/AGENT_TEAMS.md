@@ -8,11 +8,11 @@ For general agent file format and other extensions that use agents, see **[AGENT
 
 ## 1. What `agent-team` does
 
-**Extension:** `extensions/agent-team.ts` (load via shim `.pi/extensions/…` or `pi -e extensions/agent-team.ts`).
+**Extension:** `extensions/agent-team.ts` — standard dispatcher (initial team = first key in **`teams.yaml`**, e.g. **`full`**). **`extensions/agent-team-build-orchestra.ts`** — same code path but initial team **`build-orchestra`** (builder-orchestrator roster). Prefer **`just ext-agent-team`** / **`just ext-builder-team`** / **`pi-e`** (do **not** put either under **`.pi/extensions/`** unless you want that grid on **every** plain **`pi`** — Pi auto-loads all shims there). **`pi-e`** lists them as separate menu lines (**agent-team** vs **agent-team (build-orchestra)**).
 
 - The **primary** Pi agent acts as a **dispatcher**: it **`dispatch_agent`**’s **implementation** work to **named specialists**. It also gets **read-only** built-ins (**`read`**, **`ls`**, **`grep`**) so it can **verify** paths and show the user what specialists produced—**not** **`write`**, **`edit`**, or **`bash`** (those stay on specialists).
 - Each specialist is a **separate Pi subprocess** with its own **session file** under **`.pi/agent-sessions/`**, so specialists can retain context across dispatches.
-- A **grid widget** shows each specialist’s status (idle / running / done / error), **context %** (input vs model window), and **last-run tokens** (**`↓` prompt in**, **`↑` completion out**) parsed from the subprocess JSON stream; the same totals appear in **`dispatch_agent`** tool results and the completion **notify** toast.
+- A **grid widget** shows each specialist’s status (idle / running / done / error), **context %** (input vs model window), **last-run tokens** (**`↓` / `↑`**), and a one-line **work** preview from streamed assistant text. **Stream detail is ON by default**: taller cards with **⚙ current tool** and **τ thinking** (JSON **`thinking_*`** deltas), **`--thinking minimal`** on the sub-**`pi`** process, and **`tool_execution_update`** snippets in the work line. **`/agents-stream off`** or **`ctrl+shift+v`** hides it (compact cards, **`--thinking off`** on subagents). Applies to **new** dispatches after you change it; some models omit thinking in JSON mode.
 
 ---
 
@@ -31,7 +31,7 @@ plan-build:
   - reviewer
 ```
 
-Built-in rosters also include **`new-project`** (**`project-scanner`** + **`indexer`** + **`playground-portal`**) for bootstrapping **`projects/<slug>/`** in the playground from **`projects/_template/`**, for **`INDEX.md`** maps in the target tree, and for **porting playground extensions/skills into an app repo**; **`full`** and **`info`** include **`project-scanner`**, **`indexer`**, and **`playground-portal`** as well. Solo team **`playground-portal`** targets only that agent. Team **`full`** includes **`ralph`** (HTML ticket queue) and does **not** list **`hermes`** or **`red-team`**—use team **`hermes`** (solo) or **`info`** for **`dispatch_agent` `hermes`**, or add **`red-team`** via **`/agents-team-add`** / a saved preset. The **`index`** team is **`indexer`** only—builds **`INDEX.md`** at a requested path as a navigable map. The **`hermes`** team is a **single specialist** (**`hermes`**) that runs the external **Hermes CLI** (`hermes chat -q …`) and returns Hermes’s **stdout** to the dispatcher—see **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** §7. The **`ralph`** team is **Ralph plus helpers** (**`ralph`**, **`scout`**, **`planner`**, **`builder`**, **`reviewer`**, **`code-documenter`**, **`documenter`**) so the dispatcher can delegate exploration, planning, implementation, review, **code-facing docs** (comments / TSDoc), or **prose docs** around HTML ticket work; Ralph may emit **`RALPH_ESCALATE`** when a headless run cannot proceed alone. See **`.pi/agents/teams.yaml`**.
+Built-in rosters also include **`new-project`** (**`project-scanner`** + **`indexer`** + **`playground-portal`**) for bootstrapping **`projects/<slug>/`** in the playground from **`projects/_template/`**, for **`INDEX.md`** maps in the target tree, and for **porting playground extensions/skills into an app repo**. Team **`build-orchestra`** (**`builder`**, **`planner`**, **`reviewer`**, **`documenter`**, plus selected **`lang-*`**, **`infra-*`**, and **`data-ai-engineer`**) uses a **Builder-orchestrator** dispatcher prompt: you coordinate **`planner` / `builder` / `reviewer` / `documenter`** as needed, and dispatch **domain agents** for stack-specific implementation. Launch with **`just ext-builder-team`** or **`pi -e extensions/agent-team-build-orchestra.ts`** so this roster is active on startup. **`just ext-agent-team`** / **`agent-team.ts`** still defaults to the first team in **`teams.yaml`** (**`full`** unless you **`/agents-team`**). You can still set **`PI_AGENT_TEAM_DEFAULT`** manually for **`agent-team.ts`** if needed. Team **`full`** (default “standard” grid) includes **`project-scanner`** and **`playground-portal`** but **not** **`indexer`**—use team **`index`** (solo), **`info`**, or **`new-project`** to **`dispatch_agent` `indexer`**. Team **`info`** includes **`web-searcher`** (**`web_search`** / **`web_fetch`** via **`web-tools`**), **`project-scanner`**, **`indexer`**, **`playground-portal`**, and others. Solo team **`playground-portal`** targets only that agent. Team **`full`** includes **`ralph`** (HTML ticket queue) and does **not** list **`hermes`** or **`red-team`**—use team **`hermes`** (solo) or **`info`** for **`dispatch_agent` `hermes`**, or add **`red-team`** via **`/agents-team-add`** / a saved preset. The **`index`** team is **`indexer`** only—builds **`INDEX.md`** at a requested path as a navigable map. The **`hermes`** team is a **single specialist** (**`hermes`**) that runs the external **Hermes CLI** (`hermes chat -q …`) and returns Hermes’s **stdout** to the dispatcher—see **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** §7. The **`ralph`** team is **Ralph plus helpers** (**`ralph`**, **`scout`**, **`planner`**, **`builder`**, **`reviewer`**, **`code-documenter`**, **`documenter`**) so the dispatcher can delegate exploration, planning, implementation, review, **code-facing docs** (comments / TSDoc), or **prose docs** around HTML ticket work; Ralph may emit **`RALPH_ESCALATE`** when a headless run cannot proceed alone. See **`.pi/agents/teams.yaml`**.
 
 These teams are **versioned with the repo** and are the **source of truth** for built-in sets. You **cannot** delete a YAML-only team via the **`team_delete_preset`** tool (edit the file instead).
 
@@ -68,6 +68,17 @@ Member names must match **`name`** in agent markdown scanned from:
 
 First duplicate `name` wins across directories (see implementation in `scanAgentDirs`).
 
+### 3.1 Per-subagent Pi models (`--model`)
+
+Each specialist runs as a separate **`pi`** subprocess. Its **`--model`** string is resolved in this order:
+
+1. **`dispatch_agent`** optional **`model`** argument — one dispatch only (then the grid/catalog show the normal resolved default again after the next turn).
+2. **`.pi/agents/agent-models.json`** — map **agent name** → model string (keys are case-insensitive; key **`default`** is the fallback when no per-agent entry and no frontmatter `model:`).
+3. Optional **`model:`** in the agent markdown **frontmatter** (same format as **`pi --model`**, e.g. `openrouter/anthropic/claude-3.5-sonnet`).
+4. The **primary session** model (**`provider/id`**).
+
+Copy **`.pi/agents/agent-models.example.json`** to **`agent-models.json`** and edit. **`team_reload_agents`** (or **`/agents-reload`**) reloads that file with the agent scan. **`/agents-models`** prints the resolved map for the **active** roster. The grid shows a **`⎆`** line per card.
+
 ---
 
 ## 4. Dispatcher tools (LLM)
@@ -81,7 +92,7 @@ The dispatcher’s active tool set includes **`dispatch_agent`**, **team managem
 | **`team_list`** | List teams (yaml vs preset), active roster, all scanned agents. |
 | **`team_member_add`** / **`team_member_remove`** | Edit **active** team in memory. |
 | **`team_member_replace`** | Replace one roster slot (`fromAgent` → `toAgent`). |
-| **`team_reload_agents`** | Rescan `*.md` agent files from disk (after edits). |
+| **`team_reload_agents`** | Rescan `*.md` agent files and **`agent-models.json`** from disk (after edits). |
 | **`team_activate`** / **`team_load_preset`** | Switch active team or preset by name. |
 | **`team_save_preset`** | Persist current active roster under a name (`overwrite` optional). |
 | **`team_delete_preset`** | Remove a key from `teams-presets.json` (not pure-YAML teams). |
@@ -97,9 +108,11 @@ The dispatcher’s active tool set includes **`dispatch_agent`**, **team managem
 | **`/agents-team`** | Pick a team from a dialog. |
 | **`/agents-list`** | Active specialists and status. |
 | **`/agents-grid N`** | Grid columns (1–6). |
+| **`/agents-stream`** `[on\|off]` | **Default ON** — use **`off`** to hide thinking + tool lines (**`ctrl+shift+v`** toggles). |
 | **`/agents-team-add`** / **`/agents-team-remove`** | Edit active roster. |
 | **`/agents-team-replace FROM TO`** | Replace one member with another. |
-| **`/agents-reload`** | Rescan agent markdown. |
+| **`/agents-reload`** | Rescan agent markdown + **`agent-models.json`**. |
+| **`/agents-models`** | Show resolved **`--model`** per roster agent. |
 | **`/agents-preset-save`** / **`load`** / **`list`** / **`delete`** | Manage JSON presets. |
 
 On session start, the extension shows a short help banner listing these.
@@ -111,7 +124,7 @@ On session start, the extension shows a short help banner listing these.
 On each turn, **`before_agent_start`** injects a dispatcher system prompt that includes:
 
 - **Active team** name and **member list**
-- Per-agent **dispatch name**, description, and **tools** line
+- Per-agent **dispatch name**, resolved **Pi model** string, description, and **tools** line
 - Instructions to use **`dispatch_agent`** and the **team_*** tools, and when to use **`read`** / **`ls`** / **`grep`** for verification
 
 Only agents **on the active team** are valid **`dispatch_agent`** targets.
@@ -159,7 +172,7 @@ The footer is driven by the **primary (dispatcher) session**, not the subprocess
 
 - It calls **`getContextUsage()`** on the main session and uses **`usage.percent`**.
 - The bar has **10** slots (**10%** per `#`): `Math.round(pct / 10)` filled blocks.
-- The label uses **`Math.round(pct)`**.
+- The label uses **`Math.round(pct)`**, optionally followed by **`footerContextStats`**: **`used/contextWindow`** when **`getContextUsage()`** exposes those fields (names vary by Pi version), and **`↓` / `↑`** cumulative assistant **input** / **output** tokens for the session (same branch tally as **`tool-counter`**).
 
 So the footer reflects **dispatcher** context pressure (your main chat + system prompt + tools), while each card reflects **that specialist’s** last reported usage. **Rounding differs** (`ceil` on cards vs `round` in the footer), which can also nudge numbers apart by one point.
 

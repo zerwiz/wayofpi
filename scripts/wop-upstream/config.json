@@ -1,0 +1,26 @@
+{
+	"version": 1,
+	"sources": [
+		{
+			"id": "pi-mono",
+			"type": "github-archive",
+			"owner": "badlogic",
+			"repo": "pi-mono",
+			"description": "Upstream Pi monorepo (docs + packages). Sync copies selected subtrees under vendor/wop-upstream with Way of Pi–safe path names.",
+			"includePaths": ["packages/coding-agent/docs"],
+			"pathRewrites": [
+				{
+					"match": "^packages/coding-agent/docs",
+					"replace": "upstream-coding-agent-docs"
+				}
+			],
+			"destRoot": "vendor/wop-upstream/pi-mono"
+		},
+		{
+			"id": "pi-coding-agent-npm",
+			"type": "npm-registry",
+			"package": "@mariozechner/pi-coding-agent",
+			"description": "Published Pi agent package on npm. Way of Pi does not vendor this here; check compares registry latest so you can run `pi update` or reinstall when you choose."
+		}
+	]
+}

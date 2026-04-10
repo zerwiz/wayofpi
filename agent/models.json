@@ -55,11 +55,6 @@
       "api": "openai-completions",
       "apiKey": "OPENROUTER_API_KEY",
       "baseUrl": "https://openrouter.ai/api/v1"
-    },
-    "openai": {
-      "api": "openai-completions",
-      "apiKey": "OPENAI_API_KEY",
-      "baseUrl": "https://api.openai.com/v1"
     }
   }
 }

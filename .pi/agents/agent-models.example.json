@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "models": {
+    "default": "openrouter/google/gemini-3-flash-preview",
+    "reviewer": "openrouter/anthropic/claude-3.5-sonnet"
+  }
+}

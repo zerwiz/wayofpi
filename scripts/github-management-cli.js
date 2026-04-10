@@ -2,15 +2,9 @@
 
 /**
  * Lightweight CLI shim for the Pi github-management extension.
+ * Lives under scripts/ (not .pi/tools/) so Pi does not scan legacy project tools/.
  *
- * This file is discovered by the Pi runner when using tool-based flows,
- * but it can also be invoked directly as `node .pi/tools/github-management.js`.
- *
- * For now, this shim only prints a help message and defers real logic
- * to the Pi extension (loaded via `.pi/extensions/github-management.ts`).
- *
- * A future iteration can wire this into a standalone `ghm` binary that
- * talks to the same command handlers over a thin RPC or by spawning Pi.
+ * Invoke: `node scripts/github-management-cli.js` or `ghm` after ghm-install.
  */
 
 const { spawnSync } = require("node:child_process");
@@ -45,9 +39,8 @@ function main() {
 		return;
 	}
 
-	// Attempt to delegate to `pi` if available.
 	const cmd = "pi";
-	const args = ["-e", resolve(__dirname, "../../extensions/github-management.ts"), "--cmd", argv.join(" ")];
+	const args = ["-e", resolve(__dirname, "../extensions/github-management.ts"), "--cmd", argv.join(" ")];
 
 	const res = spawnSync(cmd, args, {
 		stdio: "inherit",
@@ -59,4 +52,3 @@ function main() {
 }
 
 main();
-

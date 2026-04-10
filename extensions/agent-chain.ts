@@ -27,6 +27,7 @@ import { Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { spawn } from "child_process";
 import { readFileSync, existsSync, readdirSync, mkdirSync, unlinkSync } from "fs";
 import { join } from "path";
+import { footerContextStats } from "./footer-context-stats.ts";
 import { applyExtensionDefaults } from "./themeMap.ts";
 import { collectAgentMarkdownFiles } from "./agent-dir-scan.ts";
 
@@ -783,7 +784,8 @@ ${agentCatalog}
 				const left = theme.fg("dim", ` ${model}`) +
 					theme.fg("muted", " · ") +
 					chainLabel;
-				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}% `);
+				const stats = footerContextStats(_ctx);
+				const right = theme.fg("dim", `[${bar}] ${Math.round(pct)}%${stats} `);
 				const pad = " ".repeat(Math.max(1, width - visibleWidth(left) - visibleWidth(right)));
 
 				return [truncateToWidth(left + pad + right, width)];

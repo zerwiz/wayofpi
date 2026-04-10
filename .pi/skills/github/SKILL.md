@@ -107,6 +107,21 @@ Optional (**[GitHub CLI](https://cli.github.com/)**):
 gh pr create --fill --base main
 ```
 
+## PR review from Pi (`github-management`)
+
+When the **`github-management`** extension is loaded and **`gh auth login`** is done, use the **`github_pr_*`** tools (not raw `gh` strings) from the model:
+
+| Tool | Purpose |
+|------|---------|
+| **`github_pr_list`** | Open PRs (JSON). |
+| **`github_pr_view`** | PR metadata + **`headRefOid`** + file list (`pr_number` optional if branch tracks a PR). |
+| **`github_pr_diff`** | Diff; prefer **`stat`** or **`name_only`** on large PRs; **`patch`** may truncate. |
+| **`github_pr_checks`** | CI / check runs. |
+| **`github_pr_review_submit`** | Approve, request changes, or top-level comment. |
+| **`github_pr_review_inline`** | Line comment; for **suggested edits**, put replacement lines in a GitHub **suggestion** markdown fence. **`commit_oid`** = PR **`headRefOid`** from **`github_pr_view`**. |
+
+**`/ghm`** mirrors a subset: `pr-list`, `pr-view`, `pr-diff`, `pr-checks` (output in the TUI). **`ghm_exec`** returns the same text to the chat for scripting.
+
 ## Multi-agent dispatcher pattern (agent-team)
 
 1. **Planner** writes **`plans/PLAN-*.md`** with one subsection **Per-agent worktrees** listing **absolute path** + **branch** per specialist.

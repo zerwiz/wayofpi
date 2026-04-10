@@ -78,12 +78,15 @@ Each row is a **`export default function (pi: ExtensionAPI)`** entrypoint unless
 | ---- | ---- |
 | **`agent-chain.ts`** | Sequential pipelines from **`.pi/agents/agent-chain.yaml`**; tool **`run_chain`**, **`/chain`**. |
 | **`agent-forge.ts`** | **`forge_list`**, **`forge_create`** → writes **`extensions/forge-*.ts`** + **`forge-registry.json`**. |
-| **`agent-team.ts`** | Dispatcher + **`dispatch_agent`** + **`team_*`** tools; grid UI; **`/agents-*`** commands. |
+| **`agent-team.ts`** | Dispatcher + **`dispatch_agent`** + **`team_*`** tools; grid UI; **`/agents-*`** commands (default team = first **`teams.yaml`** key). |
+| **`agent-team-build-orchestra.ts`** | Wrapper: same as **`agent-team`** but initial team **`build-orchestra`** (builder-orchestrator roster). |
+| **`context-local-hints.ts`** | **`<context_awareness>`** for Ollama / local **`baseUrl`** (turn count, rough token hint, recovery steps); **`/context-hint`**. Env **`PI_CONTEXT_HINT_PROVIDERS`**. |
 | **`chronicle.ts`** | Workflow ledger **`.pi/chronicle/`**; **`chronicle_*`** tools, **`/chronicle`**. |
-| **`cross-agent.ts`** | Discovers **`.claude/`**, **`.gemini/`**, **`.codex/`** commands, skills, agents. |
+| **`cross-agent.ts`** | Discovers **`.claude/`**, **`.gemini/`**, **`.codex/`** commands, skills, agents. Skips names that collide with **`extensions/<name>.ts`** or **`.pi/skills/<name>/SKILL.md`** (playground wins). |
 | **`damage-control.ts`** | Bash/file policy from **`.pi/damage-control-rules.yaml`**. |
 | **`dynamic-loader.ts`** | **`/extension-hint`** for stacked **`pi -e`** lines. |
 | **`extension-picker.ts`** | **`/extensions`**, **`/remember`**, **`/memory`**. |
+| **`github-management.ts`** | **`ghm_exec`**, **`github_pr_*`** (list/view/diff/checks/review/inline suggestion), **`/ghm`** — GitHub CLI (`gh`) PR workflows. |
 | **`minimal.ts`** | Compact footer (model + context meter). |
 | **`pi-pi.ts`** | Meta-agent; **`query_experts`**. |
 | **`pi-doctor.ts`** | **`/doctor`** — health checks (toolchain, **`agent/`**, **`.pi/`**, extensions, skills). |
@@ -98,10 +101,11 @@ Each row is a **`export default function (pi: ExtensionAPI)`** entrypoint unless
 | **`system-select.ts`** | **`/system`** agent persona picker. |
 | **`theme-cycler.ts`** | **`/theme`**, Ctrl+X / Ctrl+Q. |
 | **`tilldone.ts`** | **`tilldone`** tool (gates other tools), footer/widget, **`.pi/tilldone-checklist.md`**. |
+| **`web-tools.ts`** | **`web_search`**, **`web_fetch`** (Gemini / Brave / DuckDuckGo — see **`.env.sample`**). **Not** in default **`.pi/settings.json`**: the npm **`pi-web-access`** user extension registers the same tool names; loading both causes a conflict. Use one or the other. Add **`.pi/extensions/web-tools.ts`** back to **`extensions[]`** only if **`pi-web-access`** is disabled, or run **`just ext-web-tools`** for a one-off stack. Pair with **`.pi/agents/web-searcher.md`**. |
 | **`tool-counter.ts`** | Rich footer (tokens, costs, tool counts). |
 | **`tool-counter-widget.ts`** | Above-editor tool-count widget. |
 
-**Not** Pi extension factories (helpers / submodules): **`themeMap.ts`**, **`chatLabels.ts`**, **`sessions/batch-runner.ts`**, **`sessions/theme-lib/`**.
+**Not** Pi extension factories (helpers / submodules): **`themeMap.ts`**, **`chatLabels.ts`**, **`footer-context-stats.ts`**, **`agent-dir-scan.ts`**, **`sessions/batch-runner.ts`**, **`sessions/theme-lib/`**.
 
 ### Shims under `.pi/extensions/` (project auto-load)
 
@@ -113,13 +117,17 @@ Listed in **`.pi/settings.json`** → **`extensions`** (paths relative to repo r
 | **`minimal.ts`** | **`extensions/minimal.ts`** |
 | **`theme-cycler.ts`** | **`extensions/theme-cycler.ts`** (**`/theme`**, Ctrl+X / Ctrl+Q) |
 | **`session-memory.ts`** | **`extensions/session-memory.ts`** |
+| **`context-local-hints.ts`** | **`extensions/context-local-hints.ts`** |
 | **`extension-picker.ts`** | **`extensions/extension-picker.ts`** |
 | **`session-saver.ts`** | **`extensions/sessions/index.ts`** |
 | **`chronicle.ts`** | **`extensions/chronicle.ts`** |
 | **`agent-forge.ts`** | **`extensions/agent-forge.ts`** |
 | **`dynamic-loader.ts`** | **`extensions/dynamic-loader.ts`** |
+| **`github-management.ts`** | **`extensions/github-management.ts`** |
 | **`pi-doctor.ts`** | **`extensions/pi-doctor.ts`** |
 | **`ralph.ts`** | **`extensions/ralph.ts`** |
+
+**`agent-team.ts`** / **`agent-team-build-orchestra.ts`** — Do **not** add shims under **`.pi/extensions/`** for these unless you want the team grid on **every** default **`pi`** launch; Pi auto-loads every **`*.ts`** in **`.pi/extensions/`**. Use **`just ext-agent-team`**, **`just ext-builder-team`**, or **`pi-e`** instead.
 
 Other modules in **`extensions/`** may still be used via **`just`** recipes or manual **`pi -e`** stacks if they are not shimmed. After adding a shim entry, run **`/reload`** in Pi.
 
@@ -181,7 +189,7 @@ Declared under `agent/settings.json` → `packages`. Each package’s `package.j
 
 ### From another repo via this playground (`pi-e`)
 
-**`ppi pi-e`** / **`just pi-e`** runs Pi with **cwd** in your app repo while **`-e`** paths resolve to this clone. **Option 1 (FULL)** keeps the merged **`extensions[]`** in that repo’s **`.pi/settings.json`**. **Option 2** (or extension-only menu picks) temporarily clears **`extensions[]`** for that session so only the stacked **`-e`** list loads; skills/agents can still point at the playground — see **[PLAYGROUND.md](PLAYGROUND.md)** and **`.cursor/rules/pi-pi-e-playground-modes.mdc`**.
+**`ppi pi-e`** / **`just pi-e`** runs Pi with **cwd** in your app repo while **`-e`** paths resolve to this clone. **`extensions[]`** is kept only if you pick **menu 1 and/or 2 alone**; **any line 3+** (e.g. **`1 12`**) clears **`extensions[]`** for that run so only the stacked **`-e`** list loads — see **[PLAYGROUND.md](PLAYGROUND.md)** and **`.cursor/rules/pi-pi-e-playground-modes.mdc`**.
 
 ---
 
