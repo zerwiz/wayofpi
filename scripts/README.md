@@ -1,5 +1,31 @@
 # Scripts
 
+## `bootstrap-wayofpi-environment.sh` — dev environment probe (OS, CPU, tools)
+
+**Purpose:** Print **OS** (Linux / macOS / WSL, plus distro when known), **CPU** (`uname -m`), and whether **bun**, **node**, **npm**, **git**, **just**, **pi**, **rg**, and **ollama** are on `PATH` (and whether the Ollama HTTP API answers on **127.0.0.1:11434**). Suggest **copy-paste** commands for missing tools (**never** runs `sudo` or package managers without you).
+
+**Idempotent / safe defaults:** With no flags, the script **only reports** and prints hints. It follows common bootstrap practice: **`set -euo pipefail`**, probe-before-mutate, and optional **`curl | bash`** only when you pass **`--install`** (and confirm, or use **`-y`**).
+
+```bash
+# From repo root — summary + hints only
+./scripts/bootstrap-wayofpi-environment.sh
+
+# CI: fail if Bun / git / node / npm missing or Bun below UI minimum (1.1.x)
+./scripts/bootstrap-wayofpi-environment.sh --check-only
+
+# Install Bun (official installer) + npm install in apps/wayofpi-ui (non-interactive)
+./scripts/bootstrap-wayofpi-environment.sh --install -y
+
+# Create .env from .env.sample if missing
+./scripts/bootstrap-wayofpi-environment.sh --init-env
+```
+
+**`just`:** `just bootstrap-wayofpi` runs the script with **no** extra flags; for **`--check-only`** / **`--install`**, invoke the script path above.
+
+**Windows (Git Bash / MSYS):** the script prints WSL / manual Bun install links and exits; use **WSL2** for the full bash flow.
+
+---
+
 ## `ppi` — Pi playground dispatcher (**Pi** commands)
 
 This repo’s workflows are defined in the root **`justfile`**. **`scripts/ppi`** resolves its **real path** (symlinks in **`~/.local/bin`** are followed), **`export`s `PI_E_PROJECT_DIR`** and **`PI_USER_PROJECT_DIR`** as the directory you were in **before** the **`cd`** to the playground (so **`just pi-e`** options **1–2** (setup) apply to your app repo, and the **`workspace-boundary`** extension can tell the model your app vs **`~/.pi/agent`** / the playground clone), **`cd`**s to the repo root, **sources `.env` at the repo root if present** (so **`OPENROUTER_API_KEY`** and other secrets reach **`pi`**), then runs **`just`**.

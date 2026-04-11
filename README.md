@@ -79,6 +79,8 @@ All three are required:
 | **just**        | Task runner (for `just …` / `ppi …` recipes) | **macOS:** `brew install just` · **Ubuntu/Debian:** `sudo snap install just` or [cargo](https://github.com/casey/just#installation) · See [just releases](https://github.com/casey/just/releases) |
 | **pi**          | Pi Coding Agent CLI       | [Pi docs](https://github.com/mariozechner/pi-coding-agent) |
 
+**Automated probe (optional):** run **`./scripts/bootstrap-wayofpi-environment.sh`** from the repo root to print OS/CPU, which tools are installed, and copy-paste install hints. Use **`--check-only`** in CI, or **`--install -y`** to run the official [Bun installer](https://bun.sh) and **`npm install`** in **`apps/wayofpi-ui`** (still no silent `sudo`). Details: **[scripts/README.md](scripts/README.md)** (`just bootstrap-wayofpi` runs the probe without extra flags).
+
 ---
 
 ## API Keys

@@ -183,6 +183,10 @@ normalize-pi-config-models:
 install-global:
     @./scripts/install-ppi-global.sh
 
+# Probe OS/CPU and installed tools; print install hints (pass flags by running the script directly)
+bootstrap-wayofpi:
+    @./scripts/bootstrap-wayofpi-environment.sh
+
 # pi-e: interactive multi-select for stacked `pi -e ...` in one session
 #
 # Use: `just pi-e`

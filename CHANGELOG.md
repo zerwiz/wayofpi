@@ -10,6 +10,8 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Added
 
+- **`scripts/bootstrap-wayofpi-environment.sh`** — probes **OS** / **CPU**, **PATH** tools (**bun**, **node**, **npm**, **git**, **just**, **pi**, **rg**, **ollama**) and Ollama HTTP reachability; prints distro-specific install hints (no silent **sudo**). Flags: **`--check-only`** (CI), **`--install -y`** (official Bun installer + **`npm install`** in **`apps/wayofpi-ui`**), **`--init-env`**. **`just bootstrap-wayofpi`** runs the probe; documented in **`scripts/README.md`** and root **`README.md`**.
+
 - **Claw UI — pluggable modules**: `registerClawUiModule` / `listClawUiModules` in `apps/wayofpi-ui/src/claw/clawUiModules.ts`; optional registrations in `apps/wayofpi-ui/src/claw/clawUserUiModules.ts` (imported from `App.tsx`). Extra nav icons appear after **Files**; each module renders in the main column with context (workspace root, theme, server config, tab/file helpers). Unknown tab ids fall back to **Mission**.
 
 - **`apps/wayofpi-ui` server** — Bun orchestrator **Git workflow tools** (same **`WOP_ORCHESTRATOR_GIT_TOOLS`** gate as existing Git tools): **`git_branches`**, **`git_checkout`** (create/switch branch), **`git_merge`**, **`git_add`**, **`git_commit`** — so the agent can branch, commit, push to GitHub, and merge into **`main`** without relying on **`bash`** alone. Session prompts note PAT scope for push.

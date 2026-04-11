@@ -1,0 +1,37 @@
+---
+description: Linux, macOS, and Windows — avoid POSIX-only assumptions in Way of Pi and host glue
+globs:
+  - apps/wayofpi-ui/**/*
+  - scripts/**/*
+  - extensions/**/*.ts
+  - "**/start-*.sh"
+alwaysApply: false
+---
+
+# Cross-platform (Linux, macOS, Windows)
+
+Way of Pi targets **Linux**, **macOS**, and **Windows** (native Bun/Electron where shipped, plus common dev setups). When adding server, Electron, or host glue, **do not assume Linux-only** shells, paths, or CLIs.
+
+## Already established patterns (follow them)
+
+- **Paths:** use `node:path` (`path.join`, `path.normalize`). Do not hard-code `/` roots or Unix-only locations without a `process.platform` branch.
+- **Spawning shells:** **`apps/wayofpi-ui/server/terminal-ws.ts`** — `win32` → `cmd.exe /K`; otherwise `WOP_SHELL` or `/bin/bash`. PTY via Bun **`terminal`** is tried on **non-`win32`** only; Windows uses the piped fallback.
+- **Headless “bash” tool:** **`apps/wayofpi-ui/server/orchestrator-tools-exec.ts`** — `win32` uses `ComSpec` / `cmd.exe /d /s /c`; Unix uses `/bin/sh -c`. New orchestrator exec paths should mirror this split if they run shell commands.
+- **Native pickers:** **`apps/wayofpi-ui/server/native-file-dialog.ts`** — separate branches for `darwin`, `win32`, and Linux (`zenity` / `kdialog`). New native dialogs need per-OS behavior or a clear stub/error.
+- **Electron:** **`bun` vs `bun.exe`**, dock icon / menu bar differences for `darwin` vs others — see **`apps/wayofpi-ui/electron/electron-main.mjs`**. On **macOS**, **`app.setName("Way of Pi")`** and **`app.dock.setIcon`** (PNG or optional **`electron/build/icon.icns`** from **`electron/build/generate-macos-icns.sh`**) supply branding; **`BrowserWindow` `icon`** stays omitted on darwin (Electron ignores it for window chrome). **`window-all-closed`**: quit when platform **is not** `darwin` is **intentional** (macOS convention); do not “fix” that for parity with Linux unless changing product behavior deliberately.
+
+## Boot scripts and repo root
+
+- **`start-*.sh`**, **`just`**, and many **`scripts/*.sh`** are **bash**. They are primarily for **Unix-like** environments; on Windows, contributors typically use **WSL2**, **Git Bash**, or run the **documented Bun/npm entrypoints** instead. Do not replace working `.sh` flows with Linux-only binaries without documenting Windows alternatives.
+
+## Client vs server OS
+
+- The **Bun server** runs on the **host** that starts it; terminal and native dialogs use **that** OS. UI code that builds **shell lines** (e.g. Run/Debug helpers) should remember the **integrated shell** may be `cmd` on Windows — avoid always emitting **`bash`** / **`python3`** unless gated by platform or config.
+
+## Checklist for new features
+
+1. If it spawns a process: branch or resolve **`process.platform === "win32"`** for executable names, `stdio`, and line endings where relevant.
+2. If it touches the filesystem: avoid **case-sensitive** assumptions; avoid **reserved** Windows device names on paths users might use cross-platform.
+3. If it needs a GUI helper on Linux: prefer **`zenity`/`kdialog`** with a clear error if missing (same style as **`native-file-dialog.ts`**).
+
+When behavior is intentionally **one-OS only** (e.g. **`linux/install-wayofpi-menuitem.sh`**), say so in the script or adjacent README so it is not mistaken for the general product contract.

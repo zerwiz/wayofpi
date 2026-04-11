@@ -70,7 +70,9 @@ npm run dev
 - **`npm run electron:only`** — Electron only; use when **`npm run dev`** is already running (avoids **EADDRINUSE** on **3333**).
 - **`npm run electron:prod`** — `vite build`, then Bun serves `dist/` on **`WOP_SERVER_PORT`** (default `3333`) and Electron opens that origin.
 
-On **Linux** and **Windows**, the shell calls **`Menu.setApplicationMenu(null)` before `app` is ready** (Electron otherwise installs its default **File / Edit / View …** bar at ready — see [electron#35512](https://github.com/electron/electron/issues/35512)), then strips the window menu again on create. Your menus live only in the in-app bar (`MenuBar.tsx`). **macOS** still gets a minimal system menu (**Way of Pi** → About, Hide, Quit) above the window.
+On **Linux** and **Windows**, the shell calls **`Menu.setApplicationMenu(null)` before `app` is ready** (Electron otherwise installs its default **File / Edit / View …** bar at ready — see [electron#35512](https://github.com/electron/electron/issues/35512)), then strips the window menu again on create. Your menus live only in the in-app bar (`MenuBar.tsx`). **macOS** still gets a minimal system menu (**Way of Pi** → About, Hide, Quit) above the window — the process name is set with **`app.setName("Way of Pi")`** so the menu label matches the product (the npm package name stays **`wayofpi-ui`**).
+
+**macOS Dock icon:** at **`app.whenReady`**, the main process calls **`app.dock.setIcon`** using **`public/wayofpi-icon.png`**, or **`electron/build/icon.icns`** if present (sharper on Retina). Generate the latter on a Mac with **`./electron/build/generate-macos-icns.sh`** from **`apps/wayofpi-ui`**; **`icon.icns`** is gitignored. **`BrowserWindow` `icon`** is still omitted on darwin (Electron ignores it for the window chrome; Dock is the right surface).
 
 In the Electron build, **`electron/preload.mjs`** exposes **`window.wopShell`** so **View → Reload window** / **Reload (ignore cache)** and **Help → Toggle Developer Tools** replace the old Chromium **View** menu behavior (browser dev still uses **F12** / normal reload).
 

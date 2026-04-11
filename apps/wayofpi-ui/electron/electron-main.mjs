@@ -19,21 +19,55 @@ app.commandLine.appendSwitch("enable-features", "OverlayScrollbar");
 
 const isMac = process.platform === "darwin";
 const isDev = process.env.ELECTRON_DEV === "1";
-const linuxWinIcon = path.join(__dirname, "..", "public", "wayofpi-icon.png");
+const brandedIconPng = path.join(__dirname, "..", "public", "wayofpi-icon.png");
+/** Optional: run `electron/build/generate-macos-icns.sh` on macOS for multi-resolution Dock icon. */
+const brandedIconIcns = path.join(__dirname, "build", "icon.icns");
 
 /** Match `StartupWMClass=` + `desktopName` in package.json (Electron lowercases WM_CLASS on Linux). */
 if (process.platform === "linux") {
 	app.setName("wayofpi");
 }
+if (isMac) {
+	app.setName("Way of Pi");
+}
+
+/** macOS: prefer generated `.icns`, else PNG, for Dock (BrowserWindow `icon` is ignored on darwin). */
+function macDockBrandedImage() {
+	try {
+		if (fs.existsSync(brandedIconIcns)) {
+			const icns = nativeImage.createFromPath(brandedIconIcns);
+			if (!icns.isEmpty()) return icns;
+		}
+		if (fs.existsSync(brandedIconPng)) {
+			const png = nativeImage.createFromPath(brandedIconPng);
+			if (!png.isEmpty()) return png;
+		}
+	} catch {
+		/* ignore */
+	}
+	return null;
+}
+
+function applyMacOSDockBranding() {
+	if (!isMac || !app.dock) return;
+	const img = macDockBrandedImage();
+	if (img) {
+		try {
+			app.dock.setIcon(img);
+		} catch {
+			/* ignore */
+		}
+	}
+}
 
 function dockIconForPlatform() {
 	if (isMac) return undefined;
 	try {
-		if (fs.existsSync(linuxWinIcon)) return nativeImage.createFromPath(linuxWinIcon);
+		if (fs.existsSync(brandedIconPng)) return nativeImage.createFromPath(brandedIconPng);
 	} catch {
 		/* ignore */
 	}
-	return linuxWinIcon;
+	return brandedIconPng;
 }
 
 /*
@@ -283,6 +317,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+	applyMacOSDockBranding();
 	registerWopShellIpc();
 	setChromeMenus();
 	createWindow();
