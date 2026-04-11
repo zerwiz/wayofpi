@@ -1,5 +1,5 @@
 import { Brain, Cpu, FileCode2, Paperclip, Send, Square, Users, X } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { AgentMeta } from "../../hooks/useAgents";
 import type { ChatRow, ChatSessionMode } from "../../hooks/useWayOfPiSession";
 import {
@@ -7,6 +7,12 @@ import {
 	MAX_CHAT_ATTACHMENT_CHARS,
 } from "../../lib/chatAttachment";
 import { languageLabel, parseMessageSegments } from "../../lib/parseMessageSegments";
+import { chatErrorSuggestsModelFix } from "../../utils/chatErrorModelHint";
+import {
+	applySlashCompletion,
+	slashMenuAtCursor,
+	type SlashMenuState,
+} from "../../utils/chatSlashAutocomplete";
 
 /** Simple shell — **wired**: chat rows, agent picker, WebSocket send/stop (Pi tools in browser per server notes). */
 export function SimpleChatView({
@@ -18,6 +24,7 @@ export function SimpleChatView({
 	onSend,
 	onStop,
 	onClearError,
+	onReopenLlmFixModal,
 	appearanceDark,
 	agents,
 	agentsLoading,
@@ -39,6 +46,8 @@ export function SimpleChatView({
 	onSend: (text: string) => void;
 	onStop: () => void;
 	onClearError: () => void;
+	/** Re-show the model/provider fix dialog (App-level). */
+	onReopenLlmFixModal?: () => void;
 	appearanceDark: boolean;
 	agents: AgentMeta[];
 	agentsLoading: boolean;
@@ -52,8 +61,11 @@ export function SimpleChatView({
 	const [input, setInput] = useState("");
 	const [attachment, setAttachment] = useState<{ name: string; text: string } | null>(null);
 	const [attachErr, setAttachErr] = useState<string | null>(null);
+	const [caretPos, setCaretPos] = useState(0);
+	const [slashHighlight, setSlashHighlight] = useState(0);
 	const endRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
 		endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -99,6 +111,40 @@ export function SimpleChatView({
 	const composerOuter = appearanceDark ? "bg-[#1e1e1e]" : "bg-[#f3f3f3]";
 	const canSend = !!(input.trim() || attachment) && connected;
 
+	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
+	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
+	useEffect(() => {
+		setSlashHighlight(0);
+	}, [slashMenuKey]);
+
+	const applySlashPick = (commandId: string, menuState: SlashMenuState | null = slashMenu) => {
+		if (!menuState) return;
+		const { value: next, caret } = applySlashCompletion(
+			input,
+			menuState.lineStart,
+			menuState.replaceTo,
+			commandId,
+		);
+		setInput(next);
+		setCaretPos(caret);
+		queueMicrotask(() => {
+			const el = textareaRef.current;
+			if (!el) return;
+			el.focus();
+			el.setSelectionRange(caret, caret);
+		});
+	};
+
+	const slashListBorder = appearanceDark ? "border-[#ea580c]/35 bg-[#1e1e1e]" : "border-[#ea580c]/40 bg-white";
+	const slashItemHi = appearanceDark
+		? "bg-[#ea580c]/20 text-[#fed7aa]"
+		: "bg-[#ea580c]/15 text-[#9a3412]";
+	const slashItem = appearanceDark
+		? "text-[#cccccc] hover:bg-[#2d2d2d]"
+		: "text-[#333333] hover:bg-[#f5f5f5]";
+	const slashMuted = appearanceDark ? "text-[#858585]" : "text-[#616161]";
+	const slashAccent = appearanceDark ? "text-[#ea580c]" : "text-[#c2410c]";
+
 	return (
 		<div className="flex min-h-0 flex-1 flex-col overflow-hidden" data-wop-chat-root>
 			<div className={`flex flex-1 justify-center overflow-y-auto p-4 md:p-8 ${appearanceDark ? "" : "bg-[#f3f3f3]"}`}>
@@ -123,14 +169,27 @@ export function SimpleChatView({
 						</div>
 					) : null}
 					{error ? (
-						<button
-							type="button"
-							onClick={onClearError}
-							className="w-full rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-left text-sm text-red-300"
-						>
-							{error}
-							<span className={`mt-1 block ${subC}`}>Click to dismiss</span>
-						</button>
+						<div className="w-full rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-left text-sm text-red-300">
+							<p className="whitespace-pre-wrap">{error}</p>
+							<div className={`mt-3 flex flex-wrap items-center gap-2 ${subC}`}>
+								{onReopenLlmFixModal && chatErrorSuggestsModelFix(error) ? (
+									<button
+										type="button"
+										onClick={onReopenLlmFixModal}
+										className="rounded-lg border border-[#ea580c]/50 bg-[#ea580c]/20 px-3 py-1.5 text-xs font-semibold text-[#fdba74] hover:bg-[#ea580c]/30"
+									>
+										Fix model / provider…
+									</button>
+								) : null}
+								<button
+									type="button"
+									onClick={onClearError}
+									className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs hover:bg-red-500/15"
+								>
+									Dismiss
+								</button>
+							</div>
+						</div>
 					) : null}
 					{attachErr ? (
 						<div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
@@ -403,7 +462,7 @@ export function SimpleChatView({
 				) : null}
 				<form
 					onSubmit={submit}
-					className={`relative mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border p-2.5 shadow-md transition-all focus-within:border-[#ea580c] focus-within:ring-1 focus-within:ring-[#ea580c]/40 ${composerBg}`}
+					className={`relative mx-auto flex max-w-3xl flex-col gap-0 rounded-2xl border p-2.5 shadow-md transition-all focus-within:border-[#ea580c] focus-within:ring-1 focus-within:ring-[#ea580c]/40 ${composerBg}`}
 				>
 					<input
 						ref={fileRef}
@@ -412,6 +471,7 @@ export function SimpleChatView({
 						accept=".txt,.md,.ts,.tsx,.js,.jsx,.json,.yaml,.yml,.py,.rs,.go,.css,.html,.sh,.env.sample"
 						onChange={(e) => void onPickFile(e.target.files)}
 					/>
+					<div className="flex w-full items-end gap-2">
 					<button
 						type="button"
 						onClick={() => fileRef.current?.click()}
@@ -421,23 +481,85 @@ export function SimpleChatView({
 					>
 						<Paperclip size={22} />
 					</button>
-					<textarea
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" && !e.shiftKey) {
-								e.preventDefault();
-								submit(e);
+					<div className="relative min-w-0 flex-1">
+						{slashMenu && slashMenu.filtered.length > 0 ? (
+							<ul
+								className={`absolute bottom-full left-0 right-0 z-20 mb-1 max-h-52 overflow-auto rounded-lg border py-1 shadow-lg ${slashListBorder}`}
+								role="listbox"
+								aria-label="Slash commands"
+							>
+								{slashMenu.filtered.map((c, i) => (
+									<li key={c.id}>
+										<button
+											type="button"
+											role="option"
+											aria-selected={i === slashHighlight}
+											className={`flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left font-mono text-[11px] leading-snug ${
+												i === slashHighlight ? slashItemHi : slashItem
+											}`}
+											onMouseEnter={() => setSlashHighlight(i)}
+											onMouseDown={(ev) => {
+												ev.preventDefault();
+												applySlashPick(c.id, slashMenu);
+											}}
+										>
+											<span className={`font-bold ${slashAccent}`}>/{c.id}</span>
+											<span className={`text-[10px] font-normal ${slashMuted}`}>{c.detail}</span>
+										</button>
+									</li>
+								))}
+							</ul>
+						) : null}
+						<textarea
+							ref={textareaRef}
+							value={input}
+							onChange={(e) => {
+								setInput(e.target.value);
+								setCaretPos(e.target.selectionStart);
+							}}
+							onSelect={(e) => setCaretPos(e.currentTarget.selectionStart)}
+							onClick={(e) => setCaretPos(e.currentTarget.selectionStart)}
+							onKeyUp={(e) => setCaretPos(e.currentTarget.selectionStart)}
+							onKeyDown={(e) => {
+								const menu = slashMenuAtCursor(input, e.currentTarget.selectionStart);
+								if (menu && menu.filtered.length > 0) {
+									if (e.key === "ArrowDown") {
+										e.preventDefault();
+										setSlashHighlight((h) => Math.min(h + 1, menu.filtered.length - 1));
+										return;
+									}
+									if (e.key === "ArrowUp") {
+										e.preventDefault();
+										setSlashHighlight((h) => Math.max(h - 1, 0));
+										return;
+									}
+									if (e.key === "Tab") {
+										e.preventDefault();
+										const pick = menu.filtered[slashHighlight];
+										if (pick) applySlashPick(pick.id, menu);
+										return;
+									}
+									if (e.key === "Enter" && !e.shiftKey) {
+										e.preventDefault();
+										const pick = menu.filtered[slashHighlight];
+										if (pick) applySlashPick(pick.id, menu);
+										return;
+									}
+								}
+								if (e.key === "Enter" && !e.shiftKey) {
+									e.preventDefault();
+									submit(e);
+								}
+							}}
+							placeholder={
+								!connected
+									? `Tell ${assistantTitle} what to do next… (Send when connected)`
+									: `Tell ${assistantTitle} what to do next…`
 							}
-						}}
-						placeholder={
-							!connected
-								? `Tell ${assistantTitle} what to do next… (Send when connected)`
-								: `Tell ${assistantTitle} what to do next…`
-						}
-						rows={1}
-						className={`max-h-40 min-h-[48px] flex-1 resize-none border-none bg-transparent py-3 pl-2 pr-2 text-[15px] font-medium outline-none ring-0 placeholder:text-[#858585] ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
-					/>
+							rows={1}
+							className={`max-h-40 min-h-[48px] w-full resize-none border-none bg-transparent py-3 pl-2 pr-2 text-[15px] font-medium outline-none ring-0 placeholder:text-[#858585] ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
+						/>
+					</div>
 					<div className="flex gap-2 p-1">
 						{streaming ? (
 							<button
@@ -457,6 +579,7 @@ export function SimpleChatView({
 							<Send size={18} />
 							<span className="hidden sm:inline">Send</span>
 						</button>
+					</div>
 					</div>
 				</form>
 			</div>

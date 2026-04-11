@@ -21,10 +21,10 @@ import {
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { AgentMeta } from "../hooks/useAgents";
+import type { FilePersistEncoding } from "../hooks/useFileEditor";
 import type { LogRow } from "../hooks/useWayOfPiSession";
 import type { BottomPanelTab } from "../types/technicalShell";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
-import type { FilePreview } from "../types/workspaceFile";
 import {
 	PANEL_TAB_DND_TYPE,
 	parseFilePathDragJson,
@@ -105,7 +105,8 @@ export type WorkspacePaneProps = {
 	loading: boolean;
 	error: string | null;
 	dirty: boolean;
-	filePreview: FilePreview | null;
+	/** From `useFileEditor`: UTF-8 text vs Latin-1 bytes (GET/PUT base64 on the server). */
+	persistEncoding: FilePersistEncoding;
 	onSave: () => void | Promise<void>;
 	onDiscardUnsaved?: () => void;
 	onCursor?: (line: number, col: number) => void;
@@ -148,6 +149,8 @@ export type WorkspacePaneProps = {
 		agentTeams: Record<string, string[]>;
 		agents: AgentMeta[];
 		agentsLoading?: boolean;
+		/** Latest assistant message from the session (never user turns) — preview until multi-agent WS. */
+		assistantSessionText?: string;
 	} | null;
 };
 
@@ -168,7 +171,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 		loading,
 		error,
 		dirty,
-		filePreview,
+		persistEncoding,
 		onSave,
 		onDiscardUnsaved,
 		onCursor,
@@ -517,7 +520,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 											Rev
 										</button>
 									) : null}
-									{active && entry.type === "file" && fileDirty && !filePreview ? (
+									{active && entry.type === "file" && fileDirty ? (
 										<button
 											type="button"
 											draggable={false}
@@ -693,19 +696,14 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								agentTeams={agentTeamPane.agentTeams}
 								agents={agentTeamPane.agents}
 								agentsLoading={agentTeamPane.agentsLoading}
+								assistantSessionText={agentTeamPane.assistantSessionText}
 							/>
 						) : (
 							<p className="p-3 font-mono text-[12px] text-[#858585]">Team pulse data not wired for this pane.</p>
 						)}
 					</div>
 				) : activeEntry.type === "tool" ? (
-					<div
-						className={
-							activeEntry.id === "terminal"
-								? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-								: "min-h-0 flex-1 overflow-hidden"
-						}
-					>
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 						<ToolPanelBody tab={activeEntry.id} logs={logs} />
 					</div>
 				) : activeEntry.path !== editorPath ? (
@@ -718,47 +716,35 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 					</div>
 				) : error ? (
 					<div className="flex flex-1 items-center justify-center p-6 font-mono text-[13px] text-[#f14c4c]">{error}</div>
-				) : filePreview?.kind === "image" ? (
-					<div className="flex min-h-0 flex-1 overflow-auto bg-[#1e1e1e]">
-						<img
-							src={filePreview.src}
-							alt=""
-							className="mx-auto block h-auto max-w-full object-contain [image-rendering:auto]"
-							loading="lazy"
-							decoding="async"
+				) : (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+						{persistEncoding === "base64" ? (
+							<div className="shrink-0 border-b border-[#2d2d2d] bg-[#252526] px-3 py-1 font-mono text-[10px] text-[#858585]">
+								Byte editor (Latin-1) — colors off; Save writes the exact file bytes.
+							</div>
+						) : null}
+						<WorkspaceTextBuffer
+							ref={ref}
+							path={editorPath}
+							content={content}
+							onChange={onChange}
+							loading={false}
+							error={null}
+							onCursor={onCursor}
+							wordWrap={wordWrap}
+							disableSyntaxHighlight={persistEncoding === "base64"}
+							scrollClassName="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono"
+							lineGutterClassName="w-9 py-1 pr-2 font-mono text-[12px] text-[#858585]"
+							textareaClassName="py-1 pr-2 text-[13px] leading-relaxed text-[#cccccc] selection:bg-[#9a3412]"
+							findBarClassName="shrink-0 border-t border-[#2d2d2d]"
+							statusLoadingClassName="p-4 text-sm text-[#858585]"
+							statusErrorClassName="p-4 text-sm text-red-500"
+							onFindInFiles={onFindInFiles}
+							onReplaceInFiles={onReplaceInFiles}
+							onUndoRedoStackChange={onUndoRedoStackChange}
+							onSelectionPrefsChange={onSelectionPrefsChange}
 						/>
 					</div>
-				) : filePreview?.kind === "binary" ? (
-					<div className="flex flex-1 overflow-auto p-4 font-mono text-[13px] text-[#858585]">
-						<div className="max-w-md">
-							<p className="mb-2 font-semibold text-[#cccccc]">Binary file</p>
-							<p>
-								Type <span className="text-[#fed7aa]">{filePreview.mimeType}</span>. Open on disk or use an external
-								viewer.
-							</p>
-						</div>
-					</div>
-				) : (
-					<WorkspaceTextBuffer
-						ref={ref}
-						path={editorPath}
-						content={content}
-						onChange={onChange}
-						loading={false}
-						error={null}
-						onCursor={onCursor}
-						wordWrap={wordWrap}
-						scrollClassName="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono"
-						lineGutterClassName="w-9 py-1 pr-2 font-mono text-[12px] text-[#858585]"
-						textareaClassName="py-1 pr-2 text-[13px] leading-relaxed text-[#cccccc] selection:bg-[#9a3412]"
-						findBarClassName="shrink-0 border-t border-[#2d2d2d]"
-						statusLoadingClassName="p-4 text-sm text-[#858585]"
-						statusErrorClassName="p-4 text-sm text-red-500"
-						onFindInFiles={onFindInFiles}
-						onReplaceInFiles={onReplaceInFiles}
-						onUndoRedoStackChange={onUndoRedoStackChange}
-						onSelectionPrefsChange={onSelectionPrefsChange}
-					/>
 				)}
 			</div>
 		</div>

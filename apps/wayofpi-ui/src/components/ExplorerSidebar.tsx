@@ -1,7 +1,9 @@
 import { ChevronDown, ChevronRight, FilePlus, FolderPlus, SidebarClose } from "lucide-react";
-import { useState, type MouseEvent } from "react";
+import { useCallback, useState, type DragEvent, type MouseEvent } from "react";
 import { FileTree } from "./FileTree";
 import type { TreeNode } from "../types/tree";
+import { isExplorerFilePathDrag, readDraggedExplorerFilePath } from "../utils/panelDockLayout";
+import { posixDirname } from "../utils/posixPath";
 
 export function ExplorerSidebar({
 	nodes,
@@ -11,6 +13,11 @@ export function ExplorerSidebar({
 	openInMainEditorPaths,
 	onSelectFile,
 	onSelectDirectory,
+	onMoveFileToDirectory,
+	allowDropToWorkspaceRoot,
+	onRenameExplorerNode,
+	onDeleteExplorerNode,
+	onCopyExplorerPath,
 	onNewFile,
 	onNewFolder,
 	loading,
@@ -26,6 +33,13 @@ export function ExplorerSidebar({
 	openInMainEditorPaths?: readonly string[];
 	onSelectFile: (path: string, ev?: MouseEvent) => void;
 	onSelectDirectory?: (dirPath: string) => void;
+	/** Move file on disk (single- and multi-root). */
+	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
+	/** Single-folder workspace: allow drop into empty area below tree → workspace root. */
+	allowDropToWorkspaceRoot?: boolean;
+	onRenameExplorerNode?: (path: string, kind: "file" | "dir", currentName: string) => Promise<void>;
+	onDeleteExplorerNode?: (path: string, kind: "file" | "dir") => Promise<void>;
+	onCopyExplorerPath?: (path: string) => void;
 	onNewFile?: () => void;
 	onNewFolder?: () => void;
 	loading: boolean;
@@ -38,6 +52,36 @@ export function ExplorerSidebar({
 	const [outlineOpen, setOutlineOpen] = useState(false);
 	const [timelineOpen, setTimelineOpen] = useState(false);
 	const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
+	const [rootDropActive, setRootDropActive] = useState(false);
+
+	const onRootDragOver = useCallback(
+		(e: DragEvent<HTMLDivElement>) => {
+			if (!allowDropToWorkspaceRoot || !onMoveFileToDirectory || !isExplorerFilePathDrag(e.dataTransfer)) return;
+			e.preventDefault();
+			e.dataTransfer.dropEffect = "move";
+			setRootDropActive(true);
+		},
+		[allowDropToWorkspaceRoot, onMoveFileToDirectory],
+	);
+
+	const onRootDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+		const rel = e.relatedTarget as Node | null;
+		if (rel && e.currentTarget.contains(rel)) return;
+		setRootDropActive(false);
+	}, []);
+
+	const onRootDrop = useCallback(
+		async (e: DragEvent<HTMLDivElement>) => {
+			if (!allowDropToWorkspaceRoot || !onMoveFileToDirectory) return;
+			e.preventDefault();
+			setRootDropActive(false);
+			const from = readDraggedExplorerFilePath(e.dataTransfer);
+			if (!from) return;
+			if (posixDirname(from) === "") return;
+			await onMoveFileToDirectory(from, "");
+		},
+		[allowDropToWorkspaceRoot, onMoveFileToDirectory],
+	);
 
 	return (
 		<div className="flex min-h-0 min-w-0 w-full flex-1 flex-col border-r border-[#3c3c3c] bg-[#252526]">
@@ -93,7 +137,12 @@ export function ExplorerSidebar({
 					</button>
 				</div>
 			) : null}
-			<div className="min-h-0 flex-1 overflow-y-auto py-1">
+			<div
+				className={`min-h-0 flex-1 overflow-y-auto py-1 ${rootDropActive ? "bg-[#264f78]/25 outline outline-1 outline-[#ea580c]/40 -outline-offset-1" : ""}`}
+				onDragOver={allowDropToWorkspaceRoot && onMoveFileToDirectory ? onRootDragOver : undefined}
+				onDragLeave={allowDropToWorkspaceRoot && onMoveFileToDirectory ? onRootDragLeave : undefined}
+				onDrop={allowDropToWorkspaceRoot && onMoveFileToDirectory ? (e) => void onRootDrop(e) : undefined}
+			>
 				{!workspaceTreeOpen ? null : loading ? (
 					<div className="px-3 py-2 font-mono text-[12px] text-[#858585]">Loading tree…</div>
 				) : error ? (
@@ -106,6 +155,10 @@ export function ExplorerSidebar({
 						openInMainEditorPaths={openInMainEditorPaths}
 						onSelectFile={onSelectFile}
 						onSelectDirectory={onSelectDirectory}
+						onMoveFileToDirectory={onMoveFileToDirectory}
+						onRenameNode={onRenameExplorerNode}
+						onDeleteNode={onDeleteExplorerNode}
+						onCopyPath={onCopyExplorerPath}
 						expandRevision={expandRevision}
 						pathsToExpand={pathsToExpand}
 					/>

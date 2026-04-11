@@ -17,6 +17,7 @@ import { postWorkspaceOp } from "./api/workspace";
 import { ActivityBar } from "./components/ActivityBar";
 import { ChatPanel } from "./components/ChatPanel";
 import { CommandPalette, type CommandItem } from "./components/CommandPalette";
+import { LlmFixModal } from "./components/LlmFixModal";
 import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
 import { DockSplitHandle } from "./components/DockSplitHandle";
 import { ExplorerSidebar } from "./components/ExplorerSidebar";
@@ -43,6 +44,7 @@ import { useUiViewsCatalog } from "./hooks/useUiViewsCatalog";
 import { useRunMenuDebugState } from "./hooks/useRunMenuDebugState";
 import {
 	readSimpleChatStreamUiEnabled,
+	useSimplePreferences,
 	writeSimpleChatStreamUiEnabled,
 } from "./hooks/useSimplePreferences";
 import { useWayOfPiSession } from "./hooks/useWayOfPiSession";
@@ -70,9 +72,10 @@ import type {
 import type { UiViewCatalogEntry } from "./types/uiViewsCatalog";
 import { buildCodeWorkspacePayload } from "./utils/codeWorkspaceFile";
 import { flattenTreeFiles } from "./utils/flattenTree";
-import { ancestorDirPaths, posixDirname } from "./utils/posixPath";
+import { ancestorDirPaths, posixBasename, posixDirname } from "./utils/posixPath";
 import { createPlanArtifactInWorkspace } from "./utils/planModeWorkspace";
 import { readAutoSaveInitial, writeAutoSave } from "./utils/editorPreferences";
+import { chatErrorSuggestsModelFix } from "./utils/chatErrorModelHint";
 import { pushRecentWorkspaceFolder, readRecentWorkspaceFolders } from "./utils/workspaceRecent";
 import {
 	applyAddFileTab,
@@ -83,6 +86,9 @@ import {
 	applyPanelTabMove,
 	applyRemoveFileTab,
 	applyRemoveTab,
+	remapFileTabPath,
+	remapPathPrefixInDock,
+	removeExplorerPathsFromDock,
 	applyShowToolTab,
 	cloneLayout,
 	PANEL_DOCK_DEFAULTS,
@@ -231,6 +237,26 @@ export default function App() {
 		writeSimpleChatStreamUiEnabled(on);
 	}, []);
 	const session = useWayOfPiSession(refresh, bufferAssistantDeltasRef);
+	const { isDark: simpleIsDark } = useSimplePreferences();
+	const llmFixModalAppearanceDark = technical || simpleIsDark;
+	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
+	const prevChatErrorRef = useRef<string | null>(null);
+	useEffect(() => {
+		const e = session.error;
+		if (!e) {
+			prevChatErrorRef.current = null;
+			setLlmFixModalDismissed(false);
+			return;
+		}
+		if (prevChatErrorRef.current !== e) {
+			prevChatErrorRef.current = e;
+			setLlmFixModalDismissed(false);
+		}
+	}, [session.error]);
+	const showLlmFixModal =
+		!!session.error &&
+		chatErrorSuggestsModelFix(session.error) &&
+		!llmFixModalDismissed;
 	const agentsApi = useAgents();
 	const teamsYamlWritePath = useMemo(() => {
 		const tp = agentsApi.data?.teamsPath;
@@ -486,7 +512,7 @@ export default function App() {
 		content,
 		setContent,
 		lastPersistedContent: _lastPersistedContent,
-		filePreview,
+		persistEncoding,
 		loading: fileLoading,
 		error: fileError,
 		dirty,
@@ -626,6 +652,20 @@ export default function App() {
 		setSimpleProviderPath(path);
 		setSimpleProviderNonce((n) => n + 1);
 	}, []);
+
+	const dismissLlmFixModal = useCallback(() => setLlmFixModalDismissed(true), []);
+	const reopenLlmFixModal = useCallback(() => setLlmFixModalDismissed(false), []);
+
+	const openLlmFixSimpleBrains = useCallback(() => {
+		dismissLlmFixModal();
+		if (technical) setUiMode("simple");
+		setSimpleTab("models");
+	}, [dismissLlmFixModal, technical, setUiMode]);
+
+	const openLlmFixProviderCatalog = useCallback(() => {
+		dismissLlmFixModal();
+		openPiModelConfigInEditor("agent/models.json");
+	}, [dismissLlmFixModal, openPiModelConfigInEditor]);
 
 	/** Menu Settings → My Team (Pi `.pi/agents/*.md`, `teams.yaml`); Technical mode switches to Simple so the view exists. */
 	const openAgentSetupFromMenu = useCallback(() => {
@@ -815,6 +855,120 @@ description:
 			window.alert(e instanceof Error ? e.message : String(e));
 		}
 	}, [explorerContextDir, refresh]);
+
+	const handleExplorerMoveFile = useCallback(
+		async (from: string, toDir: string) => {
+			const destPreview = toDir ? `${toDir}/${posixBasename(from)}` : posixBasename(from);
+			if (destPreview.replace(/\/+$/, "") === from.replace(/\/+$/, "")) return;
+			if (effDirty && effSelectedPath === from) {
+				window.alert("Save or revert the open file before moving it.");
+				return;
+			}
+			try {
+				const r = await apiPostJson<{ ok: boolean; to: string }>("/api/fs/move", { from, toDir });
+				const toPath = r.to;
+				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(toPath) });
+				setWorkspaceGrid((g) => {
+					const cells = g.cells.map((dock) => remapFileTabPath(dock, from, toPath));
+					const out = { ...g, cells };
+					writeWorkspaceGridState(out);
+					return out;
+				});
+				if (selectedPath === from) setSelectedPath(toPath);
+				await refresh();
+			} catch (e) {
+				window.alert(e instanceof Error ? e.message : String(e));
+			}
+		},
+		[effDirty, effSelectedPath, selectedPath, refresh],
+	);
+
+	const handleExplorerCopyPath = useCallback((path: string) => {
+		void navigator.clipboard.writeText(path).catch(() => {
+			window.alert("Could not copy to the clipboard.");
+		});
+	}, []);
+
+	const handleExplorerRenameNode = useCallback(
+		async (path: string, kind: "file" | "dir", currentName: string) => {
+			const next = window.prompt(`Rename ${kind}`, currentName);
+			if (next == null) return;
+			const safe = sanitizeNewEntryName(next);
+			if (!safe) {
+				window.alert("Invalid name: no .. or empty segments; avoid slashes.");
+				return;
+			}
+			if (safe === currentName) return;
+			if (
+				effDirty &&
+				effSelectedPath &&
+				(effSelectedPath === path || (kind === "dir" && effSelectedPath.startsWith(`${path}/`)))
+			) {
+				window.alert("Save or revert open file(s) before renaming.");
+				return;
+			}
+			try {
+				const r = await apiPostJson<{ ok: boolean; to: string }>("/api/fs/rename", { from: path, newName: safe });
+				const toPath = r.to;
+				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(toPath) });
+				setWorkspaceGrid((g) => {
+					const cells = g.cells.map((dock) =>
+						kind === "dir" ? remapPathPrefixInDock(dock, path, toPath) : remapFileTabPath(dock, path, toPath),
+					);
+					const out = { ...g, cells };
+					writeWorkspaceGridState(out);
+					return out;
+				});
+				setSelectedPath((p) => {
+					if (!p) return p;
+					if (kind === "file") return p === path ? toPath : p;
+					if (p === path) return toPath;
+					if (p.startsWith(`${path}/`)) return `${toPath}/${p.slice(path.length + 1)}`;
+					return p;
+				});
+				await refresh();
+			} catch (e) {
+				window.alert(e instanceof Error ? e.message : String(e));
+			}
+		},
+		[effDirty, effSelectedPath, refresh],
+	);
+
+	const handleExplorerDeleteNode = useCallback(
+		async (path: string, kind: "file" | "dir") => {
+			const label =
+				kind === "dir"
+					? `folder “${posixBasename(path)}” and everything inside it`
+					: `“${posixBasename(path)}”`;
+			if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
+			if (
+				effDirty &&
+				effSelectedPath &&
+				(effSelectedPath === path || (kind === "dir" && effSelectedPath.startsWith(`${path}/`)))
+			) {
+				window.alert("Save or revert open file(s) before deleting.");
+				return;
+			}
+			try {
+				await apiPostJson<{ ok: boolean }>("/api/fs/delete", { path });
+				setWorkspaceGrid((g) => {
+					const cells = g.cells.map((dock) => removeExplorerPathsFromDock(dock, path, kind));
+					const out = { ...g, cells };
+					writeWorkspaceGridState(out);
+					return out;
+				});
+				setSelectedPath((p) => {
+					if (!p) return p;
+					if (p === path || (kind === "dir" && p.startsWith(`${path}/`))) return null;
+					return p;
+				});
+				await refresh();
+			} catch (e) {
+				window.alert(e instanceof Error ? e.message : String(e));
+			}
+		},
+		[effDirty, effSelectedPath, refresh],
+	);
 
 	const handleNewPlanFile = useCallback(async () => {
 		if (!root && folders.length === 0) {
@@ -1794,14 +1948,22 @@ description:
 		};
 	}, [technical, workspaceGrid.cols, workspaceGrid.rows, applyWorkspaceGridShape]);
 
-	const agentTeamWorkspacePane = useMemo(
-		() => ({
+	const agentTeamWorkspacePane = useMemo(() => {
+		let assistantSessionText = "";
+		const R = session.rows;
+		for (let i = R.length - 1; i >= 0; i--) {
+			if (R[i]!.role === "assistant") {
+				assistantSessionText = R[i]!.content;
+				break;
+			}
+		}
+		return {
 			agentTeams: agentsApi.data?.teams ?? {},
 			agents: agentsApi.data?.agents ?? [],
 			agentsLoading: agentsApi.loading,
-		}),
-		[agentsApi.data?.teams, agentsApi.data?.agents, agentsApi.loading],
-	);
+			assistantSessionText,
+		};
+	}, [agentsApi.data?.teams, agentsApi.data?.agents, agentsApi.loading, session.rows]);
 
 	const openAgentTeamInWorkspacePane = useCallback(() => {
 		if (!technical) return;
@@ -1827,6 +1989,7 @@ description:
 				onSend={session.sendChat}
 				onStop={session.stop}
 				onClearError={session.clearError}
+				onReopenLlmFixModal={reopenLlmFixModal}
 				onNewSession={session.startNewSession}
 				chatMode={session.chatMode}
 				onChatModeChange={session.setChatMode}
@@ -1853,6 +2016,7 @@ description:
 			session.sendChat,
 			session.stop,
 			session.clearError,
+			reopenLlmFixModal,
 			session.startNewSession,
 			session.chatMode,
 			session.setChatMode,
@@ -2571,6 +2735,11 @@ description:
 				selectedPath={selectedPath}
 				onSelectFile={onExplorerSelectFile}
 				onSelectDirectory={setExplorerContextDir}
+				onMoveFileToDirectory={handleExplorerMoveFile}
+				allowDropToWorkspaceRoot={folders.length === 1}
+				onRenameExplorerNode={handleExplorerRenameNode}
+				onDeleteExplorerNode={handleExplorerDeleteNode}
+				onCopyExplorerPath={handleExplorerCopyPath}
 				onNewFile={handleNewFile}
 				onNewFolder={handleNewFolder}
 				loading={treeLoading}
@@ -2680,7 +2849,7 @@ description:
 						setSelectedPath={setSelectedPath}
 						content={content}
 						setContent={setContent}
-						filePreview={filePreview}
+						persistEncoding={persistEncoding}
 						fileLoading={fileLoading}
 						fileError={fileError}
 						dirty={dirty}
@@ -2699,6 +2868,7 @@ description:
 						sendChat={session.sendChat}
 						stop={session.stop}
 						clearError={session.clearError}
+						onReopenLlmFixModal={reopenLlmFixModal}
 						chatAgentName={session.chatAgentName}
 						onChatAgentChange={session.setChatAgent}
 						chatMode={session.chatMode}
@@ -2719,12 +2889,27 @@ description:
 						onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
 						onNewPlanFile={() => void handleNewPlanFile()}
 						newPlanFileDisabled={!root && folders.length === 0}
+						contextPct={session.tokenMeter.contextPct}
+						tokensDown={session.tokenMeter.tokensDown}
+						tokensUp={session.tokenMeter.tokensUp}
+						contextTitle={session.tokenMeter.contextTitle}
+						tokensTitle={session.tokenMeter.tokensTitle}
 					/>
 				</div>
 				<CommandPalette
 					open={commandPaletteOpen}
 					onClose={() => setCommandPaletteOpen(false)}
 					items={simpleCommandItems}
+				/>
+				<LlmFixModal
+					open={showLlmFixModal}
+					onClose={dismissLlmFixModal}
+					onClearError={session.clearError}
+					errorMessage={session.error ?? ""}
+					appearanceDark={llmFixModalAppearanceDark}
+					uiMode={uiMode}
+					onOpenSimpleAiBrains={openLlmFixSimpleBrains}
+					onOpenProviderCatalog={openLlmFixProviderCatalog}
 				/>
 			</>
 		);
@@ -2805,7 +2990,7 @@ description:
 				loading={fileLoading}
 				error={fileError}
 				dirty={dirty}
-				filePreview={filePreview}
+				persistEncoding={persistEncoding}
 				onSave={async () => {
 					await save();
 					await refresh();
@@ -2930,6 +3115,16 @@ description:
 				onClose={() => setCommandPaletteOpen(false)}
 				items={commandItems}
 			/>
+			<LlmFixModal
+				open={showLlmFixModal}
+				onClose={dismissLlmFixModal}
+				onClearError={session.clearError}
+				errorMessage={session.error ?? ""}
+				appearanceDark={llmFixModalAppearanceDark}
+				uiMode={uiMode}
+				onOpenSimpleAiBrains={openLlmFixSimpleBrains}
+				onOpenProviderCatalog={openLlmFixProviderCatalog}
+			/>
 
 			<div
 				className="flex min-h-0 flex-1 overflow-hidden"
@@ -2993,6 +3188,7 @@ description:
 												onSend={session.sendChat}
 												onStop={session.stop}
 												onClearError={session.clearError}
+												onReopenLlmFixModal={reopenLlmFixModal}
 												onNewSession={session.startNewSession}
 												chatMode={session.chatMode}
 												onChatModeChange={session.setChatMode}
@@ -3054,6 +3250,7 @@ description:
 												onSend={session.sendChat}
 												onStop={session.stop}
 												onClearError={session.clearError}
+												onReopenLlmFixModal={reopenLlmFixModal}
 												onNewSession={session.startNewSession}
 												chatMode={session.chatMode}
 												onChatModeChange={session.setChatMode}
@@ -3113,9 +3310,11 @@ description:
 					line={line}
 					col={col}
 					language={languageFromPath(selectedPath)}
-					contextPct="—"
-					tokensDown="—"
-					tokensUp="—"
+					contextPct={session.tokenMeter.contextPct}
+					tokensDown={session.tokenMeter.tokensDown}
+					tokensUp={session.tokenMeter.tokensUp}
+					contextTitle={session.tokenMeter.contextTitle}
+					tokensTitle={session.tokenMeter.tokensTitle}
 					onCopyWorkspacePath={copyWorkspacePath}
 					chatMode={session.chatMode}
 					chatAgentName={session.chatAgentName}

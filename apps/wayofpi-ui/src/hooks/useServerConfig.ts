@@ -3,10 +3,17 @@ import { apiGet } from "../api/client";
 
 export interface ServerConfig {
 	provider: string;
-	/** Effective chat backend label (`ollama` / `openrouter` / reserved `pi`). */
+	/** Effective chat backend label: **`pi`**, **`auto`**, or provider id when bundled. */
 	chatEngine: string;
-	/** True when headless Pi owns chat turns (not shipped yet — always false today). */
+	/** True when **`WOP_CHAT_ENGINE`** is **`pi`** or **`auto`** and **`pi`** resolves — all personas use `pi --mode json` (full Pi tools). */
 	piDrivesChat: boolean;
+	/** True when **`WOP_CHAT_ENGINE`** is **`pi`** or **`auto`** (Pi backend requested; **`auto`** falls back to Bun if **`pi`** is missing). */
+	piChatEngineRequested?: boolean;
+	/** Same as **`piDrivesChat`** today: Pi binary found for JSON-mode turns. */
+	piChatEngineWired?: boolean;
+	/** Pi-shaped workspace tools on orchestrator turns (read/grep/…); not full Pi extensions. */
+	orchestratorTools?: boolean;
+	orchestratorBash?: boolean;
 	/** Static manifest path (filesystem scan; not runtime Pi introspection). */
 	manifestUrl?: string;
 	ollamaHost: string;
@@ -27,6 +34,10 @@ export function useServerConfig() {
 					...raw,
 					chatEngine: raw.chatEngine ?? raw.provider ?? "ollama",
 					piDrivesChat: raw.piDrivesChat ?? false,
+					piChatEngineRequested: raw.piChatEngineRequested ?? false,
+					piChatEngineWired: raw.piChatEngineWired ?? false,
+					orchestratorTools: raw.orchestratorTools ?? false,
+					orchestratorBash: raw.orchestratorBash ?? false,
 				}),
 			)
 			.catch((e) => setError(e instanceof Error ? e.message : String(e)));

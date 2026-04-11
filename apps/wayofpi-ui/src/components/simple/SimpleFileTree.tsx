@@ -111,7 +111,22 @@ export function SimpleFileTree({
 										<ChevronRight size={14} className={`shrink-0 ${chevron}`} aria-hidden />
 									)}
 									<Folder size={14} className={`shrink-0 ${appearanceDark ? "text-[#fb923c]/90" : "text-[#ea580c]"}`} />
-									<span className={`min-w-0 truncate font-mono ${dirName}`}>{node.name}</span>
+									<span
+										className={`min-w-0 flex-1 truncate font-mono ${dirName} ${
+											node.gitStatus && node.gitStatus !== "??" ? (appearanceDark ? "text-[#e2c08d]" : "text-amber-800") : ""
+										}`}
+									>
+										{node.name}
+									</span>
+									{node.gitStatus ? (
+										<span
+											className={`ml-1 shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase ${muted} ${
+												node.gitStatus !== "??" ? (appearanceDark ? "text-[#e2c08d]" : "text-amber-700") : ""
+											}`}
+										>
+											{node.gitStatus}
+										</span>
+									) : null}
 								</>
 							) : (
 								<>

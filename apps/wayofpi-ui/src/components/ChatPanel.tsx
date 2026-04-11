@@ -20,6 +20,12 @@ import {
 } from "./AgentTeamPulseGrid";
 import type { ChatRow, ChatSessionMode, ChatSessionTab } from "../hooks/useWayOfPiSession";
 import type { UiMode } from "../hooks/useUiMode";
+import { chatErrorSuggestsModelFix } from "../utils/chatErrorModelHint";
+import {
+	applySlashCompletion,
+	slashMenuAtCursor,
+	type SlashMenuState,
+} from "../utils/chatSlashAutocomplete";
 import { examplePlanPathForToday } from "../utils/planModeArtifacts";
 import type { ChatDockRegion } from "../utils/technicalLayoutStorage";
 
@@ -44,6 +50,7 @@ export function ChatPanel({
 	onSend,
 	onStop,
 	onClearError,
+	onReopenLlmFixModal,
 	onNewSession,
 	technicalDock,
 	chatMode,
@@ -74,6 +81,7 @@ export function ChatPanel({
 	onSend: (text: string) => void;
 	onStop: () => void;
 	onClearError: () => void;
+	onReopenLlmFixModal?: () => void;
 	onNewSession?: () => void;
 	/** When set (technical shell), panel size/region are user-controlled. */
 	technicalDock?: TechnicalAgentDock;
@@ -110,11 +118,22 @@ export function ChatPanel({
 	const [pulseStreamDetail, setPulseStreamDetail] = useState(true);
 	const [attachment, setAttachment] = useState<{ name: string; text: string } | null>(null);
 	const [attachErr, setAttachErr] = useState<string | null>(null);
+	const [caretPos, setCaretPos] = useState(0);
+	const [slashHighlight, setSlashHighlight] = useState(0);
 	const endRef = useRef<HTMLDivElement>(null);
+	const assistantColEndRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const pending = chatQueuePending ?? 0;
 	const assistantShort = chatAgentName?.trim() || "Orchestrator";
+	const embedSplit = embedPane && technical;
+	const assistantRows = useMemo(() => rows.filter((r) => r.role === "assistant"), [rows]);
+	const userRows = useMemo(() => rows.filter((r) => r.role === "user"), [rows]);
+	const lastRow = rows.length ? rows[rows.length - 1]! : undefined;
+	const streamingNeedsPlaceholder =
+		streaming &&
+		(!lastRow || lastRow.role !== "assistant" || !String(lastRow.content ?? "").trim());
 
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	useEffect(() => {
@@ -132,6 +151,35 @@ export function ChatPanel({
 		() => buildPulseMembersFromRoster(pulseRoster, agents ?? []),
 		[pulseRoster, agents],
 	);
+
+	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
+	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
+	useEffect(() => {
+		setSlashHighlight(0);
+	}, [slashMenuKey]);
+
+	useEffect(() => {
+		if (!embedSplit) return;
+		queueMicrotask(() => assistantColEndRef.current?.scrollIntoView({ behavior: "smooth" }));
+	}, [embedSplit, assistantRows, streaming]);
+
+	const applySlashPick = (commandId: string, menuState: SlashMenuState | null = slashMenu) => {
+		if (!menuState) return;
+		const { value: next, caret } = applySlashCompletion(
+			input,
+			menuState.lineStart,
+			menuState.replaceTo,
+			commandId,
+		);
+		setInput(next);
+		setCaretPos(caret);
+		queueMicrotask(() => {
+			const el = textareaRef.current;
+			if (!el) return;
+			el.focus();
+			el.setSelectionRange(caret, caret);
+		});
+	};
 
 	const submit = (e: FormEvent) => {
 		e.preventDefault();
@@ -372,87 +420,208 @@ export function ChatPanel({
 						)}
 					</div>
 				) : null}
-				<div
-					className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${technical ? "gap-4 p-4" : "gap-5 p-5"}`}
-				>
-					{!connected ? (
+				{embedSplit ? (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col">
 						<div
-							className={`text-[#ce9178] ${technical ? "font-mono text-[12px]" : "text-[13px]"}`}
+							className={`shrink-0 space-y-2 border-b border-[#3c3c3c] bg-[#1e1e1e] ${technical ? "px-4 py-2" : "px-5 py-2"}`}
 						>
-							Connecting to server…
+							{!connected ? (
+								<div className={`text-[#ce9178] ${technical ? "font-mono text-[12px]" : "text-[13px]"}`}>
+									Connecting to server…
+								</div>
+							) : null}
+							{error ? (
+								<div className="w-full rounded border border-[#f14c4c]/40 bg-[#f14c4c]/10 p-2 text-left font-mono text-[12px] text-[#f14c4c]">
+									<p className="whitespace-pre-wrap">{error}</p>
+									<div className="mt-2 flex flex-wrap gap-2">
+										{onReopenLlmFixModal && chatErrorSuggestsModelFix(error) ? (
+											<button
+												type="button"
+												onClick={onReopenLlmFixModal}
+												className="rounded border border-[#fb923c]/40 bg-[#ea580c]/15 px-2 py-1 text-[11px] font-semibold text-[#fdba74] hover:bg-[#ea580c]/25"
+											>
+												Fix model / provider…
+											</button>
+										) : null}
+										<button
+											type="button"
+											onClick={onClearError}
+											className="rounded border border-[#f14c4c]/30 px-2 py-1 text-[11px] text-[#f14c4c] hover:bg-[#f14c4c]/10"
+										>
+											Dismiss
+										</button>
+									</div>
+								</div>
+							) : null}
 						</div>
-					) : null}
-					{error ? (
-						<button
-							type="button"
-							onClick={onClearError}
-							className="w-full rounded border border-[#f14c4c]/40 bg-[#f14c4c]/10 p-2 text-left font-mono text-[12px] text-[#f14c4c]"
-						>
-							{error}
-							<span className="mt-1 block text-[#858585]">Click to dismiss</span>
-						</button>
-					) : null}
-					{rows.map((msg) => (
-						<div key={msg.id} className="flex w-full flex-col gap-1">
-							<div className="flex items-center justify-between">
+						<div className="flex min-h-0 min-w-0 flex-1 flex-row">
+							<div
+								className={`flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto ${technical ? "p-4" : "p-4"}`}
+								aria-label="Assistant messages"
+							>
+								<p className="font-mono text-[10px] uppercase tracking-wide text-[#858585]">
+									{assistantShort} (session)
+								</p>
+								{assistantRows.length === 0 && !streamingNeedsPlaceholder ? (
+									<p className="font-mono text-[11px] leading-relaxed text-[#6b6b6b]">
+										Assistant replies from the model stream here. Your prompts stay in the column on the
+										right.
+									</p>
+								) : null}
+								{assistantRows.map((msg) => (
+									<div key={msg.id} className="flex w-full flex-col gap-1">
+										<div className="flex items-center justify-between">
+											<span className="font-mono text-[11px] uppercase text-[#858585]">
+												{assistantShort.toUpperCase()}
+											</span>
+											<span className="font-mono text-[10px] text-[#555555]">{msg.timestamp}</span>
+										</div>
+										<div className="w-full border border-[#3c3c3c] bg-[#252526] p-3 font-mono leading-relaxed text-[#cccccc]">
+											<div className="whitespace-pre-wrap">{msg.content}</div>
+										</div>
+									</div>
+								))}
+								{streamingNeedsPlaceholder ? (
+									<div className="flex flex-col gap-1">
+										<span className="font-mono text-[11px] uppercase text-[#858585]">
+											{assistantShort.toUpperCase()} (streaming)
+										</span>
+										<div className="flex items-center gap-2 border border-[#3c3c3c] bg-[#252526] p-3">
+											<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]" />
+											<div
+												className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
+												style={{ animationDelay: "150ms" }}
+											/>
+											<div
+												className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
+												style={{ animationDelay: "300ms" }}
+											/>
+										</div>
+									</div>
+								) : null}
+								<div ref={assistantColEndRef} />
+							</div>
+							<aside
+								className={`flex min-h-0 w-[min(300px,44%)] max-w-[400px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-[#3c3c3c] bg-[#252526]/40 ${technical ? "p-4" : "p-4"}`}
+								aria-label="Your messages"
+							>
+								<p className="font-mono text-[10px] uppercase tracking-wide text-[#858585]">You</p>
+								{userRows.length === 0 ? (
+									<p className="font-mono text-[11px] leading-relaxed text-[#6b6b6b]">
+										Your messages and attachments appear here; compose below.
+									</p>
+								) : null}
+								{userRows.map((msg) => (
+									<div key={msg.id} className="flex w-full flex-col gap-1">
+										<div className="flex items-center justify-between">
+											<span className="font-mono text-[11px] uppercase text-[#858585]">USER</span>
+											<span className="font-mono text-[10px] text-[#555555]">{msg.timestamp}</span>
+										</div>
+										<div className="w-full border border-[#ea580c]/30 bg-[#ea580c]/10 p-3 font-mono leading-relaxed text-[#d4d4d4]">
+											<div className="whitespace-pre-wrap">{msg.content}</div>
+										</div>
+									</div>
+								))}
+								<div ref={endRef} />
+							</aside>
+						</div>
+					</div>
+				) : (
+					<div
+						className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${technical ? "gap-4 p-4" : "gap-5 p-5"}`}
+					>
+						{!connected ? (
+							<div
+								className={`text-[#ce9178] ${technical ? "font-mono text-[12px]" : "text-[13px]"}`}
+							>
+								Connecting to server…
+							</div>
+						) : null}
+						{error ? (
+							<div className="w-full rounded border border-[#f14c4c]/40 bg-[#f14c4c]/10 p-2 text-left font-mono text-[12px] text-[#f14c4c]">
+								<p className="whitespace-pre-wrap">{error}</p>
+								<div className="mt-2 flex flex-wrap gap-2">
+									{onReopenLlmFixModal && chatErrorSuggestsModelFix(error) ? (
+										<button
+											type="button"
+											onClick={onReopenLlmFixModal}
+											className="rounded border border-[#fb923c]/40 bg-[#ea580c]/15 px-2 py-1 text-[11px] font-semibold text-[#fdba74] hover:bg-[#ea580c]/25"
+										>
+											Fix model / provider…
+										</button>
+									) : null}
+									<button
+										type="button"
+										onClick={onClearError}
+										className="rounded border border-[#f14c4c]/30 px-2 py-1 text-[11px] text-[#f14c4c] hover:bg-[#f14c4c]/10"
+									>
+										Dismiss
+									</button>
+								</div>
+							</div>
+						) : null}
+						{rows.map((msg) => (
+							<div key={msg.id} className="flex w-full flex-col gap-1">
+								<div className="flex items-center justify-between">
+									<span
+										className={
+											technical
+												? "font-mono text-[11px] uppercase text-[#858585]"
+												: "text-[12px] font-medium text-[#858585]"
+										}
+									>
+										{technical
+											? msg.role === "user"
+												? "USER"
+												: assistantShort.toUpperCase()
+											: msg.role === "user"
+												? "You"
+												: assistantShort}
+									</span>
+									<span className={`text-[#555555] ${technical ? "font-mono text-[10px]" : "text-[11px]"}`}>
+										{msg.timestamp}
+									</span>
+								</div>
+								<div
+									className={`w-full leading-relaxed ${
+										technical ? "p-3 font-mono" : "rounded-md p-4 font-sans text-[14px]"
+									} ${
+										msg.role === "user"
+											? "border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#d4d4d4]"
+											: "border border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
+									}`}
+								>
+									<div className="whitespace-pre-wrap">{msg.content}</div>
+								</div>
+							</div>
+						))}
+						{streamingNeedsPlaceholder ? (
+							<div className="flex flex-col gap-1">
 								<span
 									className={
 										technical
 											? "font-mono text-[11px] uppercase text-[#858585]"
-											: "text-[12px] font-medium text-[#858585]"
+											: "text-[12px] text-[#858585]"
 									}
 								>
-									{technical
-										? msg.role === "user"
-											? "USER"
-											: assistantShort.toUpperCase()
-										: msg.role === "user"
-											? "You"
-											: assistantShort}
+									{technical ? `${assistantShort.toUpperCase()} (streaming)` : `${assistantShort} is replying…`}
 								</span>
-								<span className={`text-[#555555] ${technical ? "font-mono text-[10px]" : "text-[11px]"}`}>
-									{msg.timestamp}
-								</span>
+								<div className="flex items-center gap-2 border border-[#3c3c3c] bg-[#252526] p-3">
+									<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]" />
+									<div
+										className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
+										style={{ animationDelay: "150ms" }}
+									/>
+									<div
+										className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
+										style={{ animationDelay: "300ms" }}
+									/>
+								</div>
 							</div>
-							<div
-								className={`w-full leading-relaxed ${
-									technical ? "p-3 font-mono" : "rounded-md p-4 font-sans text-[14px]"
-								} ${
-									msg.role === "user"
-										? "border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#d4d4d4]"
-										: "border border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
-								}`}
-							>
-								<div className="whitespace-pre-wrap">{msg.content}</div>
-							</div>
-						</div>
-					))}
-					{streaming ? (
-						<div className="flex flex-col gap-1">
-							<span
-								className={
-									technical
-										? "font-mono text-[11px] uppercase text-[#858585]"
-										: "text-[12px] text-[#858585]"
-								}
-							>
-								{technical ? `${assistantShort.toUpperCase()} (streaming)` : `${assistantShort} is replying…`}
-							</span>
-							<div className="flex items-center gap-2 border border-[#3c3c3c] bg-[#252526] p-3">
-								<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]" />
-								<div
-									className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
-									style={{ animationDelay: "150ms" }}
-								/>
-								<div
-									className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
-									style={{ animationDelay: "300ms" }}
-								/>
-							</div>
-						</div>
-					) : null}
-					<div ref={endRef} />
-				</div>
+						) : null}
+						<div ref={endRef} />
+					</div>
+				)}
 				{teamPaneOpen && !agentsLoading && teamNames.length > 0 && pulseTeam && pulseMembers.length > 0 ? (
 					<div
 						className={`max-h-[min(45vh,440px)] shrink-0 overflow-y-auto border-t border-[#3c3c3c] bg-[#1e1e1e] font-mono text-[12px] leading-relaxed text-[#858585] ${technical ? "p-4 pt-3" : "p-5 pt-4"}`}
@@ -506,16 +675,79 @@ export function ChatPanel({
 						accept=".txt,.md,.ts,.tsx,.js,.jsx,.json,.yaml,.yml,.py,.rs,.go,.css,.html,.sh,.env.sample"
 						onChange={(e) => void onPickFile(e.target.files)}
 					/>
-					<textarea
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" && !e.shiftKey) {
-								e.preventDefault();
-								submit(e);
-							}
-						}}
-						placeholder={
+					<div className="relative w-full">
+						{slashMenu && slashMenu.filtered.length > 0 ? (
+							<ul
+								className="absolute bottom-full left-0 right-0 z-20 mb-1 max-h-52 overflow-auto rounded border border-[#ea580c]/35 bg-[#1e1e1e] py-1 shadow-lg"
+								role="listbox"
+								aria-label="Slash commands"
+							>
+								{slashMenu.filtered.map((c, i) => (
+									<li key={c.id}>
+										<button
+											type="button"
+											role="option"
+											aria-selected={i === slashHighlight}
+											className={`flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left font-mono text-[11px] leading-snug ${
+												i === slashHighlight
+													? "bg-[#ea580c]/20 text-[#fed7aa]"
+													: "text-[#cccccc] hover:bg-[#2d2d2d]"
+											}`}
+											onMouseEnter={() => setSlashHighlight(i)}
+											onMouseDown={(ev) => {
+												ev.preventDefault();
+												applySlashPick(c.id, slashMenu);
+											}}
+										>
+											<span className="font-bold text-[#ea580c]">/{c.id}</span>
+											<span className="text-[10px] font-normal text-[#858585]">{c.detail}</span>
+										</button>
+									</li>
+								))}
+							</ul>
+						) : null}
+						<textarea
+							ref={textareaRef}
+							value={input}
+							onChange={(e) => {
+								setInput(e.target.value);
+								setCaretPos(e.target.selectionStart);
+							}}
+							onSelect={(e) => setCaretPos(e.currentTarget.selectionStart)}
+							onClick={(e) => setCaretPos(e.currentTarget.selectionStart)}
+							onKeyUp={(e) => setCaretPos(e.currentTarget.selectionStart)}
+							onKeyDown={(e) => {
+								const menu = slashMenuAtCursor(input, e.currentTarget.selectionStart);
+								if (menu && menu.filtered.length > 0) {
+									if (e.key === "ArrowDown") {
+										e.preventDefault();
+										setSlashHighlight((h) => Math.min(h + 1, menu.filtered.length - 1));
+										return;
+									}
+									if (e.key === "ArrowUp") {
+										e.preventDefault();
+										setSlashHighlight((h) => Math.max(h - 1, 0));
+										return;
+									}
+									if (e.key === "Tab") {
+										e.preventDefault();
+										const pick = menu.filtered[slashHighlight];
+										if (pick) applySlashPick(pick.id, menu);
+										return;
+									}
+									if (e.key === "Enter" && !e.shiftKey) {
+										e.preventDefault();
+										const pick = menu.filtered[slashHighlight];
+										if (pick) applySlashPick(pick.id, menu);
+										return;
+									}
+								}
+								if (e.key === "Enter" && !e.shiftKey) {
+									e.preventDefault();
+									submit(e);
+								}
+							}}
+							placeholder={
 							!connected
 								? technical
 									? "> Not connected — type here; Send when the server WebSocket is up"
@@ -530,8 +762,9 @@ export function ChatPanel({
 											? "Queue next message (Enter) — runs when the assistant finishes"
 											: "Type a message… (Enter to send, Shift+Enter for new line)"
 						}
-						className="max-h-48 min-h-[60px] w-full resize-none bg-transparent p-3 font-mono text-[13px] text-[#cccccc] outline-none placeholder:text-[#858585]"
-					/>
+							className="max-h-48 min-h-[60px] w-full resize-none bg-transparent p-3 font-mono text-[13px] text-[#cccccc] outline-none placeholder:text-[#858585]"
+						/>
+					</div>
 					<div className="flex items-center justify-between gap-2 border-t border-[#3c3c3c] bg-[#2d2d2d] p-1.5">
 						<div className="flex min-w-0 flex-1 items-center gap-2">
 							<button

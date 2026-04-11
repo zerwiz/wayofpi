@@ -5,6 +5,13 @@ export function posixDirname(p: string): string {
 	return i <= 0 ? "" : n.slice(0, i);
 }
 
+/** Browser-safe basename for workspace-relative paths. */
+export function posixBasename(p: string): string {
+	const n = p.replace(/\\/g, "/").replace(/\/+$/, "");
+	const i = n.lastIndexOf("/");
+	return i < 0 ? n : n.slice(i + 1);
+}
+
 /** Directory segments to expand so `filePath` is visible (e.g. `a/b/c.txt` → `["a","a/b"]`). */
 export function ancestorDirPaths(filePath: string): string[] {
 	const norm = filePath.replace(/\\/g, "/").replace(/^\/+/, "");

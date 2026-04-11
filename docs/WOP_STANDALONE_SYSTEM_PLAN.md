@@ -24,7 +24,7 @@
 
 **Why:** Many workflows today use a **terminal** and Pi’s **TUI** (text UI). That is powerful but hard to discover.
 
-**What:** Way of Pi adds a **normal web app**—menus, buttons, chat—while keeping the **same engine** underneath (**headless Pi**) so extensions and packages keep working.
+**What:** Way of Pi adds a **normal web app**—menus, buttons, chat—while using **Pi’s engine and agent system** underneath (**headless Pi** via **`WOP_PI_BINARY`**). The product **does not** define its own long-lived agent runtime, tool registry, or extension host in Bun; it **wires** the web shell to **Pi’s** coding-agent process and **`extensions[]`**-equivalent behavior.
 
 **Sandbox:** Way of Pi uses its **own name**, **folders** (`WOP_HOME`, e.g. `~/.wayofpi`), and **environment prefix** (`WOP_*`). It does **not** replace or overwrite another **Pi** install on the same machine unless you deliberately share paths.
 

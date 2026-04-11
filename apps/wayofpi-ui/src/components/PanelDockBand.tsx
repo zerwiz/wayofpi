@@ -236,11 +236,9 @@ export function PanelDockBand({
 					) : null}
 					<div
 						className={
-							showBody?.type === "tool" && showBody.id === "terminal"
+							showBody
 								? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-								: showBody
-									? "min-h-0 flex-1 overflow-hidden"
-									: "flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 font-mono text-[11px] text-[#858585]"
+								: "flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 font-mono text-[11px] text-[#858585]"
 						}
 					>
 						{showBody ? (

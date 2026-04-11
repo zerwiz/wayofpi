@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { contextMeterBlocks, fmtTok } from "../utils/tokenMeterFormat";
 
 const ACTIVE_LLM_STORAGE_KEY = "wayofpi.activeLlmModel";
 
@@ -29,6 +30,68 @@ function readStoredChatMode(): ChatSessionMode {
 	}
 	return "build";
 }
+
+const TOKEN_METER_EMPTY = {
+	contextPct: "—",
+	tokensDown: "—",
+	tokensUp: "—",
+	contextTitle:
+		"Context fill — after a turn completes, the bar uses stream usage when present, else a Pi-style ~characters÷4 estimate",
+	tokensTitle:
+		"Token totals — cumulative per turn (stream usage when present, else ~characters÷4 for that turn)",
+} as const;
+
+function formatChatUsagePayload(data: Record<string, unknown>): {
+	contextPct: string;
+	tokensDown: string;
+	tokensUp: string;
+	contextTitle: string;
+	tokensTitle: string;
+} {
+	const cumP = typeof data.cumPrompt === "number" && Number.isFinite(data.cumPrompt) ? data.cumPrompt : 0;
+	const cumC = typeof data.cumCompletion === "number" && Number.isFinite(data.cumCompletion) ? data.cumCompletion : 0;
+	const pctRaw = typeof data.contextPercent === "number" && Number.isFinite(data.contextPercent) ? data.contextPercent : null;
+	const win = typeof data.contextWindow === "number" && Number.isFinite(data.contextWindow) && data.contextWindow > 0 ? data.contextWindow : null;
+	const lastP =
+		typeof data.lastPrompt === "number" && Number.isFinite(data.lastPrompt) ? Math.max(0, data.lastPrompt) : null;
+	const approx = data.approximate === true;
+
+	let pct = pctRaw;
+	if (pct == null && lastP != null && win != null) {
+		pct = Math.min(100, (lastP / win) * 100);
+	}
+
+	let contextPct = "—";
+	if (pct != null) {
+		const bar = contextMeterBlocks(pct);
+		contextPct = `[${bar}] ${Math.round(pct)}%`;
+	}
+
+	const tokensDown = cumP > 0 ? fmtTok(cumP) : "—";
+	const tokensUp = cumC > 0 ? fmtTok(cumC) : "—";
+	const approxNote = approx ? " (~estimated: characters÷4, no usage in stream)" : "";
+	const contextTitle =
+		lastP != null && win != null
+			? `Context (last request): ${fmtTok(lastP)} / ${fmtTok(win)} tokens — Pi-style meter${approxNote}`
+			: approx
+				? "Context fill — ~estimated (characters÷4); stream did not include usage"
+				: "Context fill — after a turn completes, the bar uses stream usage when present, else a Pi-style estimate";
+	const tokensTitle =
+		cumP + cumC > 0
+			? `Session cumulative (Pi footer-style): ↓ ${fmtTok(cumP)} prompt-side, ↑ ${fmtTok(cumC)} completion${approxNote}`
+			: approx
+				? "Token totals — cumulative uses ~estimate when the provider omits usage"
+				: "Token totals — cumulative per turn (stream usage when present, else ~characters÷4)";
+	return { contextPct, tokensDown, tokensUp, contextTitle, tokensTitle };
+}
+
+type TokenMeterState = {
+	contextPct: string;
+	tokensDown: string;
+	tokensUp: string;
+	contextTitle: string;
+	tokensTitle: string;
+};
 
 function readStoredChatAgent(): string | null {
 	try {
@@ -108,6 +171,7 @@ export function useWayOfPiSession(
 	const [chatAgentName, setChatAgentNameState] = useState<string | null>(() =>
 		typeof window !== "undefined" ? readStoredChatAgent() : null,
 	);
+	const [tokenMeter, setTokenMeter] = useState<TokenMeterState>(() => ({ ...TOKEN_METER_EMPTY }));
 	const wsRef = useRef<WebSocket | null>(null);
 	const assistantIdRef = useRef<string | null>(null);
 	const bufferThisTurnRef = useRef(false);
@@ -179,15 +243,16 @@ export function useWayOfPiSession(
 				setConnected(true);
 				setError(null);
 				setChatQueuePending(0);
+				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				queueMicrotask(() => {
 					const w = wsRef.current;
 					if (!w || w.readyState !== WebSocket.OPEN) return;
 					const id = activeChatTabIdRef.current;
 					const tabRows = rowsByTabRef.current[id] ?? [];
-					if (tabRows.length === 0) return;
 					w.send(
 						JSON.stringify({
 							type: "activate_session",
+							sessionKey: id,
 							transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
 						}),
 					);
@@ -378,6 +443,31 @@ export function useWayOfPiSession(
 					assistantIdRef.current = null;
 					bufferThisTurnRef.current = false;
 					bufferedAssistantRef.current = "";
+					setTokenMeter({ ...TOKEN_METER_EMPTY });
+					return;
+				}
+				if (type === "chat_usage") {
+					setTokenMeter(formatChatUsagePayload(data));
+					return;
+				}
+				if (type === "session_transcript") {
+					const sk = String(data.sessionKey ?? "");
+					const turns = Array.isArray(data.turns) ? data.turns : [];
+					if (!sk || sk !== activeChatTabIdRef.current) return;
+					const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
+					setRowsByTab((prev) => ({
+						...prev,
+						[sk]: turns.map((row: unknown, i: number) => {
+							const r = row as { role?: string; content?: string };
+							const role = r.role === "assistant" ? "assistant" : "user";
+							return {
+								id: `disk-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`,
+								role,
+								content: String(r.content ?? ""),
+								timestamp: ts,
+							};
+						}),
+					}));
 					return;
 				}
 				if (type === "done") {
@@ -523,6 +613,7 @@ export function useWayOfPiSession(
 		setActiveChatTabId(newId);
 		activeChatTabIdRef.current = newId;
 		setRowsByTab((prev) => ({ ...prev, [newId]: [] }));
+		setTokenMeter({ ...TOKEN_METER_EMPTY });
 		setError(null);
 		setStreaming(false);
 		assistantIdRef.current = null;
@@ -531,6 +622,13 @@ export function useWayOfPiSession(
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({ type: "new_session" }));
+			ws.send(
+				JSON.stringify({
+					type: "activate_session",
+					sessionKey: newId,
+					transcript: [],
+				}),
+			);
 		}
 	}, []);
 
@@ -538,12 +636,14 @@ export function useWayOfPiSession(
 		if (id === activeChatTabIdRef.current) return;
 		activeChatTabIdRef.current = id;
 		setActiveChatTabId(id);
+		setTokenMeter({ ...TOKEN_METER_EMPTY });
 		const tabRows = rowsByTabRef.current[id] ?? [];
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(
 				JSON.stringify({
 					type: "activate_session",
+					sessionKey: id,
 					transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
 				}),
 			);
@@ -576,12 +676,14 @@ export function useWayOfPiSession(
 			if (wasActive && nextActiveId) {
 				activeChatTabIdRef.current = nextActiveId;
 				setActiveChatTabId(nextActiveId);
+				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				const tabRows = rowsByTabRef.current[nextActiveId] ?? [];
 				const ws = wsRef.current;
 				if (ws && ws.readyState === WebSocket.OPEN) {
 					ws.send(
 						JSON.stringify({
 							type: "activate_session",
+							sessionKey: nextActiveId,
 							transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
 						}),
 					);
@@ -613,5 +715,6 @@ export function useWayOfPiSession(
 		startNewSession,
 		reconnectWebSocket,
 		clearError: () => setError(null),
+		tokenMeter,
 	};
 }

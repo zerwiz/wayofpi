@@ -1,4 +1,5 @@
 import { WOP_UNIFIED_DOCK_BAND_LABEL } from "./dockChrome";
+import { dataTransferHasType } from "./dataTransferTypes";
 
 /** Legacy: two horizontal strips (migrated to a single {@link PanelDockLayout}). */
 export type PanelBand = "top" | "bottom";
@@ -164,6 +165,56 @@ export function applyRemoveFileTab(layout: PanelDockLayout, path: string): Panel
 	return next;
 }
 
+/** After a workspace file move on disk, keep file tabs pointing at the new path. */
+export function remapFileTabPath(layout: PanelDockLayout, fromPath: string, toPath: string): PanelDockLayout {
+	if (fromPath === toPath) return layout;
+	const next = cloneLayout(layout);
+	let changed = false;
+	for (let i = 0; i < next.tabs.length; i++) {
+		const t = next.tabs[i]!;
+		if (t.type === "file" && t.path === fromPath) {
+			next.tabs[i] = { type: "file", path: toPath };
+			changed = true;
+		}
+	}
+	if (!changed) return layout;
+	clampActive(next);
+	return next;
+}
+
+/** Close file tabs for a deleted path (exact file or any file under a deleted directory). */
+export function removeExplorerPathsFromDock(layout: PanelDockLayout, path: string, kind: "file" | "dir"): PanelDockLayout {
+	const drop = (p: string) =>
+		kind === "file" ? p === path : p === path || p.startsWith(`${path}/`);
+	const next = cloneLayout(layout);
+	const prevLen = next.tabs.length;
+	next.tabs = next.tabs.filter((t) => t.type !== "file" || !drop(t.path));
+	if (next.tabs.length === prevLen) return layout;
+	clampActive(next);
+	return next;
+}
+
+/** After renaming a directory on disk, update open file tab paths under that prefix. */
+export function remapPathPrefixInDock(layout: PanelDockLayout, oldPrefix: string, newPrefix: string): PanelDockLayout {
+	if (oldPrefix === newPrefix) return layout;
+	const next = cloneLayout(layout);
+	let changed = false;
+	for (let i = 0; i < next.tabs.length; i++) {
+		const t = next.tabs[i]!;
+		if (t.type !== "file") continue;
+		const p = t.path;
+		if (p === oldPrefix || p.startsWith(`${oldPrefix}/`)) {
+			const suffix = p === oldPrefix ? "" : p.slice(oldPrefix.length + 1);
+			const np = suffix ? `${newPrefix}/${suffix}` : newPrefix;
+			next.tabs[i] = { type: "file", path: np };
+			changed = true;
+		}
+	}
+	if (!changed) return layout;
+	clampActive(next);
+	return next;
+}
+
 export function applyCloseToolTab(layout: PanelDockLayout, id: ToolTabId): PanelDockLayout {
 	const next = cloneLayout(layout);
 	const i = next.tabs.findIndex((e) => e.type === "tool" && e.id === id);
@@ -263,6 +314,19 @@ export function parseFilePathDragJson(raw: string): string | null {
 	} catch {
 		return null;
 	}
+}
+
+export function isExplorerFilePathDrag(dt: DataTransfer): boolean {
+	return dataTransferHasType(dt, WOP_FILE_PATH_DND_TYPE) || dt.types?.includes("text/plain") === true;
+}
+
+/** Path from an explorer/file-row drag (`application/x-wop-file-path` or `text/plain`). */
+export function readDraggedExplorerFilePath(dt: DataTransfer): string | null {
+	const j = parseFilePathDragJson(dt.getData(WOP_FILE_PATH_DND_TYPE));
+	if (j) return j;
+	const plain = dt.getData("text/plain").trim();
+	if (plain && !plain.includes("\n") && !plain.includes("\r")) return plain;
+	return null;
 }
 
 type StripsV2 = Record<PanelBand, PanelTab[]>;

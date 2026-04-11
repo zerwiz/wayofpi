@@ -5,7 +5,7 @@ import type { LogRow } from "../hooks/useWayOfPiSession";
 import { useFileEditor } from "../hooks/useFileEditor";
 import type { BottomPanelTab } from "../types/technicalShell";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
-import type { FilePreview } from "../types/workspaceFile";
+import type { FilePersistEncoding } from "../hooks/useFileEditor";
 import type { WorkspaceGridState } from "../utils/workspaceGridStorage";
 import {
 	applyAddFileTab,
@@ -30,7 +30,7 @@ export type TechnicalWorkspaceCellSnapshot = {
 	loading: boolean;
 	error: string | null;
 	dirty: boolean;
-	filePreview: FilePreview | null;
+	persistEncoding: FilePersistEncoding;
 	save: () => Promise<void>;
 	reload: () => Promise<void>;
 	discardUnsavedChanges: () => void;
@@ -83,6 +83,7 @@ type WorkspaceGridCellProps = {
 		agentTeams: Record<string, string[]>;
 		agents: AgentMeta[];
 		agentsLoading?: boolean;
+		assistantSessionText?: string;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
 		fromCell: number,
@@ -135,7 +136,7 @@ function WorkspaceGridCell({
 	const {
 		content,
 		setContent,
-		filePreview,
+		persistEncoding,
 		loading: fileLoading,
 		error: fileError,
 		dirty,
@@ -208,7 +209,7 @@ function WorkspaceGridCell({
 			loading: fileLoading,
 			error: fileError,
 			dirty,
-			filePreview,
+			persistEncoding,
 			save,
 			reload,
 			discardUnsavedChanges,
@@ -221,7 +222,7 @@ function WorkspaceGridCell({
 		fileLoading,
 		fileError,
 		dirty,
-		filePreview,
+		persistEncoding,
 		save,
 		reload,
 		discardUnsavedChanges,
@@ -283,7 +284,7 @@ function WorkspaceGridCell({
 					loading={fileLoading}
 					error={fileError}
 					dirty={dirty}
-					filePreview={filePreview}
+					persistEncoding={persistEncoding}
 					onSave={onSave}
 					onDiscardUnsaved={discardUnsavedChanges}
 					onCursor={onCursor}
@@ -369,6 +370,7 @@ export type TechnicalWorkspaceGridProps = {
 		agentTeams: Record<string, string[]>;
 		agents: AgentMeta[];
 		agentsLoading?: boolean;
+		assistantSessionText?: string;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
 		fromCell: number,

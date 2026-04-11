@@ -4,6 +4,7 @@ import {
 	useDeferredValue,
 	useEffect,
 	useImperativeHandle,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -26,11 +27,45 @@ import {
 	toggleLineComment,
 	tryExpandEmmetAbbreviation,
 } from "../utils/editorTextComments";
-import { highlightCodeForEditor } from "../utils/editorSyntaxHighlight";
+import { highlightCodeForEditor, highlightPlainForEditor } from "../utils/editorSyntaxHighlight";
 import { EditorFindBar } from "./EditorFindBar";
 
 const SS_CTRL_CLICK = "wop-editor-ctrl-click";
 const SS_COLUMN = "wop-editor-column-sel";
+
+function measureSoftWrappedLineHeightsPx(
+	measure: HTMLDivElement,
+	lines: string[],
+	widthPx: number,
+	textareaStyle: CSSStyleDeclaration,
+): number[] {
+	measure.style.width = `${Math.max(0, widthPx)}px`;
+	measure.style.boxSizing = textareaStyle.boxSizing;
+	measure.style.padding = textareaStyle.padding;
+	measure.style.border = textareaStyle.border;
+	measure.style.margin = textareaStyle.margin;
+	measure.style.font = textareaStyle.font;
+	measure.style.lineHeight = textareaStyle.lineHeight;
+	measure.style.fontFamily = textareaStyle.fontFamily;
+	measure.style.fontSize = textareaStyle.fontSize;
+	measure.style.fontWeight = textareaStyle.fontWeight;
+	measure.style.fontStyle = textareaStyle.fontStyle;
+	measure.style.letterSpacing = textareaStyle.letterSpacing;
+	measure.style.tabSize = textareaStyle.tabSize;
+	measure.style.fontFeatureSettings = textareaStyle.fontFeatureSettings;
+	measure.style.fontVariantNumeric = textareaStyle.fontVariantNumeric;
+	measure.style.whiteSpace = textareaStyle.whiteSpace;
+	measure.style.overflowWrap = textareaStyle.overflowWrap;
+	measure.style.wordBreak = textareaStyle.wordBreak;
+	measure.style.hyphens = textareaStyle.hyphens;
+	measure.style.direction = textareaStyle.direction;
+	measure.style.unicodeBidi = textareaStyle.unicodeBidi;
+
+	return lines.map((line) => {
+		measure.textContent = line.length > 0 ? line : "\u00a0";
+		return Math.max(1, Math.ceil(measure.offsetHeight));
+	});
+}
 
 const BRACKET_PAIRS: Record<string, string> = { "(": ")", "[": "]", "{": "}" };
 
@@ -142,6 +177,8 @@ export type WorkspaceTextBufferProps = {
 	onSelectionPrefsChange?: () => void;
 	/** Read-only buffer (e.g. in-editor welcome doc) — same layout as an open file, no edits / undo. */
 	readOnly?: boolean;
+	/** Use escaped plain text for the highlight layer (byte/Latin-1 files so wraps match the textarea). */
+	disableSyntaxHighlight?: boolean;
 };
 
 export const WorkspaceTextBuffer = forwardRef<WorkspaceEditorRef, WorkspaceTextBufferProps>(
@@ -165,17 +202,26 @@ export const WorkspaceTextBuffer = forwardRef<WorkspaceEditorRef, WorkspaceTextB
 			onUndoRedoStackChange,
 			onSelectionPrefsChange,
 			readOnly = false,
+			disableSyntaxHighlight = false,
 		},
 		ref,
 	) {
 		const lines = content.split("\n");
 		const deferredContent = useDeferredValue(content);
-		const highlightHtml = useMemo(
-			() => (path ? highlightCodeForEditor(path, deferredContent).html : ""),
-			[path, deferredContent],
-		);
+		const highlightHtml = useMemo(() => {
+			if (!path) return "";
+			return (
+				disableSyntaxHighlight
+					? highlightPlainForEditor(deferredContent)
+					: highlightCodeForEditor(path, deferredContent)
+			).html;
+		}, [path, disableSyntaxHighlight, deferredContent]);
 		const textareaRef = useRef<HTMLTextAreaElement>(null);
+		const contentWrapRef = useRef<HTMLDivElement>(null);
+		const wrapMeasureRef = useRef<HTMLDivElement | null>(null);
 		const scrollContainerRef = useRef<HTMLDivElement>(null);
+		const [gutterLineMinHeightsPx, setGutterLineMinHeightsPx] = useState<number[] | null>(null);
+		const [wrapWidthTick, setWrapWidthTick] = useState(0);
 		const findInputRef = useRef<HTMLInputElement>(null);
 		const expandStackRef = useRef<[number, number][]>([]);
 		const skipSelectionStackClear = useRef(false);
@@ -214,6 +260,58 @@ export const WorkspaceTextBuffer = forwardRef<WorkspaceEditorRef, WorkspaceTextB
 				queueMicrotask(() => findInputRef.current?.focus());
 			}
 		}, [findBar]);
+
+		useEffect(() => {
+			const el = contentWrapRef.current;
+			if (!el || !wordWrap) return;
+			const ro = new ResizeObserver(() => setWrapWidthTick((t) => t + 1));
+			ro.observe(el);
+			let cancelled = false;
+			const bump = () => {
+				if (!cancelled) setWrapWidthTick((t) => t + 1);
+			};
+			const fonts = typeof document !== "undefined" ? document.fonts : undefined;
+			const p = fonts?.ready;
+			if (p) void p.then(bump);
+			return () => {
+				cancelled = true;
+				ro.disconnect();
+			};
+		}, [wordWrap, path]);
+
+		useLayoutEffect(() => {
+			if (!wordWrap || !path) {
+				setGutterLineMinHeightsPx(null);
+				return;
+			}
+			const wrap = contentWrapRef.current;
+			const ta = textareaRef.current;
+			if (!wrap || !ta) return;
+			const w = wrap.clientWidth;
+			if (w < 2) return;
+			let measure = wrapMeasureRef.current;
+			if (!measure) {
+				measure = document.createElement("div");
+				measure.setAttribute("aria-hidden", "true");
+				measure.style.position = "fixed";
+				measure.style.left = "-99999px";
+				measure.style.top = "0";
+				measure.style.visibility = "hidden";
+				measure.style.pointerEvents = "none";
+				wrapMeasureRef.current = measure;
+				document.body.appendChild(measure);
+			}
+			const heights = measureSoftWrappedLineHeightsPx(measure, content.split("\n"), w, getComputedStyle(ta));
+			setGutterLineMinHeightsPx(heights);
+		}, [content, wordWrap, path, wrapWidthTick]);
+
+		useEffect(() => {
+			return () => {
+				const m = wrapMeasureRef.current;
+				if (m?.parentNode) m.parentNode.removeChild(m);
+				wrapMeasureRef.current = null;
+			};
+		}, []);
 
 		const applyContentAndSelection = useCallback(
 			(next: string, selStart: number, selEnd: number) => {
@@ -802,13 +900,20 @@ export const WorkspaceTextBuffer = forwardRef<WorkspaceEditorRef, WorkspaceTextB
 					) : path ? (
 						<>
 							<div className={`flex shrink-0 flex-col pr-4 text-right leading-relaxed select-none ${lineGutterClassName}`}>
-								{lines.map((_, i) => (
-									<span key={i} className="block leading-relaxed">
-										{i + 1}
-									</span>
-								))}
+								{lines.map((_, i) => {
+									const h = gutterLineMinHeightsPx?.[i];
+									return (
+										<span
+											key={i}
+											className="box-border flex shrink-0 items-start justify-end leading-relaxed"
+											style={h != null ? { minHeight: `${h}px` } : undefined}
+										>
+											{i + 1}
+										</span>
+									);
+								})}
 							</div>
-							<div className="relative min-h-[1.5em] min-w-0 flex-1">
+							<div ref={contentWrapRef} className="relative min-h-[1.5em] min-w-0 flex-1">
 								<pre
 									className={`wop-hl-pre pointer-events-none m-0 block min-h-[1.5em] w-full max-w-full p-0 leading-relaxed ${wrapCls}`}
 									aria-hidden

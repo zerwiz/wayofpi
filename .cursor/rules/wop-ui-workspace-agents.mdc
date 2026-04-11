@@ -1,5 +1,5 @@
 ---
-description: Way of Pi web UI — workspace agents (.pi/agents), API parity with Pi scan order, simple vs technical mode
+description: Way of Pi UI — workspace agents MUST align with Pi runtime; catalog vs Pi-owned turns
 globs: apps/wayofpi-ui/**/*
 alwaysApply: false
 ---
@@ -7,6 +7,13 @@ alwaysApply: false
 # Way of Pi UI: workspace agents
 
 Use this when changing **`apps/wayofpi-ui/`** agent discovery, **My AI Team**, **workspace agent** selection, chat system prompts, or anything that should stay aligned with **Pi `agent-team` / `system-select`** semantics.
+
+## CRITICAL — Pi owns agent behavior (tools + extensions)
+
+- Way of Pi **does not** ship or grow its **own** agent/orchestration **system** in Bun — it **uses Pi’s**. The web UI is a **client + host** around **`WOP_PI_BINARY`** (see **`.cursor/rules/wop-ui-pi-backend-parity.mdc`** § “Do not build or own”).
+- **Agent frontmatter `tools:`**, **skills**, and **extension-registered** capabilities are meaningful **only** when the **Pi coding-agent process** runs the turn. **Merging** an agent **`.md` body** into the interim Bun/Ollama path **does not** enable Pi tools (**persona text only**). With **`WOP_CHAT_ENGINE=pi`** or **`auto`** and a resolved **`pi`** CLI, **`runPiChatTurn`** runs **`pi --mode json`** for **every** persona (orchestrator + **`.md`** agents) so built-ins and extensions match the TUI (**`piDrivesChat`**).
+- **Orchestrator** and **every specialist** must converge on the **same** target: **headless Pi** behind **`WOP_PI_BINARY`**, not parallel Bun tool loops.
+- Do **not** document or ship UI that implies **`dispatch_agent`**, **`team_member_*`**, or extension tools ran **unless** the server proves a Pi subprocess handled it.
 
 ## Canonical sources on disk
 
@@ -17,7 +24,7 @@ Use this when changing **`apps/wayofpi-ui/`** agent discovery, **My AI Team**, *
 ## Server responsibilities (do not bypass)
 
 - **Catalog:** **`GET /api/agents`** — implemented in **`apps/wayofpi-ui/server/agents.ts`** (`loadWorkspaceAgents`). Keep scan order and de-dupe rules identical to Pi’s agent-team behavior unless product explicitly diverges (then document in **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`**).
-- **Active persona:** WebSocket message (e.g. `agent` / `set_agent` handling in **`apps/wayofpi-ui/server/index.ts`**) resolves the chosen **`name`** with **`getAgentBodyByName`**, updates **`cachedAgentBody`**, and reapplies **`applyLeadSystem`** — same agent file the TUI would load for a single-session persona switch.
+- **Active persona:** WebSocket message (e.g. `agent` / `set_agent` handling in **`apps/wayofpi-ui/server/index.ts`**) resolves the chosen **`name`** with **`getAgentBodyByName`**, updates **`cachedAgentBody`**, and reapplies **`applyLeadSystem`** — same agent file the TUI would load for a single-session persona switch. **Until Pi owns chat**, this is **prompt merge only**, not Pi session switch.
 
 ## Simple vs technical UI
 
@@ -30,10 +37,10 @@ Use this when changing **`apps/wayofpi-ui/`** agent discovery, **My AI Team**, *
 - The SPA uses **relative** `fetch("/api/…")` (**`src/api/client.ts`**). **`/api/agents`** and **`/api/llm/models`** exist only on the **Way of Pi Bun server** (`WOP_SERVER_PORT`, default **3333**). **Vite dev** proxies **`/api`** and **`/ws`** to that server (**`vite.config.ts`**).
 - If the user opens **only** static **`dist/`** (or any host without the API), the browser returns **404** — not an empty agent list. Fixes are **operational** (run the server) or **product** (documented in the workspace agents plan: health banner, base URL, or embed API). Do not “fix” 404 by silently faking agents in the client.
 
-## Pi parity: what the web stack does today vs later
+## Pi parity: catalog today vs Pi-owned turns (target)
 
-- **Today (single model, one connection):** Choosing an agent **merges that agent’s markdown body** into the chat system prompt (**`server/session-prompts.ts`**). The **`tools:`** line does **not** enable Pi tools in the browser; the appended **Way of Pi web session** note states that. This matches “pick a persona” like **`system-select`**, not subprocess **`dispatch_agent`**.
-- **Target (multi-agent / dispatcher):** True **organizer → dispatch_agent → specialist** flows require **Pi subprocesses** and a richer protocol — see **`docs/WOP_MULTI_AGENT_WEBSOCKET.md`**, **`docs/AGENT_TEAMS.md`**, and **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`**. UI work should anticipate **team presets** and **per-agent streams** without pretending **`dispatch_agent`** already exists in the web server.
+- **Today (interim):** One connection streams via Bun to **Ollama/OpenRouter**; choosing an agent **merges** that agent’s markdown into the system prompt (**`server/session-prompts.ts`**). **`tools:`** documents intent; **execution** is **not** Pi unless the user uses **Pi TUI**.
+- **Target:** **Every** turn (orchestrator + specialists) runs in **headless Pi** so **extensions**, **tools**, and **`dispatch_agent`** match the TUI — **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`docs/WOP_MULTI_AGENT_WEBSOCKET.md`**, **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`**.
 
 ## Related docs
 

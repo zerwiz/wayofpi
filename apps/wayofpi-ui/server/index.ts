@@ -1,8 +1,15 @@
 import { existsSync } from "node:fs";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { ChatMessage } from "./chat";
+import { basename as posixBasename, join as posixJoin } from "node:path/posix";
+import type { ChatMessage, StreamChatResult } from "./chat";
+import { runOrchestratorToolLoop } from "./chat-orchestrator-tools";
 import { streamChatCompletion } from "./chat";
+import {
+	approximateStreamUsageFromMessages,
+	estimateContextWindowTokens,
+	type StreamTokenUsage,
+} from "./chat-usage";
 import { applyLeadSystem, type ChatSessionMode } from "./session-prompts";
 import { getAgentBodyByName, loadWorkspaceAgents, readPlannerAgentBodySync } from "./agents";
 import { fetchOllamaTags, isValidOllamaModelId, isValidOpenRouterModelId } from "./llm-models";
@@ -35,6 +42,28 @@ import {
 import { collectDiagnostics, collectUpstreamSnapshot } from "./diagnostics";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
 import { collectStaticWebManifest } from "./web-manifest";
+import {
+	broadcastToolLog,
+	registerChatSocketForToolLogs,
+	unregisterChatSocketForToolLogs,
+} from "./tool-log-broadcast";
+import {
+	appendWayofpiSessionMessage,
+	loadWayofpiSessionMessages,
+	sanitizeSessionKey,
+	syncWayofpiSessionFile,
+	wayofpiSessionBasename,
+} from "./wop-session-jsonl";
+import { tryAutoDispatchFromUserText } from "./orchestrator-dispatch-intent";
+import { orchestratorBashEnabled, orchestratorToolsEnabled } from "./orchestrator-tools-exec";
+import {
+	piAgentRuntimeBlockedReason,
+	resolvePiBinaryPath,
+	runPiChatTurn,
+	shouldUsePiJsonChat,
+	wopChatEngineFromEnv,
+} from "./pi-agent-runtime";
+import { evalChatSlashCommand, type ChatSlashMutation } from "./chat-slash-commands";
 
 // Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
 // In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
@@ -67,6 +96,11 @@ type ChatWsData = {
 	cachedAgentBody: string | null;
 	/** Abort in-flight LLM stream (Pi-style stop generation). */
 	chatAbort: AbortController | null;
+	/** Cumulative prompt + completion tokens (Pi footer-style — sums per finished assistant turn). */
+	cumPromptTokens: number;
+	cumCompletionTokens: number;
+	/** Client chat tab id — persists transcript under `agent/sessions/wayofpi-chat-*.jsonl`. */
+	wopSessionKey: string | null;
 };
 
 type ServerWsData = ChatWsData | TerminalWsData;
@@ -76,12 +110,15 @@ function applyLeadFromCache(data: ChatWsData) {
 	if (data.chatMode === "plan" && data.agentName?.trim().toLowerCase() !== "planner") {
 		plannerBody = readPlannerAgentBodySync(getPrimaryWorkspacePath());
 	}
+	const piJson = shouldUsePiJsonChat();
 	applyLeadSystem(data.messages, {
 		mode: data.chatMode,
 		envSystemPrompt: process.env.WOP_SYSTEM_PROMPT,
 		agentBody: data.cachedAgentBody,
 		agentNameLower: data.agentName?.trim().toLowerCase() ?? null,
 		plannerAgentBody: plannerBody,
+		orchestratorPiToolsEnabled: orchestratorToolsEnabled() && !piJson,
+		piJsonChatRuntime: piJson,
 	});
 }
 
@@ -112,66 +149,477 @@ function sendQueueState(ws: { send: (data: string) => void }, pending: number) {
 	}
 }
 
+function effectiveChatModelId(data: ChatWsData): string {
+	const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+	if (provider === "openrouter") {
+		return (data.openrouterModel || process.env.OPENROUTER_MODEL || "openrouter/auto").trim();
+	}
+	return (data.ollamaModel || resolveOllamaModelDefault()).trim();
+}
+
+function sendChatUsageMeter(
+	ws: { send: (data: string) => void },
+	data: ChatWsData,
+	lastTurn: StreamTokenUsage,
+	usageApproximate: boolean,
+) {
+	const model = effectiveChatModelId(data);
+	const win = estimateContextWindowTokens(model);
+	const lp = lastTurn.promptTokens;
+	const pct = win != null && lp > 0 ? Math.min(100, (lp / win) * 100) : null;
+	try {
+		ws.send(
+			JSON.stringify({
+				type: "chat_usage",
+				lastPrompt: lastTurn.promptTokens,
+				lastCompletion: lastTurn.completionTokens,
+				cumPrompt: data.cumPromptTokens,
+				cumCompletion: data.cumCompletionTokens,
+				contextWindow: win,
+				contextPercent: pct,
+				approximate: usageApproximate,
+			}),
+		);
+	} catch {
+		/* closing */
+	}
+}
+
+async function processActivateSession(
+	ws: { data: ChatWsData; send: (data: string) => void },
+	msg: { transcript?: unknown; sessionKey?: unknown },
+): Promise<void> {
+	const raw = msg.transcript;
+	if (!Array.isArray(raw)) {
+		ws.send(
+			JSON.stringify({
+				type: "error",
+				message: "activate_session requires a transcript array of user/assistant messages.",
+			}),
+		);
+		return;
+	}
+	const skRaw = msg.sessionKey;
+	const sessionKey =
+		typeof skRaw === "string" && skRaw.trim() ? sanitizeSessionKey(skRaw.trim()) : null;
+	ws.data.wopSessionKey = sessionKey;
+
+	const next: ChatMessage[] = [];
+	for (const item of raw.slice(0, 500)) {
+		if (!item || typeof item !== "object") continue;
+		const role = (item as { role?: unknown }).role;
+		const content = String((item as { content?: unknown }).content ?? "");
+		if (role === "user" || role === "assistant") {
+			next.push({ role, content });
+		}
+	}
+
+	let hydratedFromDisk = false;
+	if (next.length === 0 && sessionKey) {
+		const disk = await loadWayofpiSessionMessages(sessionKey);
+		if (disk.length > 0) {
+			ws.data.messages = disk;
+			hydratedFromDisk = true;
+		} else {
+			ws.data.messages = [];
+		}
+	} else {
+		ws.data.messages = next;
+	}
+
+	ws.data.pendingChatTexts = [];
+	ws.data.cumPromptTokens = 0;
+	ws.data.cumCompletionTokens = 0;
+	sendQueueState(ws, 0);
+	applyLeadFromCache(ws.data);
+
+	if (sessionKey) {
+		try {
+			await syncWayofpiSessionFile(sessionKey, ws.data.messages);
+			const n = ws.data.messages.filter((m) => m.role === "user" || m.role === "assistant").length;
+			broadcastToolLog(
+				"INFO",
+				"session",
+				`JSONL ${wayofpiSessionBasename(sessionKey)} (${n} turn${n === 1 ? "" : "s"})`,
+			);
+		} catch (e) {
+			const m = e instanceof Error ? e.message : String(e);
+			ws.send(logLine("WARN", "session", `Failed to write session JSONL: ${m}`));
+		}
+	}
+
+	const userAsstCount = ws.data.messages.filter(
+		(m) =>
+			m.role === "user" ||
+			(m.role === "assistant" && String(m.content ?? "").trim().length > 0),
+	).length;
+	ws.send(
+		logLine(
+			"INFO",
+			"chat",
+			hydratedFromDisk && sessionKey
+				? `Restored ${userAsstCount} message(s) from ${wayofpiSessionBasename(sessionKey)}`
+				: `Chat tab active — ${userAsstCount} message${userAsstCount === 1 ? "" : "s"} for this connection.`,
+		),
+	);
+
+	if (hydratedFromDisk && sessionKey) {
+		const turns = ws.data.messages
+			.filter(
+				(m) =>
+					m.role === "user" ||
+					(m.role === "assistant" && String(m.content ?? "").trim().length > 0),
+			)
+			.map((m) => ({ role: m.role as "user" | "assistant", content: String(m.content ?? "") }));
+		ws.send(JSON.stringify({ type: "session_transcript", sessionKey, turns }));
+	}
+}
+
+async function applySlashMutations(
+	ws: { data: ChatWsData; send: (data: string) => void },
+	mutation: ChatSlashMutation | undefined,
+): Promise<void> {
+	if (!mutation) return;
+	const data = ws.data;
+	if (mutation.setModelId) {
+		const id = mutation.setModelId;
+		const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+		if (provider === "openrouter") {
+			data.openrouterModel = id;
+			data.ollamaModel = undefined;
+		} else {
+			data.ollamaModel = id;
+			data.openrouterModel = undefined;
+		}
+		ws.send(JSON.stringify({ type: "model_set", effectiveModel: id, provider }));
+	}
+	if (mutation.setChatMode) {
+		data.chatMode = mutation.setChatMode;
+		applyLeadFromCache(data);
+		ws.send(JSON.stringify({ type: "chat_mode", mode: mutation.setChatMode }));
+		ws.send(
+			logLine(
+				"INFO",
+				"chat",
+				mutation.setChatMode === "plan"
+					? "Plan mode — session uses workspace planner.md (Pi) when present, else built-in fallback; no duplicate if agent is planner."
+					: "Build mode — standard assistant (WOP_SYSTEM_PROMPT only if set).",
+			),
+		);
+	}
+	if (mutation.setAgentName !== undefined) {
+		const name = mutation.setAgentName;
+		if (name) {
+			const body = await getAgentBodyByName(name);
+			data.agentName = name;
+			data.cachedAgentBody = body ?? null;
+		} else {
+			data.agentName = null;
+			data.cachedAgentBody = null;
+		}
+		applyLeadFromCache(data);
+		ws.send(JSON.stringify({ type: "agent", name: data.agentName }));
+		ws.send(
+			logLine(
+				"INFO",
+				"chat",
+				data.agentName
+					? `Agent persona: ${data.agentName} (markdown system prompt from workspace).`
+					: "Agent persona: Orchestrator (no workspace .md — server injects Pi-shaped orchestrator system prompt).",
+			),
+		);
+	}
+}
+
 async function runChatTurn(
 	ws: { data: ChatWsData; send: (data: string) => void },
 	text: string,
 	notifyUser: boolean,
 ): Promise<void> {
 	const data = ws.data;
-
-	if (notifyUser) {
-		ws.send(JSON.stringify({ type: "user_message", content: text }));
-	}
-	data.messages.push({ role: "user", content: text });
-	ws.send(JSON.stringify({ type: "assistant_turn_start" }));
-
-	const sendLog = (level: "INFO" | "WARN" | "ERROR", source: string, m: string) => {
-		ws.send(logLine(level, source, m));
-	};
-
 	data.busy = true;
-	const ac = new AbortController();
-	data.chatAbort = ac;
-	sendLog("INFO", "chat", "Requesting completion…");
-	let full = "";
 	try {
-		const result = await streamChatCompletion(
-			data.messages,
-			(delta) => {
-				full += delta;
-				ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));
-			},
-			sendLog,
-			{
-				ollamaModel: data.ollamaModel,
-				openrouterModel: data.openrouterModel,
-			},
-			{ signal: ac.signal },
-		);
+		const trimmed = text.trim();
+		const slash = await evalChatSlashCommand(trimmed, {
+			provider: (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase(),
+			ollamaModel: data.ollamaModel,
+			openrouterModel: data.openrouterModel,
+		});
 
-		if (!result.ok) {
-			if ("aborted" in result && result.aborted) {
-				if (full.length > 0) {
-					data.messages.push({ role: "assistant", content: full });
+		if (slash.handled) {
+			if (slash.mutation?.clearTranscript) {
+				data.messages = [];
+				data.pendingChatTexts = [];
+				data.cumPromptTokens = 0;
+				data.cumCompletionTokens = 0;
+				sendQueueState(ws, 0);
+				applyLeadFromCache(data);
+				if (data.wopSessionKey) {
+					try {
+						await syncWayofpiSessionFile(data.wopSessionKey, data.messages);
+					} catch (e) {
+						const m = e instanceof Error ? e.message : String(e);
+						ws.send(logLine("WARN", "session", `sync JSONL after /clear: ${m}`));
+					}
 				}
-				sendLog("WARN", "chat", "Generation stopped by user.");
-				ws.send(JSON.stringify({ type: "done" }));
+				ws.send(JSON.stringify({ type: "session_reset" }));
+				ws.send(JSON.stringify({ type: "chat_mode", mode: data.chatMode }));
+				ws.send(JSON.stringify({ type: "agent", name: data.agentName }));
+				ws.send(logLine("INFO", "chat", "Transcript cleared (/clear)."));
 				return;
 			}
-			if ("error" in result) {
-				ws.send(JSON.stringify({ type: "error", message: result.error }));
-				data.messages.pop();
+
+			await applySlashMutations(ws, slash.mutation);
+
+			if (!slash.skipUserEcho) {
+				if (notifyUser) {
+					ws.send(JSON.stringify({ type: "user_message", content: trimmed }));
+				}
+				data.messages.push({ role: "user", content: trimmed });
+				if (data.wopSessionKey) {
+					try {
+						await appendWayofpiSessionMessage(data.wopSessionKey, "user", trimmed);
+					} catch (e) {
+						const m = e instanceof Error ? e.message : String(e);
+						ws.send(logLine("WARN", "session", `append user JSONL: ${m}`));
+					}
+				}
+			}
+
+			ws.send(JSON.stringify({ type: "assistant_turn_start" }));
+			const reply = slash.assistantText;
+			if (reply.length > 0) {
+				ws.send(JSON.stringify({ type: "assistant_delta", content: reply }));
+				data.messages.push({ role: "assistant", content: reply });
+				if (data.wopSessionKey) {
+					try {
+						await appendWayofpiSessionMessage(data.wopSessionKey, "assistant", reply);
+					} catch (e) {
+						const m = e instanceof Error ? e.message : String(e);
+						ws.send(logLine("WARN", "session", `append assistant JSONL: ${m}`));
+					}
+				}
+			}
+			ws.send(JSON.stringify({ type: "done" }));
+			return;
+		}
+
+		const lenBeforeUserMsg = data.messages.length;
+		if (notifyUser) {
+			ws.send(JSON.stringify({ type: "user_message", content: text }));
+		}
+		data.messages.push({ role: "user", content: text });
+		if (data.wopSessionKey) {
+			try {
+				await appendWayofpiSessionMessage(data.wopSessionKey, "user", text);
+			} catch (e) {
+				const m = e instanceof Error ? e.message : String(e);
+				ws.send(logLine("WARN", "session", `append user JSONL: ${m}`));
+			}
+		}
+
+		const sendLog = (level: "INFO" | "WARN" | "ERROR", source: string, m: string) => {
+			ws.send(logLine(level, source, m));
+		};
+
+		/** Pi-style **dispatch** — infer specialist from phrasing ("start scout", "scout to …") and switch server-side before the model runs. */
+		try {
+			const disp = await tryAutoDispatchFromUserText(text, data.agentName);
+			if (disp.kind === "orchestrator") {
+				data.agentName = null;
+				data.cachedAgentBody = null;
+				applyLeadFromCache(data);
+				ws.send(JSON.stringify({ type: "agent", name: data.agentName }));
+				sendLog(
+					"INFO",
+					"dispatch",
+					"Switched to **Orchestrator** (Pi dispatcher posture — no merged specialist `.md`).",
+				);
+				broadcastToolLog("INFO", "dispatch_agent", "→ orchestrator");
+			} else if (disp.kind === "agent") {
+				data.agentName = disp.canonicalName;
+				data.cachedAgentBody = disp.body;
+				applyLeadFromCache(data);
+				ws.send(JSON.stringify({ type: "agent", name: data.agentName }));
+				sendLog(
+					"INFO",
+					"dispatch",
+					`Auto-dispatched to **${disp.canonicalName}** — same roster as Pi **\`dispatch_agent\`**. This turn uses that persona.`,
+				);
+				broadcastToolLog(
+					"INFO",
+					"dispatch_agent",
+					`→ ${disp.canonicalName} — ${text.length > 140 ? `${text.slice(0, 137)}…` : text}`,
+				);
+			}
+		} catch (e) {
+			const m = e instanceof Error ? e.message : String(e);
+			sendLog("WARN", "dispatch", `Handoff detection skipped: ${m}`);
+		}
+
+		ws.send(JSON.stringify({ type: "assistant_turn_start" }));
+
+		const piBlocked = piAgentRuntimeBlockedReason();
+		if (piBlocked) {
+			ws.send(JSON.stringify({ type: "error", message: piBlocked }));
+			sendLog("ERROR", "chat", piBlocked);
+			data.messages.length = lenBeforeUserMsg;
+			if (data.wopSessionKey) {
+				try {
+					await syncWayofpiSessionFile(data.wopSessionKey, data.messages);
+				} catch {
+					/* ignore */
+				}
 			}
 			return;
 		}
 
-		data.messages.push({ role: "assistant", content: full });
-		ws.send(JSON.stringify({ type: "done" }));
-	} catch (e) {
-		const message = e instanceof Error ? e.message : String(e);
-		ws.send(JSON.stringify({ type: "error", message }));
-		const last = data.messages[data.messages.length - 1];
-		if (last?.role === "user") data.messages.pop();
+		const ac = new AbortController();
+		data.chatAbort = ac;
+		const usePiChat = shouldUsePiJsonChat();
+		const useOrchestratorTools = !usePiChat && orchestratorToolsEnabled();
+		sendLog(
+			"INFO",
+			"chat",
+			usePiChat
+				? "Running turn via headless Pi (`pi --mode json`)…"
+				: useOrchestratorTools
+					? "Chat completion with workspace tools (read, list_dir, grep, write, …)…"
+					: "Requesting completion…",
+		);
+		let full = "";
+		let lastStreamUsage: StreamTokenUsage | null = null;
+		try {
+			let result: StreamChatResult;
+			if (usePiChat) {
+				const o = await runPiChatTurn({
+					cwd: getPrimaryWorkspacePath(),
+					messages: data.messages,
+					onDelta: (delta) => {
+						full += delta;
+						ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));
+					},
+					onLog: sendLog,
+					signal: ac.signal,
+				});
+				result = o.result;
+				lastStreamUsage = o.lastStreamUsage;
+			} else if (useOrchestratorTools) {
+				const o = await runOrchestratorToolLoop(
+					data.messages,
+					(delta) => {
+						full += delta;
+						ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));
+					},
+					sendLog,
+					{
+						ollamaModel: data.ollamaModel,
+						openrouterModel: data.openrouterModel,
+					},
+					{ signal: ac.signal },
+				);
+				result = o.result;
+				lastStreamUsage = o.lastStreamUsage;
+				full = o.finalAssistantText;
+			} else {
+				result = await streamChatCompletion(
+					data.messages,
+					(delta) => {
+						full += delta;
+						ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));
+					},
+					sendLog,
+					{
+						ollamaModel: data.ollamaModel,
+						openrouterModel: data.openrouterModel,
+					},
+					{
+						signal: ac.signal,
+						onStreamUsage: (u) => {
+							lastStreamUsage = u;
+						},
+					},
+				);
+			}
+
+			if (!result.ok) {
+				if ("aborted" in result && result.aborted) {
+					if (useOrchestratorTools) {
+						data.messages.length = lenBeforeUserMsg;
+						sendLog("WARN", "chat", "Generation stopped by user.");
+						ws.send(JSON.stringify({ type: "done" }));
+						return;
+					}
+					const msgsBeforeAssistantAbort = data.messages;
+					const turnUsageAbort =
+						lastStreamUsage ??
+						approximateStreamUsageFromMessages(msgsBeforeAssistantAbort, full);
+					const approxAbort = lastStreamUsage == null;
+					if (full.length > 0) {
+						data.messages.push({ role: "assistant", content: full });
+						if (data.wopSessionKey) {
+							try {
+								await appendWayofpiSessionMessage(data.wopSessionKey, "assistant", full);
+							} catch (e) {
+								const m = e instanceof Error ? e.message : String(e);
+								sendLog("WARN", "session", `append assistant JSONL: ${m}`);
+							}
+						}
+					}
+					sendLog("WARN", "chat", "Generation stopped by user.");
+					data.cumPromptTokens += turnUsageAbort.promptTokens;
+					data.cumCompletionTokens += turnUsageAbort.completionTokens;
+					sendChatUsageMeter(ws, data, turnUsageAbort, approxAbort);
+					ws.send(JSON.stringify({ type: "done" }));
+					return;
+				}
+				if ("error" in result) {
+					ws.send(JSON.stringify({ type: "error", message: result.error }));
+					data.messages.length = lenBeforeUserMsg;
+					if (data.wopSessionKey) {
+						try {
+							await syncWayofpiSessionFile(data.wopSessionKey, data.messages);
+						} catch {
+							/* ignore */
+						}
+					}
+				}
+				return;
+			}
+
+			const msgsBeforeAssistant = useOrchestratorTools
+				? data.messages.slice(0, -1)
+				: data.messages;
+			const turnUsage =
+				lastStreamUsage ?? approximateStreamUsageFromMessages(msgsBeforeAssistant, full);
+			const approxTurn = lastStreamUsage == null;
+			data.cumPromptTokens += turnUsage.promptTokens;
+			data.cumCompletionTokens += turnUsage.completionTokens;
+			if (!useOrchestratorTools) {
+				data.messages.push({ role: "assistant", content: full });
+			}
+			if (data.wopSessionKey && full.length > 0) {
+				try {
+					await appendWayofpiSessionMessage(data.wopSessionKey, "assistant", full);
+				} catch (e) {
+					const m = e instanceof Error ? e.message : String(e);
+					sendLog("WARN", "session", `append assistant JSONL: ${m}`);
+				}
+			}
+			sendChatUsageMeter(ws, data, turnUsage, approxTurn);
+			ws.send(JSON.stringify({ type: "done" }));
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			ws.send(JSON.stringify({ type: "error", message }));
+			data.messages.length = lenBeforeUserMsg;
+			if (data.wopSessionKey) {
+				try {
+					await syncWayofpiSessionFile(data.wopSessionKey, data.messages);
+				} catch {
+					/* ignore */
+				}
+			}
+		}
 	} finally {
 		data.chatAbort = null;
 		data.busy = false;
@@ -277,12 +725,14 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				const p = String(body.path ?? "").trim();
 				if (!p) return json({ error: "path required" }, 400);
 				await openFolder(p);
+				broadcastToolLog("INFO", "cd", `workspace open_folder ${p.length > 160 ? `${p.slice(0, 157)}…` : p}`);
 				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
 			}
 			if (op === "add_folder") {
 				const p = String(body.path ?? "").trim();
 				if (!p) return json({ error: "path required" }, 400);
 				await addFolder(p);
+				broadcastToolLog("INFO", "cd", `workspace add_folder ${p.length > 160 ? `${p.slice(0, 157)}…` : p}`);
 				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
 			}
 			if (op === "remove_folder") {
@@ -299,6 +749,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				const p = String(body.path ?? "").trim();
 				if (!p) return json({ error: "path required" }, 400);
 				const selectPath = await openFileInWorkspace(p);
+				broadcastToolLog("INFO", "read", `workspace open_file ${p.length > 200 ? `${p.slice(0, 197)}…` : p}`);
 				return json({
 					ok: true,
 					folders: listWorkspaceFolders(),
@@ -334,13 +785,23 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/config" && req.method === "GET") {
 		const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
-		/** Reserved for Phase 2 (`pi` = headless Pi). If unset, same as `provider` for the active direct-LLM path. */
-		const chatEngine = (process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase() || provider;
+		const engineMode = wopChatEngineFromEnv();
+		const chatEngine =
+			engineMode === "bundled"
+				? (process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase() || provider
+				: engineMode;
+		const piEngineLive = shouldUsePiJsonChat();
+		const piBackendRequested = engineMode === "pi" || engineMode === "auto";
 		return json({
 			provider,
 			chatEngine,
-			/** Always false until `/ws` chat is forwarded to a Pi subprocess (see docs/WOP_PI_BACKEND_WIRING_PLAN.md §2.5). */
-			piDrivesChat: false,
+			/** True when `WOP_CHAT_ENGINE` is **`pi`** or **`auto`** and the **`pi`** CLI resolves — all personas use `pi --mode json` (full Pi tools). */
+			piDrivesChat: piEngineLive,
+			piChatEngineRequested: piBackendRequested,
+			piChatEngineWired: piEngineLive,
+			/** Interim Bun tool loop only — superseded once Pi owns tools per `docs/WOP_PI_BACKEND_WIRING_PLAN.md`. */
+			orchestratorTools: orchestratorToolsEnabled(),
+			orchestratorBash: orchestratorBashEnabled(),
 			manifestUrl: "/api/manifest",
 			ollamaHost: resolveOllamaHost(),
 			ollamaModel: resolveOllamaModelDefault(),
@@ -463,6 +924,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		const scripts = await readPackageScripts();
 		if (!scripts || !(script in scripts)) return json({ error: "Script not in package.json" }, 400);
 		const cwd = getWorkspaceRoot();
+		broadcastToolLog("INFO", "bash", `bun run ${script} (cwd ${cwd.length > 80 ? `${cwd.slice(0, 77)}…` : cwd})`);
 		try {
 			const proc = Bun.spawn(["bun", "run", script], {
 				cwd,
@@ -511,6 +973,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			const imageMime = imageMimeFromPath(rel);
 			if (imageMime) {
 				const buf = await readFile(abs);
+				broadcastToolLog("INFO", "read", `read ${rel} (image, ${buf.length} bytes)`);
 				return json({
 					path: rel,
 					encoding: "base64",
@@ -520,6 +983,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			}
 			const buf = await readFile(abs);
 			if (buf.includes(0)) {
+				broadcastToolLog("INFO", "read", `read ${rel} (binary, ${buf.length} bytes)`);
 				return json({
 					path: rel,
 					encoding: "base64",
@@ -527,6 +991,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 					content: buf.toString("base64"),
 				});
 			}
+			broadcastToolLog("INFO", "read", `read ${rel} (${buf.length} chars utf8)`);
 			return json({ path: rel, content: buf.toString("utf8") });
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
@@ -535,21 +1000,109 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	}
 
 	if (p === "/api/file" && req.method === "PUT") {
-		let body: { path?: string; content?: string };
+		let body: { path?: string; content?: string; encoding?: string };
 		try {
-			body = (await req.json()) as { path?: string; content?: string };
+			body = (await req.json()) as { path?: string; content?: string; encoding?: string };
 		} catch {
 			return json({ error: "Invalid JSON" }, 400);
 		}
 		const rel = body.path || "";
 		const abs = safeResolveUnderWorkspace(rel);
 		if (!abs) return json({ error: "Invalid path" }, 400);
-		const content = body.content ?? "";
-		if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES) return json({ error: "Content too large" }, 413);
+		const raw = body.content ?? "";
 		try {
 			await mkdir(dirname(abs), { recursive: true });
-			await writeFile(abs, content, "utf8");
+			if (body.encoding === "base64") {
+				let buf: Buffer;
+				try {
+					buf = Buffer.from(raw, "base64");
+				} catch {
+					return json({ error: "Invalid base64" }, 400);
+				}
+				if (buf.length > MAX_FILE_BYTES) return json({ error: "Content too large" }, 413);
+				await writeFile(abs, buf);
+				broadcastToolLog("INFO", "write", `write ${rel} (binary, ${buf.length} bytes)`);
+			} else {
+				if (Buffer.byteLength(raw, "utf8") > MAX_FILE_BYTES) return json({ error: "Content too large" }, 413);
+				await writeFile(abs, raw, "utf8");
+				broadcastToolLog("INFO", "write", `write ${rel} (${Buffer.byteLength(raw, "utf8")} bytes utf8)`);
+			}
 			return json({ ok: true, path: rel });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: message }, 500);
+		}
+	}
+
+	if (p === "/api/fs/move" && req.method === "POST") {
+		let body: { from?: string; toDir?: string };
+		try {
+			body = (await req.json()) as { from?: string; toDir?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const fromRel = String(body.from ?? "")
+			.trim()
+			.replace(/^[/\\]+/, "");
+		const toDirRaw = body.toDir;
+		const toDirRel =
+			typeof toDirRaw === "string"
+				? toDirRaw.trim().replace(/^[/\\]+/, "").replace(/[/\\]+$/, "")
+				: "";
+		if (!fromRel || fromRel.includes("..")) {
+			return json({ error: "Invalid from path" }, 400);
+		}
+		if (toDirRel.includes("..")) {
+			return json({ error: "Invalid toDir" }, 400);
+		}
+		if (listWorkspaceFolders().length > 1 && !toDirRel) {
+			return json({ error: "Drop onto a folder (multi-root workspace has no single root)." }, 400);
+		}
+		const fromAbs = safeResolveUnderWorkspace(fromRel);
+		if (!fromAbs) {
+			return json({ error: "Invalid from path" }, 400);
+		}
+		let stFrom: Awaited<ReturnType<typeof stat>>;
+		try {
+			stFrom = await stat(fromAbs);
+		} catch {
+			return json({ error: "Source not found" }, 404);
+		}
+		if (!stFrom.isFile()) {
+			return json({ error: "Only files can be moved from the explorer" }, 400);
+		}
+		const destRel = toDirRel ? posixJoin(toDirRel, posixBasename(fromRel)) : posixBasename(fromRel);
+		const normFrom = fromRel.replace(/\/+$/, "");
+		const normDest = destRel.replace(/\/+$/, "");
+		if (normDest === normFrom) {
+			return json({ error: "Already in that folder" }, 400);
+		}
+		const destAbs = safeResolveUnderWorkspace(destRel);
+		if (!destAbs) {
+			return json({ error: "Invalid destination" }, 400);
+		}
+		if (toDirRel) {
+			const toDirAbs = safeResolveUnderWorkspace(toDirRel);
+			if (!toDirAbs) {
+				return json({ error: "Invalid folder" }, 400);
+			}
+			let stDir: Awaited<ReturnType<typeof stat>>;
+			try {
+				stDir = await stat(toDirAbs);
+			} catch {
+				return json({ error: "Folder not found" }, 404);
+			}
+			if (!stDir.isDirectory()) {
+				return json({ error: "Target is not a folder" }, 400);
+			}
+		}
+		if (existsSync(destAbs)) {
+			return json({ error: "A file with that name already exists in the target folder" }, 409);
+		}
+		try {
+			await rename(fromAbs, destAbs);
+			broadcastToolLog("INFO", "mv", `mv ${fromRel} → ${destRel}`);
+			return json({ ok: true, to: destRel });
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ error: message }, 500);
@@ -579,9 +1132,11 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		try {
 			if (kind === "dir") {
 				await mkdir(abs, { recursive: true });
+				broadcastToolLog("INFO", "mkdir", `mkdir ${rel}`);
 			} else {
 				await mkdir(dirname(abs), { recursive: true });
 				await writeFile(abs, "", "utf8");
+				broadcastToolLog("INFO", "write", `touch ${rel}`);
 			}
 			return json({ ok: true, path: rel });
 		} catch (e) {
@@ -625,7 +1180,8 @@ const server = Bun.serve<ServerWsData>({
 			const upgraded = srv.upgrade(req, {
 				data: {
 					kind: "terminal",
-					child: null,
+					session: null,
+					stdinLogBuffer: "",
 				} satisfies TerminalWsData,
 			});
 			if (upgraded) return undefined as unknown as Response;
@@ -648,6 +1204,9 @@ const server = Bun.serve<ServerWsData>({
 					agentName: null,
 					cachedAgentBody: null,
 					chatAbort: null,
+					cumPromptTokens: 0,
+					cumCompletionTokens: 0,
+					wopSessionKey: null,
 				} satisfies ChatWsData,
 			});
 			if (upgraded) return undefined as unknown as Response;
@@ -689,10 +1248,13 @@ const server = Bun.serve<ServerWsData>({
 					agentName: ws.data.agentName,
 				}),
 			);
+			registerChatSocketForToolLogs(ws);
 		},
 		close(ws) {
 			if (ws.data.kind === "terminal") {
 				disposeTerminal(ws);
+			} else if (ws.data.kind === "chat") {
+				unregisterChatSocketForToolLogs(ws);
 			}
 		},
 		async message(ws, raw) {
@@ -840,36 +1402,7 @@ const server = Bun.serve<ServerWsData>({
 					);
 					return;
 				}
-				const raw = (msg as { transcript?: unknown }).transcript;
-				if (!Array.isArray(raw)) {
-					ws.send(
-						JSON.stringify({
-							type: "error",
-							message: "activate_session requires a transcript array of user/assistant messages.",
-						}),
-					);
-					return;
-				}
-				const next: ChatMessage[] = [];
-				for (const item of raw.slice(0, 500)) {
-					if (!item || typeof item !== "object") continue;
-					const role = (item as { role?: unknown }).role;
-					const content = String((item as { content?: unknown }).content ?? "");
-					if (role === "user" || role === "assistant") {
-						next.push({ role, content });
-					}
-				}
-				ws.data.messages = next;
-				ws.data.pendingChatTexts = [];
-				sendQueueState(ws, 0);
-				applyLeadFromCache(ws.data);
-				ws.send(
-					logLine(
-						"INFO",
-						"chat",
-						`Chat tab active — restored ${next.length} message${next.length === 1 ? "" : "s"} for this connection.`,
-					),
-				);
+				await processActivateSession(ws, msg as { transcript?: unknown; sessionKey?: unknown });
 				return;
 			}
 			if (msg.type === "new_session") {
@@ -884,6 +1417,9 @@ const server = Bun.serve<ServerWsData>({
 				}
 				ws.data.messages = [];
 				ws.data.pendingChatTexts = [];
+				ws.data.wopSessionKey = null;
+				ws.data.cumPromptTokens = 0;
+				ws.data.cumCompletionTokens = 0;
 				sendQueueState(ws, 0);
 				applyLeadFromCache(ws.data);
 				ws.send(JSON.stringify({ type: "session_reset" }));
@@ -913,6 +1449,7 @@ const server = Bun.serve<ServerWsData>({
 const _bootChatEngine =
 	(process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase() ||
 	(process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+const _bootPiDrives = shouldUsePiJsonChat();
 console.log(
-	`Way of Pi server http://127.0.0.1:${server.port} workspace=${getWorkspaceRoot()} chatEngine=${_bootChatEngine} piDrivesChat=false manifest=/api/manifest`,
+	`Way of Pi server http://127.0.0.1:${server.port} workspace=${getWorkspaceRoot()} chatEngine=${_bootChatEngine} piDrivesChat=${_bootPiDrives} manifest=/api/manifest`,
 );

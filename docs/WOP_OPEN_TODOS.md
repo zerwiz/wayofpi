@@ -4,7 +4,20 @@ Single place to track **what is not done yet** for the **Way of Pi** direction (
 
 **Merged build checklist (all WOP plans):** **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** — trim there and here when you ship.
 
-**Canonical roadmap:** **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **End-to-end wiring map (UI ↔ Pi):** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** (**§2.5** = what still **does not** hit the Pi process vs Bun-only — prioritize changes that **maximize Pi as backend**) · **Planning hub:** **[WOP_PLANNING.md](WOP_PLANNING.md)**
+**Canonical roadmap:** **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **End-to-end wiring map (UI ↔ Pi):** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** (**§0** = Pi-only agent lock · **§2.5** = what still **does not** hit the Pi process vs Bun-only) · **Planning hub:** **[WOP_PLANNING.md](WOP_PLANNING.md)**
+
+---
+
+## P0 — Pi backend (build before expanding Bun “agent” features)
+
+**Rule:** **[`.cursor/rules/wop-ui-pi-backend-parity.mdc`](../.cursor/rules/wop-ui-pi-backend-parity.mdc)** — Way of Pi **must not build or own** a parallel agent/tool/extension **system**; it **uses Pi’s backend** (`WOP_PI_BINARY`). Interim Bun chat/tools are **glue only**, not the end state.
+
+| Priority | Build |
+|----------|--------|
+| **P0.1** | **Partial:** **`WOP_CHAT_ENGINE=pi`** or **`auto`** → **`pi --mode json`** per turn for **all** personas when **`pi`** resolves (**`runPiChatTurn`**, **`pi-json-mode-chat.ts`**), stream → **`assistant_delta`** / tool log / **`done`**. **Still open:** reuse one long-lived Pi process, attach/tunnel **`/ws`**, fold interim Bun chat behind the same runtime. |
+| **P0.2** | **Tool + extension events** from Pi → Tool log + WebSocket contract (**[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** prep); retire or narrow **`WOP_ORCHESTRATOR_*`** Bun tool surface once Pi emits the same actions. |
+| **P0.3** | **Runtime manifest** — **`GET /api/manifest`** merges headless Pi introspection (**[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**). |
+| **P0.4** | **All personas through Pi** — orchestrator + every workspace **`.md`** agent; no path where “tools:” implies execution without Pi. |
 
 ---
 
@@ -21,7 +34,7 @@ Single place to track **what is not done yet** for the **Way of Pi** direction (
 | Status | Item |
 |--------|------|
 | Not shipped | User-facing **`wop`** CLI (`wop serve`, `wop doctor`, …) replacing playground-only **`ppi` / `pi-e`** strings for product workflows. |
-| Not shipped | **Headless Pi** as the only chat/tool engine behind the server; today **`apps/wayofpi-ui`** uses **Ollama/OpenRouter** directly, not Pi subprocesses. |
+| Partial | **Headless Pi** chat: **`WOP_CHAT_ENGINE=pi`** or **`auto`** uses **`pi --mode json`** when the CLI resolves; default (unset engine) is still **Ollama/OpenRouter** in Bun without **`auto`/`pi`**. |
 | Not shipped | **`WOP_HOME`**, isolated install story, and **`WOP_PI_BINARY`** resolution in the server (documented in **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**, not fully implemented in UI server). |
 | Partial | **Phase 1 MVP** per plan: **Sessions** persistence + UI, **Profiles** / extension stack UI, **Diagnostics** checklist beyond basic health, **Models** picker wired to change server model at runtime. |
 | Not shipped | **Orchestration** grid with **live** multi-agent WebSocket streams (**[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)**). |

@@ -8,7 +8,7 @@ High-level **roadmaps and product plans** for this repository.
 |----------|--------|
 | **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** | **Way of Pi** — web UI + headless Pi, namespace isolation, UI sitemap, MVP phases, production checklist (**critical:** rename *our* backend files/ids so they are never ambiguous with upstream **`pi`**) |
 | **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** | **Single build checklist** — merged TODOs from WOP plans **+ [WOP_STANDALONE_SYSTEM_PLAN](WOP_STANDALONE_SYSTEM_PLAN.md)** (**§15**), **+ [WOP_PLANNING](WOP_PLANNING.md)** hub notes (**§16**); sources in doc header |
-| **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** | **Pi backend wiring** — current Bun APIs vs Pi target, `/ws` message map, UI↔backend matrix, phases 0–6 to full headless Pi (**manifest**, chat engine, sessions, **`WOP_MULTI_AGENT_WEBSOCKET`**) |
+| **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** | **Pi backend wiring** — **§0 critical lock** (all agents = Pi runtime for tools/extensions); current Bun APIs vs Pi target, `/ws` map, phases 0–6 (**manifest**, **`pi-agent-runtime.ts`**, sessions, **`WOP_MULTI_AGENT_WEBSOCKET`**) |
 | **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** | **Living backlog** — not-done items across product, **`apps/wayofpi-ui`**, scripts, docs |
 | **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** | `wop` CLI + `WOP_*` environment variables |
 | **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** | Static vs runtime manifest for commands/tools/extensions |

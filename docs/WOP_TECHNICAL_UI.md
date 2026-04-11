@@ -4,7 +4,9 @@ This document describes the **IDE-style technical shell** in `apps/wayofpi-ui`: 
 
 **Modular dock vision + phased TODO plan:** **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** (parity, N strips, movable agent/sidebar, layout graph). **Cursor rule** for agents working in the UI tree: **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)**.
 
-For product scope and roadmap, see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**. For Explorer parity with common IDE trees, see **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)**. For **generated/binary files**, **Cursor/Zed-style** repo conventions, and **line-number parity** with docs, see **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)**. For **menu bar / command coverage**, see **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)**. For run/setup and API tables, see **`apps/wayofpi-ui/README.md`**.
+For product scope and roadmap, see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**.
+
+**CRITICAL — Pi backend:** Chat and **agent tools/extensions** must eventually run through **headless Pi** (`WOP_PI_BINARY`), not only Bun/Ollama prompts — see **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** §0 and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**. **`apps/wayofpi-ui/server/pi-agent-runtime.ts`** routes **`WOP_CHAT_ENGINE=pi`** / **`auto`** through **`pi --mode json`** when the CLI resolves (full Pi tools for all personas; long-lived Pi + **`/ws`** tunnel still planned). For Explorer parity with common IDE trees, see **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)**. For **generated/binary files**, **Cursor/Zed-style** repo conventions, and **line-number parity** with docs, see **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)**. For **menu bar / command coverage**, see **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)**. For run/setup and API tables, see **`apps/wayofpi-ui/README.md`**.
 
 ### Terminology (plans + UX)
 
@@ -80,7 +82,7 @@ Both modes share **`useWorkspaceTree`**, **`useFileEditor`**, **`useWayOfPiSessi
 | **Horizontal** | **Upper** region \| handle \| **lower** (legacy **`horizontalToolDockHeightsPx`** fields) | Pointer **down** → grow the **lower** persisted height when that split is wired to **`dockLayout`**. |
 | **Horizontal** | **Main workspace** \| handle \| **bottom chat** | **`chatSizePx`**: **`−dy`** in **`App.tsx`** when **`chatDock === "bottom"`** (sash drag direction matches the live strip). |
 | **Horizontal** | **Workspace row *r*** \| handle \| **workspace row *r+1*** (multi-row grid) | Pointer **down** → grow the **lower** row’s flex weight — **`applyWorkspaceGridRowResizeDelta`** (**`workspaceGridStorage.ts`**). |
-| **Vertical** | **Workspace column *c*** \| handle \| **workspace column *c+1*** (multi-column grid) | Pointer **right** → grow the **right** column’s flex weight — **`applyWorkspaceGridColResizeDelta`**. |
+| **Vertical** | **Workspace column *c*** \| handle \| **workspace column *c+1*** (multi-column grid) | Pointer **right** → grow the **left** column’s flex weight (`w[colEdge] += …`) — **`applyWorkspaceGridColResizeDelta`** (same sash feel as **Simple UI** chat \| editor: **`+dx`** widens the pane **left** of the handle). |
 
 **Simple UI** side-by-side chat: chat is **left** of the handle, editor **right** — **`applyChatSplitDelta`** widens chat with **`+dx`** when dragging the handle **right** (edge follows pointer).
 
@@ -195,7 +197,7 @@ Defined in **`src/types/technicalShell.ts`** and **`src/utils/technicalLayoutSto
 | **ChatPanel** | `components/ChatPanel.tsx` | Session / agent chat; **docked** right or bottom via **`technicalDock`**; dock toolbar (**PanelRight** / **PanelBottom** / hide); transcript, send/stop, **New session**. **Team Pulse** tab: roster grid ([`AgentTeamPulseGrid.tsx`](../apps/wayofpi-ui/src/components/AgentTeamPulseGrid.tsx)); live multi-agent streams — **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)**. |
 | **DockSplitHandle** | `components/DockSplitHandle.tsx` | Pointer-driven splitters between dock regions (resize). |
 | **PanelDockBand** | `components/PanelDockBand.tsx` | Legacy / auxiliary strip host (same **`PanelTab`** model); **not** used for the main editor column in current **`App.tsx`**. |
-| **ToolPanelBody** | `components/ToolPanelBody.tsx` | Problems / Output / Tool log / Terminal body inside an **active tool tab** of **`WorkspacePane`**. |
+| **ToolPanelBody** | `components/ToolPanelBody.tsx` | Problems / Output / Tool log / Terminal body inside an **active tool tab** of **`WorkspacePane`**. **Tool log** lines come from the **chat** WebSocket (`/ws`): chat/LLM server logs plus **Pi-style tool mirrors** — **`read`** / **`write`** / **`mkdir`** / **`touch`** on **`/api/file`** and **`/api/fs/entry`**, **`cd`**-style workspace folder ops, **`bash`** on integrated terminal stdin (line-buffered) and **`bun run …`** from Run script (`server/tool-log-broadcast.ts` fans out to all chat sockets). |
 | **StripFilePreview** | `components/StripFilePreview.tsx` | Read-only file preview helper (still used where **`PanelDockBand`** or previews need **`apiGet`**). |
 | **DockRegionTitleBar** | `components/DockRegionTitleBar.tsx` | Shared chrome for docked regions. |
 | **StatusBar** | `components/StatusBar.tsx` | **Zed-style** icon cluster, **`technicalToolDock`** focus (**`toolTabVisible`** on **focused** cell’s dock when grid active), connection, workspace path; line/col/language. [Zed visual customization](https://zed.dev/docs/visual-customization) alignment. |
@@ -242,7 +244,7 @@ Supporting utilities:
 | **useWorkspaceTree** | `hooks/useWorkspaceTree.ts` | `GET /api/tree` | `root`, `nodes` (`TreeNode[]`), `refresh()`. |
 | **useFileEditor** | `hooks/useFileEditor.ts` | `GET/PUT /api/file` | Loads/saves text; 2 MiB cap enforced server-side. |
 | **useServerConfig** | `hooks/useServerConfig.ts` | `GET /api/config` | Provider/model labels for UI. |
-| **useWayOfPiSession** | `hooks/useWayOfPiSession.ts` | WebSocket `/ws` | Chat rows, streaming flag, server log lines; optional tree refresh callback. |
+| **useWayOfPiSession** | `hooks/useWayOfPiSession.ts` | WebSocket `/ws` | Chat rows, streaming flag, server log lines; optional tree refresh callback. **Pi-style `/` lines** (e.g. `/models`, `/help`, `/clear`) are handled on the server in **`server/chat-slash-commands.ts`** before the LLM turn. |
 
 **Create file/folder** uses **`apiPostJson("/api/fs/entry", { path, kind })`** (see server and **`apps/wayofpi-ui/README.md`**).
 

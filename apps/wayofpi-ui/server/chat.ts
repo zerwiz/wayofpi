@@ -1,10 +1,22 @@
+import { parseStreamUsage, type StreamTokenUsage } from "./chat-usage";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
 
-export type ChatRole = "system" | "user" | "assistant";
+export type ChatRole = "system" | "user" | "assistant" | "tool";
+
+/** OpenAI-style tool call attached to an assistant message (orchestrator tool loop only). */
+export type ChatAssistantToolCall = {
+	id: string;
+	type: "function";
+	function: { name: string; arguments: string };
+};
 
 export interface ChatMessage {
 	role: ChatRole;
-	content: string;
+	/** Plain text; may be empty or null when assistant message only contains `tool_calls`. */
+	content: string | null;
+	tool_calls?: ChatAssistantToolCall[];
+	tool_call_id?: string;
+	name?: string;
 }
 
 function nowTime(): string {
@@ -12,7 +24,7 @@ function nowTime(): string {
 }
 
 /** Turn JSON error bodies (Ollama / OpenRouter) into a single readable line. */
-function formatLlmHttpError(vendor: string, status: number, body: string): string {
+export function formatLlmHttpError(vendor: string, status: number, body: string): string {
 	const slice = body.slice(0, 800).trim();
 	try {
 		const j = JSON.parse(slice) as {
@@ -39,7 +51,7 @@ function formatLlmHttpError(vendor: string, status: number, body: string): strin
 	return `${vendor} ${status}: ${slice}`;
 }
 
-function ollamaErrorHint(status: number, detail: string, model: string): string {
+export function ollamaErrorHint(status: number, detail: string, model: string): string {
 	if (status !== 404) return detail;
 	const lower = detail.toLowerCase();
 	if (!lower.includes("not found") && !lower.includes("model")) return detail;
@@ -54,12 +66,46 @@ export interface ChatRuntimeModel {
 
 export type StreamChatResult = { ok: true } | { ok: false; error: string } | { ok: false; aborted: true };
 
+/** Serialize in-memory chat to OpenAI Chat Completions `messages` (supports tool turns). */
+export function messagesToOpenAIFormat(messages: ChatMessage[]): unknown[] {
+	const out: unknown[] = [];
+	for (const m of messages) {
+		if (m.role === "system" || m.role === "user") {
+			out.push({ role: m.role, content: m.content ?? "" });
+			continue;
+		}
+		if (m.role === "tool") {
+			out.push({
+				role: "tool",
+				tool_call_id: m.tool_call_id ?? "",
+				content: m.content ?? "",
+			});
+			continue;
+		}
+		if (m.role === "assistant") {
+			if (m.tool_calls && m.tool_calls.length > 0) {
+				const row: Record<string, unknown> = {
+					role: "assistant",
+					tool_calls: m.tool_calls,
+				};
+				const c = m.content;
+				if (c != null && String(c).length > 0) row.content = c;
+				else row.content = null;
+				out.push(row);
+			} else {
+				out.push({ role: "assistant", content: m.content ?? "" });
+			}
+		}
+	}
+	return out;
+}
+
 export async function streamChatCompletion(
 	messages: ChatMessage[],
 	onDelta: (text: string) => void,
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void,
 	runtime?: ChatRuntimeModel,
-	options?: { signal?: AbortSignal },
+	options?: { signal?: AbortSignal; onStreamUsage?: (u: StreamTokenUsage) => void },
 ): Promise<StreamChatResult> {
 	const signal = options?.signal;
 	const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
@@ -83,8 +129,9 @@ export async function streamChatCompletion(
 				},
 				body: JSON.stringify({
 					model,
-					messages,
+					messages: messagesToOpenAIFormat(messages),
 					stream: true,
+					stream_options: { include_usage: true },
 				}),
 				signal,
 			});
@@ -100,7 +147,7 @@ export async function streamChatCompletion(
 			return { ok: false, error: formatLlmHttpError("OpenRouter", res.status, t) };
 		}
 		try {
-			await parseOpenAIStyleSse(res, onDelta, onLog, signal);
+			await parseOpenAIStyleSse(res, onDelta, onLog, { signal, onStreamUsage: options?.onStreamUsage });
 		} catch (e) {
 			if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
 				return { ok: false, aborted: true };
@@ -121,18 +168,43 @@ export async function streamChatCompletion(
 	const host = (runtime?.ollamaHost || resolveOllamaHost()).replace(/\/$/, "");
 	const model = runtime?.ollamaModel?.trim() || resolveOllamaModelDefault();
 	onLog("INFO", "ollama", `${host} model=${model}`);
+	const url = `${host}/v1/chat/completions`;
+	const apiMessages = messagesToOpenAIFormat(messages);
+	const payloadWithUsage = {
+		model,
+		messages: apiMessages,
+		stream: true,
+		stream_options: { include_usage: true },
+	};
+	const payloadBasic = { model, messages: apiMessages, stream: true };
 	let res: Response;
 	try {
-		res = await fetch(`${host}/v1/chat/completions`, {
+		res = await fetch(url, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				model,
-				messages,
-				stream: true,
-			}),
+			body: JSON.stringify(payloadWithUsage),
 			signal,
 		});
+		if (!res.ok && res.status === 400) {
+			const t400 = await res.text();
+			const low = t400.toLowerCase();
+			if (low.includes("stream_options") || low.includes("unexpected field") || low.includes("unknown field")) {
+				onLog(
+					"WARN",
+					"ollama",
+					"Retrying chat without stream_options (older Ollama — ctx/tokens use a Pi-style ~characters÷4 estimate).",
+				);
+				res = await fetch(url, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payloadBasic),
+					signal,
+				});
+			} else {
+				const detail = formatLlmHttpError("Ollama", res.status, t400);
+				return { ok: false, error: ollamaErrorHint(res.status, detail, model) };
+			}
+		}
 	} catch (e) {
 		if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
 			return { ok: false, aborted: true };
@@ -146,7 +218,7 @@ export async function streamChatCompletion(
 		return { ok: false, error: ollamaErrorHint(res.status, detail, model) };
 	}
 	try {
-		await parseOpenAIStyleSse(res, onDelta, onLog, signal);
+		await parseOpenAIStyleSse(res, onDelta, onLog, { signal, onStreamUsage: options?.onStreamUsage });
 	} catch (e) {
 		if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
 			return { ok: false, aborted: true };
@@ -160,8 +232,10 @@ async function parseOpenAIStyleSse(
 	res: Response,
 	onDelta: (t: string) => void,
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void,
-	signal?: AbortSignal,
+	opts?: { signal?: AbortSignal; onStreamUsage?: (u: StreamTokenUsage) => void },
 ): Promise<void> {
+	const signal = opts?.signal;
+	const onStreamUsage = opts?.onStreamUsage;
 	const reader = res.body?.getReader();
 	if (!reader) throw new Error("No response body");
 	const dec = new TextDecoder();
@@ -191,6 +265,8 @@ async function parseOpenAIStyleSse(
 				};
 				const piece = json.choices?.[0]?.delta?.content;
 				if (piece) onDelta(piece);
+				const u = parseStreamUsage(json);
+				if (u) onStreamUsage?.(u);
 			} catch {
 				onLog("WARN", "sse", `Bad chunk at ${nowTime()}`);
 			}

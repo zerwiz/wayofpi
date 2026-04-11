@@ -28,7 +28,7 @@ type SharedWorkspacePaneProps = Omit<
 	| "loading"
 	| "error"
 	| "dirty"
-	| "filePreview"
+	| "persistEncoding"
 	| "onSave"
 	| "onDiscardUnsaved"
 	| "onCursor"
@@ -58,7 +58,7 @@ export const TechnicalEditorColumn = forwardRef<
 	const {
 		content,
 		setContent,
-		filePreview,
+		persistEncoding,
 		loading,
 		error,
 		dirty,
@@ -119,7 +119,7 @@ export const TechnicalEditorColumn = forwardRef<
 				loading={loading}
 				error={error}
 				dirty={dirty}
-				filePreview={filePreview}
+				persistEncoding={persistEncoding}
 				onDiscardUnsaved={discardUnsavedChanges}
 				onSave={() => void save()}
 				onCursor={isFocused ? onCursor : undefined}

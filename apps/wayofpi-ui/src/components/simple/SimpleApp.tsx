@@ -9,7 +9,7 @@ import type { PiModelConfigPath } from "../../constants/piModelConfigPaths";
 import type { ChatRow, ChatSessionMode, LogRow } from "../../hooks/useWayOfPiSession";
 import type { UiMode } from "../../hooks/useUiMode";
 import type { TreeNode } from "../../types/tree";
-import type { FilePreview } from "../../types/workspaceFile";
+import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import { SimpleChatView } from "./SimpleChatView";
 import { SimpleFilePanel } from "./SimpleFilePanel";
 import { SimplePlanWorkspacePane } from "./SimplePlanWorkspacePane";
@@ -57,8 +57,8 @@ export function SimpleApp({
 	setSelectedPath,
 	content,
 	setContent,
-	filePreview,
-	fileLoading,
+		persistEncoding,
+		fileLoading,
 	fileError,
 	dirty,
 	save,
@@ -76,6 +76,7 @@ export function SimpleApp({
 	sendChat,
 	stop,
 	clearError,
+	onReopenLlmFixModal,
 	chatAgentName,
 	onChatAgentChange,
 	chatMode,
@@ -96,6 +97,11 @@ export function SimpleApp({
 	onCreateAgentDefinition,
 	onNewPlanFile,
 	newPlanFileDisabled,
+	contextPct,
+	tokensDown,
+	tokensUp,
+	contextTitle,
+	tokensTitle,
 }: {
 	uiMode: UiMode;
 	setUiMode: (m: UiMode) => void;
@@ -113,8 +119,8 @@ export function SimpleApp({
 	setSelectedPath: (p: string | null) => void;
 	content: string;
 	setContent: (s: string) => void;
-	filePreview: FilePreview | null;
-	fileLoading: boolean;
+		persistEncoding: FilePersistEncoding;
+		fileLoading: boolean;
 	fileError: string | null;
 	dirty: boolean;
 	save: () => Promise<void>;
@@ -132,6 +138,7 @@ export function SimpleApp({
 	sendChat: (t: string) => void;
 	stop: () => void;
 	clearError: () => void;
+	onReopenLlmFixModal?: () => void;
 	chatAgentName: string | null;
 	onChatAgentChange: (name: string | null) => void;
 	chatMode: ChatSessionMode;
@@ -153,6 +160,11 @@ export function SimpleApp({
 	onCreateAgentDefinition?: () => void;
 	onNewPlanFile: () => void;
 	newPlanFileDisabled: boolean;
+	contextPct: string;
+	tokensDown: string;
+	tokensUp: string;
+	contextTitle: string;
+	tokensTitle: string;
 }) {
 	const [leftOpen, setLeftOpen] = useState(true);
 	const [rightOpen, setRightOpen] = useState(true);
@@ -225,6 +237,7 @@ export function SimpleApp({
 			onSend={sendChat}
 			onStop={stop}
 			onClearError={clearError}
+			onReopenLlmFixModal={onReopenLlmFixModal}
 			appearanceDark={appearanceDark}
 			agents={agentsApi.data?.agents ?? []}
 			agentsLoading={agentsApi.loading}
@@ -284,7 +297,7 @@ export function SimpleApp({
 													path={selectedPath}
 													content={content}
 													onChange={setContent}
-													filePreview={filePreview}
+													persistEncoding={persistEncoding}
 													loading={fileLoading}
 													error={fileError}
 													dirty={dirty}
@@ -328,7 +341,7 @@ export function SimpleApp({
 												path={selectedPath}
 												content={content}
 												onChange={setContent}
-												filePreview={filePreview}
+												persistEncoding={persistEncoding}
 												loading={fileLoading}
 												error={fileError}
 												dirty={dirty}
@@ -435,9 +448,11 @@ export function SimpleApp({
 				line={line}
 				col={col}
 				language={languageFromPath(selectedPath)}
-				contextPct="—"
-				tokensDown="—"
-				tokensUp="—"
+				contextPct={contextPct}
+				tokensDown={tokensDown}
+				tokensUp={tokensUp}
+				contextTitle={contextTitle}
+				tokensTitle={tokensTitle}
 				onCopyWorkspacePath={copyWorkspacePath}
 				simpleAppearanceDark={appearanceDark}
 			/>

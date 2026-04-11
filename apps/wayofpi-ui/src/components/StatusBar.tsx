@@ -82,6 +82,8 @@ export function StatusBar({
 	contextPct,
 	tokensDown,
 	tokensUp,
+	contextTitle,
+	tokensTitle,
 	onCopyWorkspacePath,
 	simpleAppearanceDark,
 	technicalToolDock,
@@ -98,6 +100,10 @@ export function StatusBar({
 	contextPct: string;
 	tokensDown: string;
 	tokensUp: string;
+	/** Tooltip for context meter (Pi-style used / window). */
+	contextTitle?: string;
+	/** Tooltip for cumulative ↓/↑ tokens. */
+	tokensTitle?: string;
 	onCopyWorkspacePath?: () => void;
 	simpleAppearanceDark?: boolean;
 	technicalToolDock?: {
@@ -384,14 +390,14 @@ export function StatusBar({
 					</button>
 					<button
 						type="button"
-						title="Context (placeholder)"
+						title={contextTitle ?? "Context window fill (Pi-style meter)"}
 						className="hidden h-full cursor-default items-center gap-1.5 px-1 hover:bg-white/20 lg:flex"
 					>
 						ctx: {contextPct}
 					</button>
 					<button
 						type="button"
-						title="Token usage (placeholder)"
+						title={tokensTitle ?? "Session token totals (prompt-side ↓ / completion ↑)"}
 						className="hidden h-full cursor-default items-center gap-1.5 px-1 hover:bg-white/20 xl:flex"
 					>
 						tokens: {tokensDown} ↓ / {tokensUp} ↑

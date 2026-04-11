@@ -7,10 +7,13 @@ export function WorkspaceAgentTeamPane({
 	agentTeams,
 	agents,
 	agentsLoading,
+	assistantSessionText,
 }: {
 	agentTeams: Record<string, string[]>;
 	agents: AgentMeta[];
 	agentsLoading?: boolean;
+	/** Latest assistant output only (session mirror); user messages stay in chat. */
+	assistantSessionText?: string;
 }) {
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	const [pulseTeam, setPulseTeam] = useState<string | null>(null);
@@ -87,12 +90,26 @@ export function WorkspaceAgentTeamPane({
 				)}
 			</div>
 
-			<div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-				<p className="max-w-prose text-[11px] leading-relaxed text-[#6b6b6b]">
+			<div
+				className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-3 py-3"
+				role="log"
+				aria-label="Agent session transcript"
+			>
+				<p className="max-w-prose shrink-0 text-[11px] leading-relaxed text-[#6b6b6b]">
 					Sub-agent replies, tool output, and token streams will appear here once the workspace is wired to the
 					multi-agent stream (see <code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). In Pi,
 					the main transcript stays above the <code className="text-[#858585]">agent-team</code> footer widget.
 				</p>
+				{assistantSessionText?.trim() ? (
+					<div className="min-w-0 shrink-0 border-t border-[#3c3c3c] pt-3">
+						<p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#858585]">
+							Session assistant (preview)
+						</p>
+						<pre className="w-full min-w-0 whitespace-pre-wrap break-words rounded border border-[#3c3c3c] bg-[#252526] p-2 text-[11px] leading-relaxed text-[#cccccc]">
+							{assistantSessionText}
+						</pre>
+					</div>
+				) : null}
 			</div>
 
 			{hasRoster ? (

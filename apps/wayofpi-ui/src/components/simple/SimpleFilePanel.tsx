@@ -1,9 +1,9 @@
 import { FileCode2, Save, X } from "lucide-react";
 import type { FormEvent } from "react";
 import { forwardRef } from "react";
+import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import type { SimpleMarkdownPaneMode } from "../../hooks/useSimplePreferences";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
-import type { FilePreview } from "../../types/workspaceFile";
 import { MarkdownPreviewPane } from "../MarkdownPreviewPane";
 import { WorkspaceTextBuffer } from "../WorkspaceTextBuffer";
 
@@ -13,7 +13,7 @@ export const SimpleFilePanel = forwardRef<
 		path: string;
 		content: string;
 		onChange: (next: string) => void;
-		filePreview: FilePreview | null;
+		persistEncoding: FilePersistEncoding;
 		loading: boolean;
 		error: string | null;
 		dirty: boolean;
@@ -35,7 +35,7 @@ export const SimpleFilePanel = forwardRef<
 		path,
 		content,
 		onChange,
-		filePreview,
+		persistEncoding,
 		loading,
 		error,
 		dirty,
@@ -54,7 +54,7 @@ export const SimpleFilePanel = forwardRef<
 	ref,
 ) {
 	const fileName = path.split("/").pop() ?? path;
-	const isMarkdown = path.toLowerCase().endsWith(".md") && !filePreview;
+	const isMarkdown = path.toLowerCase().endsWith(".md");
 	const mdView = isMarkdown ? markdownPaneMode : "source";
 
 	const shell = appearanceDark
@@ -83,7 +83,7 @@ export const SimpleFilePanel = forwardRef<
 
 	const submitSave = (e: FormEvent) => {
 		e.preventDefault();
-		if (!dirty || loading || filePreview) return;
+		if (!dirty || loading) return;
 		void onSave();
 	};
 
@@ -131,7 +131,7 @@ export const SimpleFilePanel = forwardRef<
 							</button>
 						</div>
 					) : null}
-					{dirty && !filePreview ? (
+					{dirty ? (
 						<form onSubmit={submitSave}>
 							<button type="submit" disabled={loading} className={btnPrimary}>
 								<Save size={14} />
@@ -147,27 +147,14 @@ export const SimpleFilePanel = forwardRef<
 			</div>
 
 			<div className={`flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-2 ${bodyBg}`}>
-				{filePreview?.kind === "image" ? (
-					<div className="flex min-h-0 flex-1 overflow-auto">
-						<img
-							src={filePreview.src}
-							alt=""
-							className="mx-auto block h-auto max-w-full object-contain [image-rendering:auto]"
-							loading="lazy"
-							decoding="async"
-						/>
+				{persistEncoding === "base64" ? (
+					<div
+						className={`shrink-0 border-b px-2 py-1 font-mono text-[10px] ${appearanceDark ? "border-[#3c3c3c] text-[#858585]" : "border-[#e5e5e5] text-[#616161]"}`}
+					>
+						Byte editor — Save writes exact file bytes.
 					</div>
-				) : filePreview?.kind === "binary" ? (
-					<div className={`flex flex-1 overflow-auto p-2 text-sm leading-relaxed ${pathMuted}`}>
-						<div className="max-w-md">
-							<p className={`mb-1 font-semibold ${title}`}>Binary file</p>
-							<p>
-								Type <span className={appearanceDark ? "text-[#fed7aa]" : "text-[#c2410c]"}>{filePreview.mimeType}</span>.
-								Open it externally or from the workspace folder on disk.
-							</p>
-						</div>
-					</div>
-				) : isMarkdown && mdView === "preview" && !loading && !error ? (
+				) : null}
+				{isMarkdown && mdView === "preview" && !loading && !error ? (
 					<MarkdownPreviewPane markdown={content} appearanceDark={appearanceDark} />
 				) : (
 					<WorkspaceTextBuffer
@@ -179,6 +166,7 @@ export const SimpleFilePanel = forwardRef<
 						error={error}
 						onCursor={onCursor}
 						wordWrap
+						disableSyntaxHighlight={persistEncoding === "base64"}
 						scrollClassName="font-mono"
 						lineGutterClassName={`w-9 py-1 pr-2 font-mono text-[12px] ${lineNums}`}
 						textareaClassName={`py-1 pr-2 ${textArea}`}

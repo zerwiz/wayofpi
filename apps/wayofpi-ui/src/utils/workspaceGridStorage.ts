@@ -60,7 +60,11 @@ export function applyWorkspaceGridRowResizeDelta(
 	return { ...prev, rowWeights: w };
 }
 
-/** Adjust horizontal split between `colEdge` and `colEdge + 1` (positive `dx` = pointer right → more space on the right). */
+/**
+ * Adjust horizontal split between `colEdge` and `colEdge + 1`.
+ * **Pointer right (+dx)** → sash follows the cursor → **left** column (`colEdge`) **gains** flex share, **right** loses
+ * (same feel as **Simple UI** `chatColumnWidthPx + dx` with chat left of the handle — see `DockSplitHandle` contract).
+ */
 export function applyWorkspaceGridColResizeDelta(
 	prev: WorkspaceGridState,
 	colEdge: number,
@@ -74,8 +78,8 @@ export function applyWorkspaceGridColResizeDelta(
 	let a = w[colEdge]!;
 	let b = w[colEdge + 1]!;
 	const d = dx * WORKSPACE_GRID_RESIZE_PIXEL_SCALE;
-	a -= d;
-	b += d;
+	a += d;
+	b -= d;
 	w[colEdge] = Math.max(WORKSPACE_GRID_WEIGHT_MIN, a);
 	w[colEdge + 1] = Math.max(WORKSPACE_GRID_WEIGHT_MIN, b);
 	return { ...prev, colWeights: w };

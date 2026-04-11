@@ -2,7 +2,7 @@
 
 Monorepo: [zerwiz/wayofpi](https://github.com/zerwiz/wayofpi).
 
-Production-oriented web shell: **real workspace tree**, **file read/write**, **streaming chat** via **Ollama** or **OpenRouter** (no mock data).
+Production-oriented web shell: **real workspace tree**, **file read/write**, and chat **today** via interim **Ollama** / **OpenRouter** in Bun — the **target** is **no separate Way-of-Pi agent system**: **headless Pi** (`WOP_PI_BINARY`) owns agents, tools, extensions, and sessions like the TUI (**[WOP_PI_BACKEND_WIRING_PLAN.md](../../docs/WOP_PI_BACKEND_WIRING_PLAN.md)** §0).
 
 ## Electron first (recommended desktop)
 
@@ -23,7 +23,7 @@ Use **`./start-wayofpi-ui.sh`** without Electron when you explicitly want the **
 
 **Ollama env (same as Pi in this repo):** Root **`.env`** is loaded by **`start-wayofpi-ui.sh`** / **`./start-wayofpi-electron.sh`**. The Bun server resolves the Ollama base URL from **`OLLAMA_HOST`** or, if unset, Pi-style **`OLLAMA_BASE_URL`** (trailing **`/v1`** stripped). The default chat model is **`OLLAMA_MODEL`**, else **`agent/settings.json`** `defaultModel` when `defaultProvider` is **ollama** (workspace **`agent/`** first, then this playground’s **`agent/`**). See **`server/pi-ollama-env.ts`**.
 
-Headless **Pi** as the chat/tool engine is planned; this stack already gives a **real** editor, tree, saves, and **streaming LLM** chat against your workspace.
+For **full Pi tools** (built-ins **and** extension tools like **`dispatch_agent`**) on **every** workspace persona, set **`WOP_CHAT_ENGINE=auto`** (Pi when **`pi`** is on PATH or **`WOP_PI_BINARY`**) or **`WOP_CHAT_ENGINE=pi`** (strict). That path runs **`pi --mode json`** per turn — same **`.pi/settings.json`** stack as the Pi TUI. Without it, **`WOP_ORCHESTRATOR_TOOLS`** (default on) supplies an **interim** Bun shim (**`read`**, **`list_dir`**, **`grep`**, **`write`**, optional **`bash`**) only — **not** Pi extensions.
 
 **Gaps and stubs:** **[docs/WOP_OPEN_TODOS.md](../../docs/WOP_OPEN_TODOS.md)** (Technical/Simple UI, server, production).
 
@@ -39,6 +39,8 @@ The choice is stored in **`localStorage`** as **`wayofpi.uiMode`** (`simple` | `
 **Technical layout (components, state, API boundaries):** **[docs/WOP_TECHNICAL_UI.md](../../docs/WOP_TECHNICAL_UI.md)**.
 
 **Chat: Build vs Plan:** **[docs/WOP_BUILD_PLAN_MODE.md](../../docs/WOP_BUILD_PLAN_MODE.md)** — execution vs specification-first mode, `plans/PLAN-…md` handoff, and how this compares to Cursor Plan Mode and Pi TUI agents.
+
+**Chat sessions on disk (Pi-shaped JSONL):** Each chat tab id maps to **`agent/sessions/wayofpi-chat-<tab-id>.jsonl`** under the **workspace root** (same tree Pi uses for transcripts — see **[docs/AGENT_MEMORY.md](../../docs/AGENT_MEMORY.md)**). The Bun server appends **`type: "message"`** lines after each user/assistant turn, rewrites the file on tab **activate**, and can **restore** the UI from disk when you reconnect with an empty transcript (e.g. refresh). Files are **gitignored** like Pi’s **`agent/sessions/`**.
 
 ## Setup
 
@@ -103,7 +105,7 @@ The same Bun process serves `dist/` static assets plus `/api` and `/ws`.
 | POST | `/api/server/restart` | When **`WOP_ALLOW_SERVER_RESTART=1`** on the Bun process: responds **200** then **exits** the server (dev escape hatch; **`concurrently`** does not auto-restart Bun — start **`npm run dev`** again). Otherwise **403** with a hint. **Settings → Restart server…** calls this and reconnects the chat socket when restart is not used. |
 | GET | `/api/workspace` | JSON: `root` (primary folder), `folders[]` (`label` + absolute `path`), `switchAllowed`, `initialRoot` |
 | POST | `/api/workspace` | Change folders in-memory. Body `{ "op": string, ... }` — see **Workspace ops** below. |
-| GET | `/api/config` | LLM provider, **`chatEngine`** (optional **`WOP_CHAT_ENGINE`**; defaults to provider), **`piDrivesChat`** (always false until Pi owns `/ws` chat), **`manifestUrl`**, model labels, `terminalEnabled` |
+| GET | `/api/config` | LLM provider, **`chatEngine`**, **`piChatEngineRequested`** / **`piChatEngineWired`** (Pi gate), **`piDrivesChat`**, interim **`orchestratorTools`**, **`manifestUrl`**, models, `terminalEnabled` — see **[WOP_PI_BACKEND_WIRING_PLAN.md](../../docs/WOP_PI_BACKEND_WIRING_PLAN.md)** §0 |
 | GET | `/api/manifest` | **Static v1:** per workspace root, **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`** shims; **`tools`** / **`slashCommands`** empty until headless Pi introspection — **[docs/WOP_UI_MANIFEST.md](../../docs/WOP_UI_MANIFEST.md)** |
 | GET | `/api/tree` | `root`, `nodes`, `folders`, `switchAllowed`, `initialRoot`. Single-root: paths relative to folder. Multi-root: paths `label/relative/path`. |
 | GET | `/api/file?path=` | Read file (2 MiB cap). **Text:** JSON `{ path, content }` (UTF-8). **Image** (`png`, `jpeg`, …): `{ path, encoding: "base64", mimeType, content }`. **Other binary** (e.g. contains `NUL`): same base64 shape with `mimeType: "application/octet-stream"`. |
@@ -130,7 +132,7 @@ Disabled when **`WOP_ALLOW_WORKSPACE_SWITCH`** is `0`, `false`, or `no` (default
 ## WebSocket protocol
 
 - Client → server:
-  - `{ "type": "chat", "content": "..." }` — user turn; server appends to the in-memory transcript for this WebSocket and streams the model reply.
+  - `{ "type": "chat", "content": "..." }` — user turn; server appends to the in-memory transcript for this WebSocket and streams the model reply. **Single-line** messages starting with **`/`** are treated as **Pi-style slash commands** when recognized (e.g. **`/models`**, **`/help`**, **`/model <id>`**, **`/plan`** / **`/build`**, **`/agent`**, **`/clear`**, **`/reload`**); see **`server/chat-slash-commands.ts`**. Unrecognized **`/words`** get a short help reply instead of the LLM.
   - `{ "type": "new_session" }` — clear transcript (and optional `WOP_SYSTEM_PROMPT` re-applied). Not allowed while a reply is streaming.
   - `{ "type": "activate_session", "transcript": [ { "role": "user"|"assistant", "content": "..." }, ... ] }` — restore the server transcript for the active stacked chat tab (or after reconnect). Not allowed while streaming.
   - `{ "type": "ping" }` — server replies `{ "type": "pong" }`.

@@ -10,6 +10,8 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Added
 
+- **`apps/wayofpi-ui` server** — **Pi-style chat slash commands** on **`/ws`**: recognized **single-line** **`/…`** messages are handled in **`server/chat-slash-commands.ts`** before the LLM (e.g. **`/models`**, **`/help`**, **`/model <id>`**, **`/plan`** / **`/build`**, **`/agent`**, **`/clear`**, **`/reload`**). Docs: **`apps/wayofpi-ui/README.md`**, **`docs/WOP_TECHNICAL_UI.md`**.
+
 - **`apps/wayofpi-ui` server** — **`GET /api/manifest`** (**`server/web-manifest.ts`**) static v1: per workspace root, **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**; empty **`tools`** / **`slashCommands`** until Pi introspection. **`GET /api/config`** adds **`chatEngine`**, **`piDrivesChat`** (always false until Phase 2), **`manifestUrl`**. Boot log mentions **`chatEngine`** / manifest. **`GET /api/diagnostics`** includes **`manifestStatic`** counts. **`WOP_CHAT_ENGINE`** reserved in **`.env.sample`**. Docs: **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`docs/WOP_OPEN_TODOS.md`**, **`apps/wayofpi-ui/README.md`**.
 
 - **`apps/wayofpi-ui`** — **Settings → Restart server…** calls **`POST /api/server/restart`** when **`WOP_ALLOW_SERVER_RESTART=1`** (Bun exits; restart dev from the terminal); otherwise explains opt-in. Nudges chat WebSocket reconnect when the server does not self-exit. **`apps/wayofpi-ui/.env.sample`** documents the variable.

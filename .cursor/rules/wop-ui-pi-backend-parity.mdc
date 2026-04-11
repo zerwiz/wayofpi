@@ -1,9 +1,22 @@
 ---
-description: Critical — maximize Pi as backend; wayofpi-ui + server must wire to Pi / Way of Pi server; no fake Pi parity
+description: CRITICAL — Pi is the only authoritative agent/tool/extension runtime; Way of Pi must wire headless Pi, not duplicate Pi in Bun
 alwaysApply: true
 ---
 
 # Way of Pi web UI ↔ Pi backend (critical)
+
+## CRITICAL — product lock (agents + tools)
+
+- **Every workspace agent** (orchestrator + every **`.pi/agents/*.md`** persona) **must** ultimately run against the **same Pi coding-agent engine** as the TUI: **`extensions[]`**, **`registerTool`**, **slash commands**, **`dispatch_agent`**, **skills**, **hooks**, **session JSONL**, and **provider/model routing** as loaded by **`WOP_PI_BINARY`** with workspace cwd and **`WOP_HOME`** isolation per **`docs/WOP_NAMESPACE.md`**.
+- **Authoritative rule:** If Pi can do it, **Way of Pi must not ship a second “mini Pi”** in Bun (parallel tool registry, fake extension execution, or chat that implies Pi ran a tool when only Bun did). **Bun-only** paths (**`server/chat.ts`**, **`server/chat-orchestrator-tools.ts`**, **`server/orchestrator-tools-exec.ts`**, direct Ollama/OpenRouter) are **interim** only and **must** be replaced or tunneled through headless Pi with a **dated milestone** in **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** and **`docs/WOP_OPEN_TODOS.md`**.
+- **Building missing functions** takes priority over expanding interim Bun behavior: implement **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** Phase **2** (single chat through Pi) → **4** (`dispatch_agent` / multi-agent) → runtime **manifest** — not more Bun-native “tool loops.”
+- **`WOP_CHAT_ENGINE=pi`:** Chat **must not** silently use the interim Bun provider; turns run **`pi --mode json`** when **`pi`** resolves. If the CLI is missing, the server rejects the turn (**`piAgentRuntimeBlockedReason`**). **`WOP_CHAT_ENGINE=auto`** uses Pi when the CLI resolves and otherwise falls back to Bun — same **`pi --mode json`** path for **all** workspace personas when Pi is available (full built-ins + **`.pi/settings.json`** extensions).
+
+## Do not build or own “the agent system” — use Pi’s
+
+- **Way of Pi owns:** the **shell** (editor, tree, layout, menus), **workspace host I/O** where Pi does not (jailed **`/api/file`**, etc.), **`WOP_*`** isolation, and **glue** that **starts / attaches / proxies** **`WOP_PI_BINARY`** and translates HTTP/WebSocket to Pi.
+- **Pi owns:** **agent** behavior end-to-end — **`extensions[]`**, **tools**, **slash commands**, **`dispatch_agent`**, **skills**, **hooks**, **sessions**, **provider/model** inside the coding-agent process. That is **not** reimplemented in Bun.
+- **Forbidden:** a first-party “Way of Pi agent runtime”, “WOP dispatch”, or any **parallel** chat+tool+extension stack that duplicates Pi’s semantics feature-by-feature. **Integrate** Pi; do **not** replace it with a home-grown system.
 
 ## North star — **Pi as backend (maximize)**
 
@@ -27,9 +40,10 @@ alwaysApply: true
 
 ## Contract docs (keep in sync when behavior changes)
 
-- **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** — master map: HTTP/WebSocket inventory, UI surface matrix, phased Pi integration.
+- **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** — master map: HTTP/WebSocket inventory, UI surface matrix, phased Pi integration (**§0** = critical lock).
 - **`docs/WOP_TECHNICAL_UI.md`** — shell, hooks, server boundaries.
 - **`docs/WOP_MULTI_AGENT_WEBSOCKET.md`** — multi-agent / orchestration events when implemented.
 - **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`** — agent UI roadmap and Pi alignment phases.
+- **`apps/wayofpi-ui/server/pi-agent-runtime.ts`** — Pi engine gate + reserved **`runPiChatTurn`** hook.
 
 When you add or change Pi-facing UI, **verify** the backend path (API, WebSocket message, or Pi spawn) in code — do not ship “looks done” without it.

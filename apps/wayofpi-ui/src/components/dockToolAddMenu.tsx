@@ -7,7 +7,7 @@ export const DOCK_ADD_TOOL_ITEMS: { tab: BottomPanelTab; label: string; detail?:
 	{ tab: "terminal", label: "Terminal", detail: "Shell / host (when enabled)" },
 	{ tab: "agent_chat", label: "Agent chat", detail: "Session chat in this editor pane" },
 	{ tab: "agent_team", label: "Team pulse", detail: "Pi agent-team roster (from teams.yaml)" },
-	{ tab: "tool_log", label: "Tool log", detail: "Server / chat activity" },
+	{ tab: "tool_log", label: "Tool log", detail: "Pi-style tools: read/write/bash + chat + server" },
 	{ tab: "output", label: "Output", detail: "Structured output" },
 	{ tab: "problems", label: "Problems", detail: "Diagnostics (placeholder)" },
 ];

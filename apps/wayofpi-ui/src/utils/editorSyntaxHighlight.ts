@@ -112,3 +112,14 @@ export function highlightCodeForEditor(path: string, content: string): EditorHig
 		return { html: escapeHtml(content), grammarActive: false };
 	}
 }
+
+/** Escape-only layer (binary / Latin-1 buffers) — avoids hljs token boundaries changing wraps vs the textarea. */
+export function highlightPlainForEditor(content: string): EditorHighlightResult {
+	if (!content) {
+		return { html: "", grammarActive: false };
+	}
+	if (content.length > MAX_HIGHLIGHT_CHARS) {
+		return { html: escapeHtml(content), grammarActive: false };
+	}
+	return { html: escapeHtml(content), grammarActive: false };
+}

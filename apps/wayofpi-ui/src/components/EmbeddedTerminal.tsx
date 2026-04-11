@@ -5,6 +5,11 @@ import { useServerConfig } from "../hooks/useServerConfig";
 import { registerTerminalInputSender } from "../utils/terminalInputBridge";
 import "@xterm/xterm/css/xterm.css";
 
+/** Ubuntu brand orange — block cursor fill in the integrated terminal. */
+const WOP_TERMINAL_CURSOR = "#E95420";
+/** Glyph color on top of the block cursor (contrast on Ubuntu orange). */
+const WOP_TERMINAL_CURSOR_ACCENT = "#ffffff";
+
 function terminalWsUrl(): string {
 	const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
 	return `${proto}//${window.location.host}/ws/terminal`;
@@ -12,6 +17,7 @@ function terminalWsUrl(): string {
 
 export function EmbeddedTerminal() {
 	const containerRef = useRef<HTMLDivElement>(null);
+	const termRef = useRef<Terminal | null>(null);
 	const { config } = useServerConfig();
 	const enabled = config?.terminalEnabled === true;
 
@@ -22,12 +28,14 @@ export function EmbeddedTerminal() {
 
 		const term = new Terminal({
 			cursorBlink: true,
+			cursorStyle: "block",
 			fontSize: 13,
 			fontFamily: "Consolas, 'Liberation Mono', 'Courier New', monospace",
 			theme: {
 				background: "#1e1e1e",
 				foreground: "#d4d4d4",
-				cursor: "#aeafad",
+				cursor: WOP_TERMINAL_CURSOR,
+				cursorAccent: WOP_TERMINAL_CURSOR_ACCENT,
 				black: "#1e1e1e",
 				red: "#f14c4c",
 				green: "#89d185",
@@ -38,6 +46,7 @@ export function EmbeddedTerminal() {
 				brightBlack: "#858585",
 			},
 		});
+		termRef.current = term;
 		const fit = new FitAddon();
 		term.loadAddon(fit);
 		term.open(el);
@@ -68,6 +77,7 @@ export function EmbeddedTerminal() {
 				};
 				if (msg.type === "term_ready" && msg.cwd) {
 					term.writeln(`\x1b[90m# cwd: ${msg.cwd}\x1b[0m`);
+					term.focus();
 					return;
 				}
 				if (msg.type === "term_out" && typeof msg.data === "string") {
@@ -124,6 +134,7 @@ export function EmbeddedTerminal() {
 		window.addEventListener("resize", onWinResize);
 
 		return () => {
+			termRef.current = null;
 			registerTerminalInputSender(null);
 			window.removeEventListener("resize", onWinResize);
 			ro.disconnect();
@@ -158,5 +169,11 @@ export function EmbeddedTerminal() {
 		);
 	}
 
-	return <div ref={containerRef} className="h-full min-h-[160px] w-full flex-1 overflow-hidden p-1" />;
+	return (
+		<div
+			ref={containerRef}
+			className="h-full min-h-[160px] w-full flex-1 overflow-hidden p-1"
+			onMouseDown={() => termRef.current?.focus()}
+		/>
+	);
 }

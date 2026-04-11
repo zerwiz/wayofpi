@@ -1,7 +1,23 @@
 import { ChevronDown, ChevronRight, FileCode2, FileJson, File as FileIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	type DragEvent,
+	type MouseEvent,
+	type ReactNode,
+} from "react";
 import type { TreeNode } from "../types/tree";
-import { serializeFilePathForDrag, WOP_FILE_PATH_DND_TYPE } from "../utils/panelDockLayout";
+import {
+	isExplorerFilePathDrag,
+	readDraggedExplorerFilePath,
+	serializeFilePathForDrag,
+	WOP_FILE_PATH_DND_TYPE,
+} from "../utils/panelDockLayout";
+import { posixBasename } from "../utils/posixPath";
 import { sortTreeNodes } from "../utils/sortTreeNodes";
 
 function fileIcon(name: string) {
@@ -20,31 +36,66 @@ function fileIcon(name: string) {
 	return <FileIcon size={13} className="text-[#cccccc]" />;
 }
 
+function destPathForMove(from: string, toDir: string): string {
+	const base = posixBasename(from);
+	const d = toDir.replace(/\/+$/, "");
+	return d ? `${d}/${base}` : base;
+}
+
+type ContextMenuState = { x: number; y: number; path: string; kind: "file" | "dir"; name: string };
+
 export function FileTree({
 	nodes,
 	selectedPath,
 	secondarySelectedPath,
-	/** Files open in another main editor column (not the focused one). */
 	openInMainEditorPaths,
 	onSelectFile,
 	onSelectDirectory,
+	onMoveFileToDirectory,
+	onRenameNode,
+	onDeleteNode,
+	onCopyPath,
 	expandRevision,
 	pathsToExpand,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
 	onSelectFile: (path: string, ev?: MouseEvent) => void;
-	/** Secondary highlight (e.g. file open in top/middle aux dock). */
 	secondarySelectedPath?: string | null;
 	openInMainEditorPaths?: readonly string[];
 	onSelectDirectory?: (dirPath: string) => void;
-	/** Bump when `pathsToExpand` should be merged into expanded folders. */
+	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
+	onRenameNode?: (path: string, kind: "file" | "dir", currentName: string) => Promise<void>;
+	onDeleteNode?: (path: string, kind: "file" | "dir") => Promise<void>;
+	onCopyPath?: (path: string) => void;
 	expandRevision?: number;
 	pathsToExpand?: string[];
 }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	const sorted = useMemo(() => sortTreeNodes(nodes), [nodes]);
 	const suppressFileClickRef = useRef(false);
+	const [dropTargetDir, setDropTargetDir] = useState<string | null>(null);
+	const [menu, setMenu] = useState<ContextMenuState | null>(null);
+	const menuRef = useRef<HTMLDivElement | null>(null);
+
+	const closeMenu = useCallback(() => setMenu(null), []);
+
+	useEffect(() => {
+		if (!menu) return;
+		const onDown = (ev: Event) => {
+			if (menuRef.current?.contains(ev.target as Node)) return;
+			closeMenu();
+		};
+		const onKey = (ev: Event) => {
+			if (ev instanceof KeyboardEvent && ev.key === "Escape") closeMenu();
+		};
+		document.addEventListener("mousedown", onDown, true);
+		document.addEventListener("keydown", onKey);
+		return () => {
+			document.removeEventListener("mousedown", onDown, true);
+			document.removeEventListener("keydown", onKey);
+		};
+	}, [menu, closeMenu]);
 
 	useEffect(() => {
 		if (expandRevision === undefined || !pathsToExpand?.length) return;
@@ -64,6 +115,71 @@ export function FileTree({
 		});
 	}, []);
 
+	const runMove = useCallback(
+		async (from: string, toDir: string) => {
+			if (!onMoveFileToDirectory) return;
+			const dest = destPathForMove(from, toDir);
+			if (dest.replace(/\/+$/, "") === from.replace(/\/+$/, "")) return;
+			await onMoveFileToDirectory(from, toDir);
+		},
+		[onMoveFileToDirectory],
+	);
+
+	const onFolderDragOver = useCallback(
+		(e: DragEvent, dirPath: string) => {
+			if (!onMoveFileToDirectory || !isExplorerFilePathDrag(e.dataTransfer)) return;
+			e.preventDefault();
+			e.stopPropagation();
+			e.dataTransfer.dropEffect = "move";
+			setDropTargetDir(dirPath);
+		},
+		[onMoveFileToDirectory],
+	);
+
+	const onFolderDragLeave = useCallback((e: DragEvent) => {
+		const rel = e.relatedTarget as Node | null;
+		if (rel && e.currentTarget.contains(rel)) return;
+		setDropTargetDir(null);
+	}, []);
+
+	const onFolderDrop = useCallback(
+		async (e: DragEvent, dirPath: string) => {
+			if (!onMoveFileToDirectory) return;
+			e.preventDefault();
+			e.stopPropagation();
+			setDropTargetDir(null);
+			const from = readDraggedExplorerFilePath(e.dataTransfer);
+			if (!from) return;
+			await runMove(from, dirPath);
+			setExpanded((prev) => {
+				const next = new Set(prev);
+				next.add(dirPath);
+				return next;
+			});
+		},
+		[onMoveFileToDirectory, runMove],
+	);
+
+	const onRowContextMenu = useCallback((e: MouseEvent, node: TreeNode) => {
+		if (!onRenameNode && !onDeleteNode && !onCopyPath) return;
+		e.preventDefault();
+		e.stopPropagation();
+		const pad = 8;
+		const mw = 200;
+		const mh = 140;
+		let x = e.clientX;
+		let y = e.clientY;
+		x = Math.max(pad, Math.min(x, window.innerWidth - mw - pad));
+		y = Math.max(pad, Math.min(y, window.innerHeight - mh - pad));
+		setMenu({
+			x,
+			y,
+			path: node.path,
+			kind: node.type,
+			name: node.name,
+		});
+	}, [onRenameNode, onDeleteNode, onCopyPath]);
+
 	const renderNodes = (list: TreeNode[], depth: number): ReactNode => {
 		return list.map((node) => (
 			<div key={node.path}>
@@ -71,6 +187,8 @@ export function FileTree({
 					type="button"
 					draggable={node.type === "file"}
 					className={`flex w-full cursor-pointer items-center px-2 py-1 text-left hover:bg-[#2a2d2e] ${
+						node.type === "dir" && dropTargetDir === node.path ? "bg-[#264f78]/90 ring-1 ring-inset ring-[#ea580c]/50" : ""
+					} ${
 						selectedPath === node.path
 							? "bg-[#37373d]"
 							: secondarySelectedPath === node.path
@@ -80,6 +198,28 @@ export function FileTree({
 									: "text-[#cccccc]"
 					} ${node.type === "file" ? "cursor-grab active:cursor-grabbing" : ""}`}
 					style={{ paddingLeft: `${depth * 12 + 8}px` }}
+					onContextMenu={(e) => onRowContextMenu(e, node)}
+					onDragOver={
+						node.type === "dir"
+							? (e) => onFolderDragOver(e, node.path)
+							: onMoveFileToDirectory
+								? (e: DragEvent<HTMLButtonElement>) => {
+										if (!isExplorerFilePathDrag(e.dataTransfer)) return;
+										e.preventDefault();
+										e.stopPropagation();
+									}
+								: undefined
+					}
+					onDragLeave={node.type === "dir" ? onFolderDragLeave : undefined}
+					onDrop={
+						node.type === "dir"
+							? (e) => void onFolderDrop(e, node.path)
+							: onMoveFileToDirectory
+								? (e: DragEvent<HTMLButtonElement>) => {
+										e.stopPropagation();
+									}
+								: undefined
+					}
 					onDragStart={
 						node.type === "file"
 							? (e: DragEvent<HTMLButtonElement>) => {
@@ -120,7 +260,18 @@ export function FileTree({
 								) : (
 									<ChevronRight size={14} className="shrink-0 text-[#cccccc]" />
 								)}
-								<span className="truncate font-mono text-[13px]">{node.name}</span>
+								<span
+									className={`min-w-0 flex-1 truncate font-mono text-[13px] ${
+										node.gitStatus && node.gitStatus !== "??" ? "text-[#e2c08d]" : ""
+									}`}
+								>
+									{node.name}
+								</span>
+								{node.gitStatus ? (
+									<span className="ml-auto shrink-0 text-[11px] font-bold text-[#e2c08d]">
+										{node.gitStatus}
+									</span>
+								) : null}
 							</>
 						) : (
 							<>
@@ -149,5 +300,66 @@ export function FileTree({
 		));
 	};
 
-	return <div className="py-1">{renderNodes(sorted, 0)}</div>;
+	const menuPortal =
+		menu &&
+		typeof document !== "undefined" &&
+		createPortal(
+			<div
+				ref={menuRef}
+				role="menu"
+				className="fixed z-[300] min-w-[188px] rounded border border-[#454545] bg-[#252526] py-0.5 shadow-lg"
+				style={{ left: menu.x, top: menu.y }}
+				onMouseDown={(e) => e.stopPropagation()}
+			>
+				{onRenameNode ? (
+					<button
+						type="button"
+						role="menuitem"
+						className="flex w-full px-3 py-1.5 text-left font-mono text-[13px] text-[#cccccc] hover:bg-[#094771]"
+						onClick={() => {
+							const m = menu;
+							closeMenu();
+							void onRenameNode(m.path, m.kind, m.name);
+						}}
+					>
+						Rename…
+					</button>
+				) : null}
+				{onCopyPath ? (
+					<button
+						type="button"
+						role="menuitem"
+						className="flex w-full px-3 py-1.5 text-left font-mono text-[13px] text-[#cccccc] hover:bg-[#094771]"
+						onClick={() => {
+							onCopyPath(menu.path);
+							closeMenu();
+						}}
+					>
+						Copy path
+					</button>
+				) : null}
+				{onDeleteNode ? (
+					<button
+						type="button"
+						role="menuitem"
+						className="flex w-full px-3 py-1.5 text-left font-mono text-[13px] text-[#f14c4c] hover:bg-[#3c1818]"
+						onClick={() => {
+							const m = menu;
+							closeMenu();
+							void onDeleteNode(m.path, m.kind);
+						}}
+					>
+						Delete…
+					</button>
+				) : null}
+			</div>,
+			document.body,
+		);
+
+	return (
+		<div className="py-1" data-explorer-tree>
+			{renderNodes(sorted, 0)}
+			{menuPortal}
+		</div>
+	);
 }
