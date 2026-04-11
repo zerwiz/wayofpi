@@ -48,7 +48,10 @@ const previewClassLight =
 	"[&_blockquote]:border-l-2 [&_blockquote]:border-[#d1d5db] [&_blockquote]:pl-3 [&_blockquote]:text-[#4b5563] " +
 	"[&_.mermaid]:mx-auto [&_.mermaid]:max-w-full [&_.mermaid]:rounded [&_.mermaid]:border [&_.mermaid]:border-[#e5e7eb] [&_.mermaid]:bg-white [&_.mermaid]:p-3";
 
-/** Rendered Markdown for editor preview mode (sanitized). Renders ```mermaid blocks via mermaid.js. */
+/**
+ * Rendered Markdown for editor preview mode (sanitized). Fenced code blocks tagged `mermaid` become live diagrams
+ * via mermaid.js (same engine as standalone `.mmd` / `.mermaid` files in {@link MermaidPreviewPane}).
+ */
 export function MarkdownPreviewPane({
 	markdown,
 	appearanceDark,

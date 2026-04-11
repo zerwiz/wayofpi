@@ -10,7 +10,15 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Added
 
-- **`apps/wayofpi-ui` server** — **Pi-style chat slash commands** on **`/ws`**: recognized **single-line** **`/…`** messages are handled in **`server/chat-slash-commands.ts`** before the LLM (e.g. **`/models`**, **`/help`**, **`/model <id>`**, **`/plan`** / **`/build`**, **`/agent`**, **`/clear`**, **`/reload`**). Docs: **`apps/wayofpi-ui/README.md`**, **`docs/WOP_TECHNICAL_UI.md`**.
+- **`docs/WOP_ORCHESTRATION_EXTENSIONS_PANEL.md`** — guide for **Extensions → Orchestration** (Plan/Build, **`GET`/`POST /api/config`**, runtime toggles, 404 troubleshooting) and **Pi extensions**; linked from **`apps/wayofpi-ui`** panel, **`docs/README.md`**, **`docs/WOP_TECHNICAL_UI.md`**, **`docs/REPO_INDEX.md`**, **`apps/wayofpi-ui/README.md`**.
+
+- **`apps/wayofpi-ui` server** — Bun orchestrator **Git / GitHub tools**: **`git_status`**, **`git_remote`**, **`git_fetch`**, **`git_pull`**, **`git_push`** (optional PAT from Settings → GitHub, **`orchestrator-git-tools.ts`**). Env **`WOP_ORCHESTRATOR_GIT_TOOLS`** (default on with **`WOP_ORCHESTRATOR_TOOLS`**). Session prompt explains worktree vs “No Git repository detected”.
+
+- **`apps/wayofpi-ui`** — **Plan / Build workflow:** **`GET /api/plans`** (latest **`plans/PLAN-*.md`** + Markdown checkbox counts), **`Shift+Tab`** in chat to toggle mode, post-send **Plan nudge** for long Build messages, **`/plan-interview`** slash reply, **From plan** / **Review plan** composer buttons + command palette injectors (**`chatComposerInjectBus`**), **Planning** side panel notes. Docs: **`docs/WOP_BUILD_PLAN_MODE.md`**, **`apps/wayofpi-ui/README.md`**.
+
+- **Repo root** — **`LICENSE`**: MIT (copyright zerwiz). **Help → View License** in **`apps/wayofpi-ui`** opens **`MitLicenseModal`** with the same text as **`apps/wayofpi-ui/src/constants/mitLicenseText.ts`** (keep file and constant in sync).
+
+- **`apps/wayofpi-ui` server** — **Pi-style chat slash commands** on **`/ws`**: recognized **single-line** **`/…`** messages are handled in **`server/chat-slash-commands.ts`** before the LLM (e.g. **`/models`**, **`/help`**, **`/model <id>`**, **`/plan`** / **`/build`**, **`/plan-interview`**, **`/agent`**, **`/clear`**, **`/reload`**). Docs: **`apps/wayofpi-ui/README.md`**, **`docs/WOP_TECHNICAL_UI.md`**.
 
 - **`apps/wayofpi-ui` server** — **`GET /api/manifest`** (**`server/web-manifest.ts`**) static v1: per workspace root, **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**; empty **`tools`** / **`slashCommands`** until Pi introspection. **`GET /api/config`** adds **`chatEngine`**, **`piDrivesChat`** (always false until Phase 2), **`manifestUrl`**. Boot log mentions **`chatEngine`** / manifest. **`GET /api/diagnostics`** includes **`manifestStatic`** counts. **`WOP_CHAT_ENGINE`** reserved in **`.env.sample`**. Docs: **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`docs/WOP_OPEN_TODOS.md`**, **`apps/wayofpi-ui/README.md`**.
 
@@ -28,9 +36,25 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Fixed
 
+- **`apps/wayofpi-ui` server** — Orchestrator tool loop: if the model answered with an **intent-only** preamble (no **`tool_calls`**) on turns about repo/Git/files, the server now **nudges** (up to 2) so the model must call tools instead of ending the turn early; slightly higher **`MAX_ORCHESTRATOR_TOOL_STEPS`**. Prompt note: do not stop without tool calls when facts are needed.
+
+- **`apps/wayofpi-ui` server** — After **tool results** that look like errors or non-success, a **failure-summary nudge** (up to 2 per turn) asks the model to explain what broke and how to fix it; orchestrator / headless Pi prompts now require clear **success vs failure** outcomes for the user.
+
 - **`apps/wayofpi-ui`** — **`StripFilePreview`** uses **`apiGet`** (same as **`useFileEditor`**) and **`AbortController`** so fast tab switches do not apply stale **`/api/file`** responses.
 
 ### Changed
+
+- **`apps/wayofpi-ui`** — **`GET /api/health`** and **`GET /api/config`** expose **`capabilities.configRuntimePost`** (with **`workspaceProblems`**) so Vite/Electron treat an old Bun on the port as **stale**; **Extensions** activity shows a **help dock** (restart steps, **`curl`** smoke, **Re-check server**, tool log link, Pi **`PATH` / `WOP_PI_BINARY`**). **`useServerConfig`** normalizes **`capabilities`**.
+
+- **Docs** — **[`docs/WOP_ORCHESTRATION_EXTENSIONS_PANEL.md`](docs/WOP_ORCHESTRATION_EXTENSIONS_PANEL.md)**: added **Plan: toward 100% reliable Orchestration** (acceptance criteria, operator Phase 0 checklist + curl smoke, Phases 1–4 for stale detection, optional persistence, Pi parity, CI).
+
+- **`apps/wayofpi-ui` server + Host doctor** — **`GET /api/diagnostics`** exposes **`wayOfPiBundleRoot`** (same value as **`playgroundRoot`**) and checklist copy that separates **project workspace** (tree / `/api/file` / chat cwd) from **Way of Pi app checkout**; **info** row when the two paths differ. **`getWayOfPiBundleRepoRoot()`** in **`server/pi-ollama-env.ts`**; **`server/workspace-state.ts`** module banner.
+
+- **Docs / rules** — Documented that **workspace (project roots)** served by the Bun server, **Way of Pi system / product files**, and **editor shell state** (`selectedPath`, layout) are **not** the same thing: **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)** new section, **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** state table row, **[docs/README.md](docs/README.md)** index; **`.cursor/rules/wop-ui-pi-backend-parity.mdc`** table + rule line.
+
+- **Docs** — **[WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)**: **section 7** backlog plus **shipped** UI notes (**Shift+Tab**, **`/api/plans`**, palette injectors); related-doc links to **[WOP_SIMPLE_UI_VIEWS.md](docs/WOP_SIMPLE_UI_VIEWS.md)** and **[WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)**. **[docs/README.md](docs/README.md)** index line updated.
+
+- **Ralph** persona — docs, **`.pi/agents/ralph.md`**, **`.pi/skills/ralph/SKILL.md`**, and **`extensions/ralph.ts`** now use the full name **Ralph Wiggum** where the queue worker is introduced; agent id **`ralph`** and **`RALPH_ESCALATE`** unchanged. **Way of Pi** agent picker / pulse grid / status bar / command palette show **Ralph Wiggum** for roster id **`ralph`** (**`workspaceAgentDisplay.ts`**); Pi **`agent-team`** card titles match.
 
 - **Docs** — **Electron-first** Way of Pi: **`apps/wayofpi-ui/README.md`** (new §), **`docs/WOP_TECHNICAL_UI.md`** (runtime + boot table), **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** (Electron operational note), **`docs/REPO_INDEX.md`**, root **`README.md`**, **`CLAUDE.md`**, **`start-wayofpi-ui.sh`** / **`start-wayofpi-electron.sh`** comments, **`electron/electron-main.mjs`** header — same Vite→Bun **`/api`** / **`/ws`** in Electron dev as in the browser.
 

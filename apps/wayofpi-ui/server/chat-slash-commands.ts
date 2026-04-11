@@ -25,11 +25,33 @@ export type ChatSlashResult =
 			mutation?: ChatSlashMutation;
 	  };
 
+const PLAN_INTERVIEW_ASSISTANT_REPLY = [
+	"Switched to **Plan** mode for this session.",
+	"",
+	"**Plan interview** — paste your answers under each heading, then send as your next user message.",
+	"",
+	"### Outcome",
+	"- What shipped state should look like (one paragraph).",
+	"",
+	"### Constraints",
+	"- Time, compatibility, “must not change”, performance, security.",
+	"",
+	"### Current state",
+	"- What exists today; links/paths you already know.",
+	"",
+	"### Unknowns",
+	"- What you are unsure about and want the planner to research or ask about.",
+	"",
+	"### Verification",
+	"- How you will know the work is done (tests, manual checks, metrics).",
+].join("\n");
+
 const WEB_CHAT_COMMANDS = [
 	"`/help` — this list (add `all` for Pi TUI pointer).",
 	"`/models` — list Ollama models (or OpenRouter note + current id).",
 	"`/model <id>` — set session model (same as the model picker; validated).",
-	"`/plan` / `/build` — switch session mode (same as the toolbar).",
+	"`/plan` / `/build` — switch session system prompt (same as the toolbar: Plan = planner + `plans/PLAN-*.md`; Build = Orchestrator when no agent + `WOP_SYSTEM_PROMPT` if set).",
+	"`/plan-interview` — structured headings to fill before a big plan.",
 	"`/agent` — list workspace agents; `/agent <name>` or `/system <name>` — persona (merged system prompt).",
 	"`/clear` — clear this tab’s transcript (Pi-style; session file rewritten).",
 	"`/reload` — what reload does in Pi vs this shell (informational).",
@@ -172,14 +194,22 @@ export async function evalChatSlashCommand(
 		case "plan":
 			return {
 				handled: true,
-				assistantText: "Switched to **Plan** mode (planner-style system prompt when available).",
+				assistantText:
+					"Switched to **Plan** mode — **planner.md** from the workspace when present, else the built-in planner instructions. Next replies use this until you switch to **Build** or pick a different mode. Use **From plan** / **Review plan** in the chat chrome (or **GET /api/plans**) for `plans/PLAN-*.md` handoffs.",
 				mutation: { setChatMode: "plan" },
 			};
 		case "build":
 			return {
 				handled: true,
-				assistantText: "Switched to **Build** mode (standard assistant).",
+				assistantText:
+					"Switched to **Build** mode — **Orchestrator** posture when no workspace agent is selected; otherwise the selected **.md** agent body. Server **WOP_SYSTEM_PROMPT** is prepended when set (same merge order as the toolbar).",
 				mutation: { setChatMode: "build" },
+			};
+		case "plan-interview":
+			return {
+				handled: true,
+				assistantText: PLAN_INTERVIEW_ASSISTANT_REPLY,
+				mutation: { setChatMode: "plan" },
 			};
 		case "clear":
 			return {
@@ -212,7 +242,7 @@ export async function evalChatSlashCommand(
 			if (!body) {
 				return {
 					handled: true,
-					assistantText: `Agent **"${name}"** not found (same scan order as Pi **agent-team**). Try **`/agent`** with no args for the roster.`,
+					assistantText: `Agent **"${name}"** not found (same scan order as Pi **agent-team**). Try **\`/agent\`** with no args for the roster.`,
 				};
 			}
 			return {

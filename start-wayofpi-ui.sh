@@ -6,8 +6,8 @@
 # Usage: from repo root: ./start-wayofpi-ui.sh
 set -euo pipefail
 
-# Bun ships server + dev; ensure ~/.bun/bin is on PATH in non-login shells
-export PATH="${HOME}/.bun/bin:${PATH}"
+# GUI .desktop launches often have a minimal PATH — include common locations for bun / npm / node.
+export PATH="${HOME}/.bun/bin:${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UI_DIR="$ROOT/apps/wayofpi-ui"
@@ -31,7 +31,24 @@ export WOP_WORKSPACE="${WOP_WORKSPACE:-$ROOT}"
 
 cd "$UI_DIR"
 
-if ! command -v bun >/dev/null 2>&1; then
+# Electron dev: if a compatible Bun API is already on WOP_SERVER_PORT, do not start a second server (avoids EADDRINUSE when the menu launcher runs while an old API is still bound).
+if [[ "${WOP_USE_ELECTRON:-}" == "1" && -z "${WOP_REUSE_BUN_API:-}" ]]; then
+	_port="${WOP_SERVER_PORT:-3333}"
+	_hy="$(curl -sS -m 2 "http://127.0.0.1:${_port}/api/health" 2>/dev/null || true)"
+	if [[ -n "${_hy}" && "${_hy}" == *'"service":"wayofpi-ui-server"'* ]]; then
+		if [[ "${_hy}" == *'workspaceProblems'* ]]; then
+			export WOP_REUSE_BUN_API=1
+		else
+			echo "error: port ${_port} has an older Way of Pi Bun build (no workspaceProblems in /api/health). Stop that process, then try again." >&2
+			exit 1
+		fi
+	elif [[ -n "${_hy}" ]]; then
+		echo "error: port ${_port} is in use but /api/health is not Way of Pi. Free the port or set WOP_SERVER_PORT." >&2
+		exit 1
+	fi
+fi
+
+if [[ -z "${WOP_REUSE_BUN_API:-}" ]] && ! command -v bun >/dev/null 2>&1; then
 	echo "error: bun is required for apps/wayofpi-ui (server). Install: https://bun.sh" >&2
 	exit 1
 fi
@@ -62,6 +79,9 @@ open_browser_when_ready() {
 }
 
 if [[ "${WOP_USE_ELECTRON:-}" == "1" ]]; then
+	if [[ "${WOP_REUSE_BUN_API:-}" == "1" ]]; then
+		exec npm run electron:dev:reuse-api
+	fi
 	exec npm run electron:dev
 fi
 

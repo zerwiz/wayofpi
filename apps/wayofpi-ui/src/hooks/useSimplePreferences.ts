@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import {
+	AGENT_PERMISSIONS_CHANGED_EVENT,
+	patchAgentPermissions,
+	readAgentPermissions,
+} from "../utils/agentPermissionsStorage";
 
 /** Persisted Simple UI chrome: dark vs light (Technical UI–aligned grays). */
 export type SimpleColorMode = "dark" | "light";
@@ -54,19 +59,19 @@ function readMarkdownPaneMode(): SimpleMarkdownPaneMode {
 
 export function useSimplePreferences() {
 	const [colorMode, setColorModeState] = useState<SimpleColorMode>("dark");
-	const [approvalQueue, setApprovalQueueState] = useState(true);
+	const [approvalQueue, setApprovalQueueState] = useState(() => readAgentPermissions().requireToolApproval);
 	const [markdownPaneMode, setMarkdownPaneModeState] = useState<SimpleMarkdownPaneMode>("preview");
 
 	useEffect(() => {
 		setColorModeState(readColorMode());
 		setMarkdownPaneModeState(readMarkdownPaneMode());
-		try {
-			const aq = localStorage.getItem("wayofpi.simple.approvalQueue");
-			if (aq === "1") setApprovalQueueState(true);
-			else if (aq === "0") setApprovalQueueState(false);
-		} catch {
-			/* ignore */
-		}
+		setApprovalQueueState(readAgentPermissions().requireToolApproval);
+	}, []);
+
+	useEffect(() => {
+		const onChanged = () => setApprovalQueueState(readAgentPermissions().requireToolApproval);
+		window.addEventListener(AGENT_PERMISSIONS_CHANGED_EVENT, onChanged);
+		return () => window.removeEventListener(AGENT_PERMISSIONS_CHANGED_EVENT, onChanged);
 	}, []);
 
 	const setColorMode = useCallback((next: SimpleColorMode) => {
@@ -81,11 +86,7 @@ export function useSimplePreferences() {
 
 	const setApprovalQueue = useCallback((next: boolean) => {
 		setApprovalQueueState(next);
-		try {
-			localStorage.setItem("wayofpi.simple.approvalQueue", next ? "1" : "0");
-		} catch {
-			/* ignore */
-		}
+		patchAgentPermissions({ requireToolApproval: next });
 	}, []);
 
 	const setMarkdownPaneMode = useCallback((next: SimpleMarkdownPaneMode) => {

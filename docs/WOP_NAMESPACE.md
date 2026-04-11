@@ -2,6 +2,18 @@
 
 This document defines **user-facing names** and **environment variables** for Way of Pi so it **never collides** with an upstream **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** install. Canonical product plan: **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**.
 
+## Workspace (project) vs Way of Pi system files
+
+**They are not the same thing** — treat the distinction as mandatory in code and docs.
+
+| Term | Meaning |
+|------|--------|
+| **Workspace (project root)** | The folder(s) the **Bun server** is serving: **`WOP_WORKSPACE`** (if set) or **`process.cwd()`** when the server starts, then any roots from **Open Folder** / `.code-workspace` / workspace APIs (`listWorkspaceFolders()` in **`apps/wayofpi-ui/server/workspace-state.ts`**). All jailed **`/api/file`**, **`/api/tree`**, agent markdown scans, and chat/Pi **cwd** use **these** paths. |
+| **Way of Pi system / product files** | The **Way of Pi** application checkout (e.g. **`apps/wayofpi-ui/`**), **`WOP_HOME`**, scripts, and bundled UI — the **product** on disk, not the user’s target repo unless they opened it as their workspace. |
+| **Editor / UI shell state** | Which file tab is active (`selectedPath`), dock layout, etc. — **client-only**. It must **not** redefine the server workspace; switching tabs does **not** change **`WOP_WORKSPACE`**. |
+
+Do **not** read project config (e.g. **`agent/settings.json`**) from the playground repo when the user has opened a **different** workspace — resolve paths only under **`listWorkspaceFolders()`** (see **`server/pi-ollama-env.ts`** and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**).
+
 ## Principles
 
 1. **Do not** ship global binaries named `pi`, `ppi`, or `pi-e` from Way of Pi.

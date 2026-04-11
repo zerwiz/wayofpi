@@ -20,6 +20,7 @@ import type { ChatSessionMode } from "../hooks/useWayOfPiSession";
 import type { UiMode } from "../hooks/useUiMode";
 import type { BottomPanelTab } from "../types/technicalShell";
 import { HORIZONTAL_TOOL_DOCK_SLOTS, type HorizontalToolDockSlot } from "../utils/technicalLayoutStorage";
+import { workspaceAgentDisplayName } from "../utils/workspaceAgentDisplay";
 
 const TOOL_TAB_ORDER: BottomPanelTab[] = [
 	"problems",
@@ -57,7 +58,7 @@ export type TechnicalZedStatusStrip = {
 	problemsVisible: boolean;
 	/** Open settings / preferences (Zed settings entrypoints). */
 	onOpenSettings: () => void;
-	/** Placeholder count for diagnostics badge on the right (Zed shows e.g. "2 ◇"). */
+	/** Count from workspace static analysis (ESLint / tsc) for the diagnostics glyph. */
 	diagnosticsCount?: number;
 };
 
@@ -88,6 +89,7 @@ export function StatusBar({
 	simpleAppearanceDark,
 	technicalToolDock,
 	technicalZedStrip,
+	diagnosticsSummary,
 	chatMode,
 	chatAgentName,
 }: {
@@ -118,6 +120,13 @@ export function StatusBar({
 		>;
 	};
 	technicalZedStrip?: TechnicalZedStatusStrip | null;
+	/** Footer + Zed strip: ESLint/tsc totals; click footer to open Problems. */
+	diagnosticsSummary?: {
+		total: number;
+		errors: number;
+		warnings: number;
+		onOpenProblems: () => void;
+	} | null;
 	chatMode?: ChatSessionMode;
 	chatAgentName?: string | null;
 }) {
@@ -167,8 +176,8 @@ export function StatusBar({
 	};
 
 	const zed = technicalZedStrip;
-	const diagCount = zed?.diagnosticsCount ?? 0;
-	const diagClean = zed != null && diagCount === 0 && zed.problemsVisible;
+	const diagCount = diagnosticsSummary?.total ?? zed?.diagnosticsCount ?? 0;
+	const diagClean = zed != null && diagCount === 0;
 
 	return (
 		<footer className={`z-20 flex shrink-0 select-none items-center justify-between px-2 ${barClass}`}>
@@ -203,7 +212,7 @@ export function StatusBar({
 						</button>
 						<button
 							type="button"
-							title="Session chat — toggle agent panel (Zed: chat / channels strip)"
+							title="Session chat — toggle agent / chat panel (Ctrl+Alt+B, macOS: Cmd+Alt+B)"
 							onClick={() => zed.onToggleAgent()}
 							className={zedBtn(zed.agentVisible, technical)}
 						>
@@ -241,8 +250,8 @@ export function StatusBar({
 							className="pointer-events-none flex h-full max-h-[22px] items-center px-1.5 opacity-90"
 							title={
 								diagClean
-									? "No diagnostics reported (placeholder — Zed status)"
-									: "Diagnostics may be present (placeholder)"
+									? "No problems in the last ESLint / TypeScript run (Problems panel)"
+									: `${diagCount} issue(s) — open Problems for details`
 							}
 						>
 							<CheckCircle2 size={13} strokeWidth={2} className={diagClean ? "text-[#89d185]" : "text-white/50"} />
@@ -300,11 +309,48 @@ export function StatusBar({
 				</button>
 				<button
 					type="button"
-					title="Problems count (placeholder)"
-					className={`flex h-full max-w-[40vw] cursor-default items-center gap-1.5 truncate px-1 transition-colors ${simpleLight ? "hover:bg-zinc-200/80" : "hover:bg-white/20"}`}
+					title={
+						technical && diagnosticsSummary
+							? diagCount > 0
+								? `${diagnosticsSummary.errors} errors, ${diagnosticsSummary.warnings} warnings — open Problems`
+								: "No errors or warnings — open Problems to run or refresh ESLint / TypeScript"
+							: "Problems from workspace static analysis"
+					}
+					onClick={() => {
+						if (technical && diagnosticsSummary) diagnosticsSummary.onOpenProblems();
+					}}
+					disabled={!technical || !diagnosticsSummary}
+					className={`flex h-full max-w-[40vw] items-center gap-1.5 truncate px-1 transition-colors ${
+						technical && diagnosticsSummary
+							? simpleLight
+								? "cursor-pointer hover:bg-zinc-200/80"
+								: "cursor-pointer hover:bg-white/20"
+							: simpleLight
+								? "cursor-default hover:bg-zinc-200/80"
+								: "cursor-default hover:bg-white/20"
+					}`}
 				>
-					<AlertCircle size={12} />
-					{technical ? String(diagCount) : "No issues"}
+					<AlertCircle size={12} className={diagCount > 0 ? "text-[#fbbf24]" : undefined} />
+					{technical && diagnosticsSummary ? (
+						<span className="font-mono tabular-nums">
+							{diagnosticsSummary.errors > 0 ? (
+								<span className="text-[#fecaca]">{diagnosticsSummary.errors}</span>
+							) : null}
+							{diagnosticsSummary.errors > 0 && diagnosticsSummary.warnings > 0 ? (
+								<span className="text-white/50"> · </span>
+							) : null}
+							{diagnosticsSummary.warnings > 0 ? (
+								<span className="text-[#fef08a]">{diagnosticsSummary.warnings}</span>
+							) : null}
+							{diagnosticsSummary.errors === 0 && diagnosticsSummary.warnings === 0 ? (
+								<span className="text-white/90">0</span>
+							) : null}
+						</span>
+					) : technical ? (
+						String(diagCount)
+					) : (
+						"No issues"
+					)}
 				</button>
 				{technical && chatMode ? (
 					<span
@@ -319,7 +365,7 @@ export function StatusBar({
 						className="hidden max-w-[28vw] cursor-default truncate px-1 font-mono text-[10px] text-white/90 hover:bg-white/20 lg:inline"
 						title="Agent persona from workspace .md (see chat panel)"
 					>
-						{chatAgentName ? chatAgentName : "agent: orchestrator"}
+						{chatAgentName ? workspaceAgentDisplayName(chatAgentName) : "agent: orchestrator"}
 					</span>
 				) : null}
 				<button
@@ -340,7 +386,11 @@ export function StatusBar({
 						<>
 							<span
 								className="hidden cursor-default items-center gap-1 px-1 font-mono text-[10px] tabular-nums text-white/90 sm:flex"
-								title="Diagnostics count (placeholder — Zed shows count + symbol)"
+								title={
+									diagCount > 0
+										? `${diagCount} problem(s) from last ESLint / TypeScript run`
+										: "No problems in last run (◇ = Zed-style diagnostics strip)"
+								}
 							>
 								{diagCount > 0 ? <span className="text-[#cca700]">{diagCount}</span> : null}
 								<span className="text-white/50">◇</span>

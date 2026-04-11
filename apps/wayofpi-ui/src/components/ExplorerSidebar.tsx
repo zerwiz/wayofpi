@@ -24,6 +24,7 @@ export function ExplorerSidebar({
 	error,
 	expandRevision,
 	pathsToExpand,
+	onExplorerGitMutated,
 	onClosePrimarySidebar,
 }: {
 	nodes: TreeNode[];
@@ -46,6 +47,8 @@ export function ExplorerSidebar({
 	error: string | null;
 	expandRevision?: number;
 	pathsToExpand?: string[];
+	/** After staging from explorer Git badge — reload tree. */
+	onExplorerGitMutated?: () => void;
 	/** Hide the whole primary (left) sidebar — same as menu bar / Ctrl+B. */
 	onClosePrimarySidebar?: () => void;
 }) {
@@ -161,6 +164,7 @@ export function ExplorerSidebar({
 						onCopyPath={onCopyExplorerPath}
 						expandRevision={expandRevision}
 						pathsToExpand={pathsToExpand}
+						onExplorerGitMutated={onExplorerGitMutated}
 					/>
 				)}
 			</div>

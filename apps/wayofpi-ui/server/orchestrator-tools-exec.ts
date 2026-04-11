@@ -6,20 +6,67 @@
 import { spawn } from "node:child_process";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { formatUnknownOrchestratorToolMessage } from "../shared/session-log-metadata.ts";
 import { broadcastToolLog } from "./tool-log-broadcast";
 import { MAX_FILE_BYTES, shouldSkipDir } from "./paths";
+import {
+	ORCHESTRATOR_GIT_TOOLS_OPENAI,
+	orchestratorGitWorkspaceToolsEnabled,
+	orchestratorToolGitFetch,
+	orchestratorToolGitPull,
+	orchestratorToolGitPush,
+	orchestratorToolGitRemote,
+	orchestratorToolGitStatus,
+} from "./orchestrator-git-tools";
+import {
+	toolTeamList,
+	toolTeamMemberAdd,
+	toolTeamMemberRemove,
+	toolTeamMemberReplace,
+} from "./teams-yaml-mutate";
 import { getPrimaryWorkspacePath, resolveUnderWorkspace } from "./workspace-state";
+
+export type OrchestratorToolResult = { output: string; agentsCatalogChanged?: boolean };
+
+let orchestratorToolsRuntimeOverride: boolean | undefined;
+let orchestratorBashRuntimeOverride: boolean | undefined;
+
+export type OrchestratorGateRuntimePatch = {
+	/** Set **`true`/`false`** for this process; **`null`** clears override so **`WOP_*`** env applies again. */
+	orchestratorTools?: boolean | null;
+	orchestratorBash?: boolean | null;
+};
+
+/** In-memory toggles from **`POST /api/config`** (or **`POST /api/config/orchestrator-gates`**) until server restart. */
+export function patchOrchestratorGateRuntime(patch: OrchestratorGateRuntimePatch): {
+	orchestratorTools: boolean;
+	orchestratorBash: boolean;
+} {
+	if (patch.orchestratorTools !== undefined) {
+		orchestratorToolsRuntimeOverride =
+			patch.orchestratorTools === null ? undefined : patch.orchestratorTools;
+	}
+	if (patch.orchestratorBash !== undefined) {
+		orchestratorBashRuntimeOverride = patch.orchestratorBash === null ? undefined : patch.orchestratorBash;
+	}
+	return { orchestratorTools: orchestratorToolsEnabled(), orchestratorBash: orchestratorBashEnabled() };
+}
 
 /** When not `0`/`false`/`no`/`off`, orchestrator turns may use Pi-shaped workspace tools (default: on). */
 export function orchestratorToolsEnabled(): boolean {
+	if (orchestratorToolsRuntimeOverride !== undefined) return orchestratorToolsRuntimeOverride;
 	const v = process.env.WOP_ORCHESTRATOR_TOOLS?.trim().toLowerCase();
 	return v !== "0" && v !== "false" && v !== "no" && v !== "off";
 }
 
-/** Opt-in: allow `bash` tool (host shell, cwd = workspace). Trusted machines only. */
+/**
+ * `bash` tool (host shell, cwd = workspace). Default on when orchestrator tools run; set
+ * **`WOP_ORCHESTRATOR_BASH`** to **`0`/`false`/`no`/`off`** to disable on untrusted hosts.
+ */
 export function orchestratorBashEnabled(): boolean {
+	if (orchestratorBashRuntimeOverride !== undefined) return orchestratorBashRuntimeOverride;
 	const v = process.env.WOP_ORCHESTRATOR_BASH?.trim().toLowerCase();
-	return v === "1" || v === "true" || v === "yes" || v === "on";
+	return v !== "0" && v !== "false" && v !== "no" && v !== "off";
 }
 
 const MAX_GREP_BYTES = 120_000;
@@ -177,7 +224,7 @@ async function toolGrep(pattern: string, relPath?: string, glob?: string): Promi
 
 async function toolBash(command: string): Promise<string> {
 	if (!orchestratorBashEnabled()) {
-		return "bash: disabled on this server (set WOP_ORCHESTRATOR_BASH=1 to opt in — trusted workspace only).";
+		return "bash: disabled on this server (WOP_ORCHESTRATOR_BASH is 0/false/no/off — default is enabled).";
 	}
 	const cmd = command?.trim();
 	if (!cmd) return "bash: empty command.";
@@ -234,12 +281,12 @@ async function toolBash(command: string): Promise<string> {
 /**
  * Run one Pi-named orchestrator tool (workspace-jailed). Results are plain text for the model.
  */
-export async function executeOrchestratorTool(name: string, argsJson: string): Promise<string> {
+export async function executeOrchestratorTool(name: string, argsJson: string): Promise<OrchestratorToolResult> {
 	let args: Record<string, unknown> = {};
 	try {
 		args = JSON.parse(argsJson || "{}") as Record<string, unknown>;
 	} catch {
-		return "Invalid JSON in tool arguments.";
+		return { output: "Invalid JSON in tool arguments." };
 	}
 
 	switch (name) {
@@ -248,31 +295,86 @@ export async function executeOrchestratorTool(name: string, argsJson: string): P
 			const offset = typeof args.offset === "number" ? args.offset : undefined;
 			const limit = typeof args.limit === "number" ? args.limit : undefined;
 			logTool("read", path);
-			return await toolRead(path, offset, limit);
+			return { output: await toolRead(path, offset, limit) };
 		}
 		case "list_dir": {
 			const path = String(args.path ?? ".");
 			logTool("list_dir", path);
-			return await toolListDir(path);
+			return { output: await toolListDir(path) };
 		}
 		case "grep": {
 			const pattern = String(args.pattern ?? "");
 			const path = args.path != null ? String(args.path) : undefined;
 			const glob = args.glob != null ? String(args.glob) : undefined;
 			logTool("grep", `${pattern} @ ${path ?? "."}`);
-			return await toolGrep(pattern, path, glob);
+			return { output: await toolGrep(pattern, path, glob) };
 		}
 		case "write": {
 			const path = String(args.path ?? "");
 			const content = typeof args.content === "string" ? args.content : "";
-			return await toolWrite(path, content);
+			return { output: await toolWrite(path, content) };
 		}
 		case "bash": {
 			const command = String(args.command ?? "");
-			return await toolBash(command);
+			return { output: await toolBash(command) };
+		}
+		case "team_list": {
+			logTool("team_list", "");
+			return { output: await toolTeamList() };
+		}
+		case "team_member_remove": {
+			const agentName = String(args.agentName ?? "");
+			const team = args.team != null ? String(args.team) : undefined;
+			logTool("team_member_remove", `${team ?? "(default)"} − ${agentName}`);
+			return await toolTeamMemberRemove(team, agentName);
+		}
+		case "team_member_add": {
+			const agentName = String(args.agentName ?? "");
+			const team = args.team != null ? String(args.team) : undefined;
+			logTool("team_member_add", `${team ?? "(default)"} + ${agentName}`);
+			return await toolTeamMemberAdd(team, agentName);
+		}
+		case "team_member_replace": {
+			const fromAgent = String(args.fromAgent ?? "");
+			const toAgent = String(args.toAgent ?? "");
+			const team = args.team != null ? String(args.team) : undefined;
+			logTool("team_member_replace", `${team ?? "(default)"} ${fromAgent}→${toAgent}`);
+			return await toolTeamMemberReplace(team, fromAgent, toAgent);
+		}
+		case "git_status": {
+			logTool("git_status", "");
+			return { output: await orchestratorToolGitStatus() };
+		}
+		case "git_remote": {
+			logTool("git_remote", "");
+			return { output: await orchestratorToolGitRemote() };
+		}
+		case "git_fetch": {
+			const remote = args.remote != null ? String(args.remote) : undefined;
+			const prune = args.prune === true;
+			logTool("git_fetch", `${remote ?? "origin"}${prune ? " --prune" : ""}`);
+			return { output: await orchestratorToolGitFetch({ remote, prune }) };
+		}
+		case "git_pull": {
+			const remote = args.remote != null ? String(args.remote) : undefined;
+			const branch = args.branch != null ? String(args.branch) : undefined;
+			logTool("git_pull", [remote, branch].filter(Boolean).join(" ") || "(default upstream)");
+			return { output: await orchestratorToolGitPull({ remote, branch }) };
+		}
+		case "git_push": {
+			const remote = args.remote != null ? String(args.remote) : undefined;
+			const branch = args.branch != null ? String(args.branch) : undefined;
+			const forceWithLease = args.forceWithLease === true;
+			logTool(
+				"git_push",
+				`${remote ?? "origin"}${branch ? ` ${branch}` : ""}${forceWithLease ? " --force-with-lease" : ""}`,
+			);
+			return { output: await orchestratorToolGitPush({ remote, branch, forceWithLease }) };
 		}
 		default:
-			return `Unknown tool "${name}". Allowed: read, list_dir, grep, write, bash (bash requires WOP_ORCHESTRATOR_BASH=1).`;
+			return {
+				output: formatUnknownOrchestratorToolMessage(name),
+			};
 	}
 }
 
@@ -344,9 +446,70 @@ export const ORCHESTRATOR_TOOLS_OPENAI = [
 	{
 		type: "function" as const,
 		function: {
+			name: "team_list",
+			description:
+				"Pi **agent-team** parity: list teams from `.pi/agents/teams.yaml` (primary workspace) and all scanned agent definition names. Call before add/remove/replace to pick valid team and agent ids.",
+			parameters: { type: "object", properties: {} },
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
+			name: "team_member_add",
+			description:
+				"Add a roster member to a team in `teams.yaml` (must match an existing agent `.md` name). Persists to disk; UI refreshes automatically.",
+			parameters: {
+				type: "object",
+				properties: {
+					team: {
+						type: "string",
+						description:
+							"YAML team key (e.g. full, ralph). Omit to use the alphabetically first team (Pi default-team style).",
+					},
+					agentName: { type: "string", description: "Agent frontmatter `name` (e.g. scout, planner)" },
+				},
+				required: ["agentName"],
+			},
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
+			name: "team_member_remove",
+			description:
+				"Remove a member from a team in `teams.yaml`. Cannot remove the last member of a team. Persists to disk.",
+			parameters: {
+				type: "object",
+				properties: {
+					team: { type: "string", description: "YAML team key; omit = first team alphabetically" },
+					agentName: { type: "string", description: "Agent name to remove from the roster" },
+				},
+				required: ["agentName"],
+			},
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
+			name: "team_member_replace",
+			description: "Replace one roster slot (fromAgent → toAgent) in `teams.yaml`. Target agent must exist in the scan.",
+			parameters: {
+				type: "object",
+				properties: {
+					team: { type: "string", description: "YAML team key; omit = first team alphabetically" },
+					fromAgent: { type: "string", description: "Current roster member to replace" },
+					toAgent: { type: "string", description: "New agent name (must exist as .md definition)" },
+				},
+				required: ["fromAgent", "toAgent"],
+			},
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
 			name: "bash",
 			description:
-				"Run a non-interactive shell command in the workspace root. Only available when the server sets WOP_ORCHESTRATOR_BASH=1.",
+				"Run a non-interactive shell command in the workspace root. Default on; the server can disable with WOP_ORCHESTRATOR_BASH=0/false/no/off.",
 			parameters: {
 				type: "object",
 				properties: {
@@ -358,8 +521,11 @@ export const ORCHESTRATOR_TOOLS_OPENAI = [
 	},
 ];
 
-/** Tools sent to the LLM (omit `bash` when not opted in). */
-export function orchestratorToolsForLlm(): typeof ORCHESTRATOR_TOOLS_OPENAI {
-	if (orchestratorBashEnabled()) return ORCHESTRATOR_TOOLS_OPENAI;
-	return ORCHESTRATOR_TOOLS_OPENAI.filter((t) => t.function.name !== "bash");
+/** Tools sent to the LLM (omit `bash` when disabled via env). */
+export function orchestratorToolsForLlm(): (typeof ORCHESTRATOR_TOOLS_OPENAI)[number][] {
+	const base = orchestratorBashEnabled()
+		? [...ORCHESTRATOR_TOOLS_OPENAI]
+		: ORCHESTRATOR_TOOLS_OPENAI.filter((t) => t.function.name !== "bash");
+	if (!orchestratorGitWorkspaceToolsEnabled()) return base;
+	return [...base, ...(ORCHESTRATOR_GIT_TOOLS_OPENAI as unknown as (typeof ORCHESTRATOR_TOOLS_OPENAI)[number][])];
 }

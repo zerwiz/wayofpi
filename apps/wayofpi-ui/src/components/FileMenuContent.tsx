@@ -144,12 +144,26 @@ export function FileMenuContent({ fm, closeMenus }: { fm: FileMenuProps; closeMe
 				</button>
 			</li>
 			<li>
-				<button type="button" className={btn()} onClick={() => run(closeMenus, fm.onSaveWorkspaceAs)}>
+				<button
+					type="button"
+					className={btn()}
+					title={
+						!sw
+							? "Workspace switching disabled: saves a downloadable .code-workspace only (set WOP_ALLOW_WORKSPACE_SWITCH to write on the server)."
+							: "Writes a .code-workspace file on the server (browser: enter absolute path) or native save dialog in Electron."
+					}
+					onClick={() => run(closeMenus, fm.onSaveWorkspaceAs)}
+				>
 					Save Workspace As…
 				</button>
 			</li>
 			<li>
-				<button type="button" className={btn()} onClick={() => run(closeMenus, fm.onDuplicateWorkspace)}>
+				<button
+					type="button"
+					className={btn()}
+					title={!sw ? "Download-only while workspace switching is disabled." : undefined}
+					onClick={() => run(closeMenus, fm.onDuplicateWorkspace)}
+				>
 					Duplicate Workspace
 				</button>
 			</li>
@@ -158,6 +172,13 @@ export function FileMenuContent({ fm, closeMenus }: { fm: FileMenuProps; closeMe
 					type="button"
 					className={btn(fm.workspaceFolders.length < 2 || !sw)}
 					disabled={fm.workspaceFolders.length < 2 || !sw}
+					title={
+						fm.workspaceFolders.length < 2
+							? "Add another folder first (File → Add Folder to Workspace…)."
+							: !sw
+								? "Workspace switching disabled on server."
+								: undefined
+					}
 					onClick={() => setSub(sub === "remove" ? null : "remove")}
 				>
 					Remove Folder from Workspace <span className="float-right text-[#858585]">›</span>

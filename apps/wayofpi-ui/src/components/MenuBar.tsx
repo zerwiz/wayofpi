@@ -1,4 +1,12 @@
-import { ChevronDown, ChevronLeft, ChevronRight, CircleDot, Search, TerminalSquare } from "lucide-react";
+import {
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	CircleDot,
+	Info,
+	Search,
+	TerminalSquare,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PiModelConfigPath } from "../constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
@@ -76,6 +84,8 @@ export function MenuBar({
 	helpMenu,
 	/** Settings → workspace agents (Pi `.pi/agents`, `teams.yaml`) via My Team view. */
 	onOpenAgentSetup,
+	/** Settings → agent capability / approval preferences (browser-local). */
+	onOpenAgentPermissions,
 	settingsMenu,
 	/** Agents → teams.yaml, new agent files, reload catalog. */
 	onOpenTeamsYaml,
@@ -137,6 +147,8 @@ export function MenuBar({
 	helpMenu?: HelpMenuHandlers;
 	/** Settings → open agent/team setup (Simple **My Team**; switches from Technical when needed). */
 	onOpenAgentSetup: () => void;
+	/** Settings → operator allowlist for agent tools (stored in this browser). */
+	onOpenAgentPermissions: () => void;
 	/** Settings → Simple pages, sidebars, layout, chrome toggles. */
 	settingsMenu?: SettingsMenuHandlers;
 	/** Optional: mirror chat Build/Plan + new plan file (Settings menu). */
@@ -183,6 +195,9 @@ export function MenuBar({
 	const [goSwitchGroupFlyout, setGoSwitchGroupFlyout] = useState(false);
 	const [modelOpen, setModelOpen] = useState(false);
 	const [aboutOpen, setAboutOpen] = useState(false);
+	const [debugHelpOpen, setDebugHelpOpen] = useState(false);
+	/** Settings → View: hover flyout (chrome / layout toggles). */
+	const [settingsViewFlyout, setSettingsViewFlyout] = useState(false);
 	const navRef = useRef<HTMLDivElement>(null);
 	const modelRef = useRef<HTMLDivElement>(null);
 
@@ -191,6 +206,7 @@ export function MenuBar({
 			setViewFlyout(null);
 			setViewSimpleFlyout(null);
 		}
+		if (openMenu !== "Settings") setSettingsViewFlyout(false);
 		if (openMenu !== "Run") setRunNewBreakpointFlyout(false);
 		if (openMenu !== "Go") {
 			setGoSwitchEditorFlyout(false);
@@ -822,6 +838,7 @@ export function MenuBar({
 																}}
 															>
 																Full screen
+																{menuKbd("F11")}
 															</button>
 														</li>
 														<li className="my-1 border-t border-[#3c3c3c]" />
@@ -958,6 +975,7 @@ export function MenuBar({
 																}}
 															>
 																Full screen
+																{menuKbd("F11")}
 															</button>
 														</li>
 														<li>
@@ -971,6 +989,7 @@ export function MenuBar({
 																}}
 															>
 																{viewTechnical.zenMode ? "Exit Zen mode" : "Zen mode"}
+																{menuKbd("Ctrl+Alt+Z")}
 															</button>
 														</li>
 														<li>
@@ -983,9 +1002,26 @@ export function MenuBar({
 																}}
 															>
 																Centered layout
-																{viewTechnical.centeredLayout ? (
-																	<span className="float-right text-[#89d185]">✓</span>
-																) : null}
+																<span className="float-right font-mono text-[10px] text-[#858585]">
+																	{viewTechnical.centeredLayout ? (
+																		<span className="mr-2 text-[#89d185]">✓</span>
+																	) : null}
+																	Ctrl+Alt+C
+																</span>
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																title="Exit browser full screen (if any), leave Zen mode, and turn off centered layout."
+																onClick={() => {
+																	viewTechnical.onNormalView();
+																	closeMenus();
+																}}
+															>
+																Normal view
+																{menuKbd("Ctrl+Alt+N")}
 															</button>
 														</li>
 														<li>
@@ -2005,12 +2041,30 @@ export function MenuBar({
 											<li>
 												<button
 													type="button"
-													disabled={!runMenu.terminalServerEnabled}
-													className={menuBtnClass(!runMenu.terminalServerEnabled)}
+													className={menuBtnClass()}
+													onClick={() => {
+														closeMenus();
+														setDebugHelpOpen(true);
+													}}
+												>
+													<span className="inline-flex items-center gap-2">
+														<Info className="h-3.5 w-3.5 shrink-0 text-[#3794ff]" aria-hidden />
+														How debugging works
+													</span>
+												</button>
+											</li>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													disabled={!runMenu.terminalServerEnabled || !runMenu.canStartDebugging}
+													className={menuBtnClass(!runMenu.terminalServerEnabled || !runMenu.canStartDebugging)}
 													title={
 														!runMenu.terminalServerEnabled
 															? "Enable WOP_ALLOW_TERMINAL=1 on the server to run the active file in the integrated terminal."
-															: undefined
+															: !runMenu.canStartDebugging
+																? "Start Debugging needs a supported file (.js, .mjs, .cjs, .ts, .tsx, .py) in the editor."
+																: undefined
 													}
 													onClick={() => {
 														runMenu.onStartDebugging();
@@ -2078,9 +2132,12 @@ export function MenuBar({
 											<li>
 												<button
 													type="button"
-													disabled
-													title="Use Terminal → Run Task or open launch.json via Add Configuration…"
-													className={menuBtnClass(true)}
+													className={menuBtnClass()}
+													title="Open .vscode/launch.json in the editor (same as Cursor / VS Code)."
+													onClick={() => {
+														runMenu.onOpenConfigurations();
+														closeMenus();
+													}}
 												>
 													Open Configurations
 												</button>
@@ -2089,6 +2146,7 @@ export function MenuBar({
 												<button
 													type="button"
 													className={menuBtnClass()}
+													title="Append a debug configuration template, then open launch.json."
 													onClick={() => {
 														runMenu.onAddConfiguration();
 														closeMenus();
@@ -2101,12 +2159,14 @@ export function MenuBar({
 											<li>
 												<button
 													type="button"
-													disabled={!runMenu.debugSessionActive}
-													className={menuBtnClass(!runMenu.debugSessionActive)}
+													disabled={!runMenu.debugSessionActive || !runMenu.debugReplSession}
+													className={menuBtnClass(!runMenu.debugSessionActive || !runMenu.debugReplSession)}
 													title={
 														!runMenu.debugSessionActive
-															? "Available when a debug session is paused."
-															: undefined
+															? "Available when a debug session is active."
+															: !runMenu.debugReplSession
+																? "For Node/Bun, attach the inspector (e.g. chrome://inspect). Step keys apply to Python pdb in the terminal."
+																: undefined
 													}
 													onClick={() => {
 														runMenu.onStepOver();
@@ -2119,12 +2179,14 @@ export function MenuBar({
 											<li>
 												<button
 													type="button"
-													disabled={!runMenu.debugSessionActive}
-													className={menuBtnClass(!runMenu.debugSessionActive)}
+													disabled={!runMenu.debugSessionActive || !runMenu.debugReplSession}
+													className={menuBtnClass(!runMenu.debugSessionActive || !runMenu.debugReplSession)}
 													title={
 														!runMenu.debugSessionActive
-															? "Available when a debug session is paused."
-															: undefined
+															? "Available when a debug session is active."
+															: !runMenu.debugReplSession
+																? "For Node/Bun, attach the inspector (e.g. chrome://inspect). Step keys apply to Python pdb in the terminal."
+																: undefined
 													}
 													onClick={() => {
 														runMenu.onStepInto();
@@ -2137,12 +2199,14 @@ export function MenuBar({
 											<li>
 												<button
 													type="button"
-													disabled={!runMenu.debugSessionActive}
-													className={menuBtnClass(!runMenu.debugSessionActive)}
+													disabled={!runMenu.debugSessionActive || !runMenu.debugReplSession}
+													className={menuBtnClass(!runMenu.debugSessionActive || !runMenu.debugReplSession)}
 													title={
 														!runMenu.debugSessionActive
-															? "Available when a debug session is paused."
-															: undefined
+															? "Available when a debug session is active."
+															: !runMenu.debugReplSession
+																? "For Node/Bun, attach the inspector (e.g. chrome://inspect). Step keys apply to Python pdb in the terminal."
+																: undefined
 													}
 													onClick={() => {
 														runMenu.onStepOut();
@@ -2155,12 +2219,14 @@ export function MenuBar({
 											<li>
 												<button
 													type="button"
-													disabled={!runMenu.debugSessionActive}
-													className={menuBtnClass(!runMenu.debugSessionActive)}
+													disabled={!runMenu.debugSessionActive || !runMenu.debugReplSession}
+													className={menuBtnClass(!runMenu.debugSessionActive || !runMenu.debugReplSession)}
 													title={
 														!runMenu.debugSessionActive
-															? "Available when a debug session is paused."
-															: undefined
+															? "Available when a debug session is active."
+															: !runMenu.debugReplSession
+																? "For Node/Bun, attach the inspector (e.g. chrome://inspect). Continue uses pdb when debugging Python in the terminal."
+																: undefined
 													}
 													onClick={() => {
 														runMenu.onContinue();
@@ -2327,6 +2393,7 @@ export function MenuBar({
 												<button
 													type="button"
 													className={menuBtnClass()}
+													title="Open links to the VS Code Marketplace debugger category and popular DAP extensions (install in Cursor / VS Code)."
 													onClick={() => {
 														runMenu.onInstallAdditionalDebuggers();
 														closeMenus();
@@ -2580,6 +2647,19 @@ export function MenuBar({
 												<button
 													type="button"
 													className={menuBtnClass()}
+													title="Opens GET /api/diagnostics in a new tab — workspace roots, WOP_* env, Ollama reachability, Pi binary probe."
+													onClick={() => {
+														helpMenu.onOpenHostDoctor();
+														closeMenus();
+													}}
+												>
+													Host doctor…
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
 													onClick={() => {
 														helpMenu.onEditorPlayground();
 														closeMenus();
@@ -2605,6 +2685,7 @@ export function MenuBar({
 												<button
 													type="button"
 													className={menuBtnClass()}
+													title="Open WhyNot Productions contact (feedback and inquiries)."
 													onClick={() => {
 														helpMenu.onGiveFeedback();
 														closeMenus();
@@ -2613,11 +2694,25 @@ export function MenuBar({
 													Give Feedback…
 												</button>
 											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Open WhyNot Productions — home and projects."
+													onClick={() => {
+														helpMenu.onSupportUs();
+														closeMenus();
+													}}
+												>
+													Support us
+												</button>
+											</li>
 											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
 											<li>
 												<button
 													type="button"
 													className={menuBtnClass()}
+													title="Show the MIT license for this project."
 													onClick={() => {
 														helpMenu.onViewLicense();
 														closeMenus();
@@ -2732,13 +2827,28 @@ export function MenuBar({
 										<button
 											type="button"
 											className={menuBtnClass()}
-											title="Browse rosters, open agent files, and add definitions (Pi agent-team scan order)."
+											title={
+												"Pi-style workspace agents: markdown under .pi/agents (and scan roots), plus .pi/agents/teams.yaml for agent-team rosters."
+											}
 											onClick={() => {
 												onOpenAgentSetup();
 												closeMenus();
 											}}
 										>
-											Teams & agents overview…
+											Workspace agents & teams…
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Choose what agents may attempt (read, write, commands, team edits). Stored in this browser; Pi and the server still enforce their own limits."
+											onClick={() => {
+												onOpenAgentPermissions();
+												closeMenus();
+											}}
+										>
+											Agent permissions…
 										</button>
 									</li>
 									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
@@ -2786,24 +2896,8 @@ export function MenuBar({
 							) : null}
 							{openMenu === "Settings" && label === "Settings" ? (
 								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[min(340px,92vw)] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
-									<li>
-										<button
-											type="button"
-											className={menuBtnClass()}
-											title={
-												"Pi-style workspace agents: markdown under .pi/agents (and scan roots), plus .pi/agents/teams.yaml for agent-team rosters."
-											}
-											onClick={() => {
-												onOpenAgentSetup();
-												closeMenus();
-											}}
-										>
-											Workspace agents & teams…
-										</button>
-									</li>
 									{settingsMenu ? (
 										<>
-											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
 											<li>
 												<button
 													type="button"
@@ -2843,6 +2937,19 @@ export function MenuBar({
 													Projects workspace…
 												</button>
 											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Local codebase manifest, optional chat summary, and doc URLs (Cursor-style Indexing & Docs)."
+													onClick={() => {
+														settingsMenu.onOpenIndexingDocs();
+														closeMenus();
+													}}
+												>
+													Indexing & Docs…
+												</button>
+											</li>
 											{settingsMenu.onEditWorkspaceViewsCatalog ? (
 												<li>
 													<button
@@ -2858,9 +2965,9 @@ export function MenuBar({
 													</button>
 												</li>
 											) : null}
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
 										</>
 									) : null}
-									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
 									<li>
 										<button
 											type="button"
@@ -2915,6 +3022,16 @@ export function MenuBar({
 											Extensions (sidebar)…
 										</button>
 									</li>
+									<li>
+										<button
+											type="button"
+											disabled
+											className={menuBtnClass(true)}
+											title="MCP server configuration in the shell is not wired yet; track docs/WOP_OPEN_TODOS.md and Pi MCP parity."
+										>
+											MCP server <span className="text-[#555]">(planned)</span>
+										</button>
+									</li>
 									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
 									<li>
 										<button
@@ -2955,141 +3072,205 @@ export function MenuBar({
 									{viewTechnical ? (
 										<>
 											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
-											<li>
+											<li
+												className="relative"
+												onMouseEnter={() => setSettingsViewFlyout(true)}
+												onMouseLeave={() => setSettingsViewFlyout(false)}
+											>
 												<button
 													type="button"
 													className={menuBtnClass()}
-													onClick={() => {
-														viewTechnical.onToggleStatusBar();
-														closeMenus();
+													aria-expanded={settingsViewFlyout}
+													aria-haspopup="menu"
+													title="Editor chrome and layout. Hover to open the list to the side."
+													onFocus={() => setSettingsViewFlyout(true)}
+													onBlur={(e) => {
+														if (!e.currentTarget.contains(e.relatedTarget)) setSettingsViewFlyout(false);
 													}}
 												>
-													Status bar
-													{viewTechnical.statusBarVisible ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
+													View
+													<span className="float-right text-[#858585]">▸</span>
 												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													onClick={() => {
-														viewTechnical.onToggleMenuBar();
-														closeMenus();
-													}}
-												>
-													Menu bar
-													{viewTechnical.menuBarVisible ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
-												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													onClick={() => {
-														viewTechnical.onToggleWordWrap();
-														closeMenus();
-													}}
-												>
-													Editor word wrap
-													{viewTechnical.wordWrap ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
-												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													onClick={() => {
-														viewTechnical.onToggleBreadcrumbs();
-														closeMenus();
-													}}
-												>
-													Breadcrumbs
-													{viewTechnical.breadcrumbsVisible ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
-												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													onClick={() => {
-														viewTechnical.onToggleCenteredLayout();
-														closeMenus();
-													}}
-												>
-													Centered editor layout
-													{viewTechnical.centeredLayout ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
-												</button>
-											</li>
-											{onToggleAgentPanel != null && agentPanelVisible != null ? (
-												<li>
-													<button
-														type="button"
-														className={menuBtnClass()}
-														title="Show or hide the agent / chat dock region."
-														onClick={() => {
-															onToggleAgentPanel();
-															closeMenus();
-														}}
+												{settingsViewFlyout ? (
+													<ul
+														className={`${viewFlyoutClass()} min-w-[280px]`}
+														role="menu"
+														onMouseDown={(e) => e.stopPropagation()}
 													>
-														Agent / chat panel
-														{agentPanelVisible ? (
-															<span className="float-right text-[#89d185]">✓</span>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																onClick={() => {
+																	viewTechnical.onToggleStatusBar();
+																	closeMenus();
+																}}
+															>
+																Status bar
+																{viewTechnical.statusBarVisible ? (
+																	<span className="float-right text-[#89d185]">✓</span>
+																) : null}
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																onClick={() => {
+																	viewTechnical.onToggleMenuBar();
+																	closeMenus();
+																}}
+															>
+																Menu bar
+																{viewTechnical.menuBarVisible ? (
+																	<span className="float-right text-[#89d185]">✓</span>
+																) : null}
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																onClick={() => {
+																	viewTechnical.onToggleWordWrap();
+																	closeMenus();
+																}}
+															>
+																Editor word wrap
+																{viewTechnical.wordWrap ? (
+																	<span className="float-right text-[#89d185]">✓</span>
+																) : null}
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																onClick={() => {
+																	viewTechnical.onToggleBreadcrumbs();
+																	closeMenus();
+																}}
+															>
+																Breadcrumbs
+																{viewTechnical.breadcrumbsVisible ? (
+																	<span className="float-right text-[#89d185]">✓</span>
+																) : null}
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																onClick={() => {
+																	viewTechnical.onToggleCenteredLayout();
+																	closeMenus();
+																}}
+															>
+																Centered editor layout
+																<span className="float-right font-mono text-[10px] text-[#858585]">
+																	{viewTechnical.centeredLayout ? (
+																		<span className="mr-2 text-[#89d185]">✓</span>
+																	) : null}
+																	Ctrl+Alt+C
+																</span>
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																title="Exit browser full screen (if any), leave Zen mode, and turn off centered layout."
+																onClick={() => {
+																	viewTechnical.onNormalView();
+																	closeMenus();
+																}}
+															>
+																Normal view
+																{menuKbd("Ctrl+Alt+N")}
+															</button>
+														</li>
+														{onToggleAgentPanel != null && agentPanelVisible != null ? (
+															<li>
+																<button
+																	type="button"
+																	className={menuBtnClass()}
+																	role="menuitem"
+																	title="Show or hide the agent / chat dock region. Shortcut: Ctrl+Alt+B (macOS: Cmd+Alt+B)."
+																	onClick={() => {
+																		onToggleAgentPanel();
+																		closeMenus();
+																	}}
+																>
+																	Agent / chat panel
+																	<span className="float-right font-mono text-[10px] text-[#858585]">
+																		{agentPanelVisible ? (
+																			<span className="mr-2 text-[#89d185]">✓</span>
+																		) : null}
+																		Ctrl+Alt+B
+																	</span>
+																</button>
+															</li>
 														) : null}
-													</button>
-												</li>
-											) : null}
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													title={viewTechnical.zenMode ? "Leave Zen (full editor)." : "Zen mode — hide side activity and panels."}
-													onClick={() => {
-														if (viewTechnical.zenMode) viewTechnical.onExitZen();
-														else viewTechnical.onEnterZen();
-														closeMenus();
-													}}
-												>
-													{viewTechnical.zenMode ? "Exit Zen mode" : "Enter Zen mode"}
-												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													title="Reset chrome zoom to 100% (Technical layout)."
-													onClick={() => {
-														viewTechnical.onZoomReset();
-														closeMenus();
-													}}
-												>
-													Reset UI zoom (100%)
-													<span className="float-right font-mono text-[10px] text-[#858585]">
-														{viewTechnical.uiZoomPercent}%
-													</span>
-												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													className={menuBtnClass()}
-													title="Browser full-screen API when available."
-													onClick={() => {
-														viewTechnical.onToggleFullScreen();
-														closeMenus();
-													}}
-												>
-													Full screen
-												</button>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																title={
+																	viewTechnical.zenMode
+																		? "Leave Zen (full editor)."
+																		: "Zen mode — hide side activity and panels."
+																}
+																onClick={() => {
+																	if (viewTechnical.zenMode) viewTechnical.onExitZen();
+																	else viewTechnical.onEnterZen();
+																	closeMenus();
+																}}
+															>
+																{viewTechnical.zenMode ? "Exit Zen mode" : "Enter Zen mode"}
+																{menuKbd("Ctrl+Alt+Z")}
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																title="Reset chrome zoom to 100% (Technical layout)."
+																onClick={() => {
+																	viewTechnical.onZoomReset();
+																	closeMenus();
+																}}
+															>
+																Reset UI zoom (100%)
+																<span className="float-right font-mono text-[10px] text-[#858585]">
+																	{viewTechnical.uiZoomPercent}%
+																</span>
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																role="menuitem"
+																title="Browser full-screen API when available."
+																onClick={() => {
+																	viewTechnical.onToggleFullScreen();
+																	closeMenus();
+																}}
+															>
+																Full screen
+																{menuKbd("F11")}
+															</button>
+														</li>
+													</ul>
+												) : null}
 											</li>
 										</>
 									) : null}
@@ -3195,7 +3376,10 @@ export function MenuBar({
 								<p className="text-[12px] text-[#858585]">Loading config…</p>
 							)}
 							<p className="mt-2 text-[11px] text-[#858585]">
-								Web session can use host env (WOP_LLM_PROVIDER, OLLAMA_*, OPENROUTER_*). Pi TUI{" "}
+								Host env: <span className="font-mono text-[#9cdcfe]">WOP_LLM_PROVIDER</span>,{" "}
+								<span className="font-mono text-[#9cdcfe]">WOP_CHAT_ENGINE</span>,{" "}
+								<span className="font-mono text-[#9cdcfe]">OLLAMA_*</span>,{" "}
+								<span className="font-mono text-[#9cdcfe]">OPENROUTER_*</span>. Pi TUI{" "}
 								<span className="font-mono text-[#9cdcfe]">/models</span> reads workspace JSON below.
 							</p>
 							{onOpenPiModelConfig ? (
@@ -3227,6 +3411,75 @@ export function MenuBar({
 					) : null}
 				</div>
 			</div>
+
+			{debugHelpOpen ? (
+				<div
+					className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4"
+					role="presentation"
+					onMouseDown={(e) => {
+						if (e.target === e.currentTarget) setDebugHelpOpen(false);
+					}}
+				>
+					<div
+						className="max-w-lg rounded border border-[#454545] bg-[#252526] p-6 shadow-2xl"
+						role="dialog"
+						aria-labelledby="debug-help-title"
+						aria-describedby="debug-help-desc"
+					>
+						<h2 id="debug-help-title" className="flex items-center gap-2 text-lg font-bold text-white">
+							<Info className="h-5 w-5 text-[#3794ff]" aria-hidden />
+							Run and debug
+						</h2>
+						<div id="debug-help-desc" className="mt-3 space-y-3 text-[13px] leading-relaxed text-[#cccccc]">
+							<p>
+								Way of Pi does not embed the full VS Code debugger. Commands in <strong className="text-[#e0e0e0]">Run</strong>{" "}
+								send lines to the <strong className="text-[#e0e0e0]">integrated terminal</strong>, so the server must allow
+								PTYs (<span className="font-mono text-[#9cdcfe]">WOP_ALLOW_TERMINAL=1</span>).
+							</p>
+							<p>
+								<strong className="text-[#e0e0e0]">Open Configurations</strong> opens{" "}
+								<code className="text-[#9cdcfe]">.vscode/launch.json</code>. <strong className="text-[#e0e0e0]">Add Configuration…</strong>{" "}
+								appends a Cursor/VS Code-style template (Node, Bun, Python debugpy, or attach) then opens the file — use
+								those entries in Cursor when you work in the same workspace.
+							</p>
+							<p>
+								<strong className="text-[#e0e0e0]">Install Additional Debuggers…</strong> opens Marketplace and doc links so
+								you can install <strong className="text-[#e0e0e0]">DAP</strong> extensions in Cursor / VS Code (Python debugpy,
+								CodeLLDB, Go, Bun, Java, PHP, .NET, Ruby, and more).
+							</p>
+							<p>
+								<strong className="text-[#e0e0e0]">Start Debugging</strong> (<kbd className="rounded bg-[#3c3c3c] px-1 font-mono text-[11px]">F5</kbd>
+								): runs the active file with a debugger-friendly launcher —{" "}
+								<span className="font-mono text-[#9cdcfe]">node --inspect-brk</span> for JavaScript,{" "}
+								<span className="font-mono text-[#9cdcfe]">bun --inspect-wait</span> for TypeScript,{" "}
+								<span className="font-mono text-[#9cdcfe]">python3 -m pdb</span> for Python. Attach Node/Bun with your
+								browser or IDE inspector (e.g. open <span className="font-mono text-[#9cdcfe]">chrome://inspect</span>).
+							</p>
+							<p>
+								<strong className="text-[#e0e0e0]">Run Without Debugging</strong> (
+								<kbd className="rounded bg-[#3c3c3c] px-1 font-mono text-[11px]">Ctrl+F5</kbd>) runs the file normally.{" "}
+								<strong className="text-[#e0e0e0]">Stop</strong> (
+								<kbd className="rounded bg-[#3c3c3c] px-1 font-mono text-[11px]">Shift+F5</kbd>) sends Ctrl+C to the terminal
+								and clears the in-app debug session.
+							</p>
+							<p>
+								For <strong className="text-[#e0e0e0]">Python pdb</strong>, Continue / Step in the menu (and{" "}
+								<kbd className="rounded bg-[#3c3c3c] px-1 font-mono text-[11px]">F5</kbd> /{" "}
+								<kbd className="rounded bg-[#3c3c3c] px-1 font-mono text-[11px]">F10</kbd> /{" "}
+								<kbd className="rounded bg-[#3c3c3c] px-1 font-mono text-[11px]">F11</kbd>) send pdb commands when those
+								items are enabled. Editor gutter breakpoints are not yet wired to the runtime.
+							</p>
+						</div>
+						<button
+							type="button"
+							onClick={() => setDebugHelpOpen(false)}
+							className="mt-5 rounded bg-[#007acc] px-4 py-2 text-[13px] text-white hover:bg-[#006bb3]"
+						>
+							Close
+						</button>
+					</div>
+				</div>
+			) : null}
 
 			{aboutOpen ? (
 				<div

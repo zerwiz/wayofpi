@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { gitStatusMap } from "./git";
+import type { WorkspaceGitRootState, WorkspaceGitState } from "../src/types/tree";
+import { gitStatusMap, gitWorktreeSnapshot } from "./git";
 import { shouldSkipDir } from "./paths";
 import { listWorkspaceFolders, type WorkspaceFolderEntry } from "./workspace-state";
 
@@ -53,6 +54,25 @@ async function readTreeRecursive(
 	return nodes;
 }
 
+/**
+ * After leaf paths are labeled from `git status`, mark ancestor directories with `*`
+ * when they contain any nested change (VS Code-style folder hint).
+ */
+function propagateGitDirMarkers(nodes: TreeNode[]): void {
+	function walk(n: TreeNode): boolean {
+		if (n.type === "file") {
+			return Boolean(n.gitStatus);
+		}
+		let childHas = false;
+		for (const c of n.children ?? []) {
+			if (walk(c)) childHas = true;
+		}
+		if (!n.gitStatus && childHas) n.gitStatus = "*";
+		return Boolean(n.gitStatus) || childHas;
+	}
+	for (const n of nodes) walk(n);
+}
+
 function prefixTreeNodes(nodes: TreeNode[], label: string): TreeNode[] {
 	return nodes.map((n) => ({
 		...n,
@@ -61,19 +81,38 @@ function prefixTreeNodes(nodes: TreeNode[], label: string): TreeNode[] {
 	}));
 }
 
+async function gitRootStates(folders: WorkspaceFolderEntry[]): Promise<WorkspaceGitRootState[]> {
+	const roots: WorkspaceGitRootState[] = [];
+	for (const f of folders) {
+		const snap = await gitWorktreeSnapshot(f.path);
+		roots.push({
+			label: f.label,
+			path: f.path,
+			isRepo: snap.isRepo,
+			topLevel: snap.topLevel,
+			branch: snap.branch,
+			error: snap.error,
+		});
+	}
+	return roots;
+}
+
 export async function buildWorkspaceTree(): Promise<{
 	root: string;
 	nodes: TreeNode[];
 	folders: WorkspaceFolderEntry[];
+	git: WorkspaceGitState;
 }> {
 	const list = listWorkspaceFolders();
+	const git: WorkspaceGitState = { roots: await gitRootStates(list) };
 
 	if (list.length === 1) {
 		const root = list[0].path;
 		const gitMap = await gitStatusMap(root);
 		const counter = { n: 0 };
 		const nodes = await readTreeRecursive(root, root, gitMap, 0, counter);
-		return { root, nodes, folders: list };
+		propagateGitDirMarkers(nodes);
+		return { root, nodes, folders: list, git };
 	}
 
 	const top: TreeNode[] = [];
@@ -81,6 +120,7 @@ export async function buildWorkspaceTree(): Promise<{
 		const gitMap = await gitStatusMap(f.path);
 		const counter = { n: 0 };
 		const children = await readTreeRecursive(f.path, f.path, gitMap, 0, counter);
+		propagateGitDirMarkers(children);
 		const prefixed = prefixTreeNodes(children, f.label);
 		top.push({
 			name: f.label,
@@ -89,6 +129,7 @@ export async function buildWorkspaceTree(): Promise<{
 			children: prefixed,
 		});
 	}
+	propagateGitDirMarkers(top);
 	const rootDisplay = list.map((x) => x.path).join(" | ");
-	return { root: rootDisplay, nodes: top, folders: list };
+	return { root: rootDisplay, nodes: top, folders: list, git };
 }

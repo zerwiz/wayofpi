@@ -2,6 +2,7 @@ import { BookOpen, Cpu, Database, Pencil, Plus, RefreshCw, Trash2, Users } from 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPutJson } from "../../api/client";
 import type { AgentMeta } from "../../hooks/useAgents";
+import { workspaceAgentDisplayName } from "../../utils/workspaceAgentDisplay";
 import type { FileGetResponse } from "../../types/workspaceFile";
 import { parseTeamsYaml, serializeTeamsYaml } from "../../utils/teamsYaml";
 
@@ -197,7 +198,8 @@ function TeamRosterModal({
 											className="mt-1"
 										/>
 										<span>
-											<span className="font-mono font-semibold">{a.name}</span>
+											<span className="font-semibold">{workspaceAgentDisplayName(a.name)}</span>
+											<span className="ml-1 font-mono text-[11px] opacity-80">({a.name})</span>
 											{a.description ? (
 												<span className={`mt-0.5 block text-xs ${muted}`}>{a.description}</span>
 											) : null}
@@ -488,6 +490,15 @@ export function SimpleTeamView({
 				<section>
 					<h2 className={`mb-4 text-lg font-bold ${heading}`}>All agents ({agents.length})</h2>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<button
+							type="button"
+							onClick={() => setHireOpen(true)}
+							className={`flex min-h-[160px] flex-col items-center justify-center rounded-2xl border border-dashed p-6 transition-colors ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]/50 text-[#858585] hover:border-[#6f6f6f] hover:bg-[#3c3c3c]/50 hover:text-[#cccccc]" : "border-[#d4d4d4] bg-[#f3f3f3] text-[#616161] hover:border-[#c8c8c8] hover:bg-[#e5e5e5] hover:text-[#333333]"}`}
+						>
+							<Users size={28} className="mb-2" />
+							<span className="font-bold">Add agent</span>
+							<span className={`mt-1 text-center text-xs ${sub}`}>New Markdown file or open YAML</span>
+						</button>
 						{agents.map((agent) => (
 							<div key={agent.name} className={`flex flex-col rounded-2xl border p-6 shadow-sm ${card}`}>
 								<div className="mb-4 flex items-start justify-between gap-2">
@@ -498,7 +509,9 @@ export function SimpleTeamView({
 											<Cpu size={20} />
 										</div>
 										<div className="min-w-0">
-											<h3 className={`truncate font-bold ${heading}`}>{agent.name}</h3>
+											<h3 className={`truncate font-bold ${heading}`}>
+												{workspaceAgentDisplayName(agent.name)}
+											</h3>
 											<p className={`line-clamp-2 text-xs ${sub}`}>{agent.description || "—"}</p>
 										</div>
 									</div>
@@ -531,16 +544,6 @@ export function SimpleTeamView({
 								</div>
 							</div>
 						))}
-
-						<button
-							type="button"
-							onClick={() => setHireOpen(true)}
-							className={`flex min-h-[160px] flex-col items-center justify-center rounded-2xl border border-dashed p-6 transition-colors ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]/50 text-[#858585] hover:border-[#6f6f6f] hover:bg-[#3c3c3c]/50 hover:text-[#cccccc]" : "border-[#d4d4d4] bg-[#f3f3f3] text-[#616161] hover:border-[#c8c8c8] hover:bg-[#e5e5e5] hover:text-[#333333]"}`}
-						>
-							<Users size={28} className="mb-2" />
-							<span className="font-bold">Add agent</span>
-							<span className={`mt-1 text-center text-xs ${sub}`}>New Markdown file or open YAML</span>
-						</button>
 					</div>
 				</section>
 			</div>

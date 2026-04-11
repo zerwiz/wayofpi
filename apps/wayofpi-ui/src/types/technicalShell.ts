@@ -37,6 +37,8 @@ export interface ViewMenuTechnicalOptions {
 	onToggleFullScreen: () => void;
 	centeredLayout: boolean;
 	onToggleCenteredLayout: () => void;
+	/** Leave browser fullscreen, exit Zen, and turn off centered layout (default editing surface). */
+	onNormalView: () => void;
 	wordWrap: boolean;
 	onToggleWordWrap: () => void;
 	breadcrumbsVisible: boolean;

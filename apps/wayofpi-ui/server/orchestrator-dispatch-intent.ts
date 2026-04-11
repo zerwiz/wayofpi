@@ -1,7 +1,10 @@
 /**
- * Pi-shaped **dispatch** for the web shell when chat is **not** inside Pi JSON mode:
+ * Pi-shaped **phrase dispatch** for the web shell when chat is **not** inside Pi JSON mode:
  * infer specialist handoffs from natural language (same roster as **`dispatch_agent`**
- * — workspace **`.md`** agents) and return the target name, or signal return to orchestrator.
+ * — workspace **`.md`** agents) and return the target body, or signal return to orchestrator.
+ *
+ * Callers merge the specialist system block **for one assistant turn only** — like Pi **agent-team**
+ * where the **dispatcher** process stays primary; they must **not** persist `agentName` from this alone.
  *
  * Headless Pi turns should use the real **`dispatch_agent`** tool instead of this heuristic.
  */
@@ -53,9 +56,11 @@ export function tryResolveDispatchAgentName(
 	if (!raw || raw.length > 6000) return null;
 
 	const typoFixes: [RegExp, string][] = [
+		[/\bcout\b/gi, "scout"],
 		[/\bcsout\b/gi, "scout"],
 		[/\bscount\b/gi, "scout"],
 		[/\bsvout\b/gi, "scout"],
+		[/\bscoot\b/gi, "scout"],
 		[/\bsatrt\b/gi, "start"],
 		[/\bstrt\b/gi, "start"],
 		[/\byuo\b/gi, "you"],
@@ -79,6 +84,11 @@ export function tryResolveDispatchAgentName(
 		const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 		const patterns: RegExp[] = [
+			/* Mid-sentence: "can you dispatch the scout …", "/dispatch the planner" — must not require ^ or [.!?] */
+			new RegExp(
+				`\\b(?:dispatch|hand\\s*off|handoff)\\s+(?:to\\s+)?(?:the\\s+)?(${esc})\\b`,
+				"i",
+			),
 			/* "start scout", "tell the planner …", "use reviewer" */
 			new RegExp(
 				`(?:^|[.!?]\\s+)\\s*(?:please\\s+)?(?:can\\s+you\\s+|could\\s+you\\s+)?(?:start|switch\\s+(?:to|the)|use|tell|ask|invoke|run|open)\\s+(?:the\\s+)?(${esc})\\b`,
@@ -88,11 +98,6 @@ export function tryResolveDispatchAgentName(
 			new RegExp(`^${esc}\\s*[,:\\-–]\\s`, "i"),
 			/* "scout to look …" (Pi-like task phrasing) */
 			new RegExp(`^${esc}\\s+to\\s+`, "i"),
-			/* "dispatch scout", "hand off to planner" */
-			new RegExp(
-				`(?:^|[.!?]\\s+)\\s*(?:dispatch|hand\\s*off|handoff)\\s+(?:to\\s+)?(?:the\\s+)?(${esc})\\b`,
-				"i",
-			),
 			/* Slack-style @scout at start */
 			new RegExp(`^@${esc}\\b`, "i"),
 		];

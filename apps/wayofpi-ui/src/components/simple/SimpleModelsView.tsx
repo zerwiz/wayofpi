@@ -20,6 +20,7 @@ function formatBytes(n: number | undefined): string {
 /** Simple shell — **mostly wired**: LLM catalog + provider editor + session model; gaps tracked in `docs/WOP_*.md` if any. */
 export function SimpleModelsView({
 	config,
+	workspaceRoot,
 	appearanceDark,
 	effectiveModel,
 	onSelectModel,
@@ -28,6 +29,8 @@ export function SimpleModelsView({
 	onConsumeProviderConfigFocus,
 }: {
 	config: ServerConfig | null;
+	/** Primary workspace absolute path (`WOP_WORKSPACE` / server jail); Pi JSON paths are under here. */
+	workspaceRoot: string | null;
 	appearanceDark: boolean;
 	effectiveModel: string | null;
 	onSelectModel: (modelId: string) => void;
@@ -176,13 +179,110 @@ export function SimpleModelsView({
 					</button>
 				</div>
 
+				<div
+					className={`mb-6 rounded-2xl border p-4 text-sm leading-relaxed shadow-sm ${appearanceDark ? "border-[#3c3c3c] bg-[#1e1e1e]" : "border-[#e5e5e5] bg-white"}`}
+				>
+					<p className={`mb-2 font-bold uppercase tracking-wide ${heading}`}>Where to edit what</p>
+					<ul className={`list-none space-y-2.5 p-0 ${sub}`}>
+						<li>
+							<span className={`font-semibold ${heading}`}>1. Server env</span> (not in the file tree) —{" "}
+							<span className="font-mono text-[11px]">WOP_LLM_PROVIDER</span>,{" "}
+							<span className="font-mono text-[11px]">WOP_CHAT_ENGINE</span>,{" "}
+							<span className="font-mono text-[11px]">OLLAMA_HOST</span> / <span className="font-mono text-[11px]">OLLAMA_MODEL</span>,{" "}
+							<span className="font-mono text-[11px]">OPENROUTER_*</span>, … Full list:{" "}
+							<span className="font-mono text-[11px]">apps/wayofpi-ui/.env.sample</span> in the Way of Pi repo. When you
+							start from <span className="font-mono text-[11px]">./start-wayofpi-ui.sh</span> or{" "}
+							<span className="font-mono text-[11px]">./start-wayofpi-electron.sh</span>, a <span className="font-mono text-[11px]">.env</span>{" "}
+							at the <strong className={heading}>repository root</strong> (next to <span className="font-mono text-[11px]">apps/</span>) is
+							sourced before Bun. Change env → restart the dev server.
+						</li>
+						<li>
+							<span className={`font-semibold ${heading}`}>2. Pi workspace JSON</span> (this shell reads/writes via API) — paths are{" "}
+							<strong className={heading}>relative to the workspace root</strong> shown in the title bar / explorer. On disk
+							they are:
+							<ul className={`mt-1.5 list-inside list-disc space-y-1 pl-0.5 font-mono text-[11px] ${mono}`}>
+								<li>
+									{workspaceRoot ? (
+										<span className="break-all">{`${workspaceRoot.replace(/\/$/, "")}/agent/models.json`}</span>
+									) : (
+										<span>{`<workspace>/agent/models.json`}</span>
+									)}{" "}
+									<span className="font-sans text-[11px] font-normal">— provider catalog (Pi </span>
+									<span className="font-mono text-[11px]">/models</span>
+									<span className="font-sans text-[11px] font-normal">)</span>
+								</li>
+								<li>
+									{workspaceRoot ? (
+										<span className="break-all">{`${workspaceRoot.replace(/\/$/, "")}/pi.config.json`}</span>
+									) : (
+										<span>{`<workspace>/pi.config.json`}</span>
+									)}{" "}
+									<span className="font-sans text-[11px] font-normal">— flat model list</span>
+								</li>
+								<li>
+									{workspaceRoot ? (
+										<span className="break-all">{`${workspaceRoot.replace(/\/$/, "")}/agent/settings.json`}</span>
+									) : (
+										<span>{`<workspace>/agent/settings.json`}</span>
+									)}{" "}
+									<span className="font-sans text-[11px] font-normal">— defaults (incl. </span>
+									<span className="font-mono text-[11px]">defaultModel</span>
+									<span className="font-sans text-[11px] font-normal">)</span>
+								</li>
+							</ul>
+							Edit them on the <strong className={heading}>Provider files</strong> tab here, or in Technical mode: menu model
+							popover → workspace provider files, or Settings sidebar → workspace.
+						</li>
+						<li>
+							<span className={`font-semibold ${heading}`}>3. This browser session model</span> — WebSocket{" "}
+							<span className="font-mono text-[11px]">set_model</span>; persisted as{" "}
+							<span className="font-mono text-[11px]">wayofpi.activeLlmModel</span> in{" "}
+							<span className="font-mono text-[11px]">localStorage</span> for this origin (Session model tab / chat fix
+							flow).
+						</li>
+					</ul>
+					{workspaceRoot ? (
+						<p className={`mt-2 border-t pt-2 text-xs ${mono}`}>
+							Current <span className="font-mono">WOP_WORKSPACE</span> root:{" "}
+							<span
+								className={`break-all font-mono text-[11px] ${appearanceDark ? "text-[#9cdcfe]" : "text-[#007acc]"}`}
+							>
+								{workspaceRoot}
+							</span>
+						</p>
+					) : (
+						<p
+							className={`mt-2 border-t pt-2 text-xs ${appearanceDark ? "text-amber-200/90" : "text-amber-800"}`}
+						>
+							No workspace folder open yet — open one from the menu so absolute paths resolve here.
+						</p>
+					)}
+				</div>
+
 				{section === "providers" ? (
 					<div className="mb-6">
-						<p className={`mb-3 text-sm font-medium ${sub}`}>
-							Edit the same workspace JSON Pi uses for <span className="font-mono">/models</span>, provider routing, and
-							model lists (Ollama, OpenRouter, etc. in Pi). The Bun server still reads{" "}
-							<span className="font-mono">WOP_LLM_PROVIDER</span> for <em>this</em> web chat stream. Invalid JSON cannot be
-							saved.
+						<p className={`mb-2 text-xs font-medium leading-relaxed ${mono}`}>
+							Disk locations for the three files are listed under <strong className={heading}>Where to edit what</strong>{" "}
+							above (absolute paths when a workspace is open).
+						</p>
+						<p className={`mb-2 text-sm font-medium leading-relaxed ${sub}`}>
+							Edit the same workspace JSON the Pi TUI uses for <span className="font-mono">/models</span> (provider
+							blocks, routing, and flat entries in <span className="font-mono">pi.config.json</span>). Keep these files
+							aligned with Pi whenever you use the TUI on this workspace.
+						</p>
+						<p className={`mb-2 text-sm font-medium leading-relaxed ${sub}`}>
+							The Way of Pi server reads <strong className={heading}>host env</strong> —{" "}
+							<span className="font-mono">WOP_LLM_PROVIDER</span>, <span className="font-mono">WOP_CHAT_ENGINE</span> (
+							<span className="font-mono">auto</span> / <span className="font-mono">pi</span> for headless Pi, else Bun),{" "}
+							<span className="font-mono">OLLAMA_*</span>, <span className="font-mono">OPENROUTER_*</span> — not values
+							inside this JSON. Restart the Way of Pi process after changing env. Invalid JSON cannot be saved.
+						</p>
+						<p className={`mb-3 text-xs font-medium leading-relaxed ${mono}`}>
+							<strong className={heading}>Session model</strong> (other tab) lists live Ollama tags from the daemon (or
+							OpenRouter ids you type); it does <em>not</em> build rows from <span className="font-mono">agent/models.json</span>
+							. <span className="font-mono">agent/settings.json</span> <span className="font-mono">defaultModel</span> /{" "}
+							<span className="font-mono">defaultProvider</span> feed Pi and, for Bun, the default Ollama tag when{" "}
+							<span className="font-mono">OLLAMA_MODEL</span> is unset.
 						</p>
 						<ProviderConfigEditor
 							appearanceDark={appearanceDark}
@@ -206,9 +306,10 @@ export function SimpleModelsView({
 					</p>
 					<p className={sub}>
 						Pi&apos;s TUI reads workspace JSON (models / routing) via{" "}
-						<span className="font-mono text-xs">/models</span>. Here, <strong className={heading}>Provider files</strong>{" "}
-						lets you edit the same JSON; the <strong className={heading}>running Bun server</strong> still needs the
-						right host env to match how you want chat to run:
+						<span className="font-mono text-xs">/models</span>. <strong className={heading}>Provider files</strong> edits
+						the same files. The <strong className={heading}>running Way of Pi server</strong> still needs the right host
+						env for how turns run (Bun vs headless Pi — see <span className="font-mono text-xs">WOP_CHAT_ENGINE</span> in{" "}
+						<span className="font-mono text-xs">.env.sample</span>):
 					</p>
 					<ul className={`list-inside list-disc space-y-1.5 pl-0.5 ${sub}`}>
 						<li>
@@ -230,8 +331,40 @@ export function SimpleModelsView({
 						<span className="font-mono text-xs">WOP_LLM_PROVIDER</span>; restart the server with different env to change
 						Ollama vs OpenRouter.
 					</p>
+					<p className={sub}>
+						If a chat turn fails, use <strong className={heading}>Fix model / provider</strong> in the chat panel (or the
+						dialog that opens) for the same hints and quick links back here.
+					</p>
+					{config?.piDrivesChat ? (
+						<p className={sub}>
+							<strong className={heading}>Headless Pi is driving chat</strong> (<span className="font-mono text-xs">
+								WOP_CHAT_ENGINE
+							</span>{" "}
+							<span className="font-mono text-xs">{config.chatEngine}</span>): inference and{" "}
+							<span className="font-mono text-xs">/model</span> behavior follow Pi and workspace JSON like the TUI. Keep{" "}
+							<span className="font-mono text-xs">agent/settings.json</span> in sync; the table below is still the
+							convenient tag list for this machine.
+						</p>
+					) : (
+						<p className={sub}>
+							<strong className={heading}>Bun-backed chat</strong> (no live Pi JSON turn): the session model here and{" "}
+							<span className="font-mono text-xs">WOP_LLM_PROVIDER</span> control the interim completion path (plus
+							orchestrator tools when enabled on the server).
+						</p>
+					)}
 					<p className={`border-t pt-3 text-xs ${mono}`}>
-						Active backend: <span className="font-mono text-[#9cdcfe]">{providerKey}</span>
+						<span className="mr-2 inline-block">
+							<span className={`font-semibold ${heading}`}>Provider</span>{" "}
+							<span className={`font-mono ${appearanceDark ? "text-[#9cdcfe]" : "text-[#007acc]"}`}>{providerKey}</span>
+						</span>
+						{config ? (
+							<span className="mr-2 inline-block">
+								<span className={`font-semibold ${heading}`}>· Chat engine</span>{" "}
+								<span className={`font-mono ${appearanceDark ? "text-[#9cdcfe]" : "text-[#007acc]"}`}>
+									{config.chatEngine}
+								</span>
+							</span>
+						) : null}
 						{unsupported ? (
 							<span className="ml-2 text-red-400">— web chat supports only ollama or openrouter</span>
 						) : providerKey === "openrouter" ? (

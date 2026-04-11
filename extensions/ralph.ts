@@ -1,5 +1,5 @@
 /**
- * Ralph — File-queue helper for todo → inprogress → done HTML tickets
+ * Ralph Wiggum — File-queue helper for todo → inprogress → done HTML tickets
  *
  * Ensures queue dirs on session start. Tool: ralph_queue_status
  * Commands: /ralph help | status | prompt
@@ -21,7 +21,7 @@ function listTxt(dir: string): string[] {
 function buildOneTaskPrompt(cwd: string): string {
 	return `You are in the directory: ${cwd}
 
-**Ralph — one task only**
+**Ralph Wiggum — one task only**
 
 1. Pick **one** \`.txt\` file from \`todo/\`. Move it to \`inprogress/\` immediately (\`mv\`).
 2. Read that file. It contains instructions to write **a single HTML file** to a specific path. Follow them exactly.
@@ -43,9 +43,9 @@ export default function (pi: ExtensionAPI) {
 
 	pi.registerTool({
 		name: "ralph_queue_status",
-		label: "Ralph queue status",
+		label: "Ralph Wiggum queue status",
 		description:
-			"Summarize Ralph ticket folders in cwd: todo/inprogress/done .txt counts and next file. Use before claiming a task.",
+			"Summarize Ralph Wiggum ticket folders in cwd: todo/inprogress/done .txt counts and next file. Use before claiming a task.",
 		parameters: Type.Object({}),
 		async execute(_id, _params, _s, _u, ctx: ExtensionContext) {
 			const base = ctx.cwd;
@@ -65,12 +65,12 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("ralph", {
-		description: "Ralph queue — /ralph help | status | prompt",
+		description: "Ralph Wiggum queue — /ralph help | status | prompt",
 		handler: async (args: string, ctx) => {
 			const a = args.trim().toLowerCase();
 			if (!a || a === "help") {
 				ctx.ui.notify(
-					`Ralph: todo → inprogress → done (.txt tickets → one HTML file each).\n` +
+					`Ralph Wiggum: todo → inprogress → done (.txt tickets → one HTML file each).\n` +
 						`/ralph status — counts + next ticket\n` +
 						`/ralph prompt — inject one-task instructions\n` +
 						`Tool: ralph_queue_status · Skill: /skill:ralph · Agent: ralph\n` +

@@ -17,6 +17,13 @@ import { postWorkspaceOp } from "./api/workspace";
 import { ActivityBar } from "./components/ActivityBar";
 import { ChatPanel } from "./components/ChatPanel";
 import { CommandPalette, type CommandItem } from "./components/CommandPalette";
+import { AgentPermissionsModal } from "./components/AgentPermissionsModal";
+import { HostDoctorModal } from "./components/HostDoctorModal";
+import { IndexingDocsModal } from "./components/IndexingDocsModal";
+import { InstallDebuggersModal } from "./components/InstallDebuggersModal";
+import { MitLicenseModal } from "./components/MitLicenseModal";
+import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
+import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
 import { LlmFixModal } from "./components/LlmFixModal";
 import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
 import { DockSplitHandle } from "./components/DockSplitHandle";
@@ -25,6 +32,7 @@ import { MenuBar } from "./components/MenuBar";
 import { SimpleApp } from "./components/simple/SimpleApp";
 import type { SimpleTabId } from "./components/simple/SimpleNavRail";
 import { StatusBar } from "./components/StatusBar";
+import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalysisContext";
 import { TechnicalWorkspaceGrid, type TechnicalWorkspaceCellSnapshot } from "./components/TechnicalWorkspaceGrid";
 import { WorkspaceCellDropSurface } from "./components/WorkspaceCellDropSurface";
 import type { WorkspaceGridPickerConfig } from "./components/WorkspaceGridLayoutPicker";
@@ -37,7 +45,7 @@ import {
 	SettingsSidePanel,
 } from "./components/TechnicalSidePanels";
 import { useAgents } from "./hooks/useAgents";
-import { useFileEditor } from "./hooks/useFileEditor";
+import { buildFilePutPayload, useFileEditor, type FilePersistEncoding } from "./hooks/useFileEditor";
 import { useServerConfig } from "./hooks/useServerConfig";
 import { useUiMode } from "./hooks/useUiMode";
 import { useUiViewsCatalog } from "./hooks/useUiViewsCatalog";
@@ -47,8 +55,9 @@ import {
 	useSimplePreferences,
 	writeSimpleChatStreamUiEnabled,
 } from "./hooks/useSimplePreferences";
-import { useWayOfPiSession } from "./hooks/useWayOfPiSession";
+import { useWayOfPiSession, type ChatSessionMode } from "./hooks/useWayOfPiSession";
 import { useWorkspaceTree } from "./hooks/useWorkspaceTree";
+import { useWorkspaceStaticAnalysis } from "./hooks/useWorkspaceStaticAnalysis";
 import type { PiModelConfigPath } from "./constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "./constants/piModelConfigPaths";
 import type { FileMenuProps } from "./types/fileMenu";
@@ -73,10 +82,14 @@ import type { UiViewCatalogEntry } from "./types/uiViewsCatalog";
 import { buildCodeWorkspacePayload } from "./utils/codeWorkspaceFile";
 import { flattenTreeFiles } from "./utils/flattenTree";
 import { ancestorDirPaths, posixBasename, posixDirname } from "./utils/posixPath";
+import { injectIntoChatComposer } from "./utils/chatComposerInjectBus";
+import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "./utils/planModeComposerTemplates";
 import { createPlanArtifactInWorkspace } from "./utils/planModeWorkspace";
 import { readAutoSaveInitial, writeAutoSave } from "./utils/editorPreferences";
 import { chatErrorSuggestsModelFix } from "./utils/chatErrorModelHint";
+import { workspaceAgentDisplayName } from "./utils/workspaceAgentDisplay";
 import { pushRecentWorkspaceFolder, readRecentWorkspaceFolders } from "./utils/workspaceRecent";
+import { absolutePathForSaveAsDefault, relativePathFromWorkspaceAbs } from "./utils/workspaceDiskPath";
 import {
 	applyAddFileTab,
 	applyAddPanelTab,
@@ -141,8 +154,10 @@ import {
 	type WorkspaceGridState,
 } from "./utils/workspaceGridStorage";
 import type { WopDropZone } from "./utils/workspaceDropZones";
+import { computeWorkspaceFilePreview } from "./utils/workspaceFilePreview";
 import { sendTerminalInput } from "./utils/terminalInputBridge";
-import { runActiveFileShellLine } from "./utils/terminalRunCommands";
+import { mergeSnippetIntoLaunchJson, type LaunchSnippetId } from "./utils/launchJsonMutate";
+import { getActiveFileDebugPlan, runActiveFileShellLine } from "./utils/terminalRunCommands";
 
 function applyMovePanelTabBetweenCellsInGrid(
 	g: WorkspaceGridState,
@@ -191,6 +206,14 @@ const TASKS_JSON_TEMPLATE = `{
 }
 `;
 
+/** Public source repo (Help menu links, View License on GitHub). */
+const WOP_PUBLIC_REPO_URL = "https://github.com/zerwiz/wayofpi";
+
+/** Help → Give Feedback — [WhyNot Productions contact](https://whynotproductions.netlify.app/contact/). */
+const WOP_FEEDBACK_CONTACT_URL = "https://whynotproductions.netlify.app/contact/";
+/** Help → Support us — maintainer home (same as About dialog “Home”). */
+const WOP_SUPPORT_HOME_URL = "https://whynotproductions.netlify.app/";
+
 const LAUNCH_JSON_REL = ".vscode/launch.json";
 const LAUNCH_JSON_TEMPLATE = `{
   "version": "0.2.0",
@@ -226,9 +249,14 @@ function languageFromPath(path: string | null): string {
 export default function App() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
 	const technical = uiMode === "technical";
-	const { root, nodes, folders, switchAllowed, error: treeError, loading: treeLoading, refresh } =
+	const { root, nodes, folders, git, switchAllowed, error: treeError, loading: treeLoading, refresh } =
 		useWorkspaceTree();
-	const { config } = useServerConfig();
+	/** Server-backed workspace roots from `/api/tree` — not tied to the active editor tab (`selectedPath`). */
+	const workspaceOperational = useMemo(
+		() => !treeError && (folders.length > 0 || Boolean(root?.trim())),
+		[treeError, folders.length, root],
+	);
+	const { config, refresh: refreshServerConfig } = useServerConfig();
 	const [simpleChatStreamUiEnabled, setSimpleChatStreamUiEnabled] = useState(readSimpleChatStreamUiEnabled);
 	const bufferAssistantDeltasRef = useRef(false);
 	bufferAssistantDeltasRef.current = uiMode === "simple" && !simpleChatStreamUiEnabled;
@@ -236,7 +264,11 @@ export default function App() {
 		setSimpleChatStreamUiEnabled(on);
 		writeSimpleChatStreamUiEnabled(on);
 	}, []);
-	const session = useWayOfPiSession(refresh, bufferAssistantDeltasRef);
+	const agentsApi = useAgents();
+	const reloadAgentsCatalog = useCallback(() => {
+		agentsApi.reload();
+	}, [agentsApi.reload]);
+	const session = useWayOfPiSession(refresh, bufferAssistantDeltasRef, reloadAgentsCatalog);
 	const { isDark: simpleIsDark } = useSimplePreferences();
 	const llmFixModalAppearanceDark = technical || simpleIsDark;
 	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
@@ -257,7 +289,6 @@ export default function App() {
 		!!session.error &&
 		chatErrorSuggestsModelFix(session.error) &&
 		!llmFixModalDismissed;
-	const agentsApi = useAgents();
 	const teamsYamlWritePath = useMemo(() => {
 		const tp = agentsApi.data?.teamsPath;
 		if (tp) return tp;
@@ -267,25 +298,22 @@ export default function App() {
 	const uiViewsCatalog = useUiViewsCatalog();
 	const modelLabel = useMemo(() => {
 		if (!config) return "…";
-		const p = (config.provider || "ollama").toLowerCase();
+		const p = (session.llmProviderFromSocket ?? config.provider ?? "ollama").toLowerCase();
 		const id =
-			session.effectiveModel ?? (p === "openrouter" ? config.openrouterModel : config.ollamaModel);
-		return p === "openrouter" ? `openrouter/${id}` : `ollama/${id}`;
-	}, [config, session.effectiveModel]);
+			session.effectiveModel?.trim() ||
+			(p === "openrouter" ? config.openrouterModel : config.ollamaModel);
+		const trimmed = String(id ?? "").trim();
+		if (!trimmed) return "…";
+		const stackLabel =
+			p === "openrouter"
+				? `openrouter/${trimmed}`
+				: p === "ollama"
+					? `ollama/${trimmed}`
+					: `${p}/${trimmed}`;
+		if (config.piDrivesChat) return `Pi · ${stackLabel}`;
+		return stackLabel;
+	}, [config, session.effectiveModel, session.llmProviderFromSocket]);
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
-	const handleSimpleChatModeChange = useCallback(
-		(m: Parameters<typeof session.setChatMode>[0]) => {
-			session.setChatMode(m);
-			if (m !== "plan") return;
-			setSelectedPath((p) => {
-				if (!p) return null;
-				const norm = p.replace(/\\/g, "/");
-				if (/(^|\/)plans\/plan-[^/]+\.md$/i.test(norm)) return null;
-				return p;
-			});
-		},
-		[session],
-	);
 	const [explorerContextDir, setExplorerContextDir] = useState("");
 	const [treeExpand, setTreeExpand] = useState<{ rev: number; paths: string[] }>({ rev: 0, paths: [] });
 	const [autoSave, setAutoSave] = useState(readAutoSaveInitial);
@@ -305,7 +333,13 @@ export default function App() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [wsMaximizedCell]);
 	const [techWsSnapshot, setTechWsSnapshot] = useState<TechnicalWorkspaceCellSnapshot | null>(null);
+	const [multiCellAnyDirty, setMultiCellAnyDirty] = useState(false);
+	const multiCellSaveApiRef = useRef<{ saveAllDirty: () => Promise<boolean> } | null>(null);
 	const [workspaceOpenSignal, setWorkspaceOpenSignal] = useState<{ path: string; rev: number } | null>(null);
+	const [workspaceCloseEditorSignal, setWorkspaceCloseEditorSignal] = useState<{
+		rev: number;
+		cellIndex: number;
+	} | null>(null);
 	const [line, setLine] = useState(1);
 	const [col, setCol] = useState(1);
 	const techWsSnapshotRef = useRef<TechnicalWorkspaceCellSnapshot | null>(null);
@@ -513,6 +547,7 @@ export default function App() {
 		setContent,
 		lastPersistedContent: _lastPersistedContent,
 		persistEncoding,
+		mimeType: fileMimeType,
 		loading: fileLoading,
 		error: fileError,
 		dirty,
@@ -520,10 +555,30 @@ export default function App() {
 		reload,
 		discardUnsavedChanges,
 	} = useFileEditor(isWsMulti ? null : selectedPath, { autoSave });
+
+	const workspaceCenterFilePreview = useMemo(() => {
+		if (fileLoading) return null;
+		return computeWorkspaceFilePreview(selectedPath, persistEncoding, fileMimeType, content);
+	}, [fileLoading, selectedPath, persistEncoding, fileMimeType, content]);
 	useEffect(() => {
 		if (isWsMulti) return;
 		setTechWsSnapshot(null);
 	}, [isWsMulti]);
+
+	useEffect(() => {
+		if (!isWsMulti) {
+			setMultiCellAnyDirty(false);
+			multiCellSaveApiRef.current = null;
+		}
+	}, [isWsMulti]);
+
+	const onBindMultiCellSaveApi = useCallback((api: { saveAllDirty: () => Promise<boolean> } | null) => {
+		multiCellSaveApiRef.current = api;
+	}, []);
+
+	const onMultiCellAnyDirtyChange = useCallback((v: boolean) => {
+		setMultiCellAnyDirty(v);
+	}, []);
 	const effSelectedPath = isWsMulti ? (techWsSnapshot?.selectedPath ?? null) : selectedPath;
 	const effDirty = isWsMulti ? !!techWsSnapshot?.dirty : dirty;
 	const effFileLoading = isWsMulti ? !!techWsSnapshot?.loading : fileLoading;
@@ -534,6 +589,9 @@ export default function App() {
 		allBreakpointsDisabled,
 		setAllBreakpointsDisabled,
 		debugSessionActive,
+		debugReplSession,
+		beginDebugSession,
+		endDebugSession,
 	} = useRunMenuDebugState();
 	const workspaceEditorRef = useRef<WorkspaceEditorRef | null>(null);
 	const [editorMenuTick, setEditorMenuTick] = useState(0);
@@ -604,6 +662,71 @@ export default function App() {
 		});
 	}, []);
 
+	const staticAnalysisEnabled = technical && !!(folders[0]?.path ?? root);
+	const workspaceStaticAnalysis = useWorkspaceStaticAnalysis(staticAnalysisEnabled);
+
+	const openProblemLocation = useCallback(
+		(relPath: string, line: number, column: number) => {
+			const path = relPath.replace(/^[/\\]+/, "");
+			if (!path) return;
+			setExplorerContextDir(posixDirname(path));
+			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				setWorkspaceOpenSignal((s) => ({ path, rev: (s?.rev ?? 0) + 1 }));
+			} else if (technical) {
+				setSelectedPath(path);
+				setPanelDock((prev) => applyAddFileTab(prev, path));
+			}
+			queueMicrotask(() => {
+				workspaceEditorRef.current?.goToLineColumn(Math.max(1, line), Math.max(1, column));
+			});
+		},
+		[technical, workspaceGrid.cols, workspaceGrid.rows],
+	);
+
+	const workspaceStaticAnalysisApi = useMemo(
+		() => ({
+			problems: workspaceStaticAnalysis.snapshot.problems,
+			loading: workspaceStaticAnalysis.loading,
+			runAnalysis: workspaceStaticAnalysis.runAnalysis,
+			scheduleDebouncedRefresh: workspaceStaticAnalysis.scheduleDebouncedRefresh,
+			engine: workspaceStaticAnalysis.snapshot.engine,
+			log: workspaceStaticAnalysis.snapshot.log,
+			ranAt: workspaceStaticAnalysis.snapshot.ranAt,
+			ok: workspaceStaticAnalysis.snapshot.ok,
+			error: workspaceStaticAnalysis.snapshot.error,
+			openProblem: openProblemLocation,
+			refreshProblemsCache: workspaceStaticAnalysis.loadCached,
+		}),
+		[
+			workspaceStaticAnalysis.loading,
+			workspaceStaticAnalysis.runAnalysis,
+			workspaceStaticAnalysis.scheduleDebouncedRefresh,
+			workspaceStaticAnalysis.loadCached,
+			workspaceStaticAnalysis.snapshot.problems,
+			workspaceStaticAnalysis.snapshot.engine,
+			workspaceStaticAnalysis.snapshot.log,
+			workspaceStaticAnalysis.snapshot.ranAt,
+			workspaceStaticAnalysis.snapshot.ok,
+			workspaceStaticAnalysis.snapshot.error,
+			openProblemLocation,
+		],
+	);
+
+	const prevEffDirtyForProblems = useRef(effDirty);
+	useEffect(() => {
+		if (!technical || !staticAnalysisEnabled) return;
+		if (prevEffDirtyForProblems.current && !effDirty && effSelectedPath) {
+			workspaceStaticAnalysis.scheduleDebouncedRefresh();
+		}
+		prevEffDirtyForProblems.current = effDirty;
+	}, [
+		effDirty,
+		effSelectedPath,
+		technical,
+		staticAnalysisEnabled,
+		workspaceStaticAnalysis.scheduleDebouncedRefresh,
+	]);
+
 	const onOpenToolPanel = useCallback((tab: BottomPanelTab) => {
 		setPanelDock((prev) => applyShowToolTab(prev, tab as ToolTabId));
 	}, []);
@@ -658,13 +781,17 @@ export default function App() {
 
 	const openLlmFixSimpleBrains = useCallback(() => {
 		dismissLlmFixModal();
-		if (technical) setUiMode("simple");
-		setSimpleTab("models");
+		queueMicrotask(() => {
+			if (technical) setUiMode("simple");
+			setSimpleTab("models");
+		});
 	}, [dismissLlmFixModal, technical, setUiMode]);
 
 	const openLlmFixProviderCatalog = useCallback(() => {
 		dismissLlmFixModal();
-		openPiModelConfigInEditor("agent/models.json");
+		queueMicrotask(() => {
+			openPiModelConfigInEditor("agent/models.json");
+		});
 	}, [dismissLlmFixModal, openPiModelConfigInEditor]);
 
 	/** Menu Settings → My Team (Pi `.pi/agents/*.md`, `teams.yaml`); Technical mode switches to Simple so the view exists. */
@@ -744,6 +871,9 @@ description:
 			onOpenProjects: () => {
 				setUiMode("simple");
 				setSimpleTab("projects");
+			},
+			onOpenIndexingDocs: () => {
+				setIndexingDocsOpen(true);
 			},
 			onEditWorkspaceViewsCatalog: () => {
 				const rel = uiViewsCatalog.data?.catalogRelPath ?? ".wayofpi/ui-views.json";
@@ -971,8 +1101,8 @@ description:
 	);
 
 	const handleNewPlanFile = useCallback(async () => {
-		if (!root && folders.length === 0) {
-			window.alert("Open a workspace folder first.");
+		if (!workspaceOperational) {
+			window.alert("No workspace loaded — use File → Open Folder, or wait until the file tree finishes loading.");
 			return;
 		}
 		const rawSlug = window.prompt("Plan slug (short id, e.g. auth-refactor)", "feature");
@@ -999,16 +1129,125 @@ description:
 			window.alert(e instanceof Error ? e.message : String(e));
 		}
 	}, [
-		folders.length,
+		workspaceOperational,
 		persistLeftSidebar,
 		refresh,
-		root,
 		setActivity,
 		setSelectedPath,
 		setSimpleTab,
 		setUiMode,
 		technical,
 	]);
+
+	const orchestratorPlanBootstrapLockRef = useRef(false);
+
+	/**
+	 * When Plan mode is active as Orchestrator and the workspace has no `plans/PLAN-*.md` yet,
+	 * create `plans/PLAN-<date>-session.md` (toolbar, `/plan`, reconnect, or saved Plan preference).
+	 */
+	const tryOrchestratorPlanArtifactBootstrap = useCallback(
+		(agentName: string | null) => {
+			if (agentName != null) return;
+			const hasWorkspace = Boolean(root) || folders.length > 0;
+			if (!hasWorkspace) return;
+			if (orchestratorPlanBootstrapLockRef.current) return;
+			orchestratorPlanBootstrapLockRef.current = true;
+			void (async () => {
+				try {
+					const d = await apiGet<{ files: Array<{ path: string }> }>("/api/plans");
+					if ((d.files?.length ?? 0) > 0) return;
+					const { path } = await createPlanArtifactInWorkspace({
+						slugSuggestion: "session",
+						title: "Plan",
+					});
+					setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(path) });
+					await refresh();
+					setSelectedPath(path);
+				} catch {
+					/* user can create manually via File: New plan markdown */
+				} finally {
+					orchestratorPlanBootstrapLockRef.current = false;
+				}
+			})();
+		},
+		[folders.length, refresh, root],
+	);
+
+	useEffect(() => {
+		if (!session.connected) return;
+		if (session.chatMode !== "plan") return;
+		tryOrchestratorPlanArtifactBootstrap(session.chatAgentName);
+	}, [
+		session.connected,
+		session.chatMode,
+		session.chatAgentName,
+		tryOrchestratorPlanArtifactBootstrap,
+	]);
+
+	/** Plan mode: server prompt via WebSocket; Orchestrator + empty workspace plans → seed `plans/PLAN-*.md`. */
+	const handleChatModeChange = useCallback(
+		(m: Parameters<typeof session.setChatMode>[0]) => {
+			const agentAtClick = session.chatAgentName;
+			session.setChatMode(m);
+			if (m === "plan" && !technical) {
+				setSelectedPath((p) => {
+					if (!p) return null;
+					const norm = p.replace(/\\/g, "/");
+					if (/(^|\/)plans\/plan-[^/]+\.md$/i.test(norm)) return null;
+					return p;
+				});
+			}
+			if (m !== "plan") return;
+			tryOrchestratorPlanArtifactBootstrap(agentAtClick);
+		},
+		[
+			session.chatAgentName,
+			session.setChatMode,
+			setSelectedPath,
+			technical,
+			tryOrchestratorPlanArtifactBootstrap,
+		],
+	);
+
+	/** Technical shell: show Planning in the primary sidebar while Plan chat mode is on; restore shell when leaving Plan. */
+	const prevTechnicalChatModeRef = useRef<ChatSessionMode | null>(null);
+	const latestShellForPlanRef = useRef<{ activity: TechnicalActivity; leftSidebarVisible: boolean }>({
+		activity: "explorer",
+		leftSidebarVisible: true,
+	});
+	const shellBeforePlanRef = useRef<{ activity: TechnicalActivity; leftSidebarVisible: boolean } | null>(null);
+	latestShellForPlanRef.current = { activity, leftSidebarVisible };
+
+	useEffect(() => {
+		if (!technical) {
+			prevTechnicalChatModeRef.current = session.chatMode;
+			return;
+		}
+		const prev = prevTechnicalChatModeRef.current;
+		const mode = session.chatMode;
+		prevTechnicalChatModeRef.current = mode;
+
+		if (mode === "plan") {
+			if (prev !== "plan") {
+				shellBeforePlanRef.current = { ...latestShellForPlanRef.current };
+				persistLeftSidebar(true);
+				setActivity("planning");
+			}
+			return;
+		}
+
+		if (prev === "plan") {
+			const snap = shellBeforePlanRef.current;
+			shellBeforePlanRef.current = null;
+			if (snap) {
+				setActivity(snap.activity);
+				persistLeftSidebar(snap.leftSidebarVisible);
+			}
+		} else {
+			shellBeforePlanRef.current = null;
+		}
+		// `latestShellForPlanRef` is updated each render; do not list `activity` / `leftSidebarVisible` here or the effect would fire on every sidebar change while in Plan.
+	}, [persistLeftSidebar, session.chatMode, technical]);
 
 	const openWorkspaceSearch = useCallback(() => {
 		setUiMode("technical");
@@ -1066,11 +1305,32 @@ description:
 
 	useLayoutEffect(() => {
 		bumpEditorMenu();
-	}, [effSelectedPath, effFileLoading, effFileError, uiMode, simpleTab, bumpEditorMenu]);
+	}, [
+		effSelectedPath,
+		effFileLoading,
+		effFileError,
+		uiMode,
+		simpleTab,
+		bumpEditorMenu,
+		isWsMulti,
+		techWsSnapshot?.panelDock?.activeIndex,
+		techWsSnapshot?.panelDock?.tabs,
+		panelDock.activeIndex,
+		panelDock.tabs,
+	]);
 
 	const editMenu = useMemo((): EditMenuHandlers => {
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
-		const canEdit = fileReady && (technical || simpleTab === "chat");
+		const inSimpleFileSurface = uiMode === "simple" && simpleTab === "chat";
+		const inTechnicalSurface = technical;
+		const dockForEditMenu = isWsMulti ? (techWsSnapshot?.panelDock ?? panelDock) : panelDock;
+		const activeDockTab = dockForEditMenu.tabs[dockForEditMenu.activeIndex];
+		const fileTabFocusedInPane = activeDockTab?.type === "file";
+		const bufferMounted = Boolean(workspaceEditorRef.current);
+		const canEdit =
+			fileReady &&
+			(inSimpleFileSurface || inTechnicalSurface) &&
+			(inSimpleFileSurface ? bufferMounted : fileTabFocusedInPane && bufferMounted);
 		return {
 			canEdit,
 			onUndo: () => {
@@ -1102,6 +1362,10 @@ description:
 		effFileError,
 		technical,
 		simpleTab,
+		uiMode,
+		isWsMulti,
+		techWsSnapshot,
+		panelDock,
 		editorMenuTick,
 		bumpEditorMenu,
 		openWorkspaceSearch,
@@ -1110,7 +1374,16 @@ description:
 	const selectionMenu = useMemo((): SelectionMenuHandlers => {
 		const ed = workspaceEditorRef.current;
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
-		const canEdit = fileReady && (technical || simpleTab === "chat");
+		const inSimpleFileSurface = uiMode === "simple" && simpleTab === "chat";
+		const inTechnicalSurface = technical;
+		const dockForEditMenu = isWsMulti ? (techWsSnapshot?.panelDock ?? panelDock) : panelDock;
+		const activeDockTab = dockForEditMenu.tabs[dockForEditMenu.activeIndex];
+		const fileTabFocusedInPane = activeDockTab?.type === "file";
+		const bufferMounted = Boolean(workspaceEditorRef.current);
+		const canEdit =
+			fileReady &&
+			(inSimpleFileSurface || inTechnicalSurface) &&
+			(inSimpleFileSurface ? bufferMounted : fileTabFocusedInPane && bufferMounted);
 		return {
 			canEdit,
 			ctrlClickMultiCursor: ed?.getCtrlClickMultiCursor() ?? false,
@@ -1145,6 +1418,10 @@ description:
 		effFileError,
 		technical,
 		simpleTab,
+		uiMode,
+		isWsMulti,
+		techWsSnapshot,
+		panelDock,
 		editorMenuTick,
 		selectionMenuTick,
 		bumpSelectionPrefs,
@@ -1191,6 +1468,33 @@ description:
 		setExplorerContextDir(".vscode");
 		setSelectedPath(LAUNCH_JSON_REL);
 	}, [persistLeftSidebar]);
+
+	const appendLaunchConfigurationSnippet = useCallback(
+		async (id: LaunchSnippetId) => {
+			setLaunchConfigAddOpen(false);
+			setUiMode("technical");
+			persistLeftSidebar(true);
+			setActivity("explorer");
+			let base = '{"version":"0.2.0","configurations":[]}';
+			try {
+				const r = await apiGet<{ path: string; content: string }>(
+					`/api/file?path=${encodeURIComponent(LAUNCH_JSON_REL)}`,
+				);
+				base = r.content;
+			} catch {
+				/* missing file: start from empty configurations */
+			}
+			const merged = mergeSnippetIntoLaunchJson(base, id);
+			await apiPutJson<{ ok: boolean }>("/api/file", {
+				path: LAUNCH_JSON_REL,
+				content: merged,
+			});
+			setExplorerContextDir(".vscode");
+			setSelectedPath(LAUNCH_JSON_REL);
+			void refresh();
+		},
+		[persistLeftSidebar, refresh],
+	);
 
 	const terminalMenu = useMemo((): TerminalMenuHandlers => {
 		const termOk = config?.terminalEnabled === true;
@@ -1240,12 +1544,64 @@ description:
 		openTasksJsonInEditor,
 	]);
 
-	const runStartDebugging = useCallback(() => {
+	const runWithoutDebugging = useCallback(() => {
+		endDebugSession();
 		focusTerminalForCommands();
 		if (config?.terminalEnabled !== true || !effSelectedPath) return;
 		const shellLine = runActiveFileShellLine(effSelectedPath);
 		if (shellLine) sendTerminalInput(shellLine);
-	}, [focusTerminalForCommands, config?.terminalEnabled, effSelectedPath]);
+	}, [endDebugSession, focusTerminalForCommands, config?.terminalEnabled, effSelectedPath, sendTerminalInput]);
+
+	const startDebugging = useCallback(() => {
+		focusTerminalForCommands();
+		if (config?.terminalEnabled !== true || !effSelectedPath) return;
+		const plan = getActiveFileDebugPlan(effSelectedPath);
+		if (!plan) return;
+		sendTerminalInput(plan.line);
+		beginDebugSession(plan.repl);
+	}, [
+		focusTerminalForCommands,
+		config?.terminalEnabled,
+		effSelectedPath,
+		sendTerminalInput,
+		beginDebugSession,
+	]);
+
+	const stopDebugging = useCallback(() => {
+		focusTerminalForCommands();
+		if (config?.terminalEnabled === true) sendTerminalInput("\x03");
+		endDebugSession();
+	}, [focusTerminalForCommands, config?.terminalEnabled, sendTerminalInput, endDebugSession]);
+
+	const restartDebugging = useCallback(() => {
+		focusTerminalForCommands();
+		if (config?.terminalEnabled === true) sendTerminalInput("\x03");
+		endDebugSession();
+		window.setTimeout(() => {
+			if (config?.terminalEnabled !== true || !effSelectedPath) return;
+			const plan = getActiveFileDebugPlan(effSelectedPath);
+			if (!plan) return;
+			focusTerminalForCommands();
+			sendTerminalInput(plan.line);
+			beginDebugSession(plan.repl);
+		}, 150);
+	}, [
+		focusTerminalForCommands,
+		config?.terminalEnabled,
+		effSelectedPath,
+		sendTerminalInput,
+		endDebugSession,
+		beginDebugSession,
+	]);
+
+	const sendReplDebugCommand = useCallback(
+		(cmd: string) => {
+			if (!debugReplSession || config?.terminalEnabled !== true) return;
+			focusTerminalForCommands();
+			sendTerminalInput(cmd.endsWith("\r") ? cmd : `${cmd}\r`);
+		},
+		[debugReplSession, config?.terminalEnabled, focusTerminalForCommands, sendTerminalInput],
+	);
 
 	const toggleBreakpointAtCursor = useCallback(() => {
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
@@ -1272,23 +1628,27 @@ description:
 		const hasBreakpoints = Object.values(breakpointsByPath as Record<string, number[]>).some(
 			(lines) => lines.length > 0,
 		);
+		const canStartDebugging = termOk && !!effSelectedPath && getActiveFileDebugPlan(effSelectedPath) != null;
 		return {
 			debugSessionActive,
+			canStartDebugging,
+			debugReplSession,
 			terminalServerEnabled: termOk,
 			canToggleBreakpoint,
 			hasBreakpoints,
 			allBreakpointsDisabled,
-			onStartDebugging: runStartDebugging,
-			onRunWithoutDebugging: runStartDebugging,
-			onStopDebugging: () => {},
-			onRestartDebugging: () => {},
-			onAddConfiguration: () => {
+			onStartDebugging: startDebugging,
+			onRunWithoutDebugging: runWithoutDebugging,
+			onStopDebugging: stopDebugging,
+			onRestartDebugging: restartDebugging,
+			onOpenConfigurations: () => {
 				void openLaunchJsonInEditor();
 			},
-			onStepOver: () => {},
-			onStepInto: () => {},
-			onStepOut: () => {},
-			onContinue: () => {},
+			onAddConfiguration: () => setLaunchConfigAddOpen(true),
+			onStepOver: () => sendReplDebugCommand("n"),
+			onStepInto: () => sendReplDebugCommand("s"),
+			onStepOut: () => sendReplDebugCommand("return"),
+			onContinue: () => sendReplDebugCommand("c"),
 			onToggleBreakpoint: toggleBreakpointAtCursor,
 			onNewBreakpointInline: () => setCommandPaletteOpen(true),
 			onNewBreakpointConditional: () => setCommandPaletteOpen(true),
@@ -1301,13 +1661,7 @@ description:
 				setBreakpointsByPath({});
 				setAllBreakpointsDisabled(false);
 			},
-			onInstallAdditionalDebuggers: () => {
-				window.open(
-					"https://marketplace.visualstudio.com/search?target=Microsoft.VisualStudio.Code&category=Debuggers&sortBy=Installs",
-					"_blank",
-					"noopener,noreferrer",
-				);
-			},
+			onInstallAdditionalDebuggers: () => setInstallDebuggersModalOpen(true),
 		};
 	}, [
 		config?.terminalEnabled,
@@ -1319,7 +1673,12 @@ description:
 		breakpointsByPath,
 		allBreakpointsDisabled,
 		debugSessionActive,
-		runStartDebugging,
+		debugReplSession,
+		startDebugging,
+		runWithoutDebugging,
+		stopDebugging,
+		restartDebugging,
+		sendReplDebugCommand,
 		toggleBreakpointAtCursor,
 		openLaunchJsonInEditor,
 	]);
@@ -1393,17 +1752,57 @@ description:
 		focusToolTab,
 	]);
 
+	const [hostDoctorOpen, setHostDoctorOpen] = useState(false);
+	const [indexingDocsOpen, setIndexingDocsOpen] = useState(false);
+	const [agentPermissionsOpen, setAgentPermissionsOpen] = useState(false);
+	const [launchConfigAddOpen, setLaunchConfigAddOpen] = useState(false);
+	const [installDebuggersModalOpen, setInstallDebuggersModalOpen] = useState(false);
+	const [mitLicenseModalOpen, setMitLicenseModalOpen] = useState(false);
+	const [newWorkspaceFileDraft, setNewWorkspaceFileDraft] = useState<{
+		defaultPath: string;
+		initialContent?: string;
+	} | null>(null);
+	const openHostDoctor = useCallback(() => {
+		setHostDoctorOpen(true);
+	}, []);
+
 	const helpMenu = useMemo((): HelpMenuHandlers => {
-		const repo = "https://github.com/zerwiz/wayofpi";
+		const repo = WOP_PUBLIC_REPO_URL;
 		const shell = typeof window !== "undefined" ? window.wopShell : undefined;
 		return {
 			onShowAllCommands: () => setCommandPaletteOpen(true),
+			onOpenHostDoctor: openHostDoctor,
 			onEditorPlayground: () =>
 				window.open(`${repo}/blob/main/docs/PLAYGROUND.md`, "_blank", "noopener,noreferrer"),
 			onAccessibilityFeatures: () =>
 				window.open("https://code.visualstudio.com/docs/editor/accessibility", "_blank", "noopener,noreferrer"),
-			onGiveFeedback: () => window.open(`${repo}/issues/new`, "_blank", "noopener,noreferrer"),
-			onViewLicense: () => window.open(repo, "_blank", "noopener,noreferrer"),
+			onGiveFeedback: () => {
+				void (async () => {
+					try {
+						if (shell?.openExternalUrl) {
+							await shell.openExternalUrl(WOP_FEEDBACK_CONTACT_URL);
+							return;
+						}
+					} catch {
+						/* fall through */
+					}
+					window.open(WOP_FEEDBACK_CONTACT_URL, "_blank", "noopener,noreferrer");
+				})();
+			},
+			onSupportUs: () => {
+				void (async () => {
+					try {
+						if (shell?.openExternalUrl) {
+							await shell.openExternalUrl(WOP_SUPPORT_HOME_URL);
+							return;
+						}
+					} catch {
+						/* fall through */
+					}
+					window.open(WOP_SUPPORT_HOME_URL, "_blank", "noopener,noreferrer");
+				})();
+			},
+			onViewLicense: () => setMitLicenseModalOpen(true),
 			canToggleDeveloperTools: Boolean(shell?.toggleDevtools),
 			onToggleDeveloperTools: () => {
 				void shell?.toggleDevtools?.();
@@ -1413,16 +1812,31 @@ description:
 			canDownloadUpdate: true,
 			onDownloadUpdate: () => window.open(`${repo}/releases`, "_blank", "noopener,noreferrer"),
 		};
-	}, []);
+	}, [openHostDoctor]);
 
 	const saveAndRefresh = useCallback(async () => {
+		let ok = true;
 		if (technical && workspaceGrid.cols * workspaceGrid.rows > 1) {
-			await techWsSnapshotRef.current?.save?.();
+			const s = techWsSnapshotRef.current;
+			ok = s ? await s.save() : true;
 		} else {
-			await save();
+			ok = await save();
 		}
-		await refresh();
-	}, [technical, workspaceGrid.cols, workspaceGrid.rows, save, refresh]);
+		if (ok) {
+			await refresh();
+			if (technical && staticAnalysisEnabled) {
+				workspaceStaticAnalysis.scheduleDebouncedRefresh();
+			}
+		}
+	}, [
+		technical,
+		staticAnalysisEnabled,
+		workspaceGrid.cols,
+		workspaceGrid.rows,
+		save,
+		refresh,
+		workspaceStaticAnalysis.scheduleDebouncedRefresh,
+	]);
 
 	const reloadFocusedOrMain = useCallback(async () => {
 		if (technical && workspaceGrid.cols * workspaceGrid.rows > 1) {
@@ -1556,6 +1970,41 @@ description:
 		})();
 	}, [refresh]);
 
+	const handleCloseEditor = useCallback(() => {
+		if (isWsMulti) {
+			const s = techWsSnapshotRef.current;
+			const p = s?.selectedPath;
+			if (!p) return;
+			if (s.dirty && !window.confirm("Close editor? Unsaved changes will be lost.")) return;
+			setWorkspaceCloseEditorSignal((sig) => ({
+				rev: (sig?.rev ?? 0) + 1,
+				cellIndex: wsFocusedCell,
+			}));
+			return;
+		}
+		const t = panelDock.tabs[panelDock.activeIndex];
+		const pathToClose =
+			t?.type === "file"
+				? t.path
+				: panelDock.tabs.find((x) => x.type === "file")?.path ?? selectedPath;
+		if (!pathToClose) return;
+		const closingActiveBuffer = pathToClose === selectedPath;
+		if (closingActiveBuffer && dirty && !window.confirm("Close editor? Unsaved changes will be lost.")) return;
+		setPanelDock((prev) => applyRemoveFileTab(prev, pathToClose));
+	}, [isWsMulti, selectedPath, dirty, wsFocusedCell, panelDock.tabs, panelDock.activeIndex]);
+
+	const closeAppWindowOrTab = useCallback(() => {
+		const shell = typeof window !== "undefined" ? window.wopShell : undefined;
+		if (shell?.closeWindow) {
+			void shell.closeWindow();
+			return;
+		}
+		window.close();
+		window.setTimeout(() => {
+			window.alert("If the tab is still open, close it from the browser.");
+		}, 100);
+	}, []);
+
 	const downloadWorkspaceJson = useCallback(
 		(suggestedName: string, workspaceFileParentDir: string | null) => {
 			const payload = buildCodeWorkspacePayload(folders, workspaceFileParentDir);
@@ -1576,19 +2025,74 @@ description:
 		return window.prompt(msg, primary);
 	}, [folders]);
 
+	const resolveSaveWorkspaceServerPath = useCallback(
+		async (suggestedFileName: string): Promise<string | null> => {
+			const shellApi = window.wopShell;
+			if (shellApi?.saveWorkspaceFileAs) {
+				const r = await shellApi.saveWorkspaceFileAs(suggestedFileName);
+				if ("cancelled" in r && r.cancelled) return null;
+				if ("error" in r && r.error) {
+					window.alert(r.error);
+					return null;
+				}
+				if ("path" in r && r.path) return r.path;
+				return null;
+			}
+			const p = window.prompt(
+				`Save workspace file (absolute path on the server machine; filename e.g. ${suggestedFileName})`,
+				suggestedFileName,
+			);
+			if (p == null || !p.trim()) return null;
+			return p.trim();
+		},
+		[],
+	);
+
 	const handleSaveWorkspaceAs = useCallback(() => {
-		const raw = promptWorkspaceFileParentDir();
-		if (raw == null) return;
-		downloadWorkspaceJson("wayof-pi.code-workspace", raw.trim() || null);
-	}, [downloadWorkspaceJson, promptWorkspaceFileParentDir]);
+		void (async () => {
+			if (switchAllowed) {
+				const target = await resolveSaveWorkspaceServerPath("wayof-pi.code-workspace");
+				if (!target) return;
+				const r = await postWorkspaceOp({ op: "save_code_workspace_file", path: target });
+				if (r.error) window.alert(r.error);
+				else await refresh();
+				return;
+			}
+			const raw = promptWorkspaceFileParentDir();
+			if (raw == null) return;
+			downloadWorkspaceJson("wayof-pi.code-workspace", raw.trim() || null);
+		})();
+	}, [
+		switchAllowed,
+		resolveSaveWorkspaceServerPath,
+		refresh,
+		downloadWorkspaceJson,
+		promptWorkspaceFileParentDir,
+	]);
 
 	const handleDuplicateWorkspace = useCallback(() => {
-		const name = window.prompt("Save duplicate workspace as", "wayof-pi-copy.code-workspace");
-		if (name == null) return;
-		const raw = promptWorkspaceFileParentDir();
-		if (raw == null) return;
-		downloadWorkspaceJson(name.trim() || "wayof-pi-copy.code-workspace", raw.trim() || null);
-	}, [downloadWorkspaceJson, promptWorkspaceFileParentDir]);
+		void (async () => {
+			if (switchAllowed) {
+				const target = await resolveSaveWorkspaceServerPath("wayof-pi-copy.code-workspace");
+				if (!target) return;
+				const r = await postWorkspaceOp({ op: "save_code_workspace_file", path: target });
+				if (r.error) window.alert(r.error);
+				else await refresh();
+				return;
+			}
+			const name = window.prompt("Save duplicate workspace as", "wayof-pi-copy.code-workspace");
+			if (name == null) return;
+			const raw = promptWorkspaceFileParentDir();
+			if (raw == null) return;
+			downloadWorkspaceJson(name.trim() || "wayof-pi-copy.code-workspace", raw.trim() || null);
+		})();
+	}, [
+		switchAllowed,
+		resolveSaveWorkspaceServerPath,
+		refresh,
+		downloadWorkspaceJson,
+		promptWorkspaceFileParentDir,
+	]);
 
 	const handleNewTextFile = useCallback(() => {
 		const name = window.prompt("New file name", "untitled.txt");
@@ -1611,18 +2115,19 @@ description:
 		})();
 	}, [explorerContextDir, refresh]);
 
-	const handleNewTextFileInDock = useCallback(() => {
-		const name = window.prompt("New file name", "untitled.txt");
-		if (name == null) return;
-		const safe = sanitizeNewEntryName(name);
-		if (!safe) {
-			window.alert("Invalid name.");
-			return;
-		}
-		const rel = explorerContextDir ? `${explorerContextDir}/${safe}` : safe;
-		void (async () => {
+	const performCreateNewWorkspaceFile = useCallback(
+		async (relRaw: string, initialContent?: string) => {
+			const safe = sanitizeNewEntryName(relRaw);
+			if (!safe) {
+				window.alert("Invalid name.");
+				return;
+			}
+			const rel = safe;
 			try {
 				await apiPostJson("/api/fs/entry", { path: rel, kind: "file" });
+				if (initialContent !== undefined) {
+					await apiPutJson<{ ok: boolean }>("/api/file", { path: rel, content: initialContent });
+				}
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
 				await refresh();
 				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
@@ -1634,8 +2139,14 @@ description:
 			} catch (e) {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
-		})();
-	}, [explorerContextDir, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
+		},
+		[refresh, technical, workspaceGrid.cols, workspaceGrid.rows],
+	);
+
+	/** From the workspace + tab strip: path is relative to the workspace (primary root), not the explorer selection. */
+	const handleNewFileInDock = useCallback((defaultSuggestion: string, initialContent?: string) => {
+		setNewWorkspaceFileDraft({ defaultPath: defaultSuggestion, initialContent });
+	}, []);
 
 	const handleOpenFileInDock = useCallback(() => {
 		void (async () => {
@@ -1665,42 +2176,137 @@ description:
 		})();
 	}, [bumpRecent, pickAbsoluteServerPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
 
+	const workspaceDockFileActions = useMemo(
+		() => [
+			{
+				label: "New file…",
+				detail: "Opens as a new editor tab — workspace path — hover for type",
+				run: () => handleNewFileInDock("untitled.txt"),
+				submenu: [
+					{ label: "Plain text", detail: ".txt", run: () => handleNewFileInDock("untitled.txt") },
+					{
+						label: "Markdown",
+						detail: ".md",
+						run: () => handleNewFileInDock("untitled.md", "# \n\n"),
+					},
+					{ label: "JSON", detail: ".json", run: () => handleNewFileInDock("untitled.json", "{\n  \n}\n") },
+					{
+						label: "TypeScript",
+						detail: ".ts",
+						run: () => handleNewFileInDock("untitled.ts", "// \n"),
+					},
+					{ label: "JavaScript", detail: ".js", run: () => handleNewFileInDock("untitled.js", "// \n") },
+					{ label: "Python", detail: ".py", run: () => handleNewFileInDock("untitled.py", "# \n") },
+					{ label: "YAML", detail: ".yaml", run: () => handleNewFileInDock("untitled.yaml", "# \n") },
+					{
+						label: "Shell script",
+						detail: ".sh",
+						run: () => handleNewFileInDock("untitled.sh", "#!/usr/bin/env bash\n\n"),
+					},
+				],
+			},
+			{ label: "Open file in workspace…", run: handleOpenFileInDock },
+		],
+		[handleNewFileInDock, handleOpenFileInDock],
+	);
+
+	const resolveSaveAsTargetPath = useCallback(
+		async (relEditorPath: string): Promise<string | null> => {
+			const shellSave = typeof window !== "undefined" ? window.wopShell?.saveFileAs : undefined;
+			if (shellSave && folders.length > 0) {
+				const defaultPath = absolutePathForSaveAsDefault(relEditorPath, folders);
+				const r = await shellSave({ defaultPath });
+				if ("cancelled" in r && r.cancelled) return null;
+				if ("error" in r && r.error) {
+					window.alert(r.error);
+					return null;
+				}
+				if ("path" in r && r.path) {
+					const rel = relativePathFromWorkspaceAbs(r.path, folders);
+					if (!rel) {
+						window.alert(
+							"Save location must be inside an open workspace folder. Choose a path under your project root.",
+						);
+						return null;
+					}
+					return rel;
+				}
+				return null;
+			}
+			const rel = window.prompt("Save as (path relative to workspace)", relEditorPath);
+			if (rel == null || !rel.trim()) return null;
+			return rel.trim().replace(/^[/\\]+/, "");
+		},
+		[folders],
+	);
+
 	const handleSaveAs = useCallback(() => {
 		const multi = technical && workspaceGrid.cols * workspaceGrid.rows > 1;
-		const path = multi ? (techWsSnapshotRef.current?.selectedPath ?? null) : selectedPath;
-		const fileContent = multi ? (techWsSnapshotRef.current?.content ?? "") : content;
+		const snap = techWsSnapshotRef.current;
+		const path = multi ? (snap?.selectedPath ?? null) : selectedPath;
+		const fileContent = multi ? (snap?.content ?? "") : content;
+		const enc: FilePersistEncoding = multi ? (snap?.persistEncoding ?? "utf8") : persistEncoding;
 		if (!path) return;
-		const suggest = path;
-		const rel = window.prompt("Save as (path relative to workspace)", suggest);
-		if (rel == null || !rel.trim()) return;
-		const target = rel.trim().replace(/^[/\\]+/, "");
 		void (async () => {
+			const target = await resolveSaveAsTargetPath(path);
+			if (!target) return;
 			try {
-				await apiPutJson("/api/file", { path: target, content: fileContent });
+				await apiPutJson("/api/file", buildFilePutPayload(target, fileContent, enc));
 				if (multi) {
 					setWorkspaceOpenSignal((s) => ({ path: target, rev: (s?.rev ?? 0) + 1 }));
 				} else {
 					setSelectedPath(target);
+					setPanelDock((prev) => applyAddFileTab(prev, target));
 				}
 				setExplorerContextDir(posixDirname(target));
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(target) });
 				await refresh();
+				if (technical && staticAnalysisEnabled) {
+					workspaceStaticAnalysis.scheduleDebouncedRefresh();
+				}
 			} catch (e) {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
 		})();
-	}, [content, selectedPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
+	}, [
+		content,
+		selectedPath,
+		persistEncoding,
+		refresh,
+		resolveSaveAsTargetPath,
+		technical,
+		workspaceGrid.cols,
+		workspaceGrid.rows,
+		staticAnalysisEnabled,
+		workspaceStaticAnalysis.scheduleDebouncedRefresh,
+	]);
 
 	const handleSaveAll = useCallback(async () => {
 		const multi = technical && workspaceGrid.cols * workspaceGrid.rows > 1;
 		if (multi) {
-			const s = techWsSnapshotRef.current;
-			if (s?.selectedPath && s.dirty) await s.save();
-			await refresh();
+			const api = multiCellSaveApiRef.current;
+			let ok = true;
+			if (api) ok = await api.saveAllDirty();
+			if (ok) {
+				await refresh();
+				if (staticAnalysisEnabled) {
+					workspaceStaticAnalysis.scheduleDebouncedRefresh();
+				}
+			}
 		} else if (dirty && selectedPath) {
 			await saveAndRefresh();
 		}
-	}, [dirty, selectedPath, saveAndRefresh, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
+	}, [
+		dirty,
+		selectedPath,
+		saveAndRefresh,
+		refresh,
+		technical,
+		workspaceGrid.cols,
+		workspaceGrid.rows,
+		staticAnalysisEnabled,
+		workspaceStaticAnalysis.scheduleDebouncedRefresh,
+	]);
 
 	const onWorkspaceFileChange = useCallback(
 		async (e: ChangeEvent<HTMLInputElement>) => {
@@ -1756,10 +2362,10 @@ description:
 				});
 			},
 			workspaceFolders: folders,
-			dirty: effDirty,
+			dirty: isWsMulti ? multiCellAnyDirty : effDirty,
 			hasOpenFile: !!effSelectedPath,
 			canSaveFile: !!effSelectedPath && effDirty,
-			canRevertFile: !!effSelectedPath,
+			canRevertFile: !!effSelectedPath && effDirty,
 			onRefreshWorkspaceTree: refresh,
 			onCopyWorkspacePath: copyWorkspacePath,
 			onNewTextFile: handleNewTextFile,
@@ -1782,17 +2388,10 @@ description:
 			onSaveAs: handleSaveAs,
 			onSaveAll: handleSaveAll,
 			onRevertFile: reloadFocusedOrMain,
-			onCloseEditor: () => setSelectedPath(null),
+			onCloseEditor: handleCloseEditor,
 			onCloseWorkspace: handleCloseWorkspace,
-			onCloseWindow: () => {
-				window.close();
-			},
-			onExit: () => {
-				window.close();
-				window.setTimeout(() => {
-					window.alert("If the tab is still open, close it from the browser.");
-				}, 100);
-			},
+			onCloseWindow: closeAppWindowOrTab,
+			onExit: closeAppWindowOrTab,
 			onPreferencesOpen: openPreferences,
 			onShareCopyLink: () => void navigator.clipboard.writeText(window.location.href),
 			onRemoveWorkspaceFolder: handleRemoveWorkspaceFolder,
@@ -1802,9 +2401,10 @@ description:
 			recentFolders,
 			autoSave,
 			folders,
+			isWsMulti,
+			multiCellAnyDirty,
 			effDirty,
 			effSelectedPath,
-			techWsSnapshot,
 			refresh,
 			copyWorkspacePath,
 			handleNewTextFile,
@@ -1818,7 +2418,9 @@ description:
 			handleSaveAs,
 			handleSaveAll,
 			reloadFocusedOrMain,
+			handleCloseEditor,
 			handleCloseWorkspace,
+			closeAppWindowOrTab,
 			openPreferences,
 			handleRemoveWorkspaceFolder,
 		],
@@ -1849,6 +2451,18 @@ description:
 		}
 		setZenMode(false);
 	}, [persistLeftSidebar, updateDockLayout]);
+
+	const restoreNormalView = useCallback(() => {
+		if (zenMode) exitZen();
+		setChrome((c) => ({ ...c, centeredEditorLayout: false }));
+		void (async () => {
+			try {
+				if (document.fullscreenElement) await document.exitFullscreen();
+			} catch {
+				/* ignore */
+			}
+		})();
+	}, [zenMode, exitZen]);
 
 	useEffect(() => {
 		if (!zenMode) return;
@@ -1948,31 +2562,37 @@ description:
 		};
 	}, [technical, workspaceGrid.cols, workspaceGrid.rows, applyWorkspaceGridShape]);
 
-	const agentTeamWorkspacePane = useMemo(() => {
-		let assistantSessionText = "";
-		const R = session.rows;
-		for (let i = R.length - 1; i >= 0; i--) {
-			if (R[i]!.role === "assistant") {
-				assistantSessionText = R[i]!.content;
-				break;
-			}
-		}
-		return {
+	const agentTeamWorkspacePane = useMemo(
+		() => ({
 			agentTeams: agentsApi.data?.teams ?? {},
 			agents: agentsApi.data?.agents ?? [],
 			agentsLoading: agentsApi.loading,
-			assistantSessionText,
-		};
-	}, [agentsApi.data?.teams, agentsApi.data?.agents, agentsApi.loading, session.rows]);
+			/** Full active-tab session (same rows as Session Chat) — Team pulse transcript mirror. */
+			teamSessionTranscript: session.rows,
+			streaming: session.streaming,
+			chatAgentName: session.chatAgentName,
+			dispatchTurnAgent: session.dispatchTurnAgent,
+			chatPulseMeters: session.chatPulseMeters,
+		}),
+		[
+			agentsApi.data?.teams,
+			agentsApi.data?.agents,
+			agentsApi.loading,
+			session.rows,
+			session.streaming,
+			session.chatAgentName,
+			session.dispatchTurnAgent,
+			session.chatPulseMeters,
+		],
+	);
 
-	const openAgentTeamInWorkspacePane = useCallback(() => {
+	/** Cursor-style: roster beside the editor — show the agent dock and expand Team in Session Chat (not a center tab). */
+	const [teamPulseDockSignal, setTeamPulseDockSignal] = useState(0);
+	const openTeamPulseInAgentDock = useCallback(() => {
 		if (!technical) return;
-		if (isWsMulti) {
-			patchWorkspaceCellDock(wsFocusedCell, (prev) => applyShowToolTab(prev, "agent_team"));
-		} else {
-			setPanelDock((prev) => applyShowToolTab(prev, "agent_team"));
-		}
-	}, [technical, isWsMulti, wsFocusedCell, patchWorkspaceCellDock, setPanelDock]);
+		updateDockLayout({ agentPanelVisible: true });
+		setTeamPulseDockSignal((n) => n + 1);
+	}, [technical, updateDockLayout]);
 
 	const workspaceEmbeddedChat = useCallback(
 		() => (
@@ -1992,14 +2612,22 @@ description:
 				onReopenLlmFixModal={reopenLlmFixModal}
 				onNewSession={session.startNewSession}
 				chatMode={session.chatMode}
-				onChatModeChange={session.setChatMode}
+				onChatModeChange={handleChatModeChange}
 				agents={agentsApi.data?.agents ?? []}
 				agentsLoading={agentsApi.loading}
 				agentTeams={agentsApi.data?.teams ?? {}}
-				onOpenAgentTeamInPane={openAgentTeamInWorkspacePane}
+				onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+				openTeamPulseSignal={teamPulseDockSignal}
 				chatAgentName={session.chatAgentName}
+				dispatchTurnAgent={session.dispatchTurnAgent}
 				onChatAgentChange={session.setChatAgent}
 				chatQueuePending={session.chatQueuePending}
+				chatQueueItems={session.chatQueueItems}
+				editChatQueueItem={session.editChatQueueItem}
+				deleteChatQueueItem={session.deleteChatQueueItem}
+				forceChatQueueItem={session.forceChatQueueItem}
+				chatPulseMeters={session.chatPulseMeters}
+				contextTitle={session.tokenMeter.contextTitle}
 				embeddedInWorkspace
 			/>
 		),
@@ -2019,14 +2647,22 @@ description:
 			reopenLlmFixModal,
 			session.startNewSession,
 			session.chatMode,
-			session.setChatMode,
+			handleChatModeChange,
 			agentsApi.data?.agents,
 			agentsApi.loading,
 			agentsApi.data?.teams,
-			openAgentTeamInWorkspacePane,
+			openTeamPulseInAgentDock,
+			teamPulseDockSignal,
 			session.chatAgentName,
+			session.dispatchTurnAgent,
 			session.setChatAgent,
 			session.chatQueuePending,
+			session.chatQueueItems,
+			session.editChatQueueItem,
+			session.deleteChatQueueItem,
+			session.forceChatQueueItem,
+			session.chatPulseMeters,
+			session.tokenMeter.contextTitle,
 		],
 	);
 
@@ -2054,6 +2690,7 @@ description:
 			onToggleFullScreen: toggleFullScreen,
 			centeredLayout: chrome.centeredEditorLayout,
 			onToggleCenteredLayout: () => setChrome((c) => ({ ...c, centeredEditorLayout: !c.centeredEditorLayout })),
+			onNormalView: restoreNormalView,
 			wordWrap: chrome.editorWordWrap,
 			onToggleWordWrap: () => setChrome((c) => ({ ...c, editorWordWrap: !c.editorWordWrap })),
 			breadcrumbsVisible: chrome.breadcrumbsVisible,
@@ -2083,6 +2720,7 @@ description:
 			zenMode,
 			enterZen,
 			exitZen,
+			restoreNormalView,
 			toggleFullScreen,
 			flipDockLayout,
 			applyEditorLayoutPreset,
@@ -2160,6 +2798,19 @@ description:
 			const inChat = (e.target as HTMLElement | null)?.closest?.("[data-wop-chat-root]");
 			const inXterm = (e.target as HTMLElement | null)?.closest?.(".xterm");
 			if (!inChat && !inXterm) {
+				/** View → Appearance: full screen (not while debug REPL maps plain F11 to Step Into). */
+				if (
+					e.key === "F11" &&
+					!e.shiftKey &&
+					!e.ctrlKey &&
+					!e.altKey &&
+					!e.metaKey &&
+					!(debugSessionActive && debugReplSession)
+				) {
+					e.preventDefault();
+					void toggleFullScreen();
+					return;
+				}
 				if (e.key === "F9" && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
 					e.preventDefault();
 					toggleBreakpointAtCursor();
@@ -2169,37 +2820,52 @@ description:
 					if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
 						e.preventDefault();
 						if (debugSessionActive) {
-							/* continue — reserved for DAP */
+							if (debugReplSession) {
+								focusTerminalForCommands();
+								sendTerminalInput("c\r");
+							}
 						} else {
-							runStartDebugging();
+							startDebugging();
 						}
 						return;
 					}
 					if (e.ctrlKey && !e.shiftKey && !e.altKey) {
 						e.preventDefault();
-						runStartDebugging();
+						runWithoutDebugging();
 						return;
 					}
 					if (e.shiftKey && !e.ctrlKey && !e.altKey) {
-						if (debugSessionActive) e.preventDefault();
+						if (debugSessionActive) {
+							e.preventDefault();
+							stopDebugging();
+						}
 						return;
 					}
 					if (e.ctrlKey && e.shiftKey && !e.altKey) {
-						if (debugSessionActive) e.preventDefault();
+						if (debugSessionActive) {
+							e.preventDefault();
+							restartDebugging();
+						}
 						return;
 					}
 				}
-				if (debugSessionActive) {
+				if (debugSessionActive && debugReplSession) {
 					if (e.key === "F10" && !e.ctrlKey && !e.shiftKey && !e.altKey) {
 						e.preventDefault();
+						focusTerminalForCommands();
+						sendTerminalInput("n\r");
 						return;
 					}
 					if (e.key === "F11" && !e.shiftKey && !e.ctrlKey && !e.altKey) {
 						e.preventDefault();
+						focusTerminalForCommands();
+						sendTerminalInput("s\r");
 						return;
 					}
 					if (e.key === "F11" && e.shiftKey && !e.ctrlKey && !e.altKey) {
 						e.preventDefault();
+						focusTerminalForCommands();
+						sendTerminalInput("return\r");
 						return;
 					}
 				}
@@ -2265,6 +2931,41 @@ description:
 			) {
 				e.preventDefault();
 				updateDockLayout((d) => ({ ...d, agentPanelVisible: !d.agentPanelVisible }));
+				return;
+			}
+			/** View → Appearance: Zen (toggle) / centered editor column */
+			if (
+				technical &&
+				(e.metaKey || e.ctrlKey) &&
+				e.altKey &&
+				!e.shiftKey &&
+				e.key.toLowerCase() === "z"
+			) {
+				e.preventDefault();
+				if (zenMode) exitZen();
+				else enterZen();
+				return;
+			}
+			if (
+				technical &&
+				(e.metaKey || e.ctrlKey) &&
+				e.altKey &&
+				!e.shiftKey &&
+				e.key.toLowerCase() === "c"
+			) {
+				e.preventDefault();
+				setChrome((c) => ({ ...c, centeredEditorLayout: !c.centeredEditorLayout }));
+				return;
+			}
+			if (
+				technical &&
+				(e.metaKey || e.ctrlKey) &&
+				e.altKey &&
+				!e.shiftKey &&
+				e.key.toLowerCase() === "n"
+			) {
+				e.preventDefault();
+				restoreNormalView();
 				return;
 			}
 			if (technical && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j" && !e.shiftKey && !e.altKey) {
@@ -2344,12 +3045,12 @@ description:
 			}
 			if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "w") {
 				e.preventDefault();
-				setSelectedPath(null);
+				handleCloseEditor();
 				return;
 			}
 			if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "q") {
 				e.preventDefault();
-				window.close();
+				closeAppWindowOrTab();
 				return;
 			}
 		};
@@ -2366,18 +3067,32 @@ description:
 		handleSaveAs,
 		handleNewTextFile,
 		handleOpenFilePrompt,
+		handleCloseEditor,
+		closeAppWindowOrTab,
 		focusTerminalForCommands,
 		config?.terminalEnabled,
 		persistLeftSidebar,
 		onOpenToolPanel,
 		setUiMode,
 		toggleBreakpointAtCursor,
-		runStartDebugging,
+		startDebugging,
+		runWithoutDebugging,
+		stopDebugging,
+		restartDebugging,
 		debugSessionActive,
+		debugReplSession,
+		sendTerminalInput,
+		focusTerminalForCommands,
 		goHistoryBack,
 		goHistoryForward,
 		openWorkspaceSearch,
 		promptGoToLine,
+		toggleFullScreen,
+		enterZen,
+		exitZen,
+		restoreNormalView,
+		zenMode,
+		setChrome,
 	]);
 
 	const workspaceDockActionsMain = useMemo(
@@ -2484,7 +3199,7 @@ description:
 			onFocusDiagnostics: () => focusToolTab("problems"),
 			problemsVisible: toolTabVisible(dockForZedStrip, "problems"),
 			onOpenSettings: openPreferences,
-			diagnosticsCount: 0,
+			diagnosticsCount: workspaceStaticAnalysis.totalCount,
 		}),
 		[
 			toggleLeftSidebar,
@@ -2496,6 +3211,7 @@ description:
 			updateDockLayout,
 			dockLayout.agentPanelVisible,
 			openPreferences,
+			workspaceStaticAnalysis.totalCount,
 		],
 	);
 
@@ -2506,6 +3222,13 @@ description:
 		};
 		return [
 			{ id: "palette", label: "Command palette", keywords: ["commands"], run: () => setCommandPaletteOpen(true) },
+			{
+				id: "host-doctor",
+				label: "Help: Host doctor",
+				detail: "Workspace, env, Ollama/OpenRouter, Pi CLI, terminal — GET /api/diagnostics",
+				keywords: ["doctor", "diagnostics", "health", "wop", "env", "ollama"],
+				run: openHostDoctor,
+			},
 			{
 				id: "leftsidebar",
 				label: leftSidebarVisible ? "View: Hide primary sidebar" : "View: Show primary sidebar",
@@ -2527,13 +3250,13 @@ description:
 				id: "chat-mode-plan",
 				label: "Agent: Plan mode (Pi planner prompt)",
 				keywords: ["cursor", "planning"],
-				run: () => session.setChatMode("plan"),
+				run: () => handleChatModeChange("plan"),
 			},
 			{
 				id: "chat-mode-build",
 				label: "Agent: Build mode",
 				keywords: ["cursor", "coding"],
-				run: () => session.setChatMode("build"),
+				run: () => handleChatModeChange("build"),
 			},
 			{
 				id: "chat-agent-default",
@@ -2543,8 +3266,8 @@ description:
 			},
 			...((agentsApi.data?.agents ?? []).slice(0, 48).map((a) => ({
 				id: `chat-agent-${a.name}`,
-				label: `Chat: Agent ${a.name}`,
-				keywords: [a.name, a.description, "pi", "persona"],
+				label: `Chat: Agent ${workspaceAgentDisplayName(a.name)}`,
+				keywords: [a.name, workspaceAgentDisplayName(a.name), a.description, "pi", "persona"],
 				run: () => session.setChatAgent(a.name),
 			})) satisfies CommandItem[]),
 			{ id: "settings", label: "View: Settings", run: setAct("settings") },
@@ -2577,6 +3300,63 @@ description:
 				run: () => void handleNewPlanFile(),
 			},
 			{
+				id: "chat-build-from-plan-compose",
+				label: "Chat: Insert Build handoff from latest plan",
+				keywords: ["plan", "implement", "build", "composer"],
+				run: () => {
+					void apiGet<{ latest: { path: string } | null }>("/api/plans")
+						.then((d) => {
+							const p = d.latest?.path;
+							if (!p) {
+								injectIntoChatComposer(
+									"No `plans/PLAN-*.md` file found yet — use **File: New plan markdown** or add one under `plans/`.",
+								);
+								return;
+							}
+							injectIntoChatComposer(buildImplementPlanPrompt(p));
+						})
+						.catch(() => injectIntoChatComposer("Could not load `/api/plans` — is the Way of Pi server running?"));
+				},
+			},
+			{
+				id: "chat-review-plan-compose",
+				label: "Chat: Insert review prompt for latest plan",
+				keywords: ["plan", "review", "critique"],
+				run: () => {
+					void apiGet<{ latest: { path: string } | null }>("/api/plans")
+						.then((d) => {
+							const p = d.latest?.path;
+							if (!p) {
+								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
+								return;
+							}
+							injectIntoChatComposer(buildReviewPlanPrompt(p));
+						})
+						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
+				},
+			},
+			{
+				id: "chat-plan-reviewer-latest",
+				label: "Chat: Set plan-reviewer + review latest plan",
+				keywords: ["plan-reviewer", "plan", "review"],
+				run: () => {
+					const roster = agentsApi.data?.agents ?? [];
+					if (roster.some((a) => a.name === "plan-reviewer")) {
+						session.setChatAgent("plan-reviewer");
+					}
+					void apiGet<{ latest: { path: string } | null }>("/api/plans")
+						.then((d) => {
+							const p = d.latest?.path;
+							if (!p) {
+								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
+								return;
+							}
+							injectIntoChatComposer(buildReviewPlanPrompt(p));
+						})
+						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
+				},
+			},
+			{
 				id: "agent-dock-right",
 				label: "View: Dock agent panel to the right",
 				keywords: ["chat", "session", "sidebar", "zed", "cursor"],
@@ -2603,6 +3383,7 @@ description:
 			{
 				id: "agent-toggle",
 				label: dockLayout.agentPanelVisible ? "View: Hide agent panel" : "View: Show agent panel",
+				detail: "Ctrl+Alt+B (macOS: Cmd+Alt+B)",
 				keywords: ["chat", "session", "copilot"],
 				run: () => updateDockLayout((d) => ({ ...d, agentPanelVisible: !d.agentPanelVisible })),
 			},
@@ -2646,10 +3427,12 @@ description:
 		toggleLeftSidebar,
 		dockLayout.agentPanelVisible,
 		updateDockLayout,
-		session.setChatMode,
+		handleChatModeChange,
 		session.setChatAgent,
 		agentsApi.data?.agents,
 		handleNewPlanFile,
+		openHostDoctor,
+		session.setChatAgent,
 	]);
 
 	const simpleCommandItems: CommandItem[] = useMemo(() => {
@@ -2660,6 +3443,13 @@ description:
 				label: "Command palette",
 				keywords: ["commands"],
 				run: () => setCommandPaletteOpen(true),
+			},
+			{
+				id: "s-host-doctor",
+				label: "Help: Host doctor",
+				detail: "GET /api/diagnostics — checks + copy JSON",
+				keywords: ["doctor", "diagnostics", "health", "env", "ollama"],
+				run: openHostDoctor,
 			},
 			{ id: "s-chat", label: "Simple: Chat", run: () => setSimpleTab("chat") },
 			{ id: "s-team", label: "Simple: My Team", run: () => setSimpleTab("team") },
@@ -2680,19 +3470,55 @@ description:
 				id: "s-chat-plan",
 				label: "Agent: Plan mode (Pi planner prompt)",
 				keywords: ["cursor", "planning"],
-				run: () => session.setChatMode("plan"),
+				run: () => handleChatModeChange("plan"),
 			},
 			{
 				id: "s-chat-build",
 				label: "Agent: Build mode",
 				keywords: ["cursor", "coding"],
-				run: () => session.setChatMode("build"),
+				run: () => handleChatModeChange("build"),
 			},
 			{
 				id: "s-new-plan",
 				label: "File: New plan markdown (plans/PLAN-…)",
 				keywords: ["plan", "planner", "spec"],
 				run: () => void handleNewPlanFile(),
+			},
+			{
+				id: "s-chat-build-from-plan",
+				label: "Chat: Insert Build handoff from latest plan",
+				keywords: ["plan", "implement"],
+				run: () => {
+					setSimpleTab("chat");
+					void apiGet<{ latest: { path: string } | null }>("/api/plans")
+						.then((d) => {
+							const p = d.latest?.path;
+							if (!p) {
+								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
+								return;
+							}
+							injectIntoChatComposer(buildImplementPlanPrompt(p));
+						})
+						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
+				},
+			},
+			{
+				id: "s-chat-review-plan",
+				label: "Chat: Insert review prompt for latest plan",
+				keywords: ["plan", "review"],
+				run: () => {
+					setSimpleTab("chat");
+					void apiGet<{ latest: { path: string } | null }>("/api/plans")
+						.then((d) => {
+							const p = d.latest?.path;
+							if (!p) {
+								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
+								return;
+							}
+							injectIntoChatComposer(buildReviewPlanPrompt(p));
+						})
+						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
+				},
 			},
 			...PI_MODEL_CONFIG_ENTRIES.map(
 				(e) =>
@@ -2721,10 +3547,11 @@ description:
 		refresh,
 		reload,
 		saveAndRefresh,
-		session.setChatMode,
+		handleChatModeChange,
 		setSelectedPath,
 		setSimpleTab,
 		setUiMode,
+		openHostDoctor,
 	]);
 
 	const leftPanel =
@@ -2746,6 +3573,7 @@ description:
 				error={treeError}
 				expandRevision={treeExpand.rev}
 				pathsToExpand={treeExpand.paths}
+				onExplorerGitMutated={refresh}
 				onClosePrimarySidebar={() => persistLeftSidebar(false)}
 			/>
 		) : activity === "search" ? (
@@ -2758,13 +3586,36 @@ description:
 				}}
 			/>
 		) : activity === "scm" ? (
-			<ScmSidePanel root={root} onRefresh={refresh} />
+			<ScmSidePanel
+				root={root}
+				git={git}
+				nodes={nodes}
+				treeLoading={treeLoading}
+				treeError={treeError}
+				onRefresh={refresh}
+				onOpenFile={(p) => {
+					onExplorerSelectFile(p);
+					setActivity("explorer");
+				}}
+			/>
 		) : activity === "extensions" ? (
-			<ExtensionsSidePanel />
+			<ExtensionsSidePanel
+				folders={folders}
+				config={config}
+				refreshServerConfig={refreshServerConfig}
+				chatMode={session.chatMode}
+				onChatModeChange={handleChatModeChange}
+				streaming={session.streaming}
+				hasWorkspace={!!root || folders.length > 0}
+				focusWorkspaceFile={focusWorkspaceFileFromMenu}
+				onOpenTeamsYaml={openTeamsYamlFromMenu}
+				onFocusToolLog={() => focusToolTab("tool_log")}
+				onTreeRefresh={refresh}
+			/>
 		) : activity === "planning" ? (
 			<PlanningSidePanel
 				chatMode={session.chatMode}
-				onChatModeChange={session.setChatMode}
+				onChatModeChange={handleChatModeChange}
 				streaming={session.streaming}
 				hasWorkspace={!!root || folders.length > 0}
 				onNewPlanFile={() => void handleNewPlanFile()}
@@ -2798,7 +3649,7 @@ description:
 						onSave={saveAndRefresh}
 						canSave={!!selectedPath && dirty}
 						onRevertFile={() => void reload()}
-						canRevert={!!selectedPath}
+						canRevert={!!selectedPath && dirty}
 						onRefreshWorkspace={refresh}
 						onCopyWorkspacePath={copyWorkspacePath}
 						onSelectActivity={(a) => {
@@ -2818,6 +3669,7 @@ description:
 						terminalMenu={terminalMenu}
 						helpMenu={helpMenu}
 						onOpenAgentSetup={openAgentSetupFromMenu}
+						onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
 						settingsMenu={settingsMenuHandlers}
 						onOpenTeamsYaml={openTeamsYamlFromMenu}
 						onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
@@ -2826,10 +3678,10 @@ description:
 						chatSessionControls={{
 							mode: session.chatMode,
 							switchDisabled: session.streaming,
-							onSetMode: handleSimpleChatModeChange,
+							onSetMode: handleChatModeChange,
 						}}
 						onNewPlanFile={() => void handleNewPlanFile()}
-						newPlanFileDisabled={!root && folders.length === 0}
+						newPlanFileDisabled={!workspaceOperational}
 						viewSimple={viewSimpleMenu ?? undefined}
 					/>
 					<SimpleApp
@@ -2850,6 +3702,7 @@ description:
 						content={content}
 						setContent={setContent}
 						persistEncoding={persistEncoding}
+						fileMimeType={fileMimeType}
 						fileLoading={fileLoading}
 						fileError={fileError}
 						dirty={dirty}
@@ -2863,6 +3716,10 @@ description:
 						chatStreamUiEnabled={simpleChatStreamUiEnabled}
 						onChatStreamUiEnabledChange={onSimpleChatStreamUiEnabledChange}
 						chatQueuePending={session.chatQueuePending}
+						chatQueueItems={session.chatQueueItems}
+						editChatQueueItem={session.editChatQueueItem}
+						deleteChatQueueItem={session.deleteChatQueueItem}
+						forceChatQueueItem={session.forceChatQueueItem}
 						connected={session.connected}
 						error={session.error}
 						sendChat={session.sendChat}
@@ -2870,9 +3727,10 @@ description:
 						clearError={session.clearError}
 						onReopenLlmFixModal={reopenLlmFixModal}
 						chatAgentName={session.chatAgentName}
+						dispatchTurnAgent={session.dispatchTurnAgent}
 						onChatAgentChange={session.setChatAgent}
 						chatMode={session.chatMode}
-						onChatModeChange={handleSimpleChatModeChange}
+						onChatModeChange={handleChatModeChange}
 						activeTab={simpleTab}
 						onTabChange={setSimpleTab}
 						providerConfigInitialPath={simpleProviderPath}
@@ -2884,12 +3742,14 @@ description:
 						onFindInFiles={openWorkspaceSearch}
 						onReplaceInFiles={openWorkspaceSearch}
 						teamsYamlWritePath={teamsYamlWritePath}
-						workspaceReady={!!root}
+						workspaceReady={workspaceOperational}
 						onOpenTeamsYaml={openTeamsYamlFromMenu}
 						onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
 						onNewPlanFile={() => void handleNewPlanFile()}
-						newPlanFileDisabled={!root && folders.length === 0}
+						newPlanFileDisabled={!workspaceOperational}
+						onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
 						contextPct={session.tokenMeter.contextPct}
+						contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
 						tokensDown={session.tokenMeter.tokensDown}
 						tokensUp={session.tokenMeter.tokensUp}
 						contextTitle={session.tokenMeter.contextTitle}
@@ -2911,6 +3771,46 @@ description:
 					onOpenSimpleAiBrains={openLlmFixSimpleBrains}
 					onOpenProviderCatalog={openLlmFixProviderCatalog}
 				/>
+				<HostDoctorModal
+					open={hostDoctorOpen}
+					onClose={() => setHostDoctorOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					onWorkspaceFileSaved={() => void refresh()}
+				/>
+				<IndexingDocsModal
+					open={indexingDocsOpen}
+					onClose={() => setIndexingDocsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<AgentPermissionsModal
+					open={agentPermissionsOpen}
+					onClose={() => setAgentPermissionsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<NewWorkspaceFileModal
+					open={newWorkspaceFileDraft != null}
+					defaultPath={newWorkspaceFileDraft?.defaultPath ?? ""}
+					initialContent={newWorkspaceFileDraft?.initialContent}
+					onDismiss={() => setNewWorkspaceFileDraft(null)}
+					onCreate={(path, ic) => {
+						setNewWorkspaceFileDraft(null);
+						void performCreateNewWorkspaceFile(path, ic);
+					}}
+				/>
+				<LaunchConfigAddModal
+					open={launchConfigAddOpen}
+					onDismiss={() => setLaunchConfigAddOpen(false)}
+					onPick={(id) => void appendLaunchConfigurationSnippet(id)}
+				/>
+				<InstallDebuggersModal
+					open={installDebuggersModalOpen}
+					onDismiss={() => setInstallDebuggersModalOpen(false)}
+				/>
+				<MitLicenseModal
+					open={mitLicenseModalOpen}
+					onDismiss={() => setMitLicenseModalOpen(false)}
+					repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+				/>
 			</>
 		);
 	}
@@ -2925,14 +3825,7 @@ description:
 			onFocusedCursor={onTechFocusedCursor}
 			workspaceEditorRef={workspaceEditorRef}
 			logs={session.logs}
-			fileActions={[
-				{
-					label: "New text file…",
-					detail: "Create under the explorer folder",
-					run: handleNewTextFileInDock,
-				},
-				{ label: "Open file in workspace…", run: handleOpenFileInDock },
-			]}
+			fileActions={workspaceDockFileActions}
 			onOpenToolPanelForCell={onOpenToolPanelForCell}
 			onOpenWorkspace={refresh}
 			workspaceDockActions={workspaceDockActionsMain}
@@ -2945,6 +3838,7 @@ description:
 			refresh={refresh}
 			autoSave={autoSave}
 			externalOpenFile={workspaceOpenSignal}
+			externalCloseEditor={workspaceCloseEditorSignal}
 			onWorkspaceSurfaceDrop={onWorkspaceSurfaceDrop}
 			onSplitEditorRight={splitEditorRight}
 			splitEditorDisabled={workspaceGrid.cols >= WORKSPACE_GRID_MAX_COLS}
@@ -2957,6 +3851,8 @@ description:
 			onCrossCellTabMoveBetweenCells={movePanelTabBetweenCells}
 			onWorkspaceGridRowResize={onWorkspaceGridRowResize}
 			onWorkspaceGridColResize={onWorkspaceGridColResize}
+			onBindMultiCellSaveApi={onBindMultiCellSaveApi}
+			onMultiCellAnyDirtyChange={onMultiCellAnyDirtyChange}
 		/>
 	) : (
 		<WorkspaceCellDropSurface
@@ -2975,14 +3871,7 @@ description:
 				onReorderTab={onDockEntryMove}
 				onCloseTab={onDockEntryClose}
 				onAddTool={onOpenToolPanel}
-				fileActions={[
-					{
-						label: "New text file…",
-						detail: "Create under the explorer folder",
-						run: handleNewTextFileInDock,
-					},
-					{ label: "Open file in workspace…", run: handleOpenFileInDock },
-				]}
+				fileActions={workspaceDockFileActions}
 				logs={session.logs}
 				editorPath={selectedPath}
 				content={content}
@@ -2991,9 +3880,10 @@ description:
 				error={fileError}
 				dirty={dirty}
 				persistEncoding={persistEncoding}
+				filePreview={workspaceCenterFilePreview}
 				onSave={async () => {
-					await save();
-					await refresh();
+					const ok = await save();
+					if (ok) await refresh();
 				}}
 				onDiscardUnsaved={discardUnsavedChanges}
 				onCursor={onCursor}
@@ -3025,6 +3915,7 @@ description:
 	);
 
 	return (
+		<WorkspaceStaticAnalysisProvider value={workspaceStaticAnalysisApi}>
 		<div
 			data-ui-mode={uiMode}
 			className="flex h-screen w-full flex-col overflow-hidden bg-[#1e1e1e] font-sans text-[#cccccc] selection:bg-[#9a3412] wop-density-compact"
@@ -3047,7 +3938,7 @@ description:
 					onSave={saveAndRefresh}
 					canSave={!!effSelectedPath && effDirty}
 					onRevertFile={() => void reloadFocusedOrMain()}
-					canRevert={!!effSelectedPath}
+					canRevert={!!effSelectedPath && effDirty}
 					onRefreshWorkspace={refresh}
 					onCopyWorkspacePath={copyWorkspacePath}
 					onSelectActivity={selectActivityWithSidebar}
@@ -3075,6 +3966,7 @@ description:
 					terminalMenu={terminalMenu}
 					helpMenu={helpMenu}
 					onOpenAgentSetup={openAgentSetupFromMenu}
+					onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
 					settingsMenu={settingsMenuHandlers}
 					onOpenTeamsYaml={openTeamsYamlFromMenu}
 					onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
@@ -3083,10 +3975,10 @@ description:
 					chatSessionControls={{
 						mode: session.chatMode,
 						switchDisabled: session.streaming,
-						onSetMode: session.setChatMode,
+						onSetMode: handleChatModeChange,
 					}}
 					onNewPlanFile={() => void handleNewPlanFile()}
-					newPlanFileDisabled={!root && folders.length === 0}
+					newPlanFileDisabled={!workspaceOperational}
 					viewTechnical={viewTechnicalOptions}
 				/>
 			) : (
@@ -3124,6 +4016,46 @@ description:
 				uiMode={uiMode}
 				onOpenSimpleAiBrains={openLlmFixSimpleBrains}
 				onOpenProviderCatalog={openLlmFixProviderCatalog}
+			/>
+			<HostDoctorModal
+				open={hostDoctorOpen}
+				onClose={() => setHostDoctorOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+				onWorkspaceFileSaved={() => void refresh()}
+			/>
+			<IndexingDocsModal
+				open={indexingDocsOpen}
+				onClose={() => setIndexingDocsOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+			/>
+			<AgentPermissionsModal
+				open={agentPermissionsOpen}
+				onClose={() => setAgentPermissionsOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+			/>
+			<NewWorkspaceFileModal
+				open={newWorkspaceFileDraft != null}
+				defaultPath={newWorkspaceFileDraft?.defaultPath ?? ""}
+				initialContent={newWorkspaceFileDraft?.initialContent}
+				onDismiss={() => setNewWorkspaceFileDraft(null)}
+				onCreate={(path, ic) => {
+					setNewWorkspaceFileDraft(null);
+					void performCreateNewWorkspaceFile(path, ic);
+				}}
+			/>
+			<LaunchConfigAddModal
+				open={launchConfigAddOpen}
+				onDismiss={() => setLaunchConfigAddOpen(false)}
+				onPick={(id) => void appendLaunchConfigurationSnippet(id)}
+			/>
+			<InstallDebuggersModal
+				open={installDebuggersModalOpen}
+				onDismiss={() => setInstallDebuggersModalOpen(false)}
+			/>
+			<MitLicenseModal
+				open={mitLicenseModalOpen}
+				onDismiss={() => setMitLicenseModalOpen(false)}
+				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
 			/>
 
 			<div
@@ -3191,14 +4123,22 @@ description:
 												onReopenLlmFixModal={reopenLlmFixModal}
 												onNewSession={session.startNewSession}
 												chatMode={session.chatMode}
-												onChatModeChange={session.setChatMode}
+												onChatModeChange={handleChatModeChange}
 												agents={agentsApi.data?.agents ?? []}
 												agentsLoading={agentsApi.loading}
 												agentTeams={agentsApi.data?.teams ?? {}}
-												onOpenAgentTeamInPane={openAgentTeamInWorkspacePane}
+												onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+												openTeamPulseSignal={teamPulseDockSignal}
 												chatAgentName={session.chatAgentName}
+												dispatchTurnAgent={session.dispatchTurnAgent}
 												onChatAgentChange={session.setChatAgent}
 												chatQueuePending={session.chatQueuePending}
+												chatQueueItems={session.chatQueueItems}
+												editChatQueueItem={session.editChatQueueItem}
+												deleteChatQueueItem={session.deleteChatQueueItem}
+												forceChatQueueItem={session.forceChatQueueItem}
+												chatPulseMeters={session.chatPulseMeters}
+												contextTitle={session.tokenMeter.contextTitle}
 												dockPanelFrame
 												technicalDock={{
 													region: "right",
@@ -3253,14 +4193,22 @@ description:
 												onReopenLlmFixModal={reopenLlmFixModal}
 												onNewSession={session.startNewSession}
 												chatMode={session.chatMode}
-												onChatModeChange={session.setChatMode}
+												onChatModeChange={handleChatModeChange}
 												agents={agentsApi.data?.agents ?? []}
 												agentsLoading={agentsApi.loading}
 												agentTeams={agentsApi.data?.teams ?? {}}
-												onOpenAgentTeamInPane={openAgentTeamInWorkspacePane}
+												onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+												openTeamPulseSignal={teamPulseDockSignal}
 												chatAgentName={session.chatAgentName}
+												dispatchTurnAgent={session.dispatchTurnAgent}
 												onChatAgentChange={session.setChatAgent}
 												chatQueuePending={session.chatQueuePending}
+												chatQueueItems={session.chatQueueItems}
+												editChatQueueItem={session.editChatQueueItem}
+												deleteChatQueueItem={session.deleteChatQueueItem}
+												forceChatQueueItem={session.forceChatQueueItem}
+												chatPulseMeters={session.chatPulseMeters}
+												contextTitle={session.tokenMeter.contextTitle}
 												dockPanelFrame
 												technicalDock={{
 													region: "bottom",
@@ -3323,8 +4271,19 @@ description:
 						onReveal: (id) => focusToolTab(id),
 						isVisible: (id) => toolTabVisible(dockForZedStrip, id as ToolTabId),
 					}}
+					diagnosticsSummary={
+						technical && staticAnalysisEnabled
+							? {
+									total: workspaceStaticAnalysis.totalCount,
+									errors: workspaceStaticAnalysis.errorCount,
+									warnings: workspaceStaticAnalysis.warningCount,
+									onOpenProblems: () => focusToolTab("problems"),
+								}
+							: null
+					}
 				/>
 			) : null}
 		</div>
+		</WorkspaceStaticAnalysisProvider>
 	);
 }

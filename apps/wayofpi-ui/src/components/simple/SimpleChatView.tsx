@@ -1,6 +1,9 @@
 import { Brain, Cpu, FileCode2, Paperclip, Send, Square, Users, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
+import { ChatQueueModal } from "../ChatQueueModal";
 import type { AgentMeta } from "../../hooks/useAgents";
+import { workspaceAgentDisplayName } from "../../utils/workspaceAgentDisplay";
 import type { ChatRow, ChatSessionMode } from "../../hooks/useWayOfPiSession";
 import {
 	buildChatMessageWithAttachment,
@@ -13,6 +16,13 @@ import {
 	slashMenuAtCursor,
 	type SlashMenuState,
 } from "../../utils/chatSlashAutocomplete";
+import { ContextUsageRing } from "../ContextUsageRing";
+import { usePlanWorkspaceSummary } from "../../hooks/usePlanWorkspaceSummary";
+import { registerChatComposerInject } from "../../utils/chatComposerInjectBus";
+import { agentsForSessionPicker, rosterNamesMissingFromAgents } from "../../utils/workspaceChatAgentPicker";
+import { apiGet } from "../../api/client";
+import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../../utils/planModeComposerTemplates";
+import { shouldSuggestPlanModeForMessage } from "../../utils/planModeHeuristics";
 
 /** Simple shell — **wired**: chat rows, agent picker, WebSocket send/stop (Pi tools in browser per server notes). */
 export function SimpleChatView({
@@ -27,14 +37,22 @@ export function SimpleChatView({
 	onReopenLlmFixModal,
 	appearanceDark,
 	agents,
+	agentTeams = {},
 	agentsLoading,
 	chatAgentName,
+	dispatchTurnAgent,
 	onChatAgentChange,
 	chatMode,
 	onChatModeChange,
 	chatStreamUiEnabled,
 	onChatStreamUiEnabledChange,
 	chatQueuePending = 0,
+	contextFillPct = null,
+	contextTitle = "",
+	chatQueueItems = [],
+	onChatQueueEdit,
+	onChatQueueDelete,
+	onChatQueueForce,
 }: {
 	rows: ChatRow[];
 	streaming: boolean;
@@ -50,19 +68,31 @@ export function SimpleChatView({
 	onReopenLlmFixModal?: () => void;
 	appearanceDark: boolean;
 	agents: AgentMeta[];
+	/** Same source as ChatPanel — used to list team roster ids that do not yet have a `.md` agent file. */
+	agentTeams?: Record<string, string[]>;
 	agentsLoading: boolean;
 	chatAgentName: string | null;
+	dispatchTurnAgent?: string | null;
 	onChatAgentChange: (name: string | null) => void;
 	chatMode: ChatSessionMode;
 	onChatModeChange: (m: ChatSessionMode) => void;
 	/** Server-side messages waiting after the current assistant turn. */
 	chatQueuePending?: number;
+	/** From `chat_usage` — context window fill 0–100; null until a turn reports usage */
+	contextFillPct?: number | null;
+	contextTitle?: string;
+	chatQueueItems?: ChatQueueItem[];
+	onChatQueueEdit?: (id: string, text: string) => void;
+	onChatQueueDelete?: (id: string) => void;
+	onChatQueueForce?: (id: string) => void;
 }) {
+	const [queueModalOpen, setQueueModalOpen] = useState(false);
 	const [input, setInput] = useState("");
 	const [attachment, setAttachment] = useState<{ name: string; text: string } | null>(null);
 	const [attachErr, setAttachErr] = useState<string | null>(null);
 	const [caretPos, setCaretPos] = useState(0);
 	const [slashHighlight, setSlashHighlight] = useState(0);
+	const [planNudgeOpen, setPlanNudgeOpen] = useState(false);
 	const endRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -77,10 +107,14 @@ export function SimpleChatView({
 		e.preventDefault();
 		const msg = buildMessage(input);
 		if (!msg || !connected) return;
+		const wasBuild = chatMode === "build";
 		onSend(msg);
 		setInput("");
 		setAttachment(null);
 		setAttachErr(null);
+		if (wasBuild && shouldSuggestPlanModeForMessage(msg)) {
+			setPlanNudgeOpen(true);
+		}
 	};
 
 	const onPickFile = async (list: FileList | null) => {
@@ -100,9 +134,24 @@ export function SimpleChatView({
 		if (fileRef.current) fileRef.current.value = "";
 	};
 
-	const assistantTitle = chatAgentName ? chatAgentName : "Orchestrator";
+	const sessionPick = chatAgentName?.trim() || null;
+	const assistantTitle = sessionPick ? workspaceAgentDisplayName(sessionPick) : "Orchestrator";
 	const assistantSubtitle =
-		modelLabel && modelLabel !== "…" ? `Powered by ${modelLabel}` : "Ready when the server connects.";
+		connected && modelLabel && modelLabel !== "…"
+			? `Powered by ${modelLabel}`
+			: connected
+				? "Loading model info…"
+				: "Ready when the server connects.";
+	const phraseDispatchNote =
+		!sessionPick && dispatchTurnAgent?.trim()
+			? `This reply uses phrase-dispatch (${workspaceAgentDisplayName(dispatchTurnAgent)}); the picker stays on Orchestrator unless you choose a workspace agent.`
+			: null;
+
+	const pickerAgents = useMemo(() => agentsForSessionPicker(agents), [agents]);
+	const rosterOnlyNames = useMemo(
+		() => rosterNamesMissingFromAgents(agentTeams, agents),
+		[agentTeams, agents],
+	);
 
 	const borderHero = appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]";
 	const titleC = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
@@ -113,9 +162,44 @@ export function SimpleChatView({
 
 	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
 	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
+	const planSummary = usePlanWorkspaceSummary(connected);
 	useEffect(() => {
 		setSlashHighlight(0);
 	}, [slashMenuKey]);
+
+	const injectComposer = useCallback((t: string) => {
+		setInput((prev) => (prev.trim() ? `${prev.trim()}\n\n${t}` : t));
+		queueMicrotask(() => {
+			const el = textareaRef.current;
+			if (!el) return;
+			el.focus();
+			const len = el.value.length;
+			el.setSelectionRange(len, len);
+		});
+	}, []);
+
+	useEffect(() => {
+		registerChatComposerInject(injectComposer);
+		return () => registerChatComposerInject(null);
+	}, [injectComposer]);
+
+	const applyPlanHandoff = async (kind: "implement" | "review") => {
+		try {
+			const d = await apiGet<{ latest: { path: string } | null }>("/api/plans");
+			const path = d.latest?.path;
+			if (!path) {
+				injectComposer(
+					kind === "implement"
+						? "No `plans/PLAN-*.md` file found yet — create one under `plans/` first."
+						: "No `plans/PLAN-*.md` file found yet — create a plan file first, then run this again.",
+				);
+				return;
+			}
+			injectComposer(kind === "implement" ? buildImplementPlanPrompt(path) : buildReviewPlanPrompt(path));
+		} catch {
+			injectComposer("Could not read the plans index — check the workspace and server.");
+		}
+	};
 
 	const applySlashPick = (commandId: string, menuState: SlashMenuState | null = slashMenu) => {
 		if (!menuState) return;
@@ -159,6 +243,9 @@ export function SimpleChatView({
 									Chat with {assistantTitle}
 								</h1>
 								<p className={`text-sm font-medium ${subC}`}>{assistantSubtitle}</p>
+								{phraseDispatchNote ? (
+									<p className={`mt-1 max-w-xl text-xs leading-snug ${subC}`}>{phraseDispatchNote}</p>
+								) : null}
 							</div>
 						</div>
 					</div>
@@ -346,24 +433,36 @@ export function SimpleChatView({
 						<select
 							value={chatAgentName ?? ""}
 							disabled={!connected || streaming || agentsLoading}
+							title="Orchestrator = session lead (phrase-dispatch can still merge a specialist for one reply). Pick a row to load that agent’s `.md` into every turn until you switch back."
 							onChange={(e) => {
 								const v = e.target.value;
 								onChatAgentChange(v === "" ? null : v);
 							}}
 							className={`rounded-lg border px-3 py-2 text-sm font-normal normal-case ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#d4d4d4] bg-white text-[#333333]"}`}
 						>
-							<option value="">Orchestrator</option>
-							{agents.map((a) => (
-								<option key={a.name} value={a.name} title={a.description}>
-									{a.name}
+							<option value="">Orchestrator (session lead)</option>
+							{pickerAgents.map((a) => (
+								<option key={a.name} value={a.name} title={a.description || a.relativePath}>
+									{workspaceAgentDisplayName(a.name)}
+								</option>
+							))}
+							{rosterOnlyNames.map((name) => (
+								<option
+									key={`roster-${name}`}
+									value={name}
+									disabled
+									title="Listed in teams.yaml but no matching agent `.md` under agents/, .pi/agents/, .claude/agents/, or .cursor/agents/ yet."
+								>
+									{workspaceAgentDisplayName(name)} (no .md yet)
 								</option>
 							))}
 						</select>
 					</label>
-					<div className="flex flex-col gap-1">
+					<div className="flex min-w-0 flex-col gap-1">
 						<span className={`text-xs font-semibold uppercase tracking-wide ${subC}`}>Mode</span>
 						<div
 							className={`flex rounded-lg border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`}
+							title="Shift+Tab in the message box toggles Plan/Build when slash completion is closed"
 						>
 							<button
 								type="button"
@@ -394,6 +493,44 @@ export function SimpleChatView({
 								Plan
 							</button>
 						</div>
+						{chatMode === "plan" && planSummary ? (
+							<span
+								className={`max-w-[11rem] truncate font-mono text-[10px] ${subC}`}
+								title={planSummary.path}
+							>
+								{planSummary.doneTodos} done · {planSummary.openTodos} open
+							</span>
+						) : null}
+						{chatMode === "plan" ? (
+							<div className="flex flex-wrap gap-1">
+								<button
+									type="button"
+									disabled={streaming || !connected}
+									onClick={() => void applyPlanHandoff("implement")}
+									className={`rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
+										appearanceDark
+											? "border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] hover:border-[#ea580c]/50"
+											: "border-[#d4d4d4] bg-white text-[#333333] hover:border-[#ea580c]/50"
+									} disabled:opacity-40`}
+									title="Insert a Build handoff for the latest `plans/PLAN-*.md`"
+								>
+									From plan
+								</button>
+								<button
+									type="button"
+									disabled={streaming || !connected}
+									onClick={() => void applyPlanHandoff("review")}
+									className={`rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
+										appearanceDark
+											? "border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] hover:border-[#c586c0]/50"
+											: "border-[#d4d4d4] bg-white text-[#333333] hover:border-[#c586c0]/50"
+									} disabled:opacity-40`}
+									title="Insert a short plan-review prompt"
+								>
+									Review plan
+								</button>
+							</div>
+						) : null}
 					</div>
 					<div className="flex flex-col gap-1">
 						<span
@@ -454,11 +591,69 @@ export function SimpleChatView({
 					</div>
 				) : null}
 				{chatQueuePending > 0 ? (
-					<p
-						className={`mx-auto mb-2 max-w-3xl text-center text-xs ${appearanceDark ? "text-[#858585]" : "text-[#616161]"}`}
+					<button
+						type="button"
+						onClick={() => setQueueModalOpen(true)}
+						disabled={!connected}
+						className={`mx-auto mb-2 block max-w-3xl rounded-lg border border-[#ea580c]/35 bg-[#ea580c]/10 px-3 py-2 text-center text-xs font-medium transition-colors hover:bg-[#ea580c]/20 disabled:cursor-not-allowed disabled:opacity-50 ${appearanceDark ? "text-[#fdba74]" : "text-[#9a3412]"}`}
+						title="View, edit, remove, or prioritize queued messages"
 					>
 						{chatQueuePending} message{chatQueuePending === 1 ? "" : "s"} queued — will run after the current reply.
-					</p>
+						<span className={`mt-0.5 block text-[10px] font-normal ${appearanceDark ? "text-[#fdba74]/80" : "text-[#c2410c]/90"}`}>
+							Click to manage queue
+						</span>
+					</button>
+				) : null}
+				{queueModalOpen ? (
+					<ChatQueueModal
+						open={queueModalOpen}
+						onClose={() => setQueueModalOpen(false)}
+						items={chatQueueItems}
+						connected={connected}
+						streaming={streaming}
+						onEdit={(id, text) => onChatQueueEdit?.(id, text)}
+						onDelete={(id) => onChatQueueDelete?.(id)}
+						onForce={(id) => onChatQueueForce?.(id)}
+						appearanceDark={appearanceDark}
+					/>
+				) : null}
+				{planNudgeOpen ? (
+					<div
+						className={`mx-auto mb-2 flex max-w-3xl flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${
+							appearanceDark
+								? "border-[#c586c0]/40 bg-[#c586c0]/10 text-[#e9d5ff]"
+								: "border-[#c586c0]/35 bg-[#faf5ff] text-[#6b21a8]"
+						}`}
+					>
+						<span className="min-w-0 flex-1 font-medium">
+							That message looked multi-step. Try <strong>Plan</strong> for planner-style instructions on the next
+							reply.
+						</span>
+						<div className="flex shrink-0 gap-2">
+							<button
+								type="button"
+								disabled={streaming}
+								className={`rounded-lg px-2 py-1 text-[11px] font-bold text-white disabled:opacity-40 ${
+									appearanceDark ? "bg-[#c586c0]" : "bg-[#9333ea]"
+								}`}
+								onClick={() => {
+									onChatModeChange("plan");
+									setPlanNudgeOpen(false);
+								}}
+							>
+								Switch to Plan
+							</button>
+							<button
+								type="button"
+								className={`rounded-lg border px-2 py-1 text-[11px] font-semibold ${
+									appearanceDark ? "border-[#555] text-[#cccccc]" : "border-[#d4d4d4] text-[#333333]"
+								}`}
+								onClick={() => setPlanNudgeOpen(false)}
+							>
+								Dismiss
+							</button>
+						</div>
+					</div>
 				) : null}
 				<form
 					onSubmit={submit}
@@ -546,6 +741,11 @@ export function SimpleChatView({
 										return;
 									}
 								}
+								if (e.key === "Tab" && e.shiftKey && !streaming) {
+									e.preventDefault();
+									onChatModeChange(chatMode === "build" ? "plan" : "build");
+									return;
+								}
 								if (e.key === "Enter" && !e.shiftKey) {
 									e.preventDefault();
 									submit(e);
@@ -557,28 +757,44 @@ export function SimpleChatView({
 									: `Tell ${assistantTitle} what to do next…`
 							}
 							rows={1}
-							className={`max-h-40 min-h-[48px] w-full resize-none border-none bg-transparent py-3 pl-2 pr-2 text-[15px] font-medium outline-none ring-0 placeholder:text-[#858585] ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
+							className={`max-h-40 min-h-[48px] w-full resize-none border-none bg-transparent py-3 pl-2 pr-10 pb-9 text-[15px] font-medium outline-none ring-0 placeholder:text-[#858585] ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
 						/>
+						<div
+							className={`pointer-events-none absolute bottom-1.5 right-1.5 z-30 flex items-center justify-center rounded-full p-0.5 shadow-sm ring-1 ring-[#555]/50 ${
+								appearanceDark ? "bg-[#1e1e1e]/85" : "bg-white/90"
+							}`}
+						>
+							<ContextUsageRing
+								contextFillPct={contextFillPct}
+								title={contextTitle}
+								appearanceDark={appearanceDark}
+								sizePx={22}
+								className="pointer-events-auto opacity-95"
+							/>
+						</div>
 					</div>
 					<div className="flex gap-2 p-1">
 						{streaming ? (
 							<button
 								type="button"
 								onClick={onStop}
-								className="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-red-600 active:scale-95"
+								aria-label="Stop generation"
+								className="flex items-center gap-2 rounded-sm border border-[#ef4444] bg-[#450a0a] px-6 py-3 text-sm font-bold uppercase tracking-wide text-[#fecaca] shadow-sm transition-colors hover:bg-[#7f1d1d] active:scale-95"
 							>
-								<Square size={16} fill="currentColor" />
+								<Square size={14} className="shrink-0" fill="currentColor" />
 								<span className="hidden sm:inline">Stop</span>
 							</button>
-						) : null}
-						<button
-							type="submit"
-							disabled={!canSend}
-							className="flex items-center gap-2 rounded-xl bg-[#ea580c] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#c2410c] disabled:bg-[#3c3c3c] disabled:text-[#858585] active:scale-95"
-						>
-							<Send size={18} />
-							<span className="hidden sm:inline">Send</span>
-						</button>
+						) : (
+							<button
+								type="submit"
+								disabled={!canSend}
+								aria-label="Send message"
+								className="flex items-center gap-2 rounded-sm bg-[#c2410c] px-6 py-3 text-sm font-bold uppercase tracking-wide text-[#d4d4d4] shadow-sm transition-colors hover:bg-[#9a3412] disabled:bg-[#3c3c3c] disabled:text-[#858585] active:scale-95"
+							>
+								<Send size={18} className="shrink-0 text-[#d4d4d4]" />
+								<span className="hidden sm:inline">Send</span>
+							</button>
+						)}
 					</div>
 					</div>
 				</form>

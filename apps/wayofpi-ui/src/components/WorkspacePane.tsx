@@ -22,7 +22,9 @@ import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { AgentMeta } from "../hooks/useAgents";
 import type { FilePersistEncoding } from "../hooks/useFileEditor";
-import type { LogRow } from "../hooks/useWayOfPiSession";
+import type { FilePreview } from "../types/workspaceFile";
+import { filePreviewSupportsSourceToggle } from "../utils/workspaceFilePreview";
+import type { ChatPulseMeters, ChatRow, LogRow } from "../hooks/useWayOfPiSession";
 import type { BottomPanelTab } from "../types/technicalShell";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
 import {
@@ -43,6 +45,8 @@ import { DockZoneAddMenu, type DockFileActionItem } from "./dockToolAddMenu";
 import { WorkspaceGridLayoutPicker, type WorkspaceGridPickerConfig } from "./WorkspaceGridLayoutPicker";
 import { ToolPanelBody } from "./ToolPanelBody";
 import { WorkspaceAgentTeamPane } from "./WorkspaceAgentTeamPane";
+import { MermaidPreviewPane } from "./MermaidPreviewPane";
+import { WorkspaceSvgPreview } from "./WorkspaceSvgPreview";
 import { WorkspaceTextBuffer } from "./WorkspaceTextBuffer";
 
 const TAB_LABELS: Record<ToolTabId, string> = {
@@ -107,6 +111,8 @@ export type WorkspacePaneProps = {
 	dirty: boolean;
 	/** From `useFileEditor`: UTF-8 text vs Latin-1 bytes (GET/PUT base64 on the server). */
 	persistEncoding: FilePersistEncoding;
+	/** When set (e.g. PNG / SVG), show a preview instead of the byte or text buffer. */
+	filePreview?: FilePreview | null;
 	onSave: () => void | Promise<void>;
 	onDiscardUnsaved?: () => void;
 	onCursor?: (line: number, col: number) => void;
@@ -149,8 +155,12 @@ export type WorkspacePaneProps = {
 		agentTeams: Record<string, string[]>;
 		agents: AgentMeta[];
 		agentsLoading?: boolean;
-		/** Latest assistant message from the session (never user turns) — preview until multi-agent WS. */
-		assistantSessionText?: string;
+		/** Active chat tab rows (user + assistant) — full transcript mirror for Team pulse. */
+		teamSessionTranscript?: ChatRow[];
+		streaming?: boolean;
+		chatAgentName?: string | null;
+		dispatchTurnAgent?: string | null;
+		chatPulseMeters?: ChatPulseMeters | null;
 	} | null;
 };
 
@@ -172,6 +182,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 		error,
 		dirty,
 		persistEncoding,
+		filePreview = null,
 		onSave,
 		onDiscardUnsaved,
 		onCursor,
@@ -207,6 +218,8 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 	const [dropHint, setDropHint] = useState<DropHint | null>(null);
 	const [histPast, setHistPast] = useState<number[]>([]);
 	const [histFuture, setHistFuture] = useState<number[]>([]);
+	/** Preview (image / SVG / Mermaid render) vs Source (buffer). */
+	const [visualMediaMode, setVisualMediaMode] = useState<"preview" | "source">("preview");
 
 	const syncDropHint = (h: DropHint | null) => {
 		dropHintRef.current = h;
@@ -309,6 +322,10 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 	}, [entries.length]);
 
 	useEffect(() => {
+		setVisualMediaMode("preview");
+	}, [editorPath]);
+
+	useEffect(() => {
 		const el = tabStripScrollRef.current;
 		if (!el) return;
 		const onWheel = (e: WheelEvent) => {
@@ -370,6 +387,21 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 
 	const showBread =
 		showBreadcrumbs && activeEntry?.type === "file" && activeEntry.path === editorPath && editorPath;
+
+	const mediaDualChrome =
+		Boolean(
+			activeEntry?.type === "file" &&
+				activeEntry.path === editorPath &&
+				filePreview &&
+				filePreviewSupportsSourceToggle(filePreview) &&
+				!loading &&
+				!error,
+		);
+	const showMediaAsSource = mediaDualChrome && visualMediaMode === "source";
+
+	const mediaSegOn = "rounded-md border border-[#ea580c]/60 bg-[#3c3c3c] px-2.5 py-1 font-mono text-[11px] text-[#fed7aa]";
+	const mediaSegOff =
+		"rounded-md border border-[#3c3c3c] bg-[#2d2d2d] px-2.5 py-1 font-mono text-[11px] text-[#cccccc] hover:bg-[#3c3c3c]";
 
 	return (
 		<div
@@ -658,6 +690,31 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 					</span>
 				</div>
 			) : null}
+			{mediaDualChrome ? (
+				<div
+					className="flex h-8 shrink-0 items-center gap-2 border-b border-[#2d2d2d] bg-[#252526] px-3"
+					role="group"
+					aria-label="File view mode"
+				>
+					<span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[#858585]">
+						View
+					</span>
+					<button
+						type="button"
+						onClick={() => setVisualMediaMode("preview")}
+						className={visualMediaMode === "preview" ? mediaSegOn : mediaSegOff}
+					>
+						Preview
+					</button>
+					<button
+						type="button"
+						onClick={() => setVisualMediaMode("source")}
+						className={visualMediaMode === "source" ? mediaSegOn : mediaSegOff}
+					>
+						Source
+					</button>
+				</div>
+			) : null}
 
 			<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 				{!activeEntry ? (
@@ -696,7 +753,11 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								agentTeams={agentTeamPane.agentTeams}
 								agents={agentTeamPane.agents}
 								agentsLoading={agentTeamPane.agentsLoading}
-								assistantSessionText={agentTeamPane.assistantSessionText}
+								teamSessionTranscript={agentTeamPane.teamSessionTranscript}
+								streaming={agentTeamPane.streaming}
+								chatAgentName={agentTeamPane.chatAgentName}
+								dispatchTurnAgent={agentTeamPane.dispatchTurnAgent}
+								chatPulseMeters={agentTeamPane.chatPulseMeters}
 							/>
 						) : (
 							<p className="p-3 font-mono text-[12px] text-[#858585]">Team pulse data not wired for this pane.</p>
@@ -716,6 +777,70 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 					</div>
 				) : error ? (
 					<div className="flex flex-1 items-center justify-center p-6 font-mono text-[13px] text-[#f14c4c]">{error}</div>
+				) : showMediaAsSource ? (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+						{persistEncoding === "base64" ? (
+							<div className="shrink-0 border-b border-[#2d2d2d] bg-[#252526] px-3 py-1 font-mono text-[10px] text-[#858585]">
+								Byte editor (Latin-1) — colors off; Save writes the exact file bytes.
+							</div>
+						) : null}
+						<WorkspaceTextBuffer
+							ref={ref}
+							path={editorPath}
+							content={content}
+							onChange={onChange}
+							loading={false}
+							error={null}
+							onCursor={onCursor}
+							wordWrap={wordWrap}
+							disableSyntaxHighlight={persistEncoding === "base64"}
+							scrollClassName="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono"
+							lineGutterClassName="w-9 py-1 pr-2 font-mono text-[12px] text-[#858585]"
+							textareaClassName="py-1 pr-2 text-[13px] leading-relaxed text-[#cccccc] selection:bg-[#9a3412]"
+							findBarClassName="shrink-0 border-t border-[#2d2d2d]"
+							statusLoadingClassName="p-4 text-sm text-[#858585]"
+							statusErrorClassName="p-4 text-sm text-red-500"
+							onFindInFiles={onFindInFiles}
+							onReplaceInFiles={onReplaceInFiles}
+							onUndoRedoStackChange={onUndoRedoStackChange}
+							onSelectionPrefsChange={onSelectionPrefsChange}
+						/>
+					</div>
+				) : filePreview?.kind === "image" ? (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
+						<div className="flex min-h-0 flex-1 overflow-auto p-4">
+							<img
+								src={filePreview.src}
+								alt=""
+								className="mx-auto block h-auto max-w-full object-contain [image-rendering:auto]"
+								loading="lazy"
+								decoding="async"
+							/>
+						</div>
+					</div>
+				) : filePreview?.kind === "svg" ? (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
+						<div className="flex min-h-0 flex-1 overflow-auto p-4">
+							<WorkspaceSvgPreview
+								xml={filePreview.xml}
+								imgClassName="mx-auto block h-auto max-w-full object-contain [image-rendering:auto]"
+							/>
+						</div>
+					</div>
+				) : filePreview?.kind === "mermaid" ? (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
+						<MermaidPreviewPane source={filePreview.source} appearanceDark />
+					</div>
+				) : filePreview?.kind === "binary" ? (
+					<div className="flex min-h-0 flex-1 overflow-auto bg-[#1e1e1e] p-4 font-mono text-[13px] leading-relaxed text-[#d4d4d4]">
+						<div className="max-w-xl text-[#858585]">
+							<p className="mb-2 text-[#cccccc]">Binary file</p>
+							<p>
+								Type <span className="text-[#fed7aa]">{filePreview.mimeType}</span>. This file is not shown as text.
+								Open it externally or use the workspace on disk.
+							</p>
+						</div>
+					</div>
 				) : (
 					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 						{persistEncoding === "base64" ? (

@@ -2,6 +2,8 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef } from "react";
 import { useServerConfig } from "../hooks/useServerConfig";
+import { useTerminalUiPreferences } from "../hooks/useTerminalUiPreferences";
+import { TERMINAL_UI_DEFAULT_FONT } from "../utils/terminalUiPreferences";
 import { registerTerminalInputSender } from "../utils/terminalInputBridge";
 import "@xterm/xterm/css/xterm.css";
 
@@ -20,6 +22,8 @@ export function EmbeddedTerminal() {
 	const termRef = useRef<Terminal | null>(null);
 	const { config } = useServerConfig();
 	const enabled = config?.terminalEnabled === true;
+	const { prefs } = useTerminalUiPreferences();
+	const fontFamily = prefs.fontFamily.trim() || TERMINAL_UI_DEFAULT_FONT;
 
 	useEffect(() => {
 		if (!enabled) return;
@@ -29,8 +33,8 @@ export function EmbeddedTerminal() {
 		const term = new Terminal({
 			cursorBlink: true,
 			cursorStyle: "block",
-			fontSize: 13,
-			fontFamily: "Consolas, 'Liberation Mono', 'Courier New', monospace",
+			fontSize: prefs.fontSize,
+			fontFamily,
 			theme: {
 				background: "#1e1e1e",
 				foreground: "#d4d4d4",
@@ -146,7 +150,7 @@ export function EmbeddedTerminal() {
 			}
 			term.dispose();
 		};
-	}, [enabled]);
+	}, [enabled, prefs.fontSize, fontFamily]);
 
 	if (config === null) {
 		return <div className="p-4 font-mono text-[12px] text-[#858585]">Loading server config…</div>;

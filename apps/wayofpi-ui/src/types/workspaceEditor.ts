@@ -77,6 +77,16 @@ export type GoMenuHandlers = {
 /** Menu bar Run → … (debug / breakpoints; stepping when `debugSessionActive`). */
 export type RunMenuHandlers = {
 	debugSessionActive: boolean;
+	/**
+	 * True when **Start Debugging** can launch a supported runner (see `getActiveFileDebugPlan`).
+	 * Mirrors Cursor/VS Code: unsupported types stay gray until a `.js` / `.ts` / `.py` (etc.) file is active.
+	 */
+	canStartDebugging: boolean;
+	/**
+	 * Terminal REPL debugger (pdb): Run → Continue / Step * and F5/F10/F11 forward one-letter commands.
+	 * False for Node/Bun `--inspect*` (attach Chrome / built-in inspector instead).
+	 */
+	debugReplSession: boolean;
 	terminalServerEnabled: boolean;
 	/** File open in editor and ready — toggles breakpoint on current line. */
 	canToggleBreakpoint: boolean;
@@ -86,6 +96,9 @@ export type RunMenuHandlers = {
 	onRunWithoutDebugging: () => void;
 	onStopDebugging: () => void;
 	onRestartDebugging: () => void;
+	/** Open **`.vscode/launch.json`** (create from template if missing), like VS Code **Open Configurations**. */
+	onOpenConfigurations: () => void;
+	/** Append a configuration (picker / merge), then open **launch.json** — Cursor **Add Configuration…**. */
 	onAddConfiguration: () => void;
 	onStepOver: () => void;
 	onStepInto: () => void;
@@ -100,6 +113,7 @@ export type RunMenuHandlers = {
 	onEnableAllBreakpoints: () => void;
 	onDisableAllBreakpoints: () => void;
 	onRemoveAllBreakpoints: () => void;
+	/** VS Code / Cursor-style: open chooser with Marketplace links and DAP context (extensions install in the desktop editor). */
 	onInstallAdditionalDebuggers: () => void;
 };
 
@@ -111,6 +125,8 @@ export type SettingsMenuHandlers = {
 	onOpenAiBrains: () => void;
 	/** Simple **Projects** tab. */
 	onOpenProjects: () => void;
+	/** Settings → Indexing & Docs (local manifest under `.wayofpi/index`). */
+	onOpenIndexingDocs: () => void;
 	/** Open `.wayofpi/ui-views.json` in the Simple editor (optional). */
 	onEditWorkspaceViewsCatalog?: () => void;
 	/**
@@ -123,9 +139,14 @@ export type SettingsMenuHandlers = {
 /** Menu bar Help → … (documentation links; some items are inert in the browser). */
 export type HelpMenuHandlers = {
 	onShowAllCommands: () => void;
+	/** Open **Host doctor** (fetches **GET `/api/diagnostics`**: checks, env, Ollama/OpenRouter, Pi CLI, terminal). */
+	onOpenHostDoctor: () => void;
 	onEditorPlayground: () => void;
 	onAccessibilityFeatures: () => void;
+	/** Opens the maintainer contact page (WhyNot Productions). */
 	onGiveFeedback: () => void;
+	/** Opens the maintainer home page (WhyNot Productions). */
+	onSupportUs: () => void;
 	onViewLicense: () => void;
 	/** False in the browser; true only if embedded in a shell that exposes devtools. */
 	canToggleDeveloperTools: boolean;

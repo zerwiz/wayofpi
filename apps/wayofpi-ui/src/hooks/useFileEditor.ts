@@ -21,11 +21,27 @@ function latin1ToBase64(s: string): string {
 	return btoa(bin);
 }
 
-function payloadToEditorState(r: FileGetResponse): { text: string; persistEncoding: FilePersistEncoding } {
-	if ("encoding" in r && r.encoding === "base64") {
-		return { text: base64ToLatin1(r.content), persistEncoding: "base64" };
+/** Body for `PUT /api/file` — matches `useFileEditor.save` encoding rules. */
+export function buildFilePutPayload(
+	path: string,
+	content: string,
+	persistEncoding: FilePersistEncoding,
+): { path: string; content: string } | { path: string; encoding: "base64"; content: string } {
+	if (persistEncoding === "base64") {
+		return { path, encoding: "base64", content: latin1ToBase64(content) };
 	}
-	return { text: r.content, persistEncoding: "utf8" };
+	return { path, content };
+}
+
+function payloadToEditorState(r: FileGetResponse): {
+	text: string;
+	persistEncoding: FilePersistEncoding;
+	mimeType: string | null;
+} {
+	if ("encoding" in r && r.encoding === "base64") {
+		return { text: base64ToLatin1(r.content), persistEncoding: "base64", mimeType: r.mimeType };
+	}
+	return { text: r.content, persistEncoding: "utf8", mimeType: null };
 }
 
 export function useFileEditor(path: string | null, options?: { autoSave?: boolean }) {
@@ -33,6 +49,7 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 	const [content, setContent] = useState("");
 	const [lastPersistedContent, setLastPersistedContent] = useState("");
 	const [persistEncoding, setPersistEncoding] = useState<FilePersistEncoding>("utf8");
+	const [mimeType, setMimeType] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [dirty, setDirty] = useState(false);
@@ -42,6 +59,7 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 			setContent("");
 			setLastPersistedContent("");
 			setPersistEncoding("utf8");
+			setMimeType(null);
 			setDirty(false);
 			setError(null);
 			return;
@@ -52,10 +70,11 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 		apiGet<FileGetResponse>(`/api/file?path=${encodeURIComponent(path)}`)
 			.then((r) => {
 				if (!cancelled) {
-					const { text, persistEncoding: enc } = payloadToEditorState(r);
+					const { text, persistEncoding: enc, mimeType: mt } = payloadToEditorState(r);
 					setContent(text);
 					setLastPersistedContent(text);
 					setPersistEncoding(enc);
+					setMimeType(mt);
 					setDirty(false);
 				}
 			})
@@ -75,8 +94,8 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 		setDirty(true);
 	}, []);
 
-	const save = useCallback(async () => {
-		if (!path) return;
+	const save = useCallback(async (): Promise<boolean> => {
+		if (!path) return false;
 		setError(null);
 		try {
 			if (persistEncoding === "base64") {
@@ -90,8 +109,10 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 			}
 			setLastPersistedContent(content);
 			setDirty(false);
+			return true;
 		} catch (e) {
 			setError(e instanceof Error ? e.message : String(e));
+			return false;
 		}
 	}, [path, content, persistEncoding]);
 
@@ -101,10 +122,11 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 		setError(null);
 		try {
 			const r = await apiGet<FileGetResponse>(`/api/file?path=${encodeURIComponent(path)}`);
-			const { text, persistEncoding: enc } = payloadToEditorState(r);
+			const { text, persistEncoding: enc, mimeType: mt } = payloadToEditorState(r);
 			setContent(text);
 			setLastPersistedContent(text);
 			setPersistEncoding(enc);
+			setMimeType(mt);
 			setDirty(false);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : String(e));
@@ -136,6 +158,7 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 		setContent: setContentTracked,
 		lastPersistedContent,
 		persistEncoding,
+		mimeType,
 		loading,
 		error,
 		dirty,

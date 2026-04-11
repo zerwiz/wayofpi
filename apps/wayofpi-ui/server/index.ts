@@ -15,8 +15,10 @@ import { getAgentBodyByName, loadWorkspaceAgents, readPlannerAgentBodySync } fro
 import { fetchOllamaTags, isValidOllamaModelId, isValidOpenRouterModelId } from "./llm-models";
 import { getWorkspaceRoot, MAX_FILE_BYTES, safeResolveUnderWorkspace } from "./paths";
 import { imageMimeFromPath } from "./workspace-file-mime";
+import { listPlansCatalog } from "./plans-catalog";
 import { readPackageScripts } from "./package-scripts";
 import { readUiViewsCatalog, seedUiViewsCatalogIfMissing } from "./ui-views-catalog";
+import { gitStageAbsolutePath } from "./git";
 import { buildWorkspaceTree } from "./tree";
 import {
 	addFolder,
@@ -28,6 +30,7 @@ import {
 	openFolder,
 	removeFolderByLabel,
 	resetWorkspaceToInitial,
+	saveCodeWorkspaceFileToPath,
 	setWorkspaceFoldersAbs,
 	workspaceSwitchAllowed,
 } from "./workspace-state";
@@ -37,9 +40,11 @@ import {
 	disposeTerminal,
 	handleTerminalMessage,
 	terminalAllowed,
+	terminalShellHints,
 	type TerminalWsData,
 } from "./terminal-ws";
 import { collectDiagnostics, collectUpstreamSnapshot } from "./diagnostics";
+import { runWorkspaceProblemsAnalysis, type WorkspaceProblemsRunResult } from "./workspace-problems";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
 import { collectStaticWebManifest } from "./web-manifest";
 import {
@@ -55,8 +60,14 @@ import {
 	wayofpiSessionBasename,
 } from "./wop-session-jsonl";
 import { tryAutoDispatchFromUserText } from "./orchestrator-dispatch-intent";
-import { orchestratorBashEnabled, orchestratorToolsEnabled } from "./orchestrator-tools-exec";
 import {
+	orchestratorBashEnabled,
+	orchestratorToolsEnabled,
+	patchOrchestratorGateRuntime,
+	type OrchestratorGateRuntimePatch,
+} from "./orchestrator-tools-exec";
+import {
+	patchPiJsonChatRuntimeOverride,
 	piAgentRuntimeBlockedReason,
 	resolvePiBinaryPath,
 	runPiChatTurn,
@@ -64,6 +75,22 @@ import {
 	wopChatEngineFromEnv,
 } from "./pi-agent-runtime";
 import { evalChatSlashCommand, type ChatSlashMutation } from "./chat-slash-commands";
+import {
+	addWorkspaceIndexDoc,
+	clearWorkspaceIndex,
+	getWorkspaceIndexChatBoostSync,
+	getWorkspaceIndexStatus,
+	patchWorkspaceIndexOptions,
+	removeWorkspaceIndexDoc,
+	syncWorkspaceIndex,
+	syncWorkspaceIndexDoc,
+} from "./workspace-index";
+import {
+	readGithubConnectionMeta,
+	removeGithubCredentials,
+	saveGithubCredentials,
+	verifyGithubToken,
+} from "./github-connection";
 
 // Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
 // In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
@@ -78,13 +105,15 @@ if (process.env.NODE_ENV !== "production") {
 const PORT = Number(process.env.WOP_SERVER_PORT || "3333");
 const DIST = join(import.meta.dir, "..", "dist");
 
+type PendingChatItem = { id: string; text: string };
+
 type ChatWsData = {
 	kind: "chat";
 	messages: ChatMessage[];
 	/** True while a chat completion stream is in flight. */
 	busy: boolean;
-	/** User texts received while `busy`; run after the current turn completes. */
-	pendingChatTexts: string[];
+	/** User texts received while `busy`; run after the current turn completes (stable ids for queue UI). */
+	pendingChatQueue: PendingChatItem[];
 	/** Per-connection override (UI-selected); falls back to Pi-aligned defaults (`resolveOllamaModelDefault` / OPENROUTER_MODEL). */
 	ollamaModel?: string;
 	openrouterModel?: string;
@@ -105,9 +134,22 @@ type ChatWsData = {
 
 type ServerWsData = ChatWsData | TerminalWsData;
 
-function applyLeadFromCache(data: ChatWsData) {
+function applyLeadFromCache(
+	data: ChatWsData,
+	opts?: {
+		/**
+		 * Phrase-dispatch: specialist body is merged for this turn only while `agentName` stays null (Pi dispatcher).
+		 * Must match that specialist for Plan-mode planner dedup (avoid stacking planner twice on `planner.md`).
+		 */
+		effectiveAgentNameLower?: string | null;
+	},
+) {
+	const agentNameLower =
+		data.agentName?.trim().toLowerCase() ??
+		(opts?.effectiveAgentNameLower != null ? opts.effectiveAgentNameLower.trim().toLowerCase() : null) ??
+		null;
 	let plannerBody: string | null = null;
-	if (data.chatMode === "plan" && data.agentName?.trim().toLowerCase() !== "planner") {
+	if (data.chatMode === "plan" && agentNameLower !== "planner") {
 		plannerBody = readPlannerAgentBodySync(getPrimaryWorkspacePath());
 	}
 	const piJson = shouldUsePiJsonChat();
@@ -115,10 +157,11 @@ function applyLeadFromCache(data: ChatWsData) {
 		mode: data.chatMode,
 		envSystemPrompt: process.env.WOP_SYSTEM_PROMPT,
 		agentBody: data.cachedAgentBody,
-		agentNameLower: data.agentName?.trim().toLowerCase() ?? null,
+		agentNameLower,
 		plannerAgentBody: plannerBody,
 		orchestratorPiToolsEnabled: orchestratorToolsEnabled() && !piJson,
 		piJsonChatRuntime: piJson,
+		workspaceIndexBoost: getWorkspaceIndexChatBoostSync(),
 	});
 }
 
@@ -141,9 +184,15 @@ function logLine(
 	return JSON.stringify({ type: "log", time, level, source, msg });
 }
 
-function sendQueueState(ws: { send: (data: string) => void }, pending: number) {
+function sendQueueState(ws: { send: (data: string) => void }, queue: PendingChatItem[]) {
 	try {
-		ws.send(JSON.stringify({ type: "queue_state", pending }));
+		ws.send(
+			JSON.stringify({
+				type: "queue_state",
+				pending: queue.length,
+				items: queue.map((q) => ({ id: q.id, text: q.text })),
+			}),
+		);
 	} catch {
 		/* socket may be closing */
 	}
@@ -227,10 +276,10 @@ async function processActivateSession(
 		ws.data.messages = next;
 	}
 
-	ws.data.pendingChatTexts = [];
+	ws.data.pendingChatQueue = [];
 	ws.data.cumPromptTokens = 0;
 	ws.data.cumCompletionTokens = 0;
-	sendQueueState(ws, 0);
+	sendQueueState(ws, []);
 	applyLeadFromCache(ws.data);
 
 	if (sessionKey) {
@@ -303,7 +352,7 @@ async function applySlashMutations(
 				"chat",
 				mutation.setChatMode === "plan"
 					? "Plan mode — session uses workspace planner.md (Pi) when present, else built-in fallback; no duplicate if agent is planner."
-					: "Build mode — standard assistant (WOP_SYSTEM_PROMPT only if set).",
+					: "Build mode — Orchestrator when no .md agent, else selected agent; WOP_SYSTEM_PROMPT prepended when set.",
 			),
 		);
 	}
@@ -338,6 +387,8 @@ async function runChatTurn(
 ): Promise<void> {
 	const data = ws.data;
 	data.busy = true;
+	/** Snapshot before phrase-dispatch overwrites `cachedAgentBody` for one turn (Pi: dispatcher unchanged). */
+	let phraseDispatchRestoreCached: string | null | undefined = undefined;
 	try {
 		const trimmed = text.trim();
 		const slash = await evalChatSlashCommand(trimmed, {
@@ -349,10 +400,10 @@ async function runChatTurn(
 		if (slash.handled) {
 			if (slash.mutation?.clearTranscript) {
 				data.messages = [];
-				data.pendingChatTexts = [];
+				data.pendingChatQueue = [];
 				data.cumPromptTokens = 0;
 				data.cumCompletionTokens = 0;
-				sendQueueState(ws, 0);
+				sendQueueState(ws, []);
 				applyLeadFromCache(data);
 				if (data.wopSessionKey) {
 					try {
@@ -418,16 +469,24 @@ async function runChatTurn(
 			}
 		}
 
+		/** Re-merge lead `system` from disk + env (planner.md, WOP_SYSTEM_PROMPT) before phrase-dispatch and the model. */
+		applyLeadFromCache(data);
+
 		const sendLog = (level: "INFO" | "WARN" | "ERROR", source: string, m: string) => {
 			ws.send(logLine(level, source, m));
 		};
 
-		/** Pi-style **dispatch** — infer specialist from phrasing ("start scout", "scout to …") and switch server-side before the model runs. */
+		/**
+		 * Pi-style **phrase dispatch** — infer specialist ("start scout", "dispatch the planner …") like roster hints.
+		 * Does **not** persist `agentName` (picker / `set_agent`): specialist `.md` is merged **for this turn only**,
+		 * matching Pi **agent-team** where the dispatcher process stays primary.
+		 */
 		try {
 			const disp = await tryAutoDispatchFromUserText(text, data.agentName);
 			if (disp.kind === "orchestrator") {
 				data.agentName = null;
 				data.cachedAgentBody = null;
+				phraseDispatchRestoreCached = undefined;
 				applyLeadFromCache(data);
 				ws.send(JSON.stringify({ type: "agent", name: data.agentName }));
 				sendLog(
@@ -437,19 +496,23 @@ async function runChatTurn(
 				);
 				broadcastToolLog("INFO", "dispatch_agent", "→ orchestrator");
 			} else if (disp.kind === "agent") {
-				data.agentName = disp.canonicalName;
+				phraseDispatchRestoreCached = data.cachedAgentBody;
 				data.cachedAgentBody = disp.body;
-				applyLeadFromCache(data);
-				ws.send(JSON.stringify({ type: "agent", name: data.agentName }));
+				applyLeadFromCache(data, { effectiveAgentNameLower: disp.canonicalName.trim().toLowerCase() });
+				try {
+					ws.send(JSON.stringify({ type: "dispatch_turn", agent: disp.canonicalName }));
+				} catch {
+					/* closing */
+				}
 				sendLog(
 					"INFO",
 					"dispatch",
-					`Auto-dispatched to **${disp.canonicalName}** — same roster as Pi **\`dispatch_agent\`**. This turn uses that persona.`,
+					`Phrase-dispatch **${disp.canonicalName}** for this reply only — session persona unchanged (Pi **dispatch_agent** / dispatcher posture).`,
 				);
 				broadcastToolLog(
 					"INFO",
 					"dispatch_agent",
-					`→ ${disp.canonicalName} — ${text.length > 140 ? `${text.slice(0, 137)}…` : text}`,
+					`→ ${disp.canonicalName} (one turn) — ${text.length > 140 ? `${text.slice(0, 137)}…` : text}`,
 				);
 			}
 		} catch (e) {
@@ -484,7 +547,7 @@ async function runChatTurn(
 			usePiChat
 				? "Running turn via headless Pi (`pi --mode json`)…"
 				: useOrchestratorTools
-					? "Chat completion with workspace tools (read, list_dir, grep, write, …)…"
+					? "Chat completion with workspace tools (read, list_dir, grep, write, team_list, team_member_*, …)…"
 					: "Requesting completion…",
 		);
 		let full = "";
@@ -516,7 +579,16 @@ async function runChatTurn(
 						ollamaModel: data.ollamaModel,
 						openrouterModel: data.openrouterModel,
 					},
-					{ signal: ac.signal },
+					{
+						signal: ac.signal,
+						onAgentsCatalogChanged: () => {
+							try {
+								ws.send(JSON.stringify({ type: "agents_catalog_changed" }));
+							} catch {
+								/* closing */
+							}
+						},
+					},
 				);
 				result = o.result;
 				lastStreamUsage = o.lastStreamUsage;
@@ -621,24 +693,81 @@ async function runChatTurn(
 			}
 		}
 	} finally {
+		if (phraseDispatchRestoreCached !== undefined) {
+			data.cachedAgentBody = phraseDispatchRestoreCached;
+			phraseDispatchRestoreCached = undefined;
+			applyLeadFromCache(data);
+		}
 		data.chatAbort = null;
 		data.busy = false;
-		const next = data.pendingChatTexts.shift();
-		sendQueueState(ws, data.pendingChatTexts.length);
+		const next = data.pendingChatQueue.shift();
+		sendQueueState(ws, data.pendingChatQueue);
 		if (next != null) {
-			void runChatTurn(ws, next, false).catch(() => {
+			void runChatTurn(ws, next.text, false).catch(() => {
 				/* runChatTurn already reports errors to the client */
 			});
 		}
 	}
 }
 
+/** Last static analysis snapshot (ESLint or `tsc` under the primary workspace root). */
+let lastWorkspaceProblems: WorkspaceProblemsRunResult | null = null;
+
+function applySessionRuntimePostBody(body: Record<string, unknown>): Response {
+	const orchPatch: OrchestratorGateRuntimePatch = {};
+	let any = false;
+	if ("orchestratorTools" in body) {
+		any = true;
+		const v = body.orchestratorTools;
+		if (v === null) orchPatch.orchestratorTools = null;
+		else if (typeof v === "boolean") orchPatch.orchestratorTools = v;
+		else return json({ error: "orchestratorTools must be boolean or null" }, 400);
+	}
+	if ("orchestratorBash" in body) {
+		any = true;
+		const v = body.orchestratorBash;
+		if (v === null) orchPatch.orchestratorBash = null;
+		else if (typeof v === "boolean") orchPatch.orchestratorBash = v;
+		else return json({ error: "orchestratorBash must be boolean or null" }, 400);
+	}
+	if ("piDrivesChat" in body) {
+		any = true;
+		const v = body.piDrivesChat;
+		if (v === null) patchPiJsonChatRuntimeOverride(null);
+		else if (typeof v === "boolean") patchPiJsonChatRuntimeOverride(v);
+		else return json({ error: "piDrivesChat must be boolean or null" }, 400);
+	}
+	if (!any) {
+		return json(
+			{ error: "Provide orchestratorTools, orchestratorBash, and/or piDrivesChat (boolean or null)" },
+			400,
+		);
+	}
+	patchOrchestratorGateRuntime(orchPatch);
+	return json({
+		ok: true,
+		orchestratorTools: orchestratorToolsEnabled(),
+		orchestratorBash: orchestratorBashEnabled(),
+		piDrivesChat: shouldUsePiJsonChat(),
+	});
+}
+
 async function handleApi(url: URL, req: Request): Promise<Response> {
-	/** Avoid 404 when clients or proxies append a trailing slash. */
-	const p = url.pathname.replace(/\/+$/, "") || "/";
+	/** Collapse duplicate slashes; strip trailing slash (except root). */
+	const p = url.pathname.replace(/\/{2,}/g, "/").replace(/\/+$/, "") || "/";
 
 	if (p === "/api/health") {
-		return json({ ok: true, service: "wayofpi-ui-server", time: new Date().toISOString() });
+		return json({
+			ok: true,
+			service: "wayofpi-ui-server",
+			time: new Date().toISOString(),
+			/** Bump clients (Vite/Electron “Start service”) so they do not treat an old Bun on this port as healthy. */
+			capabilities: {
+				workspaceProblems: true,
+				/** **`POST /api/config`** runtime toggles (Pi drives chat, orchestrator tools/bash) exist on this build. */
+				configRuntimePost: true,
+			},
+		});
 	}
 
 	if (p === "/api/diagnostics" && req.method === "GET") {
@@ -712,6 +841,142 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		});
 	}
 
+	if (p === "/api/workspace/problems" && req.method === "GET") {
+		if (lastWorkspaceProblems) return json(lastWorkspaceProblems);
+		return json({
+			ok: true,
+			ranAt: new Date(0).toISOString(),
+			engine: "none",
+			problems: [],
+			exitCode: null,
+			log: "No analysis run yet — open the Problems panel and choose Run analysis. (Requires ESLint or tsconfig at workspace root, or under apps/wayofpi-ui in this monorepo.)",
+		} satisfies WorkspaceProblemsRunResult);
+	}
+
+	if (p === "/api/workspace/problems/run" && req.method === "POST") {
+		try {
+			const root = getPrimaryWorkspacePath();
+			const result = await runWorkspaceProblemsAnalysis(root);
+			lastWorkspaceProblems = result;
+			broadcastToolLog(
+				"INFO",
+				"analyze",
+				`workspace problems: engine=${result.engine} count=${result.problems.length}${result.error ? ` (${result.error})` : ""}`,
+			);
+			return json(result);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message, ranAt: new Date().toISOString(), engine: "error", problems: [], exitCode: null, log: message }, 500);
+		}
+	}
+
+	if (p === "/api/workspace-index" && req.method === "GET") {
+		try {
+			const payload = await getWorkspaceIndexStatus();
+			return json(payload);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: message }, 500);
+		}
+	}
+
+	if (p === "/api/workspace-index/sync" && req.method === "POST") {
+		try {
+			const result = await syncWorkspaceIndex();
+			broadcastToolLog("INFO", "index", `workspace index sync: files=${result.state.fileCount}`);
+			return json(result);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/workspace-index/clear" && req.method === "POST") {
+		try {
+			await clearWorkspaceIndex();
+			broadcastToolLog("INFO", "index", "workspace index cleared");
+			return json({ ok: true });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/workspace-index/options" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		try {
+			const partial: {
+				indexNewFolders?: boolean;
+				instantGrepIndex?: boolean;
+				attachSummaryToChat?: boolean;
+			} = {};
+			if (typeof body.indexNewFolders === "boolean") partial.indexNewFolders = body.indexNewFolders;
+			if (typeof body.instantGrepIndex === "boolean") partial.instantGrepIndex = body.instantGrepIndex;
+			if (typeof body.attachSummaryToChat === "boolean") partial.attachSummaryToChat = body.attachSummaryToChat;
+			const options = await patchWorkspaceIndexOptions(partial);
+			return json({ ok: true, options });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/workspace-index/docs" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const url = String(body.url ?? "").trim();
+		if (!url) return json({ error: "url required" }, 400);
+		try {
+			const entry = await addWorkspaceIndexDoc(url);
+			return json({ ok: true, entry });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 400);
+		}
+	}
+
+	if (p === "/api/workspace-index/docs/sync" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const id = String(body.id ?? "").trim();
+		if (!id) return json({ error: "id required" }, 400);
+		try {
+			const entry = await syncWorkspaceIndexDoc(id);
+			if (!entry) return json({ error: "not found" }, 404);
+			return json({ ok: true, entry });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/workspace-index/docs/remove" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const id = String(body.id ?? "").trim();
+		if (!id) return json({ error: "id required" }, 400);
+		const ok = await removeWorkspaceIndexDoc(id);
+		if (!ok) return json({ error: "not found" }, 404);
+		return json({ ok: true });
+	}
+
 	if (p === "/api/workspace" && req.method === "POST") {
 		let body: Record<string, unknown>;
 		try {
@@ -739,6 +1004,17 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				const label = String(body.label ?? "").trim();
 				if (!label) return json({ error: "label required" }, 400);
 				removeFolderByLabel(label);
+				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+			}
+			if (op === "save_code_workspace_file") {
+				const filePath = String(body.path ?? "").trim();
+				if (!filePath) return json({ error: "path required" }, 400);
+				await saveCodeWorkspaceFileToPath(filePath);
+				broadcastToolLog(
+					"INFO",
+					"write",
+					`workspace save_code_workspace_file ${filePath.length > 200 ? `${filePath.slice(0, 197)}…` : filePath}`,
+				);
 				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
 			}
 			if (op === "close_workspace" || op === "reset_workspace") {
@@ -783,6 +1059,19 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		}
 	}
 
+	if (
+		req.method === "POST" &&
+		(p === "/api/config" || p === "/api/config/orchestrator-gates")
+	) {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		return applySessionRuntimePostBody(body);
+	}
+
 	if (p === "/api/config" && req.method === "GET") {
 		const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
 		const engineMode = wopChatEngineFromEnv();
@@ -792,22 +1081,65 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				: engineMode;
 		const piEngineLive = shouldUsePiJsonChat();
 		const piBackendRequested = engineMode === "pi" || engineMode === "auto";
+		const piBinaryResolved = resolvePiBinaryPath() != null;
 		return json({
 			provider,
 			chatEngine,
 			/** True when `WOP_CHAT_ENGINE` is **`pi`** or **`auto`** and the **`pi`** CLI resolves — all personas use `pi --mode json` (full Pi tools). */
 			piDrivesChat: piEngineLive,
+			/** Whether a **`pi`** executable was resolved (`WOP_PI_BINARY` or PATH); **on** still needs this for headless Pi turns. */
+			piBinaryResolved,
 			piChatEngineRequested: piBackendRequested,
 			piChatEngineWired: piEngineLive,
 			/** Interim Bun tool loop only — superseded once Pi owns tools per `docs/WOP_PI_BACKEND_WIRING_PLAN.md`. */
 			orchestratorTools: orchestratorToolsEnabled(),
 			orchestratorBash: orchestratorBashEnabled(),
+			/** Same shape as **`GET /api/health`**. so the UI can detect a stale Bun without a second request. */
+			capabilities: {
+				workspaceProblems: true,
+				configRuntimePost: true,
+			},
 			manifestUrl: "/api/manifest",
 			ollamaHost: resolveOllamaHost(),
 			ollamaModel: resolveOllamaModelDefault(),
 			openrouterModel: process.env.OPENROUTER_MODEL || "openrouter/auto",
 			terminalEnabled: terminalAllowed(),
+			...terminalShellHints(),
 		});
+	}
+
+	if (p === "/api/github/status" && req.method === "GET") {
+		try {
+			return json(await readGithubConnectionMeta());
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ connected: false, login: null, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/github/connect" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ ok: false, error: "Invalid JSON" }, 400);
+		}
+		const token = String(body.token ?? "");
+		const verified = await verifyGithubToken(token);
+		if (!verified.ok) return json({ ok: false, error: verified.error }, 400);
+		const saved = await saveGithubCredentials(token, verified.login);
+		if (!saved.ok) return json({ ok: false, error: saved.error }, 500);
+		return json({ ok: true, login: verified.login });
+	}
+
+	if (p === "/api/github/disconnect" && req.method === "POST") {
+		try {
+			await removeGithubCredentials();
+			return json({ ok: true });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
 	}
 
 	if (p === "/api/manifest" && req.method === "GET") {
@@ -948,14 +1280,44 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/tree" && req.method === "GET") {
 		try {
-			const { root, nodes, folders } = await buildWorkspaceTree();
+			const { root, nodes, folders, git } = await buildWorkspaceTree();
 			return json({
 				root,
 				nodes,
 				folders,
+				git,
 				switchAllowed: workspaceSwitchAllowed(),
 				initialRoot: getFrozenInitialWorkspacePath(),
 			});
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: message }, 500);
+		}
+	}
+
+	if (p === "/api/git/stage" && req.method === "POST") {
+		let body: { path?: string };
+		try {
+			body = (await req.json()) as { path?: string };
+		} catch {
+			return json({ ok: false as const, error: "Invalid JSON" });
+		}
+		const rel = String(body.path ?? "").trim();
+		const abs = safeResolveUnderWorkspace(rel);
+		if (!abs) return json({ ok: false as const, error: "Invalid path" });
+		const result = await gitStageAbsolutePath(abs);
+		if (!result.ok) {
+			broadcastToolLog("WARN", "git", `stage failed ${rel}: ${result.error}`);
+			return json(result);
+		}
+		broadcastToolLog("INFO", "git", `staged ${rel}`);
+		return json(result);
+	}
+
+	if (p === "/api/plans" && req.method === "GET") {
+		try {
+			const catalog = await listPlansCatalog();
+			return json(catalog);
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ error: message }, 500);
@@ -1197,7 +1559,7 @@ const server = Bun.serve<ServerWsData>({
 					kind: "chat",
 					messages: [] as ChatMessage[],
 					busy: false,
-					pendingChatTexts: [],
+					pendingChatQueue: [],
 					ollamaModel: undefined,
 					openrouterModel: undefined,
 					chatMode: "build",
@@ -1342,7 +1704,7 @@ const server = Bun.serve<ServerWsData>({
 						"chat",
 						next === "plan"
 							? "Plan mode — session uses workspace planner.md (Pi) when present, else built-in fallback; no duplicate if agent is planner."
-							: "Build mode — standard assistant (WOP_SYSTEM_PROMPT only if set).",
+							: "Build mode — Orchestrator when no .md agent, else selected agent; WOP_SYSTEM_PROMPT prepended when set.",
 					),
 				);
 				return;
@@ -1416,11 +1778,11 @@ const server = Bun.serve<ServerWsData>({
 					return;
 				}
 				ws.data.messages = [];
-				ws.data.pendingChatTexts = [];
+				ws.data.pendingChatQueue = [];
 				ws.data.wopSessionKey = null;
 				ws.data.cumPromptTokens = 0;
 				ws.data.cumCompletionTokens = 0;
-				sendQueueState(ws, 0);
+				sendQueueState(ws, []);
 				applyLeadFromCache(ws.data);
 				ws.send(JSON.stringify({ type: "session_reset" }));
 				ws.send(JSON.stringify({ type: "chat_mode", mode: ws.data.chatMode }));
@@ -1428,14 +1790,75 @@ const server = Bun.serve<ServerWsData>({
 				ws.send(logLine("INFO", "chat", "New session — conversation context cleared for this connection."));
 				return;
 			}
+			if (msg.type === "queue_edit") {
+				const id = String((msg as { id?: unknown }).id ?? "").trim();
+				const nextText = String((msg as { text?: unknown }).text ?? "").trim();
+				if (!id || !nextText) {
+					ws.send(JSON.stringify({ type: "error", message: "queue_edit requires id and non-empty text." }));
+					return;
+				}
+				const item = ws.data.pendingChatQueue.find((q) => q.id === id);
+				if (!item) {
+					ws.send(JSON.stringify({ type: "error", message: "Unknown queue message id." }));
+					return;
+				}
+				item.text = nextText;
+				sendQueueState(ws, ws.data.pendingChatQueue);
+				return;
+			}
+			if (msg.type === "queue_delete") {
+				const id = String((msg as { id?: unknown }).id ?? "").trim();
+				if (!id) {
+					ws.send(JSON.stringify({ type: "error", message: "queue_delete requires id." }));
+					return;
+				}
+				const before = ws.data.pendingChatQueue.length;
+				ws.data.pendingChatQueue = ws.data.pendingChatQueue.filter((q) => q.id !== id);
+				if (ws.data.pendingChatQueue.length === before) {
+					ws.send(JSON.stringify({ type: "error", message: "Unknown queue message id." }));
+					return;
+				}
+				sendQueueState(ws, ws.data.pendingChatQueue);
+				return;
+			}
+			if (msg.type === "queue_force") {
+				const id = String((msg as { id?: unknown }).id ?? "").trim();
+				if (!id) {
+					ws.send(JSON.stringify({ type: "error", message: "queue_force requires id." }));
+					return;
+				}
+				const idx = ws.data.pendingChatQueue.findIndex((q) => q.id === id);
+				if (idx < 0) {
+					ws.send(JSON.stringify({ type: "error", message: "Unknown queue message id." }));
+					return;
+				}
+				const [item] = ws.data.pendingChatQueue.splice(idx, 1);
+				if (!item) return;
+				if (ws.data.busy) {
+					ws.data.pendingChatQueue.unshift(item);
+					sendQueueState(ws, ws.data.pendingChatQueue);
+					return;
+				}
+				try {
+					ws.send(JSON.stringify({ type: "queue_runtime_bind", queueId: item.id }));
+				} catch {
+					/* socket may be closing */
+				}
+				sendQueueState(ws, ws.data.pendingChatQueue);
+				void runChatTurn(ws, item.text, false).catch(() => {
+					/* runChatTurn already reports errors to the client */
+				});
+				return;
+			}
 			if (msg.type !== "chat") return;
 			const text = String(msg.content ?? "").trim();
 			if (!text) return;
 
 			if (ws.data.busy) {
-				ws.data.pendingChatTexts.push(text);
-				ws.send(JSON.stringify({ type: "user_queued", content: text }));
-				sendQueueState(ws, ws.data.pendingChatTexts.length);
+				const id = crypto.randomUUID();
+				ws.data.pendingChatQueue.push({ id, text });
+				ws.send(JSON.stringify({ type: "user_queued", content: text, queueId: id }));
+				sendQueueState(ws, ws.data.pendingChatQueue);
 				return;
 			}
 

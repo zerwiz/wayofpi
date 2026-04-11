@@ -1,5 +1,5 @@
-import { realpathSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 
 function syncRealpath(abs: string): string {
 	try {
@@ -61,6 +61,69 @@ function recordPath(
 	if (key) map[key] = status;
 }
 
+/** Worktree identity for the Source Control panel (no label — add in `tree.ts`). */
+export interface GitWorktreeSnapshot {
+	isRepo: boolean;
+	topLevel: string | null;
+	branch: string | null;
+	error: string | null;
+}
+
+function emptySnapshot(error: string | null): GitWorktreeSnapshot {
+	return { isRepo: false, topLevel: null, branch: null, error };
+}
+
+/**
+ * Resolve whether `root` is inside a Git worktree and which branch (or detached) is checked out.
+ * Used by `/api/tree` for the SCM sidebar; failures are surfaced in `error` except plain “not a repo”.
+ */
+export async function gitWorktreeSnapshot(root: string): Promise<GitWorktreeSnapshot> {
+	const proc = Bun.spawn(["git", "-C", root, "rev-parse", "--is-inside-work-tree", "--show-toplevel"], {
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const out = await new Response(proc.stdout).text();
+	const err = await new Response(proc.stderr).text();
+	const code = await proc.exited;
+	const msg = (err.trim() || out.trim()).replace(/\s+/g, " ");
+	if (code !== 0) {
+		if (/not a git repository/i.test(msg)) return emptySnapshot(null);
+		return emptySnapshot(msg || `git rev-parse exited ${code}`);
+	}
+	const lines = out
+		.trim()
+		.split("\n")
+		.map((l) => l.trim())
+		.filter(Boolean);
+	const inside = lines[0] === "true";
+	const topLine = lines[1];
+	const topLevel = topLine ? syncRealpath(topLine) : null;
+	if (!inside || !topLevel) return emptySnapshot(null);
+
+	const branchProc = Bun.spawn(["git", "-C", root, "branch", "--show-current"], {
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const branchOut = await new Response(branchProc.stdout).text();
+	const branchErr = await new Response(branchProc.stderr).text();
+	const branchCode = await branchProc.exited;
+	let branch: string | null = branchOut.trim() || null;
+	if (branchCode !== 0 && branchErr.trim()) {
+		return { isRepo: true, topLevel, branch: null, error: branchErr.trim() };
+	}
+	if (!branch) {
+		const shortProc = Bun.spawn(["git", "-C", root, "rev-parse", "--short", "HEAD"], {
+			stdout: "pipe",
+			stderr: "pipe",
+		});
+		const shortOut = await new Response(shortProc.stdout).text();
+		await shortProc.exited;
+		const h = shortOut.trim();
+		branch = h ? `(detached @ ${h})` : "(detached)";
+	}
+	return { isRepo: true, topLevel, branch, error: null };
+}
+
 /** Relative path (tree keys) → short porcelain status (M, ??, MM, …). */
 export async function gitStatusMap(root: string): Promise<Record<string, string>> {
 	const map: Record<string, string> = {};
@@ -95,4 +158,42 @@ export async function gitStatusMap(root: string): Promise<Record<string, string>
 		}
 	}
 	return map;
+}
+
+export type GitStageResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Stage a workspace file or directory (`git add`) using the repository that contains `absPath`.
+ */
+export async function gitStageAbsolutePath(absPath: string): Promise<GitStageResult> {
+	if (!existsSync(absPath)) return { ok: false, error: "Path does not exist" };
+	const startDir = dirname(absPath);
+	const topProc = Bun.spawn(["git", "-C", startDir, "rev-parse", "--show-toplevel"], {
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const topOut = await new Response(topProc.stdout).text();
+	const topErr = await new Response(topProc.stderr).text();
+	if ((await topProc.exited) !== 0) {
+		const msg = topErr.trim() || topOut.trim();
+		if (/not a git repository/i.test(msg)) return { ok: false, error: "Not a git repository" };
+		return { ok: false, error: msg || "git rev-parse failed" };
+	}
+	const repoTop = syncRealpath(topOut.trim());
+	const absReal = syncRealpath(absPath);
+	const spec = relative(repoTop, absReal).replace(/\\/g, "/");
+	if (!spec || spec.startsWith("..") || spec.split("/").includes("..")) {
+		return { ok: false, error: "Path is outside the git repository" };
+	}
+
+	const addProc = Bun.spawn(["git", "-C", repoTop, "add", "--", spec], {
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const addErr = await new Response(addProc.stderr).text();
+	const code = await addProc.exited;
+	if (code !== 0) {
+		return { ok: false, error: addErr.trim() || `git add exited with code ${code}` };
+	}
+	return { ok: true };
 }

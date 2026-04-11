@@ -1,11 +1,12 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef } from "react";
 import { useFileEditor } from "../hooks/useFileEditor";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
+import { computeWorkspaceFilePreview } from "../utils/workspaceFilePreview";
 import type { PanelTab } from "../utils/panelDockLayout";
 import { WorkspacePane, type WorkspacePaneProps } from "./WorkspacePane";
 
 export type MainEditorColumnApi = {
-	save: () => Promise<void>;
+	save: () => Promise<boolean>;
 	reload: () => Promise<void>;
 	getContent: () => string;
 	dirty: boolean;
@@ -29,6 +30,7 @@ type SharedWorkspacePaneProps = Omit<
 	| "error"
 	| "dirty"
 	| "persistEncoding"
+	| "filePreview"
 	| "onSave"
 	| "onDiscardUnsaved"
 	| "onCursor"
@@ -59,6 +61,7 @@ export const TechnicalEditorColumn = forwardRef<
 		content,
 		setContent,
 		persistEncoding,
+		mimeType,
 		loading,
 		error,
 		dirty,
@@ -68,6 +71,11 @@ export const TechnicalEditorColumn = forwardRef<
 	} = useFileEditor(path, {
 		autoSave,
 	});
+
+	const filePreview = useMemo(() => {
+		if (loading) return null;
+		return computeWorkspaceFilePreview(path, persistEncoding, mimeType, content);
+	}, [loading, path, persistEncoding, mimeType, content]);
 
 	const tabs = useMemo<PanelTab[]>(() => [{ type: "file", path }], [path]);
 
@@ -120,6 +128,7 @@ export const TechnicalEditorColumn = forwardRef<
 				error={error}
 				dirty={dirty}
 				persistEncoding={persistEncoding}
+				filePreview={filePreview}
 				onDiscardUnsaved={discardUnsavedChanges}
 				onSave={() => void save()}
 				onCursor={isFocused ? onCursor : undefined}

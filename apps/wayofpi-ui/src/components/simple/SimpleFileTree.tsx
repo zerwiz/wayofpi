@@ -1,6 +1,8 @@
 import { ChevronDown, ChevronRight, FileCode2, FileJson, File as FileIcon, Folder } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { TreeNode } from "../../types/tree";
+import { GitExplorerStatusBadge } from "../GitExplorerStatusBadge";
+import { gitExplorerRowTitle } from "../../utils/gitStatusUi";
 import { sortTreeNodes } from "../../utils/sortTreeNodes";
 
 function fileRowIcon(name: string, appearanceDark: boolean) {
@@ -39,11 +41,13 @@ export function SimpleFileTree({
 	selectedPath,
 	onSelectFile,
 	appearanceDark,
+	onExplorerGitMutated,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
 	onSelectFile: (path: string) => void;
 	appearanceDark: boolean;
+	onExplorerGitMutated?: () => void;
 }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	const sorted = useMemo(() => sortTreeNodes(nodes), [nodes]);
@@ -72,7 +76,6 @@ export function SimpleFileTree({
 	const dirName = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
 	const hoverRow = appearanceDark ? "hover:bg-[#3c3c3c]/80" : "hover:bg-[#e5e5e5]";
 	const fileName = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
-	const muted = appearanceDark ? "text-[#858585]" : "text-[#616161]";
 
 	const renderNodes = (list: TreeNode[], depth: number): ReactNode =>
 		list.map((node) => {
@@ -80,7 +83,11 @@ export function SimpleFileTree({
 			const isOpen = expanded.has(node.path);
 			const selected = selectedPath === node.path;
 			const modified =
-				!isDir && node.gitStatus != null && node.gitStatus !== "" && node.gitStatus !== " ";
+				!isDir &&
+				node.gitStatus != null &&
+				node.gitStatus !== "" &&
+				node.gitStatus !== " " &&
+				node.gitStatus !== "*";
 
 			const rowBase = `flex w-full items-center rounded-lg border px-2 py-1.5 text-left text-[13px] font-medium transition-colors ${hoverRow}`;
 			const rowSelected = selected
@@ -95,6 +102,7 @@ export function SimpleFileTree({
 				<div key={node.path}>
 					<button
 						type="button"
+						title={gitExplorerRowTitle(node.gitStatus)}
 						onClick={() => {
 							if (isDir) toggle(node.path);
 							else onSelectFile(node.path);
@@ -113,19 +121,23 @@ export function SimpleFileTree({
 									<Folder size={14} className={`shrink-0 ${appearanceDark ? "text-[#fb923c]/90" : "text-[#ea580c]"}`} />
 									<span
 										className={`min-w-0 flex-1 truncate font-mono ${dirName} ${
-											node.gitStatus && node.gitStatus !== "??" ? (appearanceDark ? "text-[#e2c08d]" : "text-amber-800") : ""
-										}`}
+											node.gitStatus && node.gitStatus !== "??" && node.gitStatus !== "*"
+												? appearanceDark
+													? "text-[#e2c08d]"
+													: "text-amber-800"
+												: ""
+										}${node.gitStatus === "*" ? (appearanceDark ? " text-[#858585]" : " text-[#737373]") : ""}`}
 									>
 										{node.name}
 									</span>
 									{node.gitStatus ? (
-										<span
-											className={`ml-1 shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase ${muted} ${
-												node.gitStatus !== "??" ? (appearanceDark ? "text-[#e2c08d]" : "text-amber-700") : ""
-											}`}
-										>
-											{node.gitStatus}
-										</span>
+										<GitExplorerStatusBadge
+											gitStatus={node.gitStatus}
+											relativePath={node.path}
+											variant="simple"
+											appearanceDark={appearanceDark}
+											onExplorerGitMutated={onExplorerGitMutated}
+										/>
 									) : null}
 								</>
 							) : (
@@ -138,13 +150,13 @@ export function SimpleFileTree({
 										{node.name}
 									</span>
 									{node.gitStatus ? (
-										<span
-											className={`ml-1 shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase ${muted} ${
-												modified ? "text-amber-500" : ""
-											}`}
-										>
-											{node.gitStatus}
-										</span>
+										<GitExplorerStatusBadge
+											gitStatus={node.gitStatus}
+											relativePath={node.path}
+											variant="simple"
+											appearanceDark={appearanceDark}
+											onExplorerGitMutated={onExplorerGitMutated}
+										/>
 									) : null}
 								</>
 							)}

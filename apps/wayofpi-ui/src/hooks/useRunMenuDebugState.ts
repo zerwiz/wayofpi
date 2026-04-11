@@ -1,19 +1,29 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 /**
- * Run menu breakpoint toggles (gutter / F9) and related flags.
- * Kept in one hook so App.tsx cannot reference breakpointsByPath without the matching useState.
+ * Run menu breakpoint toggles (gutter / F9) and a lightweight **terminal debug session**
+ * (Node/Bun inspector or Python pdb) so Stop / Restart and pdb stepping can be wired.
  */
 export function useRunMenuDebugState() {
 	const [breakpointsByPath, setBreakpointsByPath] = useState<Record<string, number[]>>({});
 	const [allBreakpointsDisabled, setAllBreakpointsDisabled] = useState(false);
-	/** Reserved for a future debug adapter; stop / step stay inert until then. */
-	const debugSessionActive = false;
+	const [debugSession, setDebugSession] = useState<null | { repl: boolean }>(null);
+
+	const beginDebugSession = useCallback((repl: boolean) => {
+		setDebugSession({ repl });
+	}, []);
+	const endDebugSession = useCallback(() => {
+		setDebugSession(null);
+	}, []);
+
 	return {
 		breakpointsByPath,
 		setBreakpointsByPath,
 		allBreakpointsDisabled,
 		setAllBreakpointsDisabled,
-		debugSessionActive,
+		debugSessionActive: debugSession !== null,
+		debugReplSession: debugSession?.repl ?? false,
+		beginDebugSession,
+		endDebugSession,
 	};
 }

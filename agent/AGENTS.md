@@ -38,9 +38,9 @@ Shell layout ( **`TechnicalWorkspaceGrid`** ≤ **3×4**, **`WorkspacePane`**, *
 
 When **`tilldone`** is loaded, each task list update writes **`.pi/tilldone-checklist.md`** (checkbox markdown + summary). **`read`** it for handoffs or to align with the user; **`tilldone`** tool results remain authoritative—editing the markdown does not update TillDone.
 
-## Ralph (optional batch queue)
+## Ralph Wiggum (optional batch queue)
 
-**Skill:** **`/skill:ralph`** · **Agent:** **`ralph`** · **Team `ralph`:** **`ralph`**, **`scout`**, **`planner`**, **`builder`**, **`reviewer`**, **`code-documenter`**, **`documenter`** (dispatcher can **`dispatch_agent`** helpers; Ralph may reply **`RALPH_ESCALATE`** when blocked). **Extension:** **`ralph_queue_status`**, **`/ralph`** — **`todo/` → `inprogress/` → `done/`** for one HTML file per **`.txt`** ticket. Shim **`extensions/ralph.ts`** via **`.pi/settings.json`**.
+**Skill:** **`/skill:ralph`** · **Agent:** **`ralph`** · **Team `ralph`:** **`ralph`**, **`scout`**, **`planner`**, **`builder`**, **`reviewer`**, **`code-documenter`**, **`documenter`** (dispatcher can **`dispatch_agent`** helpers; Ralph Wiggum may reply **`RALPH_ESCALATE`** when blocked). **Extension:** **`ralph_queue_status`**, **`/ralph`** — **`todo/` → `inprogress/` → `done/`** for one HTML file per **`.txt`** ticket. Shim **`extensions/ralph.ts`** via **`.pi/settings.json`**.
 
 ## Hermes (external CLI via Pi agent)
 

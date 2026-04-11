@@ -1,7 +1,7 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { AgentMeta } from "../hooks/useAgents";
-import type { LogRow } from "../hooks/useWayOfPiSession";
+import type { ChatPulseMeters, ChatRow, LogRow } from "../hooks/useWayOfPiSession";
 import { useFileEditor } from "../hooks/useFileEditor";
 import type { BottomPanelTab } from "../types/technicalShell";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
@@ -16,6 +16,7 @@ import {
 	type PanelDockLayout,
 	type PanelTab,
 } from "../utils/panelDockLayout";
+import { computeWorkspaceFilePreview } from "../utils/workspaceFilePreview";
 import type { WopDropZone } from "../utils/workspaceDropZones";
 import type { DockFileActionItem } from "./dockToolAddMenu";
 import { DockSplitHandle } from "./DockSplitHandle";
@@ -31,7 +32,7 @@ export type TechnicalWorkspaceCellSnapshot = {
 	error: string | null;
 	dirty: boolean;
 	persistEncoding: FilePersistEncoding;
-	save: () => Promise<void>;
+	save: () => Promise<boolean>;
 	reload: () => Promise<void>;
 	discardUnsavedChanges: () => void;
 	panelDock: PanelDockLayout;
@@ -66,6 +67,8 @@ type WorkspaceGridCellProps = {
 	autoSave: boolean;
 	/** When `rev` changes, focused cell opens this path (explorer / dock actions). */
 	externalOpenFile: { path: string; rev: number } | null;
+	/** File → Close editor: `cellIndex` must match this cell; `rev` bumps each menu action. */
+	externalCloseEditor: { rev: number; cellIndex: number } | null;
 	/** Hit-testing for snap overlay (1×1 when this cell is maximized). */
 	hitCols: number;
 	hitRows: number;
@@ -83,7 +86,11 @@ type WorkspaceGridCellProps = {
 		agentTeams: Record<string, string[]>;
 		agents: AgentMeta[];
 		agentsLoading?: boolean;
-		assistantSessionText?: string;
+		teamSessionTranscript?: ChatRow[];
+		streaming?: boolean;
+		chatAgentName?: string | null;
+		dispatchTurnAgent?: string | null;
+		chatPulseMeters?: ChatPulseMeters | null;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
 		fromCell: number,
@@ -91,6 +98,8 @@ type WorkspaceGridCellProps = {
 		tab: PanelTab,
 		before: PanelTab | null,
 	) => void;
+	/** Multi-cell: register per-cell save + dirty for File → Save All. */
+	registerCellSave?: (cellIndex: number, entry: { dirty: boolean; save: () => Promise<boolean> } | null) => void;
 };
 
 function WorkspaceGridCell({
@@ -130,13 +139,17 @@ function WorkspaceGridCell({
 	workspaceGridPicker,
 	agentTeamPane,
 	onCrossCellTabMoveBetweenCells,
+	registerCellSave,
+	externalCloseEditor,
 }: WorkspaceGridCellProps) {
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
 	const lastExternalRev = useRef(0);
+	const lastCloseEditorRev = useRef(0);
 	const {
 		content,
 		setContent,
 		persistEncoding,
+		mimeType,
 		loading: fileLoading,
 		error: fileError,
 		dirty,
@@ -144,6 +157,11 @@ function WorkspaceGridCell({
 		reload,
 		discardUnsavedChanges,
 	} = useFileEditor(selectedPath, { autoSave });
+
+	const filePreview = useMemo(() => {
+		if (fileLoading) return null;
+		return computeWorkspaceFilePreview(selectedPath, persistEncoding, mimeType, content);
+	}, [fileLoading, selectedPath, persistEncoding, mimeType, content]);
 
 	const setWorkspaceActiveIndex = useCallback(
 		(index: number) => {
@@ -181,6 +199,22 @@ function WorkspaceGridCell({
 		setSelectedPath(externalOpenFile.path);
 		patchDock((prev) => applyAddFileTab(prev, externalOpenFile.path));
 	}, [isFocused, externalOpenFile, patchDock]);
+
+	useEffect(() => {
+		if (!externalCloseEditor) return;
+		if (externalCloseEditor.cellIndex !== cellIndex) return;
+		if (externalCloseEditor.rev === lastCloseEditorRev.current) return;
+		lastCloseEditorRev.current = externalCloseEditor.rev;
+		const t = panelDock.tabs[panelDock.activeIndex];
+		const path =
+			t?.type === "file"
+				? t.path
+				: (panelDock.tabs.find((x) => x.type === "file") as { type: "file"; path: string } | undefined)
+						?.path ?? selectedPath;
+		if (!path) return;
+		patchDock((prev) => applyRemoveFileTab(prev, path));
+		setSelectedPath(null);
+	}, [externalCloseEditor, cellIndex, panelDock.tabs, panelDock.activeIndex, selectedPath, patchDock]);
 
 	useEffect(() => {
 		if (!selectedPath) return;
@@ -234,9 +268,17 @@ function WorkspaceGridCell({
 		onReportFocused(buildSnapshot());
 	}, [isFocused, onReportFocused, buildSnapshot]);
 
+	useEffect(() => {
+		if (!registerCellSave) return;
+		const hasFile = !!selectedPath;
+		const cellDirty = hasFile && dirty;
+		registerCellSave(cellIndex, { dirty: cellDirty, save });
+		return () => registerCellSave(cellIndex, null);
+	}, [registerCellSave, cellIndex, selectedPath, dirty, save]);
+
 	const onSave = useCallback(async () => {
-		await save();
-		await refresh();
+		const ok = await save();
+		if (ok) await refresh();
 	}, [save, refresh]);
 
 	const onExternalFileDrop = useCallback(
@@ -285,6 +327,7 @@ function WorkspaceGridCell({
 					error={fileError}
 					dirty={dirty}
 					persistEncoding={persistEncoding}
+					filePreview={filePreview}
 					onSave={onSave}
 					onDiscardUnsaved={discardUnsavedChanges}
 					onCursor={onCursor}
@@ -359,6 +402,7 @@ export type TechnicalWorkspaceGridProps = {
 	refresh: () => Promise<void>;
 	autoSave: boolean;
 	externalOpenFile: { path: string; rev: number } | null;
+	externalCloseEditor: { rev: number; cellIndex: number } | null;
 	onWorkspaceSurfaceDrop: (e: React.DragEvent, surfaceCellIndex: number, zone: WopDropZone) => void;
 	onSplitEditorRight?: () => void;
 	splitEditorDisabled?: boolean;
@@ -370,7 +414,11 @@ export type TechnicalWorkspaceGridProps = {
 		agentTeams: Record<string, string[]>;
 		agents: AgentMeta[];
 		agentsLoading?: boolean;
-		assistantSessionText?: string;
+		teamSessionTranscript?: ChatRow[];
+		streaming?: boolean;
+		chatAgentName?: string | null;
+		dispatchTurnAgent?: string | null;
+		chatPulseMeters?: ChatPulseMeters | null;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
 		fromCell: number,
@@ -382,6 +430,9 @@ export type TechnicalWorkspaceGridProps = {
 	onWorkspaceGridRowResize?: (rowEdge: number, dy: number) => void;
 	/** Drag vertical bar between columns (`cols > 1`). */
 	onWorkspaceGridColResize?: (colEdge: number, dx: number) => void;
+	/** File → Save All across editor cells. */
+	onBindMultiCellSaveApi?: (api: { saveAllDirty: () => Promise<boolean> } | null) => void;
+	onMultiCellAnyDirtyChange?: (anyDirty: boolean) => void;
 };
 
 export function TechnicalWorkspaceGrid({
@@ -407,6 +458,7 @@ export function TechnicalWorkspaceGrid({
 	refresh,
 	autoSave,
 	externalOpenFile,
+	externalCloseEditor,
 	onWorkspaceSurfaceDrop,
 	onSplitEditorRight,
 	splitEditorDisabled,
@@ -418,8 +470,44 @@ export function TechnicalWorkspaceGrid({
 	onCrossCellTabMoveBetweenCells,
 	onWorkspaceGridRowResize,
 	onWorkspaceGridColResize,
+	onBindMultiCellSaveApi,
+	onMultiCellAnyDirtyChange,
 }: TechnicalWorkspaceGridProps) {
 	const total = grid.cols * grid.rows;
+
+	const cellSaveRegistry = useRef(new Map<number, { dirty: boolean; save: () => Promise<boolean> }>());
+
+	const registerCellSave = useCallback(
+		(cellIndex: number, entry: { dirty: boolean; save: () => Promise<boolean> } | null) => {
+			if (entry == null) cellSaveRegistry.current.delete(cellIndex);
+			else cellSaveRegistry.current.set(cellIndex, entry);
+			if (!onMultiCellAnyDirtyChange) return;
+			let any = false;
+			for (const [, v] of cellSaveRegistry.current) {
+				if (v.dirty) {
+					any = true;
+					break;
+				}
+			}
+			onMultiCellAnyDirtyChange(any);
+		},
+		[onMultiCellAnyDirtyChange],
+	);
+
+	useEffect(() => {
+		if (!onBindMultiCellSaveApi) return;
+		const api = {
+			saveAllDirty: async () => {
+				let ok = true;
+				for (const [, v] of cellSaveRegistry.current) {
+					if (v.dirty) ok = (await v.save()) && ok;
+				}
+				return ok;
+			},
+		};
+		onBindMultiCellSaveApi(api);
+		return () => onBindMultiCellSaveApi(null);
+	}, [onBindMultiCellSaveApi]);
 
 	if (maximizedCell != null && maximizedCell >= 0 && maximizedCell < total) {
 		const dock = grid.cells[maximizedCell] ?? grid.cells[0]!;
@@ -450,6 +538,7 @@ export function TechnicalWorkspaceGrid({
 					refresh={refresh}
 					autoSave={autoSave}
 					externalOpenFile={externalOpenFile}
+					externalCloseEditor={externalCloseEditor}
 					hitCols={1}
 					hitRows={1}
 					layoutCols={grid.cols}
@@ -464,6 +553,7 @@ export function TechnicalWorkspaceGrid({
 					agentTeamPane={agentTeamPane}
 					workspaceEmbeddedChat={workspaceEmbeddedChat}
 					onCrossCellTabMoveBetweenCells={onCrossCellTabMoveBetweenCells}
+					registerCellSave={registerCellSave}
 				/>
 			</div>
 		);
@@ -541,6 +631,7 @@ export function TechnicalWorkspaceGrid({
 											refresh={refresh}
 											autoSave={autoSave}
 											externalOpenFile={externalOpenFile}
+											externalCloseEditor={externalCloseEditor}
 											hitCols={grid.cols}
 											hitRows={grid.rows}
 											layoutCols={grid.cols}
@@ -555,6 +646,7 @@ export function TechnicalWorkspaceGrid({
 											agentTeamPane={agentTeamPane}
 											workspaceEmbeddedChat={workspaceEmbeddedChat}
 											onCrossCellTabMoveBetweenCells={onCrossCellTabMoveBetweenCells}
+											registerCellSave={registerCellSave}
 										/>
 									</div>
 								</Fragment>

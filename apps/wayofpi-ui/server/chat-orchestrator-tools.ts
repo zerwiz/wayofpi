@@ -4,7 +4,69 @@ import { parseStreamUsage, type StreamTokenUsage } from "./chat-usage";
 import { executeOrchestratorTool, orchestratorToolsForLlm } from "./orchestrator-tools-exec";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
 
-const MAX_ORCHESTRATOR_TOOL_STEPS = 14;
+const MAX_ORCHESTRATOR_TOOL_STEPS = 18;
+
+// When the model ends a round with prose but no tool_calls, inject a user reminder (intent-only preambles).
+const MAX_ORCHESTRATOR_TOOL_NUDGES = 2;
+
+// User asks about repo or Git facts (case-insensitive). Used to nudge when the model preambles without tool_calls.
+const USER_TURN_HINTS_TOOLS =
+	/\b(git|github|repository|worktree|workspace|folder|\.git|inspect|structure|integration|list_dir|file\s*tree|scout|porcelain|branch|what\s+happened|happend|unfinished|did\s+you\s+find|so\s+what)\b/i;
+
+function lastUserMessageText(messages: ChatMessage[]): string {
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const m = messages[i];
+		if (m?.role === "user" && typeof m.content === "string") return m.content;
+	}
+	return "";
+}
+
+function soundsLikeToolStallWithoutTools(text: string): boolean {
+	const t = text.trim();
+	if (!t) return true;
+	if (/\b(here'?s|here is|summary|results?|git_status:|list_dir|\[[^\]]+\])\b/i.test(t)) return false;
+	return /\b(let me|i'?ll|i will|i need to|going to|first,? i|i should|i can)\b/i.test(t);
+}
+
+const MAX_FAILURE_SUMMARY_NUDGES = 2;
+
+/** True when tool text looks like an error or non-success the user must hear about. */
+function toolOutputNeedsUserExplanation(output: string): boolean {
+	const o = output.trim();
+	if (!o) return false;
+	if (/\(no matches\)/i.test(o) && /^\[grep\b/im.test(o)) return false;
+	if (/^write: ok\b/i.test(o)) return false;
+	if (/^git_(fetch|pull|push): ok\b/i.test(o)) return false;
+	const head = o.split("\n")[0] ?? "";
+	if (/^git_(fetch|pull|push): ok\b/i.test(head)) return false;
+	if (/\(hint:/i.test(o)) return true;
+	if (/\bexit\s*=\s*[1-9]\d*\b/i.test(o)) return true;
+	if (/^Unknown tool\b/i.test(o)) return true;
+	if (/^read:\s/i.test(o)) return true;
+	if (/^list_dir:\s/i.test(o)) return true;
+	if (/^grep: (rg error|failed to spawn|rg exited [^01])/i.test(o)) return true;
+	if (/^write:\s/i.test(o) && !/^write: ok\b/i.test(o)) return true;
+	if (/^bash: disabled\b/i.test(o)) return true;
+	if (/^git_\w+: exit\s/i.test(o)) return true;
+	if (/^git_status: no Git\b/i.test(o)) return true;
+	if (/^git_(fetch|pull|push):/i.test(head) && !/\bok\b/i.test(head)) return true;
+	if (/^team_/i.test(o) && /(cannot|error|invalid|not found|failed)/i.test(o)) return true;
+	return false;
+}
+
+function shouldNudgeMissingToolCalls(
+	userTurn: string,
+	round: StreamToolRound,
+	nudgesUsed: number,
+): boolean {
+	if (nudgesUsed >= MAX_ORCHESTRATOR_TOOL_NUDGES) return false;
+	const u = userTurn.trim();
+	const userWantsGrounding = u.length > 0 && USER_TURN_HINTS_TOOLS.test(u);
+	if (!userWantsGrounding) return false;
+	if (round.toolCalls && round.toolCalls.length > 0) return false;
+	if (round.finishReason === "length") return false;
+	return soundsLikeToolStallWithoutTools(round.text);
+}
 
 type StreamToolRound = {
 	text: string;
@@ -137,13 +199,21 @@ export async function runOrchestratorToolLoop(
 	onDelta: (text: string) => void,
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void,
 	runtime: ChatRuntimeModel | undefined,
-	options: { signal?: AbortSignal; onStreamUsage?: (u: StreamTokenUsage) => void },
+	options: {
+		signal?: AbortSignal;
+		onStreamUsage?: (u: StreamTokenUsage) => void;
+		/** After `team_*` tools rewrite `teams.yaml`, notify the client to refetch `/api/agents`. */
+		onAgentsCatalogChanged?: () => void;
+	},
 ): Promise<{ result: StreamChatResult; lastStreamUsage: StreamTokenUsage | null; finalAssistantText: string }> {
 	const signal = options.signal;
 	const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
 	const tools = orchestratorToolsForLlm();
 	let mergedUsage: StreamTokenUsage | null = null;
 	let finalAssistantText = "";
+	const initialUserTurn = lastUserMessageText(messages);
+	let toolNudgesUsed = 0;
+	let failureSummaryNudgesUsed = 0;
 
 	const bumpUsage = (u: StreamTokenUsage | null) => {
 		if (!u) return;
@@ -301,15 +371,57 @@ export async function runOrchestratorToolLoop(
 				content: round.text.trim().length > 0 ? round.text : null,
 				tool_calls: round.toolCalls,
 			});
+			const toolOutputsThisRound: string[] = [];
 			for (const tc of round.toolCalls) {
-				const out = await executeOrchestratorTool(tc.function.name, tc.function.arguments);
+				const toolResult = await executeOrchestratorTool(tc.function.name, tc.function.arguments);
+				toolOutputsThisRound.push(toolResult.output);
+				if (toolResult.agentsCatalogChanged) {
+					try {
+						options.onAgentsCatalogChanged?.();
+					} catch {
+						/* ignore */
+					}
+				}
 				messages.push({
 					role: "tool",
 					tool_call_id: tc.id,
-					content: out,
+					content: toolResult.output,
 					name: tc.function.name,
 				});
 			}
+			const anyProblem = toolOutputsThisRound.some(toolOutputNeedsUserExplanation);
+			if (anyProblem && failureSummaryNudgesUsed < MAX_FAILURE_SUMMARY_NUDGES) {
+				failureSummaryNudgesUsed++;
+				messages.push({
+					role: "user",
+					content:
+						"[Way of Pi] At least one tool in the last batch reported a problem or non-success. **Reply now** in plain language: what failed, what is broken, what still worked, and **concrete** fixes (paths to open in Way of Pi, **Settings → …**, env vars). Do not answer with only an apology or a promise to explain later.",
+				});
+				onLog(
+					"INFO",
+					"chat",
+					`Orchestrator: failure-summary nudge ${failureSummaryNudgesUsed}/${MAX_FAILURE_SUMMARY_NUDGES} after tool results.`,
+				);
+			}
+			continue;
+		}
+
+		if (shouldNudgeMissingToolCalls(initialUserTurn, round, toolNudgesUsed)) {
+			toolNudgesUsed++;
+			const pre = round.text.trim();
+			if (pre.length > 0) {
+				messages.push({ role: "assistant", content: round.text });
+			}
+			messages.push({
+				role: "user",
+				content:
+					"[Way of Pi] Your last reply did not include any **function tool** calls. This session ends the turn after a message without tools. Call **list_dir** (e.g. path `.`), **git_status**, and/or **read** on concrete paths now, then answer from tool output.",
+			});
+			onLog(
+				"INFO",
+				"chat",
+				`Orchestrator: nudge ${toolNudgesUsed}/${MAX_ORCHESTRATOR_TOOL_NUDGES} — model stopped with preamble but no tool_calls (user turn hinted repo/files).`,
+			);
 			continue;
 		}
 
@@ -319,7 +431,11 @@ export async function runOrchestratorToolLoop(
 	}
 
 	return {
-		result: { ok: false, error: "Orchestrator tool loop exceeded max steps." },
+		result: {
+			ok: false,
+			error:
+				"Orchestrator tool loop exceeded max steps (server safety cap). Ask the user to retry with a smaller question or fewer tool rounds; if this keeps happening, report it.",
+		},
 		lastStreamUsage: mergedUsage,
 		finalAssistantText,
 	};

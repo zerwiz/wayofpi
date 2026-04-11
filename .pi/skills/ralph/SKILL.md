@@ -1,10 +1,10 @@
 ---
 name: ralph
-description: File-queue batch workflow for HTML tasks — todo to inprogress to done, one .txt ticket at a time, only the target HTML file may be created or edited. Use when working through todo/inprogress/done folders or when the user says Ralph, batch HTML, or ticket queue.
+description: Ralph Wiggum file-queue batch workflow for HTML tasks — todo to inprogress to done, one .txt ticket at a time, only the target HTML file may be created or edited. Use when working through todo/inprogress/done folders or when the user says Ralph, Ralph Wiggum, batch HTML, or ticket queue.
 allowed-tools: read write edit bash grep find ls
 ---
 
-# Ralph (queue worker)
+# Ralph Wiggum (queue worker)
 
 Repeatable checklist for **one task per turn**. Works in the **current working directory** where **`todo/`**, **`inprogress/`**, and **`done/`** live.
 
@@ -38,7 +38,7 @@ Repeatable checklist for **one task per turn**. Works in the **current working d
 Team **`ralph`** in **`.pi/agents/teams.yaml`** includes **`ralph`**, **`scout`**, **`planner`**, **`builder`**, **`reviewer`**, **`code-documenter`**, **`documenter`**.
 
 - **Dispatcher** (primary in **`agent-team`**): For each HTML ticket, usually **`dispatch_agent` `ralph`**. If the task needs exploration, planning, or extra implementation beyond one HTML file, **`dispatch_agent` `scout`**, **`planner`**, or **`builder`** as needed, then **`ralph`** with a clear handoff. **`planner`** writes **`plans/PLAN-*.md`**—pass that path to **`builder`** or **`ralph`** in the task text. For post-build review, **`dispatch_agent` `reviewer`** with a narrow task (single file path). For **doc comments / TSDoc / code-adjacent `.md`** only (no logic edits), **`dispatch_agent` `code-documenter`** with source paths. For **README / `docs/` guides / prose drift**, **`dispatch_agent` `documenter`** with explicit paths: **`read`** current docs, reconcile with code, then **`edit`**/**`write`**.
-- **Ralph specialist** (headless Pi, no **`dispatch_agent`**): If you are blocked, output **`RALPH_ESCALATE`** (see **`ralph` agent** `.md`) so the dispatcher can run another agent and retry.
+- **Ralph Wiggum** (headless Pi specialist, no **`dispatch_agent`**): If you are blocked, output **`RALPH_ESCALATE`** (see **`ralph` agent** `.md`) so the dispatcher can run another agent and retry.
 
 ## Pi helpers
 

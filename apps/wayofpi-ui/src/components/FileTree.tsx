@@ -18,6 +18,8 @@ import {
 	WOP_FILE_PATH_DND_TYPE,
 } from "../utils/panelDockLayout";
 import { posixBasename } from "../utils/posixPath";
+import { GitExplorerStatusBadge } from "./GitExplorerStatusBadge";
+import { gitExplorerRowTitle } from "../utils/gitStatusUi";
 import { sortTreeNodes } from "../utils/sortTreeNodes";
 
 function fileIcon(name: string) {
@@ -57,6 +59,7 @@ export function FileTree({
 	onCopyPath,
 	expandRevision,
 	pathsToExpand,
+	onExplorerGitMutated,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -70,6 +73,8 @@ export function FileTree({
 	onCopyPath?: (path: string) => void;
 	expandRevision?: number;
 	pathsToExpand?: string[];
+	/** After explorer Git actions (e.g. stage) — reload tree so SCM badges update. */
+	onExplorerGitMutated?: () => void;
 }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	const sorted = useMemo(() => sortTreeNodes(nodes), [nodes]);
@@ -185,6 +190,7 @@ export function FileTree({
 			<div key={node.path}>
 				<button
 					type="button"
+					title={gitExplorerRowTitle(node.gitStatus)}
 					draggable={node.type === "file"}
 					className={`flex w-full cursor-pointer items-center px-2 py-1 text-left hover:bg-[#2a2d2e] ${
 						node.type === "dir" && dropTargetDir === node.path ? "bg-[#264f78]/90 ring-1 ring-inset ring-[#ea580c]/50" : ""
@@ -262,15 +268,20 @@ export function FileTree({
 								)}
 								<span
 									className={`min-w-0 flex-1 truncate font-mono text-[13px] ${
-										node.gitStatus && node.gitStatus !== "??" ? "text-[#e2c08d]" : ""
-									}`}
+										node.gitStatus && node.gitStatus !== "??" && node.gitStatus !== "*"
+											? "text-[#e2c08d]"
+											: ""
+									}${node.gitStatus === "*" ? " text-[#858585]" : ""}`}
 								>
 									{node.name}
 								</span>
 								{node.gitStatus ? (
-									<span className="ml-auto shrink-0 text-[11px] font-bold text-[#e2c08d]">
-										{node.gitStatus}
-									</span>
+									<GitExplorerStatusBadge
+										gitStatus={node.gitStatus}
+										relativePath={node.path}
+										variant="technical"
+										onExplorerGitMutated={onExplorerGitMutated}
+									/>
 								) : null}
 							</>
 						) : (
@@ -279,15 +290,20 @@ export function FileTree({
 								{fileIcon(node.name)}
 								<span
 									className={`truncate font-mono text-[13px] ${
-										node.gitStatus && node.gitStatus !== "??" ? "text-[#e2c08d]" : ""
-									}`}
+										node.gitStatus && node.gitStatus !== "??" && node.gitStatus !== "*"
+											? "text-[#e2c08d]"
+											: ""
+									}${node.gitStatus === "*" ? " text-[#858585]" : ""}`}
 								>
 									{node.name}
 								</span>
 								{node.gitStatus ? (
-									<span className="ml-auto shrink-0 text-[11px] font-bold text-[#e2c08d]">
-										{node.gitStatus}
-									</span>
+									<GitExplorerStatusBadge
+										gitStatus={node.gitStatus}
+										relativePath={node.path}
+										variant="technical"
+										onExplorerGitMutated={onExplorerGitMutated}
+									/>
 								) : null}
 							</>
 						)}

@@ -25,3 +25,33 @@ export function runActiveFileShellLine(relPath: string): string | null {
 			return null;
 	}
 }
+
+/**
+ * Cursor/VS Code-style **Start Debugging**: launch with inspector or pdb when supported.
+ * `repl: true` → Run → Continue / Step * send pdb one-letter commands to the integrated terminal.
+ */
+export type ActiveFileDebugPlan = {
+	line: string;
+	repl: boolean;
+};
+
+export function getActiveFileDebugPlan(relPath: string): ActiveFileDebugPlan | null {
+	const t = relPath.trim().replace(/\\/g, "/");
+	if (!t || t.includes("..")) return null;
+	const q = JSON.stringify(t);
+	const ext = t.split(".").pop()?.toLowerCase() ?? "";
+	switch (ext) {
+		case "py":
+		case "pyw":
+			return { line: `python3 -m pdb ${q}\r`, repl: true };
+		case "js":
+		case "cjs":
+		case "mjs":
+			return { line: `node --inspect-brk ${q}\r`, repl: false };
+		case "ts":
+		case "tsx":
+			return { line: `bun --inspect-wait ${q}\r`, repl: false };
+		default:
+			return null;
+	}
+}

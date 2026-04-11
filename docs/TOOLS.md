@@ -109,3 +109,4 @@ See root **[README.md](../README.md)** (Damage Control) and **`extensions/damage
 | **[SKILLS.md](SKILLS.md)** | Skills vs tools |
 | **[TOOLS.md](../TOOLS.md)** | Core function signatures (repo root) |
 | **[COMPARISON.md](../COMPARISON.md)** | Pi vs Claude Code tool surface (optional tools, etc.) |
+| **[WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md](WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md)** | Pi tool catalog + Way of Pi web orchestrator vs Pi **agent-team** dispatcher |

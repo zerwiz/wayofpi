@@ -1,23 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { AgentMeta } from "../hooks/useAgents";
-import { AgentTeamPulseGrid, buildPulseMembersFromRoster } from "./AgentTeamPulseGrid";
+import type { ChatPulseMeters, ChatRow } from "../hooks/useWayOfPiSession";
+import {
+	AgentTeamPulseGrid,
+	buildPulseMembersFromRoster,
+	overlayPulseMembersWithActiveChat,
+	useAgentPulseDoneFlash,
+} from "./AgentTeamPulseGrid";
 
-/** Agent roster in a **workspace** column tab — Pi-style: transcript area above, roster grid pinned to the bottom. */
+/** Agent roster in a **workspace** column tab — Pi-style: full session transcript above, roster grid at the bottom. */
 export function WorkspaceAgentTeamPane({
 	agentTeams,
 	agents,
 	agentsLoading,
-	assistantSessionText,
+	teamSessionTranscript = [],
+	streaming = false,
+	chatAgentName = null,
+	dispatchTurnAgent = null,
+	chatPulseMeters = null,
 }: {
 	agentTeams: Record<string, string[]>;
 	agents: AgentMeta[];
 	agentsLoading?: boolean;
-	/** Latest assistant output only (session mirror); user messages stay in chat. */
-	assistantSessionText?: string;
+	/** Active Session Chat tab — same rows as the docked / embedded chat (user + assistant). */
+	teamSessionTranscript?: ChatRow[];
+	streaming?: boolean;
+	chatAgentName?: string | null;
+	/** Phrase-dispatch specialist for this turn (picker unchanged). */
+	dispatchTurnAgent?: string | null;
+	chatPulseMeters?: ChatPulseMeters | null;
 }) {
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	const [pulseTeam, setPulseTeam] = useState<string | null>(null);
 	const [pulseStreamDetail, setPulseStreamDetail] = useState(true);
+	const endRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (!agentTeams || teamNames.length === 0) {
@@ -28,10 +44,43 @@ export function WorkspaceAgentTeamPane({
 	}, [agentTeams, teamNames]);
 
 	const pulseRoster = pulseTeam ? (agentTeams[pulseTeam] ?? []) : [];
-	const pulseMembers = useMemo(
-		() => buildPulseMembersFromRoster(pulseRoster, agents ?? []),
-		[pulseRoster, agents],
+	const pulseAgentName = chatAgentName?.trim() || dispatchTurnAgent?.trim() || null;
+	const pulseDoneFlashLower = useAgentPulseDoneFlash(streaming, pulseAgentName);
+	const userRows = useMemo(
+		() => teamSessionTranscript.filter((r) => r.role === "user"),
+		[teamSessionTranscript],
 	);
+	const lastUserTask = useMemo(() => {
+		for (let i = userRows.length - 1; i >= 0; i--) {
+			const t = String(userRows[i]?.content ?? "").trim();
+			if (t) return t;
+		}
+		return null;
+	}, [userRows]);
+	const pulseMembers = useMemo(() => {
+		const base = buildPulseMembersFromRoster(pulseRoster, agents ?? []);
+		return overlayPulseMembersWithActiveChat(base, {
+			activeAgentName: pulseAgentName,
+			streaming,
+			doneFlashAgentLower: pulseDoneFlashLower,
+			lastUserTask,
+			meters: chatPulseMeters ?? null,
+		});
+	}, [
+		pulseRoster,
+		agents,
+		pulseAgentName,
+		streaming,
+		pulseDoneFlashLower,
+		lastUserTask,
+		chatPulseMeters,
+	]);
+
+	const lastRowSig = teamSessionTranscript.at(-1)?.id ?? "";
+	/** New row only — avoids snapping scroll on every streaming token when the user has scrolled up. */
+	useLayoutEffect(() => {
+		endRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+	}, [teamSessionTranscript.length, lastRowSig]);
 
 	if (agentsLoading) {
 		return (
@@ -56,6 +105,7 @@ export function WorkspaceAgentTeamPane({
 	}
 
 	const hasRoster = Boolean(pulseTeam && pulseMembers.length > 0);
+	const hasTranscript = teamSessionTranscript.length > 0;
 
 	return (
 		<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e] font-mono text-[12px] text-[#858585]">
@@ -93,23 +143,44 @@ export function WorkspaceAgentTeamPane({
 			<div
 				className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-3 py-3"
 				role="log"
-				aria-label="Agent session transcript"
+				aria-label="Team session transcript"
 			>
 				<p className="max-w-prose shrink-0 text-[11px] leading-relaxed text-[#6b6b6b]">
-					Sub-agent replies, tool output, and token streams will appear here once the workspace is wired to the
-					multi-agent stream (see <code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). In Pi,
-					the main transcript stays above the <code className="text-[#858585]">agent-team</code> footer widget.
+					<strong className="text-[#858585]">Session mirror</strong> — the full <strong className="text-[#858585]">active</strong>{" "}
+					chat tab (you + orchestrator) so you can review work next to the roster. Per-agent sub-streams are still
+					planned (see <code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>).
 				</p>
-				{assistantSessionText?.trim() ? (
-					<div className="min-w-0 shrink-0 border-t border-[#3c3c3c] pt-3">
-						<p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#858585]">
-							Session assistant (preview)
+				{hasTranscript ? (
+					<div className="flex min-w-0 flex-col gap-3 border-t border-[#3c3c3c] pt-3">
+						<p className="text-[10px] font-semibold uppercase tracking-wide text-[#858585]">
+							Team session transcript
 						</p>
-						<pre className="w-full min-w-0 whitespace-pre-wrap break-words rounded border border-[#3c3c3c] bg-[#252526] p-2 text-[11px] leading-relaxed text-[#cccccc]">
-							{assistantSessionText}
-						</pre>
+						{teamSessionTranscript.map((msg) => (
+							<div key={msg.id} className="flex min-w-0 flex-col gap-1">
+								<div className="flex items-center justify-between gap-2">
+									<span className="text-[11px] font-semibold uppercase text-[#858585]">
+										{msg.role === "user" ? "You" : "Assistant"}
+									</span>
+									<span className="shrink-0 font-mono text-[10px] text-[#555555]">{msg.timestamp}</span>
+								</div>
+								<div
+									className={`rounded border px-2 py-2 text-[11px] leading-relaxed ${
+										msg.role === "user"
+											? "border-[#ea580c]/30 bg-[#ea580c]/10 text-[#d4d4d4]"
+											: "border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
+									}`}
+								>
+									<pre className="w-full min-w-0 whitespace-pre-wrap break-words font-mono">{msg.content}</pre>
+								</div>
+							</div>
+						))}
+						<div ref={endRef} className="h-px shrink-0" aria-hidden />
 					</div>
-				) : null}
+				) : (
+					<p className="shrink-0 border-t border-[#3c3c3c] pt-3 text-[11px] italic text-[#6b6b6b]">
+						No messages yet — send prompts from the chat tab (empty tabs are titled New Chat); they appear here in order.
+					</p>
+				)}
 			</div>
 
 			{hasRoster ? (

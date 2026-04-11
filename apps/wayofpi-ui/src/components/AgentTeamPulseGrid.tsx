@@ -1,12 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import type { AgentMeta } from "../hooks/useAgents";
-
-/** Match `extensions/agent-team.ts` displayName (hyphen → Title Case words). */
-function displayAgentName(name: string): string {
-	return name
-		.split("-")
-		.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-		.join(" ");
-}
+import type { ChatPulseMeters } from "../hooks/useWayOfPiSession";
+import { workspaceAgentDisplayName } from "../utils/workspaceAgentDisplay";
 
 function fmtTok(n: number): string {
 	if (n < 1000) return `${n}`;
@@ -103,7 +98,7 @@ function PulseCard({
 	return (
 		<div className="flex h-full min-h-0 min-w-0 flex-col rounded-none border border-[#555555] bg-[#1e1e1e] font-mono text-[11px] leading-snug">
 			<div className="shrink-0 space-y-0 border-b border-[#3c3c3c] px-2 py-1.5">
-				<div className="truncate font-bold text-[#fb923c]">{displayAgentName(w.name)}</div>
+				<div className="truncate font-bold text-[#fb923c]">{workspaceAgentDisplayName(w.name)}</div>
 				<div className="truncate text-[#858585]">⎆ {w.resolvedModel?.trim() || "—"}</div>
 				<div className={`truncate ${statusColor}`}>
 					{statusIcon} {w.status}
@@ -188,14 +183,17 @@ export function AgentTeamPulseGrid({
 
 	const hint = showSessionHint ? (
 		<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
-			Live running/done state, tools, thinking, and token streams will follow the multi-agent WebSocket plan (
-			<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). Session chat stays on the other tab.
+			Session persona shows <strong className="text-[#858585]">running</strong> / <strong className="text-[#858585]">done</strong>{" "}
+			from chat streaming and <code className="text-[#858585]">chat_usage</code>. Per-subagent tools, thinking lines, and
+			separate Pi subprocess pulses remain on the multi-agent WebSocket plan (
+			<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>).
 		</p>
 	) : (
 		<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
 			Mirrors the Pi <code className="text-[#858585]">agent-team</code> footer widget layout ({" "}
 			<code className="text-[#858585]">/agents-team</code>, <code className="text-[#858585]">/agents-grid N</code>
-			). <strong className="text-[#858585]">Pane team</strong> opens the roster as a workspace tab.
+			). <strong className="text-[#858585]">Pane team</strong> opens the roster in the agent panel beside the editor. Use
+			workspace <strong className="text-[#858585]">+ → Team pulse</strong> for the full tab with session mirror.
 		</p>
 	);
 
@@ -235,5 +233,69 @@ export function buildPulseMembersFromRoster(
 			tokensOut: 0,
 			description: def?.description?.trim() || "(no matching agent .md in workspace scan)",
 		};
+	});
+}
+
+/** After a turn finishes, briefly flash **done** on the roster card for `chatAgentName` (Pi-style feedback). */
+export function useAgentPulseDoneFlash(
+	streaming: boolean,
+	chatAgentName: string | null | undefined,
+): string | null {
+	const [flashAgentLower, setFlashAgentLower] = useState<string | null>(null);
+	const prevStreaming = useRef(streaming);
+	useEffect(() => {
+		const wasStreaming = prevStreaming.current;
+		prevStreaming.current = streaming;
+		if (wasStreaming && !streaming) {
+			const k = chatAgentName?.trim().toLowerCase() ?? "";
+			if (!k) return;
+			setFlashAgentLower(k);
+			const t = window.setTimeout(() => setFlashAgentLower(null), 4200);
+			return () => window.clearTimeout(t);
+		}
+	}, [streaming, chatAgentName]);
+	return flashAgentLower;
+}
+
+/** Drive the roster card for the active session persona from WebSocket streaming + usage (until real multi-agent events exist). */
+export function overlayPulseMembersWithActiveChat(
+	members: AgentTeamPulseMember[],
+	opts: {
+		activeAgentName: string | null | undefined;
+		streaming: boolean;
+		doneFlashAgentLower: string | null;
+		lastUserTask?: string | null;
+		meters: ChatPulseMeters | null;
+	},
+): AgentTeamPulseMember[] {
+	const active = opts.activeAgentName?.trim().toLowerCase() || "";
+	const doneK = opts.doneFlashAgentLower;
+	const task = (opts.lastUserTask ?? "").replace(/\s+/g, " ").trim().slice(0, 140) || undefined;
+	const m = opts.meters;
+
+	return members.map((mem) => {
+		const key = mem.name.trim().toLowerCase();
+		if (active && key === active && opts.streaming) {
+			const ctx = m?.contextFillPct != null ? Math.round(m.contextFillPct) : mem.contextPct;
+			return {
+				...mem,
+				status: "running",
+				contextPct: ctx,
+				tokensIn: m?.cumPrompt ?? 0,
+				tokensOut: m?.cumCompletion ?? 0,
+				task: task ?? mem.task,
+			};
+		}
+		if (doneK && key === doneK && !opts.streaming) {
+			const ctx = m?.contextFillPct != null ? Math.round(m.contextFillPct) : mem.contextPct;
+			return {
+				...mem,
+				status: "done",
+				contextPct: ctx,
+				tokensIn: m?.cumPrompt ?? mem.tokensIn,
+				tokensOut: m?.cumCompletion ?? mem.tokensOut,
+			};
+		}
+		return mem;
 	});
 }

@@ -1,4 +1,7 @@
 import type { SimpleColorMode } from "../../hooks/useSimplePreferences";
+import type { ServerConfig } from "../../hooks/useServerConfig";
+import { GithubManageSettingsCard } from "../GithubManageSettingsCard";
+import { TerminalSettingsSection } from "../TerminalSettingsSection";
 
 function ToggleRow({
 	title,
@@ -48,12 +51,18 @@ export function SimpleSettingsView({
 	approvalQueue,
 	onApprovalQueue,
 	onSwitchToTechnical,
+	onOpenIndexingDocs,
+	serverConfig,
 }: {
 	colorMode: SimpleColorMode;
 	onColorMode: (m: SimpleColorMode) => void;
 	approvalQueue: boolean;
 	onApprovalQueue: (next: boolean) => void;
 	onSwitchToTechnical: () => void;
+	/** Settings menu parity: codebase index + docs (server). */
+	onOpenIndexingDocs?: () => void;
+	/** `/api/config` — terminal enable flag and shell hints. */
+	serverConfig: ServerConfig | null;
 }) {
 	const appearanceDark = colorMode === "dark";
 	const pageBg = appearanceDark ? "" : "bg-[#f3f3f3]";
@@ -70,6 +79,8 @@ export function SimpleSettingsView({
 				<p className={`mb-8 font-medium ${sub}`}>Simple UI preferences (stored in this browser).</p>
 
 				<div className="space-y-4">
+					<GithubManageSettingsCard appearanceDark={appearanceDark} />
+
 					<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>
 						<h3 className={`mb-2 font-bold ${heading}`}>Appearance</h3>
 						<p className={`mb-4 text-sm ${sub}`}>
@@ -113,6 +124,28 @@ export function SimpleSettingsView({
 						onToggle={() => onApprovalQueue(!approvalQueue)}
 						appearanceDark={appearanceDark}
 					/>
+
+					{onOpenIndexingDocs ? (
+						<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>
+							<h3 className={`font-bold ${heading}`}>Indexing & Docs</h3>
+							<p className={`mt-1 text-sm ${sub}`}>
+								Local workspace manifest under <code className="text-xs">.wayofpi/index</code>, optional chat
+								context, and HTTP(S) doc crawls — same product area as Cursor’s Indexing & Docs (without cloud
+								embeddings).
+							</p>
+							<button
+								type="button"
+								onClick={onOpenIndexingDocs}
+								className="mt-4 rounded-xl bg-[#ea580c] px-4 py-2 text-sm font-bold text-white hover:bg-[#c2410c]"
+							>
+								Open Indexing & Docs…
+							</button>
+						</div>
+					) : null}
+
+					<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>
+						<TerminalSettingsSection config={serverConfig} appearanceDark={appearanceDark} />
+					</div>
 
 					<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>
 						<h3 className={`font-bold ${heading}`}>Technical layout</h3>

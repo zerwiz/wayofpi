@@ -13,6 +13,7 @@ agent/auth.json
 
 # Local Pi agent state (machine-specific; do not publish chat logs)
 agent/sessions/
+apps/wayofpi-ui/agent/sessions/
 agent/run-history.jsonl
 agent/bin/
 storage/sessions/
@@ -37,3 +38,6 @@ storage/
 
 # Chronicle ledger at repo root (session metadata)
 chronicle/
+
+# Way of Pi — GitHub PAT written under an opened workspace (do not publish)
+.wayofpi/github-credentials.json

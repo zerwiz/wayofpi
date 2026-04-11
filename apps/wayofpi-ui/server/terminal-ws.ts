@@ -15,6 +15,23 @@ export function terminalAllowed(): boolean {
 	return terminalEnvTruthy();
 }
 
+/** For `/api/config` — which shell the embedded terminal spawns (read-only; set on the server process). */
+export function terminalShellHints(): {
+	shellExecutable: string;
+	shellArgs: string[];
+	customShell: boolean;
+	/** Same as Node `process.platform` (e.g. `linux`, `darwin`, `win32`). */
+	platform: string;
+} {
+	const { file, args } = shellArgv();
+	return {
+		shellExecutable: file,
+		shellArgs: args,
+		customShell: Boolean(process.env.WOP_SHELL?.trim()),
+		platform: process.platform,
+	};
+}
+
 /** POSIX: real PTY via `Bun.spawn` `terminal` option. Windows / fallback: piped `child_process`. */
 export type TerminalSession =
 	| { mode: "pty"; proc: Subprocess & { terminal: BunTerminal } }

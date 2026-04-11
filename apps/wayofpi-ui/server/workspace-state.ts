@@ -1,6 +1,14 @@
+/**
+ * **Workspace roots** (what `/api/tree`, `/api/file`, plans, agents, and Pi `cwd` use) live in
+ * **`folders`** — set at boot from **`WOP_WORKSPACE`** or **`process.cwd()`**, then updated only via
+ * **Open Folder** / workspace-file APIs. They are **not** the Way of Pi app install path unless the
+ * user opened that directory, and they are **not** driven by the editor’s active tab path.
+ */
 import { existsSync, realpathSync } from "node:fs";
-import { stat } from "node:fs/promises";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
+
+import { buildCodeWorkspacePayload } from "../shared/code-workspace-file.ts";
 
 export interface WorkspaceFolderEntry {
 	label: string;
@@ -32,6 +40,12 @@ function uniqueLabelsFor(absPaths: string[]): WorkspaceFolderEntry[] {
 	});
 }
 
+/**
+ * Boot-time workspace roots for the Bun server — **only** `WOP_WORKSPACE` (if set) or **process.cwd()**
+ * when the server process starts. Client **editor selection** (`selectedPath`) does not change this;
+ * use **Open Folder** / workspace file APIs to retarget roots. Any directory may be opened; features
+ * that need files (agents, plans) degrade gracefully when those paths are absent.
+ */
 export function initWorkspaceFoldersFromEnv(): void {
 	const raw = process.env.WOP_WORKSPACE?.trim();
 	const start = normalize(resolve(raw || process.cwd()));
@@ -87,13 +101,25 @@ export function resolveUnderWorkspace(relRaw: string): string | null {
 		return joined;
 	}
 
+	/** Multi-root: `label/rest` when first segment matches a workspace folder label. */
 	const slash = trimmed.indexOf("/");
-	const label = slash === -1 ? trimmed : trimmed.slice(0, slash);
-	const rest = slash === -1 ? "" : trimmed.slice(slash + 1);
-	const folder = folders.find((f) => f.label === label);
-	if (!folder || !rest) return null;
-	const joined = normalize(join(folder.path, rest));
-	if (!isInsideRoot(folder.path, joined)) return null;
+	const firstSeg = slash === -1 ? trimmed : trimmed.slice(0, slash);
+	const folderByLabel = folders.find((f) => f.label === firstSeg);
+	const hasLabelPrefix = slash !== -1 && folderByLabel != null;
+
+	if (hasLabelPrefix) {
+		const rest = trimmed.slice(slash + 1);
+		if (!rest) return null;
+		const joined = normalize(join(folderByLabel.path, rest));
+		if (!isInsideRoot(folderByLabel.path, joined)) return null;
+		return joined;
+	}
+
+	/* Paths like `agent/models.json` (no folder label) resolve on the primary root — same as single-root UX. */
+	const primary = folders[0]?.path;
+	if (!primary) return null;
+	const joined = normalize(join(primary, trimmed));
+	if (!isInsideRoot(primary, joined)) return null;
 	return joined;
 }
 
@@ -199,4 +225,20 @@ export async function loadFoldersFromWorkspaceJson(
 		resolved.push(await assertDirectory(p));
 	}
 	folders = uniqueLabelsFor(resolved);
+}
+
+/**
+ * Writes a `.code-workspace` JSON file (VS Code / Cursor layout) for the **current** in-memory folder list.
+ * Folder paths in the file are relative to the directory containing the workspace file when possible.
+ */
+export async function saveCodeWorkspaceFileToPath(absInput: string): Promise<void> {
+	if (!isSwitchAllowed()) {
+		throw new Error("Workspace switching is disabled (set WOP_ALLOW_WORKSPACE_SWITCH unset or 1).");
+	}
+	const abs = normalize(resolve(absInput.trim()));
+	if (!abs) throw new Error("Invalid path");
+	const parent = dirname(abs);
+	await mkdir(parent, { recursive: true });
+	const payload = buildCodeWorkspacePayload(listWorkspaceFolders(), parent);
+	await writeFile(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }

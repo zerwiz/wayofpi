@@ -22,6 +22,16 @@ export function wopChatEngineFromEnv(): WopChatEngineMode {
 	return "bundled";
 }
 
+let piJsonChatRuntimeOverride: boolean | undefined;
+
+/**
+ * In-memory **`pi --mode json`** toggle from **`POST /api/config`** (`piDrivesChat`) until process restart;
+ * **`null`** clears the override ( **`WOP_CHAT_ENGINE`** applies again).
+ */
+export function patchPiJsonChatRuntimeOverride(value: boolean | null): void {
+	piJsonChatRuntimeOverride = value === null ? undefined : value;
+}
+
 /** Strict **`WOP_CHAT_ENGINE=pi`** — server must error if the Pi CLI is missing (no silent fallback to Bun). */
 export function isPiChatEngineForced(): boolean {
 	return wopChatEngineFromEnv() === "pi";
@@ -32,6 +42,10 @@ export function isPiChatEngineForced(): boolean {
  * All workspace personas (orchestrator + **`.md`** agents) share this path — **full Pi tools** inside the subprocess.
  */
 export function shouldUsePiJsonChat(): boolean {
+	if (piJsonChatRuntimeOverride === false) return false;
+	if (piJsonChatRuntimeOverride === true) {
+		return resolvePiBinaryPath() != null;
+	}
 	const mode = wopChatEngineFromEnv();
 	if (mode === "bundled") return false;
 	return resolvePiBinaryPath() != null;
@@ -42,6 +56,7 @@ export function shouldUsePiJsonChat(): boolean {
  * **`auto`** without a CLI falls back to Bun and does **not** use this error.
  */
 export function piAgentRuntimeBlockedReason(): string | null {
+	if (piJsonChatRuntimeOverride === false) return null;
 	if (!isPiChatEngineForced()) return null;
 	if (!resolvePiBinaryPath()) {
 		return (

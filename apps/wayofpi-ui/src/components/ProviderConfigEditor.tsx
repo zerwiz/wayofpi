@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PI_MODEL_CONFIG_ENTRIES, type PiModelConfigPath } from "../constants/piModelConfigPaths";
 import { useFileEditor } from "../hooks/useFileEditor";
 
@@ -42,8 +42,25 @@ export function ProviderConfigEditor({
 	}, [initialPath, initialPathNonce, onInitialPathConsumed]);
 
 	const { content, setContent, loading, error, dirty, save, reload } = useFileEditor(selected, { autoSave: false });
+	const [saving, setSaving] = useState(false);
+	const [savedFlash, setSavedFlash] = useState(false);
+	const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const parseCheck = useMemo(() => tryParseJson(content), [content]);
+
+	useEffect(() => {
+		return () => {
+			if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (dirty) setSavedFlash(false);
+	}, [dirty]);
+
+	useEffect(() => {
+		setSavedFlash(false);
+	}, [selected]);
 
 	const border = appearanceDark ? "border-slate-800" : "border-zinc-200";
 	const navBg = appearanceDark ? "bg-slate-950/80" : "bg-zinc-100";
@@ -58,8 +75,22 @@ export function ProviderConfigEditor({
 
 	const onSave = useCallback(async () => {
 		if (!parseCheck.ok) return;
-		await save();
-		onAfterSave?.();
+		setSaving(true);
+		setSavedFlash(false);
+		try {
+			const ok = await save();
+			if (ok) {
+				if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+				setSavedFlash(true);
+				savedTimerRef.current = setTimeout(() => {
+					setSavedFlash(false);
+					savedTimerRef.current = null;
+				}, 2200);
+				onAfterSave?.();
+			}
+		} finally {
+			setSaving(false);
+		}
 	}, [parseCheck.ok, save, onAfterSave]);
 
 	return (
@@ -84,9 +115,14 @@ export function ProviderConfigEditor({
 						);
 					})}
 				</ul>
+				<p className={`mt-2 px-2 text-[10px] leading-snug md:hidden ${sub}`}>
+					Saves to workspace via API. Restart Way of Pi for env changes; Pi TUI: <span className="font-mono">/models</span>.
+				</p>
 				<p className={`mt-2 hidden px-2 text-[10px] leading-snug md:block ${sub}`}>
-					Edits are saved to the workspace over the API. Restart Pi or use <span className="font-mono">/models</span> where
-					applicable so the TUI reloads catalog changes.
+					Edits are saved to the workspace over the API. Restart the <strong className="font-semibold">Way of Pi server</strong>{" "}
+					so host env (<span className="font-mono">WOP_LLM_PROVIDER</span>, <span className="font-mono">WOP_CHAT_ENGINE</span>,{" "}
+					<span className="font-mono">OLLAMA_*</span>, …) matches what you expect. For the Pi TUI, restart Pi or use{" "}
+					<span className="font-mono">/models</span> so catalog changes from JSON are picked up.
 				</p>
 			</nav>
 			<div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -94,11 +130,19 @@ export function ProviderConfigEditor({
 					<span className="font-mono text-[11px] text-sky-500">{selected}</span>
 					{loading ? <span className={`text-[11px] ${sub}`}>Loading…</span> : null}
 					{dirty ? <span className="text-[11px] font-bold text-amber-500">Modified</span> : null}
+					{savedFlash ? (
+						<span
+							className={`text-[11px] font-bold ${appearanceDark ? "text-emerald-400" : "text-emerald-700"}`}
+							role="status"
+						>
+							Saved to disk
+						</span>
+					) : null}
 					<div className="ml-auto flex flex-wrap gap-2">
 						<button
 							type="button"
 							onClick={() => void reload()}
-							disabled={loading}
+							disabled={loading || saving}
 							className={
 								appearanceDark
 									? "rounded border border-slate-600 px-2 py-1 text-[11px] text-slate-200 hover:bg-slate-800 disabled:opacity-40"
@@ -110,10 +154,10 @@ export function ProviderConfigEditor({
 						<button
 							type="button"
 							onClick={() => void onSave()}
-							disabled={loading || !dirty || !parseCheck.ok}
+							disabled={loading || saving || !dirty || !parseCheck.ok}
 							className="rounded border border-sky-600 bg-sky-600/90 px-2 py-1 text-[11px] font-bold text-white hover:bg-sky-600 disabled:opacity-40"
 						>
-							Save
+							{saving ? "Saving…" : "Save"}
 						</button>
 					</div>
 				</div>

@@ -10,6 +10,24 @@ export interface OllamaTagsResponse {
 	models?: OllamaTagModel[];
 }
 
+/**
+ * True if **`/api/tags`** lists a model that Ollama would accept for **`requested`** (exact name,
+ * `base:tag` when request is `base`, or same stem as `base:tag` when request has no `:`).
+ */
+export function ollamaTagsIncludeRequestedModel(models: OllamaTagModel[], requested: string): boolean {
+	const w = requested.trim().toLowerCase();
+	if (!w) return false;
+	for (const m of models) {
+		const n = (m.name || m.model || "").trim().toLowerCase();
+		if (!n) continue;
+		if (n === w) return true;
+		if (n.startsWith(`${w}:`)) return true;
+		const stem = n.split(":")[0] ?? "";
+		if (!w.includes(":") && stem === w) return true;
+	}
+	return false;
+}
+
 export async function fetchOllamaTags(
 	ollamaHost: string,
 	opts?: { signal?: AbortSignal },

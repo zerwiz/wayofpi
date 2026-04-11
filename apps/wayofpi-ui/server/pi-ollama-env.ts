@@ -4,13 +4,29 @@
  * Pi session defaults also live in **`agent/settings.json`** (`defaultProvider`, `defaultModel`).
  *
  * Way of Pi historically used **`OLLAMA_HOST`** only — we merge both shapes here.
+ *
+ * **Workspace-only:** default model from JSON is read only under **`listWorkspaceFolders()`** (the
+ * folder(s) Way of Pi is working in — `WOP_WORKSPACE` / cwd), never from the playground repo root.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getPrimaryWorkspacePath } from "./workspace-state";
+import { listWorkspaceFolders } from "./workspace-state";
 
-export function getPlaygroundRepoRoot(): string {
+/**
+ * Absolute path to this **Way of Pi** web-server package on disk: the directory that contains
+ * **`apps/wayofpi-ui`** (resolved to the monorepo / checkout root with `wop.upstream.lock.json`, etc.).
+ *
+ * Use only for **install / upstream / self-check** paths. **Never** treat as the user’s opened
+ * project — project roots come from **`listWorkspaceFolders()`** / **`WOP_WORKSPACE`** / Open Folder
+ * (see **`workspace-state.ts`**).
+ */
+export function getWayOfPiBundleRepoRoot(): string {
 	return join(import.meta.dir, "..", "..");
+}
+
+/** @deprecated Prefer {@link getWayOfPiBundleRepoRoot} — same path; old name referred to “playground” checkout. */
+export function getPlaygroundRepoRoot(): string {
+	return getWayOfPiBundleRepoRoot();
 }
 
 /** Strip trailing `/` and trailing OpenAI-style **`/v1`** so Ollama REST roots match **`fetchOllamaTags`**. */
@@ -46,16 +62,15 @@ export function resolveOllamaHost(): string {
 }
 
 /**
- * Prefer **`OLLAMA_MODEL`**, else **`agent/settings.json`** under the active workspace, else under this playground repo,
- * else **`llama3`**.
+ * Prefer **`OLLAMA_MODEL`**, else first **`agent/settings.json`** (Ollama `defaultModel`) under any
+ * configured workspace folder (primary first), else **`llama3`**.
  */
 export function resolveOllamaModelDefault(): string {
 	const env = process.env.OLLAMA_MODEL?.trim();
 	if (env) return env;
-	const ws = getPrimaryWorkspacePath();
-	return (
-		tryReadAgentSettingsDefaultModel(ws) ??
-		tryReadAgentSettingsDefaultModel(getPlaygroundRepoRoot()) ??
-		"llama3"
-	);
+	for (const { path: root } of listWorkspaceFolders()) {
+		const m = tryReadAgentSettingsDefaultModel(root);
+		if (m) return m;
+	}
+	return "llama3";
 }

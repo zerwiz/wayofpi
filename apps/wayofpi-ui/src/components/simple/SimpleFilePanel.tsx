@@ -1,10 +1,16 @@
 import { FileCode2, Save, X } from "lucide-react";
 import type { FormEvent } from "react";
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useMemo, useState } from "react";
 import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import type { SimpleMarkdownPaneMode } from "../../hooks/useSimplePreferences";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
+import {
+	computeWorkspaceFilePreview,
+	filePreviewSupportsSourceToggle,
+} from "../../utils/workspaceFilePreview";
 import { MarkdownPreviewPane } from "../MarkdownPreviewPane";
+import { MermaidPreviewPane } from "../MermaidPreviewPane";
+import { WorkspaceSvgPreview } from "../WorkspaceSvgPreview";
 import { WorkspaceTextBuffer } from "../WorkspaceTextBuffer";
 
 export const SimpleFilePanel = forwardRef<
@@ -14,6 +20,8 @@ export const SimpleFilePanel = forwardRef<
 		content: string;
 		onChange: (next: string) => void;
 		persistEncoding: FilePersistEncoding;
+		/** From `GET /api/file` when `encoding` is `base64` (raster/binary). */
+		fileMimeType?: string | null;
 		loading: boolean;
 		error: string | null;
 		dirty: boolean;
@@ -36,6 +44,7 @@ export const SimpleFilePanel = forwardRef<
 		content,
 		onChange,
 		persistEncoding,
+		fileMimeType = null,
 		loading,
 		error,
 		dirty,
@@ -56,6 +65,20 @@ export const SimpleFilePanel = forwardRef<
 	const fileName = path.split("/").pop() ?? path;
 	const isMarkdown = path.toLowerCase().endsWith(".md");
 	const mdView = isMarkdown ? markdownPaneMode : "source";
+
+	const filePreview = useMemo(() => {
+		if (loading) return null;
+		return computeWorkspaceFilePreview(path, persistEncoding, fileMimeType, content);
+	}, [loading, path, persistEncoding, fileMimeType, content]);
+
+	const [visualMediaMode, setVisualMediaMode] = useState<"preview" | "source">("preview");
+	useEffect(() => {
+		setVisualMediaMode("preview");
+	}, [path]);
+
+	const mediaDual =
+		Boolean(filePreview && filePreviewSupportsSourceToggle(filePreview) && !loading && !error);
+	const showMediaSource = mediaDual && visualMediaMode === "source";
 
 	const shell = appearanceDark
 		? "border-[#3c3c3c] bg-[#252526]"
@@ -131,6 +154,24 @@ export const SimpleFilePanel = forwardRef<
 							</button>
 						</div>
 					) : null}
+					{mediaDual ? (
+						<div className={`inline-flex ${segWrap}`} role="group" aria-label="Image or diagram view">
+							<button
+								type="button"
+								className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${visualMediaMode === "preview" ? segOn : segOff}`}
+								onClick={() => setVisualMediaMode("preview")}
+							>
+								Preview
+							</button>
+							<button
+								type="button"
+								className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${visualMediaMode === "source" ? segOn : segOff}`}
+								onClick={() => setVisualMediaMode("source")}
+							>
+								Source
+							</button>
+						</div>
+					) : null}
 					{dirty ? (
 						<form onSubmit={submitSave}>
 							<button type="submit" disabled={loading} className={btnPrimary}>
@@ -147,7 +188,7 @@ export const SimpleFilePanel = forwardRef<
 			</div>
 
 			<div className={`flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-2 ${bodyBg}`}>
-				{persistEncoding === "base64" ? (
+				{persistEncoding === "base64" && (!filePreview || showMediaSource) ? (
 					<div
 						className={`shrink-0 border-b px-2 py-1 font-mono text-[10px] ${appearanceDark ? "border-[#3c3c3c] text-[#858585]" : "border-[#e5e5e5] text-[#616161]"}`}
 					>
@@ -156,6 +197,57 @@ export const SimpleFilePanel = forwardRef<
 				) : null}
 				{isMarkdown && mdView === "preview" && !loading && !error ? (
 					<MarkdownPreviewPane markdown={content} appearanceDark={appearanceDark} />
+				) : showMediaSource ? (
+					<WorkspaceTextBuffer
+						ref={ref}
+						path={path}
+						content={content}
+						onChange={onChange}
+						loading={loading}
+						error={error}
+						onCursor={onCursor}
+						wordWrap
+						disableSyntaxHighlight={persistEncoding === "base64"}
+						scrollClassName="font-mono"
+						lineGutterClassName={`w-9 py-1 pr-2 font-mono text-[12px] ${lineNums}`}
+						textareaClassName={`py-1 pr-2 ${textArea}`}
+						findBarClassName={`shrink-0 border-t ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
+						statusLoadingClassName={`p-4 text-sm ${pathMuted}`}
+						statusErrorClassName="p-4 text-sm text-red-500"
+						onUndoRedoStackChange={onUndoRedoStackChange}
+						onSelectionPrefsChange={onSelectionPrefsChange}
+						onFindInFiles={onFindInFiles}
+						onReplaceInFiles={onReplaceInFiles}
+					/>
+				) : filePreview?.kind === "image" ? (
+					<div className={`flex min-h-0 flex-1 overflow-auto ${bodyBg}`}>
+						<img
+							src={filePreview.src}
+							alt=""
+							className="mx-auto block h-auto max-w-full object-contain [image-rendering:auto]"
+							loading="lazy"
+							decoding="async"
+						/>
+					</div>
+				) : filePreview?.kind === "svg" ? (
+					<div className={`flex min-h-0 flex-1 overflow-auto ${bodyBg}`}>
+						<WorkspaceSvgPreview
+							xml={filePreview.xml}
+							imgClassName="mx-auto block h-auto max-w-full object-contain [image-rendering:auto]"
+						/>
+					</div>
+				) : filePreview?.kind === "mermaid" ? (
+					<MermaidPreviewPane source={filePreview.source} appearanceDark={appearanceDark} />
+				) : filePreview?.kind === "binary" ? (
+					<div className={`flex flex-1 overflow-auto p-3 font-mono text-[13px] ${textArea}`}>
+						<div className={`max-w-xl ${pathMuted}`}>
+							<p className={`mb-2 font-semibold ${title}`}>Binary file</p>
+							<p>
+								Type <span className="text-[#ea580c]">{filePreview.mimeType}</span>. Not shown as text — open
+								externally or on disk.
+							</p>
+						</div>
+					</div>
 				) : (
 					<WorkspaceTextBuffer
 						ref={ref}

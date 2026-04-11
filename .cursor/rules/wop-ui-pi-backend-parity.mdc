@@ -14,7 +14,7 @@ alwaysApply: true
 
 ## Do not build or own “the agent system” — use Pi’s
 
-- **Way of Pi owns:** the **shell** (editor, tree, layout, menus), **workspace host I/O** where Pi does not (jailed **`/api/file`**, etc.), **`WOP_*`** isolation, and **glue** that **starts / attaches / proxies** **`WOP_PI_BINARY`** and translates HTTP/WebSocket to Pi.
+- **Way of Pi owns:** the **shell** (editor, tree, layout, menus), **workspace host I/O** where Pi does not (jailed **`/api/file`**, etc.), **`WOP_*`** isolation, and **glue** that **starts / attaches / proxies** **`WOP_PI_BINARY`** and translates HTTP/WebSocket to Pi. **Workspace roots** come from **`WOP_WORKSPACE`** / server **`listWorkspaceFolders()`** (and workspace-switch APIs), **not** from whichever file tab is active in the UI — chat, tools, and tree I/O must stay operational for **any** opened folder without requiring a specific editor buffer.
 - **Pi owns:** **agent** behavior end-to-end — **`extensions[]`**, **tools**, **slash commands**, **`dispatch_agent`**, **skills**, **hooks**, **sessions**, **provider/model** inside the coding-agent process. That is **not** reimplemented in Bun.
 - **Forbidden:** a first-party “Way of Pi agent runtime”, “WOP dispatch”, or any **parallel** chat+tool+extension stack that duplicates Pi’s semantics feature-by-feature. **Integrate** Pi; do **not** replace it with a home-grown system.
 
@@ -22,8 +22,20 @@ alwaysApply: true
 
 - **Default engineering direction:** Treat **headless Pi** (same **`extensions[]`**, skills, tools, sessions, provider stack as the TUI) as the **authoritative runtime** behind **`apps/wayofpi-ui/server/`**. Prefer **spawning, attaching, or proxying Pi** for any capability Pi already owns instead of growing a **second parallel** “mini Pi” inside Bun (duplicate chat, tool registry, slash commands, session format, or model routing).
 - **Interim bridges are temporary:** Direct **Ollama / OpenRouter** in the Bun server exists as a **transition path** only. **New features** should integrate **through Pi** (or a documented Pi sidecar) unless explicitly scoped as pre-Pi infrastructure — and that scope must be **called out** in **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** / **`docs/WOP_OPEN_TODOS.md`** with a **time-bounded** follow-up to fold into Pi.
-- **Configuration alignment:** Reuse **Pi’s on-disk and env conventions** where practical (e.g. repo **`.env`**, **`agent/settings.json`**, **`OLLAMA_*`** / workspace **`agent/`**) so one workspace truth feeds both TUI and web until a single Pi process owns chat. **`server/pi-ollama-env.ts`** is the pattern: bridge env shapes, do not fork unrelated names without **`WOP_*`** / **`docs/WOP_NAMESPACE.md`** justification.
+- **Configuration alignment:** Reuse **Pi’s on-disk and env conventions** where practical (e.g. repo **`.env`**, **`OLLAMA_*`**, workspace **`agent/`**). **`agent/settings.json`** defaults for the Bun chat path must be read only from **`listWorkspaceFolders()`** (the active **`WOP_WORKSPACE`** / cwd roots), **not** from the Way of Pi playground repo root — see **`server/pi-ollama-env.ts`**. Bridge env shapes; do not fork unrelated names without **`WOP_*`** / **`docs/WOP_NAMESPACE.md`** justification.
 - **When in doubt:** Add the **real Pi path** (HTTP forward, WebSocket tunnel, subprocess contract) or **shrink the UI** to stub — do **not** deepen bespoke Bun-only behavior that Pi will have to replace later.
+
+## Workspace (project) vs system files vs editor shell (non-negotiable)
+
+These are **three different things**. Conflating them breaks multi-project use and confuses users.
+
+| Concept | What it is | What it is **not** |
+|--------|-------------|---------------------|
+| **Workspace (project root)** | On-disk folder(s) the Bun server exposes: **`listWorkspaceFolders()`**, from **`WOP_WORKSPACE`** or **`process.cwd()`** at server boot, then **File → Open Folder** / `.code-workspace` / native pick APIs. **`/api/file`**, **`/api/tree`**, agent scans, chat **cwd** for Pi, and workspace-relative paths refer **only** here. | Not the Way of Pi repo unless the user opened it as their project. Not “whatever tab is open.” |
+| **Way of Pi system / product files** | This playground’s **`apps/wayofpi-ui/`**, **`WOP_HOME`**, installers, bundled docs — the **product** checkout and runtime support files. | Not the user’s arbitrary project tree unless that tree **is** the opened workspace. |
+| **Editor / shell UI state** | **`selectedPath`**, focused grid cell, tab stack, local layout JSON — **browser/Electron UI only**. | **Never** rewrites server workspace roots. Opening or closing a file tab does **not** change **`WOP_WORKSPACE`** or **`listWorkspaceFolders()`**. |
+
+**Rule:** Implementers must not infer workspace roots from **active editor buffers** or from the **Way of Pi installation path** unless the user explicitly opened that path as the workspace.
 
 ## Non-negotiable
 

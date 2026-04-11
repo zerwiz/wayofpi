@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 import type { UiMode } from "../hooks/useUiMode";
 
 /** Shown when chat fails for model/provider reasons so users can jump to the right UI. */
@@ -40,9 +41,12 @@ export function LlmFixModal({
 		onClose();
 	};
 
-	return (
+	const portalTarget = typeof document !== "undefined" ? document.body : null;
+	if (!portalTarget) return null;
+
+	return createPortal(
 		<div
-			className="fixed inset-0 z-[125] flex items-center justify-center bg-black/60 p-4"
+			className="fixed inset-0 z-[20000] flex items-center justify-center bg-black/60 p-4"
 			role="presentation"
 			onMouseDown={(e) => {
 				if (e.target === e.currentTarget) onClose();
@@ -53,6 +57,7 @@ export function LlmFixModal({
 				role="dialog"
 				aria-labelledby="llm-fix-title"
 				aria-describedby="llm-fix-desc"
+				onMouseDown={(e) => e.stopPropagation()}
 			>
 				<div className={`flex items-center justify-between border-b px-4 py-3 ${borderB}`}>
 					<h2 id="llm-fix-title" className="text-lg font-bold">
@@ -137,6 +142,7 @@ export function LlmFixModal({
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		portalTarget,
 	);
 }

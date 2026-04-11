@@ -189,7 +189,7 @@ Defined in **`src/types/technicalShell.ts`** and **`src/utils/technicalLayoutSto
 | **FileTree** | `components/FileTree.tsx` | Recursive tree; expand/collapse; folders-first sort via **`sortTreeNodes`**; optional `expandRevision` / `pathsToExpand` to open ancestors after create. |
 | **SearchSidePanel** | `components/TechnicalSidePanels.tsx` | Flat file list filtered by path substring (`flattenTreeFiles`). |
 | **ScmSidePanel** | `components/TechnicalSidePanels.tsx` | SCM placeholder / refresh hook. |
-| **ExtensionsSidePanel** | `components/TechnicalSidePanels.tsx` | Extensions placeholder. |
+| **ExtensionsSidePanel** | `components/TechnicalSidePanels.tsx` | **Orchestration** (Plan/Build, **`/api/config`** summary, session **`POST /api/config`** toggles) + **Pi extensions** (`.pi/settings.json` **`extensions[]`**, manifest refresh). See **[WOP_ORCHESTRATION_EXTENSIONS_PANEL.md](WOP_ORCHESTRATION_EXTENSIONS_PANEL.md)**. |
 | **SettingsSidePanel** | `components/TechnicalSidePanels.tsx` | Shows server config / workspace path. |
 | **WorkspacePane** | `components/WorkspacePane.tsx` | **Main workspace:** **`h-9`** tab row (**Dock** chip, **`dockChrome.ts`**) + **`WorkspaceTextBuffer`** / **`ToolPanelBody`**; Zed-style tab DnD (**`PANEL_TAB_DND_TYPE`**). **`data-wop-workspace-pane`**. |
 | **TechnicalWorkspaceGrid** | `components/TechnicalWorkspaceGrid.tsx` | **3×4 max** matrix of **`WorkspacePane`** cells (flex + **`DockSplitHandle`**); focus ring; **`onFocusedReport`** syncs menus; **`externalOpenFile`** for explorer → focused cell; **`onWorkspaceGridRowResize`** / **`onWorkspaceGridColResize`** from **`App`**. |
@@ -221,6 +221,7 @@ Supporting utilities:
 | `techWsSnapshot` | **`TechnicalWorkspaceCellSnapshot`** from focused cell — drives **`effSelectedPath`**, **`effDirty`**, save/revert when grid **> 1×1**. |
 | `workspaceOpenSignal` | **`{ path, rev }`** — bumps focused cell to open a file from explorer / dock dialogs. |
 | `selectedPath` | Open file path; with **1×1** grid feeds **`useFileEditor`**; with multi-cell synced from focused cell snapshot. |
+| **Workspace vs shell** | **Project roots** = server **`listWorkspaceFolders()`** (`WOP_WORKSPACE` + open-folder APIs); see **`docs/WOP_NAMESPACE.md`**. **`selectedPath`** / dock layout = **UI only** — they do **not** retarget the server. **Way of Pi system files** (app checkout, `WOP_HOME`) ≠ the user’s project unless that tree is the opened workspace. |
 | `explorerContextDir` | Target folder for **New File** / **New Folder**; updated when selecting a file (parent dir) or clicking a directory in the tree. |
 | `treeExpand` | `{ rev, paths }` to force-expand folder paths after creating a file/folder. |
 | `activity` | Current **`TechnicalActivity`** (left panel). |

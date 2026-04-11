@@ -1,10 +1,58 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { reconcileQueuedTranscript, type ChatQueueItem } from "../utils/chatQueueTranscript";
 import { contextMeterBlocks, fmtTok } from "../utils/tokenMeterFormat";
+
+/** Numeric slice of `chat_usage` for agent pulse cards (context bar + token counts). */
+export type ChatPulseMeters = {
+	cumPrompt: number;
+	cumCompletion: number;
+	/** 0–100 when server sends usage or derives from lastPrompt/contextWindow. */
+	contextFillPct: number | null;
+};
+
+type ChatUsageCore = {
+	cumP: number;
+	cumC: number;
+	pct: number | null;
+	lastP: number | null;
+	win: number | null;
+	approx: boolean;
+};
+
+function computeChatUsageCore(data: Record<string, unknown>): ChatUsageCore {
+	const cumP = typeof data.cumPrompt === "number" && Number.isFinite(data.cumPrompt) ? data.cumPrompt : 0;
+	const cumC = typeof data.cumCompletion === "number" && Number.isFinite(data.cumCompletion) ? data.cumCompletion : 0;
+	const pctRaw =
+		typeof data.contextPercent === "number" && Number.isFinite(data.contextPercent) ? data.contextPercent : null;
+	const win =
+		typeof data.contextWindow === "number" && Number.isFinite(data.contextWindow) && data.contextWindow > 0
+			? data.contextWindow
+			: null;
+	const lastP =
+		typeof data.lastPrompt === "number" && Number.isFinite(data.lastPrompt) ? Math.max(0, data.lastPrompt) : null;
+	const approx = data.approximate === true;
+	let pct = pctRaw;
+	if (pct == null && lastP != null && win != null) {
+		pct = Math.min(100, (lastP / win) * 100);
+	}
+	return { cumP, cumC, pct, lastP, win, approx };
+}
 
 const ACTIVE_LLM_STORAGE_KEY = "wayofpi.activeLlmModel";
 
 /** Stale UI picks / bad docs — never valid on typical `ollama list` for this playground. */
 const LEGACY_DISCARD_OLLAMA_MODEL_IDS = new Set(["qwen3.5:latest"]);
+
+/** Persisted chat model id (Ollama tag or OpenRouter id); applied on connect via `set_model`. */
+function readStoredLlmModelId(): string | null {
+	try {
+		if (typeof window === "undefined") return null;
+		const v = localStorage.getItem(ACTIVE_LLM_STORAGE_KEY)?.trim();
+		return v || null;
+	} catch {
+		return null;
+	}
+}
 
 function scrubLegacyStoredOllamaModel(): void {
 	try {
@@ -48,18 +96,8 @@ function formatChatUsagePayload(data: Record<string, unknown>): {
 	contextTitle: string;
 	tokensTitle: string;
 } {
-	const cumP = typeof data.cumPrompt === "number" && Number.isFinite(data.cumPrompt) ? data.cumPrompt : 0;
-	const cumC = typeof data.cumCompletion === "number" && Number.isFinite(data.cumCompletion) ? data.cumCompletion : 0;
-	const pctRaw = typeof data.contextPercent === "number" && Number.isFinite(data.contextPercent) ? data.contextPercent : null;
-	const win = typeof data.contextWindow === "number" && Number.isFinite(data.contextWindow) && data.contextWindow > 0 ? data.contextWindow : null;
-	const lastP =
-		typeof data.lastPrompt === "number" && Number.isFinite(data.lastPrompt) ? Math.max(0, data.lastPrompt) : null;
-	const approx = data.approximate === true;
-
-	let pct = pctRaw;
-	if (pct == null && lastP != null && win != null) {
-		pct = Math.min(100, (lastP / win) * 100);
-	}
+	const c = computeChatUsageCore(data);
+	const { cumP, cumC, pct, lastP, win, approx } = c;
 
 	let contextPct = "—";
 	if (pct != null) {
@@ -108,6 +146,8 @@ export interface ChatRow {
 	role: "user" | "assistant";
 	content: string;
 	timestamp: string;
+	/** Server queue slot while message waits behind an in-flight assistant turn. */
+	queueId?: string;
 }
 
 export interface LogRow {
@@ -141,6 +181,8 @@ export function useWayOfPiSession(
 	onTreeRefresh?: () => void,
 	/** When ref is true, assistant deltas are buffered and applied once on `done` (Simple UI “streaming off”). */
 	bufferAssistantDeltasRef?: MutableRefObject<boolean>,
+	/** Refreshes agent/team catalog when the server rewrites `teams.yaml` (orchestrator `team_*` tools). */
+	onAgentsCatalogInvalidate?: () => void,
 ) {
 	const initialTabIdRef = useRef<string | null>(null);
 	if (initialTabIdRef.current == null) {
@@ -150,7 +192,7 @@ export function useWayOfPiSession(
 
 	const [connected, setConnected] = useState(false);
 	const [chatTabs, setChatTabs] = useState<ChatSessionTab[]>([
-		{ id: initialTabId, label: "Session Chat" },
+		{ id: initialTabId, label: "New Chat" },
 	]);
 	const [activeChatTabId, setActiveChatTabId] = useState(initialTabId);
 	const [rowsByTab, setRowsByTab] = useState<Record<string, ChatRow[]>>(() => ({
@@ -162,16 +204,26 @@ export function useWayOfPiSession(
 	const [streaming, setStreaming] = useState(false);
 	/** Server-side count of user messages waiting after the in-flight assistant turn. */
 	const [chatQueuePending, setChatQueuePending] = useState(0);
+	/** Pending texts + ids (from `queue_state.items`) for queue manager UI. */
+	const [chatQueueItems, setChatQueueItems] = useState<ChatQueueItem[]>([]);
+	const prevQueueSnapshotRef = useRef<ChatQueueItem[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	/** Server-reported model id in use for this WebSocket (Ollama tag or OpenRouter id). */
-	const [effectiveModel, setEffectiveModel] = useState<string | null>(null);
+	const [effectiveModel, setEffectiveModel] = useState<string | null>(() => readStoredLlmModelId());
+	/** From **`ready`** / **`model_set`** — same source as the Bun chat session (not only `/api/config`). */
+	const [llmProviderFromSocket, setLlmProviderFromSocket] = useState<string | null>(null);
 	const [chatMode, setChatModeState] = useState<ChatSessionMode>(() =>
 		typeof window !== "undefined" ? readStoredChatMode() : "build",
 	);
 	const [chatAgentName, setChatAgentNameState] = useState<string | null>(() =>
 		typeof window !== "undefined" ? readStoredChatAgent() : null,
 	);
+	/** Phrase-dispatch specialist for this assistant turn only (picker / `agent` unchanged). */
+	const [dispatchTurnAgent, setDispatchTurnAgent] = useState<string | null>(null);
 	const [tokenMeter, setTokenMeter] = useState<TokenMeterState>(() => ({ ...TOKEN_METER_EMPTY }));
+	const onAgentsCatalogInvalidateRef = useRef(onAgentsCatalogInvalidate);
+	onAgentsCatalogInvalidateRef.current = onAgentsCatalogInvalidate;
+	const [chatPulseMeters, setChatPulseMeters] = useState<ChatPulseMeters | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
 	const assistantIdRef = useRef<string | null>(null);
 	const bufferThisTurnRef = useRef(false);
@@ -189,6 +241,20 @@ export function useWayOfPiSession(
 	useEffect(() => {
 		chatTabsRef.current = chatTabs;
 	}, [chatTabs]);
+
+	/** Empty tabs show **New Chat**; normalize legacy **Session Chat** / **New chat** when there are no user rows yet. */
+	useEffect(() => {
+		setChatTabs((tabs) => {
+			const next = tabs.map((t) => {
+				const r = rowsByTab[t.id] ?? [];
+				const hasUser = r.some((row) => row.role === "user");
+				if (hasUser) return t;
+				if (t.label === "Session Chat" || t.label === "New chat") return { ...t, label: "New Chat" };
+				return t;
+			});
+			return next.some((t, i) => t !== tabs[i]) ? next : tabs;
+		});
+	}, [rowsByTab]);
 
 	const shouldBufferDeltas = () => bufferAssistantDeltasRef?.current === true;
 
@@ -243,7 +309,11 @@ export function useWayOfPiSession(
 				setConnected(true);
 				setError(null);
 				setChatQueuePending(0);
+				setChatQueueItems([]);
+				prevQueueSnapshotRef.current = [];
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
+				setChatPulseMeters(null);
+				setDispatchTurnAgent(null);
 				queueMicrotask(() => {
 					const w = wsRef.current;
 					if (!w || w.readyState !== WebSocket.OPEN) return;
@@ -265,6 +335,9 @@ export function useWayOfPiSession(
 				setConnected(false);
 				setStreaming(false);
 				setChatQueuePending(0);
+				setChatQueueItems([]);
+				prevQueueSnapshotRef.current = [];
+				setLlmProviderFromSocket(null);
 				assistantIdRef.current = null;
 				bufferThisTurnRef.current = false;
 				bufferedAssistantRef.current = "";
@@ -282,7 +355,14 @@ export function useWayOfPiSession(
 					const type = data.type as string;
 					if (type === "ready") {
 						const eff = String(data.effectiveModel ?? "").trim();
-						if (eff) setEffectiveModel(eff);
+						const pr =
+							typeof data.provider === "string" && data.provider.trim()
+								? data.provider.trim().toLowerCase()
+								: "";
+						if (pr) setLlmProviderFromSocket(pr);
+						const saved = readStoredLlmModelId()?.trim() ?? "";
+						const displayId = saved && saved !== eff ? saved : eff || saved;
+						if (displayId) setEffectiveModel(displayId);
 						const srvMode = data.chatMode === "plan" || data.chatMode === "build" ? data.chatMode : "build";
 						const want = readStoredChatMode();
 						setChatModeState(want);
@@ -306,7 +386,6 @@ export function useWayOfPiSession(
 							},
 						]);
 						try {
-							const saved = localStorage.getItem(ACTIVE_LLM_STORAGE_KEY)?.trim();
 							if (saved && saved !== eff && ws.readyState === WebSocket.OPEN) {
 								ws.send(JSON.stringify({ type: "set_model", model: saved }));
 							}
@@ -339,6 +418,11 @@ export function useWayOfPiSession(
 				if (type === "model_set") {
 					const eff = String(data.effectiveModel ?? "").trim();
 					if (eff) setEffectiveModel(eff);
+					const pr =
+						typeof data.provider === "string" && data.provider.trim()
+							? data.provider.trim().toLowerCase()
+							: "";
+					if (pr) setLlmProviderFromSocket(pr);
 					return;
 				}
 				if (type === "log") {
@@ -380,6 +464,7 @@ export function useWayOfPiSession(
 					const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
 					const tabId = activeChatTabIdRef.current;
 					const queuedText = String(data.content ?? "");
+					const queueId = String(data.queueId ?? "").trim() || undefined;
 					applyFirstUserTabTitle(tabId, queuedText);
 					setRowsByTab((prev) => {
 						const R = prev[tabId] ?? [];
@@ -392,10 +477,34 @@ export function useWayOfPiSession(
 									role: "user",
 									content: queuedText,
 									timestamp: ts,
+									...(queueId ? { queueId } : {}),
 								},
 							],
 						};
 					});
+					return;
+				}
+				if (type === "queue_runtime_bind") {
+					const qid = String(data.queueId ?? "").trim();
+					if (!qid) return;
+					const tabId = activeChatTabIdRef.current;
+					setRowsByTab((prev) => {
+						const R = prev[tabId] ?? [];
+						const idx = R.findIndex((r) => r.role === "user" && r.queueId === qid);
+						if (idx === -1) return prev;
+						const copy = [...R];
+						copy[idx] = { ...copy[idx], queueId: undefined };
+						return { ...prev, [tabId]: copy };
+					});
+					return;
+				}
+				if (type === "agents_catalog_changed") {
+					onAgentsCatalogInvalidateRef.current?.();
+					return;
+				}
+				if (type === "dispatch_turn") {
+					const a = data.agent;
+					setDispatchTurnAgent(typeof a === "string" && a.trim() ? a.trim() : null);
 					return;
 				}
 				if (type === "assistant_turn_start") {
@@ -403,11 +512,31 @@ export function useWayOfPiSession(
 					bufferThisTurnRef.current = shouldBufferDeltas();
 					bufferedAssistantRef.current = "";
 					setStreaming(true);
+					setChatPulseMeters(null);
 					return;
 				}
 				if (type === "queue_state") {
-					const n = data.pending;
-					setChatQueuePending(typeof n === "number" && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0);
+					const rawItems = data.items;
+					const items: ChatQueueItem[] = [];
+					if (Array.isArray(rawItems)) {
+						for (const el of rawItems) {
+							if (!el || typeof el !== "object") continue;
+							const o = el as Record<string, unknown>;
+							const id = String(o.id ?? "").trim();
+							const text = String(o.text ?? o.content ?? "").trim();
+							if (id) items.push({ id, text });
+						}
+					}
+					const n =
+						typeof data.pending === "number" && Number.isFinite(data.pending)
+							? Math.max(0, Math.floor(data.pending))
+							: items.length;
+					setChatQueuePending(n);
+					setChatQueueItems(items);
+					const tabId = activeChatTabIdRef.current;
+					const prevSnap = prevQueueSnapshotRef.current;
+					reconcileQueuedTranscript(prevSnap, items, tabId, setRowsByTab);
+					prevQueueSnapshotRef.current = items;
 					return;
 				}
 				if (type === "assistant_delta") {
@@ -440,14 +569,24 @@ export function useWayOfPiSession(
 					setRowsByTab((prev) => ({ ...prev, [tabId]: [] }));
 					setStreaming(false);
 					setChatQueuePending(0);
+					setChatQueueItems([]);
+					prevQueueSnapshotRef.current = [];
 					assistantIdRef.current = null;
 					bufferThisTurnRef.current = false;
 					bufferedAssistantRef.current = "";
 					setTokenMeter({ ...TOKEN_METER_EMPTY });
+					setChatPulseMeters(null);
+					setDispatchTurnAgent(null);
 					return;
 				}
 				if (type === "chat_usage") {
 					setTokenMeter(formatChatUsagePayload(data));
+					const u = computeChatUsageCore(data);
+					setChatPulseMeters({
+						cumPrompt: u.cumP,
+						cumCompletion: u.cumC,
+						contextFillPct: u.pct,
+					});
 					return;
 				}
 				if (type === "session_transcript") {
@@ -499,6 +638,7 @@ export function useWayOfPiSession(
 					}
 					setStreaming(false);
 					assistantIdRef.current = null;
+					setDispatchTurnAgent(null);
 					onTreeRefresh?.();
 					return;
 				}
@@ -506,6 +646,7 @@ export function useWayOfPiSession(
 					bufferThisTurnRef.current = false;
 					bufferedAssistantRef.current = "";
 					setStreaming(false);
+					setDispatchTurnAgent(null);
 					setError(String(data.message ?? "Unknown error"));
 					setLogs((L) => [
 						...L,
@@ -546,6 +687,37 @@ export function useWayOfPiSession(
 		wsRef.current.send(JSON.stringify({ type: "chat", content: t }));
 	}, []);
 
+	const sendQueuePayload = useCallback((payload: Record<string, unknown>) => {
+		const w = wsRef.current;
+		if (!w || w.readyState !== WebSocket.OPEN) return;
+		w.send(JSON.stringify(payload));
+	}, []);
+
+	const editChatQueueItem = useCallback(
+		(id: string, text: string) => {
+			const t = text.trim();
+			if (!id || !t) return;
+			sendQueuePayload({ type: "queue_edit", id, text: t });
+		},
+		[sendQueuePayload],
+	);
+
+	const deleteChatQueueItem = useCallback(
+		(id: string) => {
+			if (!id.trim()) return;
+			sendQueuePayload({ type: "queue_delete", id: id.trim() });
+		},
+		[sendQueuePayload],
+	);
+
+	const forceChatQueueItem = useCallback(
+		(id: string) => {
+			if (!id.trim()) return;
+			sendQueuePayload({ type: "queue_force", id: id.trim() });
+		},
+		[sendQueuePayload],
+	);
+
 	const setChatMode = useCallback((mode: ChatSessionMode) => {
 		setChatModeState(mode);
 		try {
@@ -577,6 +749,7 @@ export function useWayOfPiSession(
 	const setLlmModel = useCallback((modelId: string) => {
 		const id = modelId.trim();
 		if (!id) return;
+		setEffectiveModel(id);
 		try {
 			localStorage.setItem(ACTIVE_LLM_STORAGE_KEY, id);
 		} catch {
@@ -609,11 +782,15 @@ export function useWayOfPiSession(
 
 	const startNewSession = useCallback(() => {
 		const newId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-		setChatTabs((tabs) => [...tabs, { id: newId, label: "New chat" }]);
+		setChatTabs((tabs) => [...tabs, { id: newId, label: "New Chat" }]);
 		setActiveChatTabId(newId);
 		activeChatTabIdRef.current = newId;
+		prevQueueSnapshotRef.current = [];
+		setChatQueueItems([]);
 		setRowsByTab((prev) => ({ ...prev, [newId]: [] }));
 		setTokenMeter({ ...TOKEN_METER_EMPTY });
+		setChatPulseMeters(null);
+		setDispatchTurnAgent(null);
 		setError(null);
 		setStreaming(false);
 		assistantIdRef.current = null;
@@ -636,7 +813,11 @@ export function useWayOfPiSession(
 		if (id === activeChatTabIdRef.current) return;
 		activeChatTabIdRef.current = id;
 		setActiveChatTabId(id);
+		prevQueueSnapshotRef.current = [];
+		setChatQueueItems([]);
 		setTokenMeter({ ...TOKEN_METER_EMPTY });
+		setChatPulseMeters(null);
+		setDispatchTurnAgent(null);
 		const tabRows = rowsByTabRef.current[id] ?? [];
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
@@ -676,7 +857,11 @@ export function useWayOfPiSession(
 			if (wasActive && nextActiveId) {
 				activeChatTabIdRef.current = nextActiveId;
 				setActiveChatTabId(nextActiveId);
+				prevQueueSnapshotRef.current = [];
+				setChatQueueItems([]);
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
+				setChatPulseMeters(null);
+				setDispatchTurnAgent(null);
 				const tabRows = rowsByTabRef.current[nextActiveId] ?? [];
 				const ws = wsRef.current;
 				if (ws && ws.readyState === WebSocket.OPEN) {
@@ -703,11 +888,17 @@ export function useWayOfPiSession(
 		logs,
 		streaming,
 		chatQueuePending,
+		chatQueueItems,
+		editChatQueueItem,
+		deleteChatQueueItem,
+		forceChatQueueItem,
 		error,
 		effectiveModel,
+		llmProviderFromSocket,
 		chatMode,
 		setChatMode,
 		chatAgentName,
+		dispatchTurnAgent,
 		setChatAgent,
 		sendChat,
 		setLlmModel,
@@ -716,5 +907,6 @@ export function useWayOfPiSession(
 		reconnectWebSocket,
 		clearError: () => setError(null),
 		tokenMeter,
+		chatPulseMeters,
 	};
 }

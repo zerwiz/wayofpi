@@ -7,6 +7,7 @@ import { useSimpleChatWorkspaceLayout } from "../../hooks/useSimpleChatWorkspace
 import { useSimplePreferences } from "../../hooks/useSimplePreferences";
 import type { PiModelConfigPath } from "../../constants/piModelConfigPaths";
 import type { ChatRow, ChatSessionMode, LogRow } from "../../hooks/useWayOfPiSession";
+import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
 import type { UiMode } from "../../hooks/useUiMode";
 import type { TreeNode } from "../../types/tree";
 import type { FilePersistEncoding } from "../../hooks/useFileEditor";
@@ -34,6 +35,8 @@ function languageFromPath(path: string | null): string {
 		jsx: "JavaScript",
 		json: "JSON",
 		md: "Markdown",
+		mmd: "Mermaid",
+		mermaid: "Mermaid",
 		yml: "YAML",
 		yaml: "YAML",
 	};
@@ -57,8 +60,9 @@ export function SimpleApp({
 	setSelectedPath,
 	content,
 	setContent,
-		persistEncoding,
-		fileLoading,
+	persistEncoding,
+	fileMimeType,
+	fileLoading,
 	fileError,
 	dirty,
 	save,
@@ -71,6 +75,10 @@ export function SimpleApp({
 	chatStreamUiEnabled,
 	onChatStreamUiEnabledChange,
 	chatQueuePending,
+	chatQueueItems,
+	editChatQueueItem,
+	deleteChatQueueItem,
+	forceChatQueueItem,
 	connected,
 	error,
 	sendChat,
@@ -78,6 +86,7 @@ export function SimpleApp({
 	clearError,
 	onReopenLlmFixModal,
 	chatAgentName,
+	dispatchTurnAgent,
 	onChatAgentChange,
 	chatMode,
 	onChatModeChange,
@@ -97,7 +106,9 @@ export function SimpleApp({
 	onCreateAgentDefinition,
 	onNewPlanFile,
 	newPlanFileDisabled,
+	onOpenIndexingDocs,
 	contextPct,
+	contextFillPct,
 	tokensDown,
 	tokensUp,
 	contextTitle,
@@ -119,11 +130,13 @@ export function SimpleApp({
 	setSelectedPath: (p: string | null) => void;
 	content: string;
 	setContent: (s: string) => void;
-		persistEncoding: FilePersistEncoding;
-		fileLoading: boolean;
+	persistEncoding: FilePersistEncoding;
+	/** From `GET /api/file` when the payload is base64 (images, binary). */
+	fileMimeType: string | null;
+	fileLoading: boolean;
 	fileError: string | null;
 	dirty: boolean;
-	save: () => Promise<void>;
+	save: () => Promise<boolean>;
 	line: number;
 	col: number;
 	onCursor: (l: number, c: number) => void;
@@ -133,6 +146,10 @@ export function SimpleApp({
 	chatStreamUiEnabled: boolean;
 	onChatStreamUiEnabledChange: (on: boolean) => void;
 	chatQueuePending: number;
+	chatQueueItems: ChatQueueItem[];
+	editChatQueueItem: (id: string, text: string) => void;
+	deleteChatQueueItem: (id: string) => void;
+	forceChatQueueItem: (id: string) => void;
 	connected: boolean;
 	error: string | null;
 	sendChat: (t: string) => void;
@@ -140,6 +157,7 @@ export function SimpleApp({
 	clearError: () => void;
 	onReopenLlmFixModal?: () => void;
 	chatAgentName: string | null;
+	dispatchTurnAgent?: string | null;
 	onChatAgentChange: (name: string | null) => void;
 	chatMode: ChatSessionMode;
 	onChatModeChange: (m: ChatSessionMode) => void;
@@ -160,7 +178,10 @@ export function SimpleApp({
 	onCreateAgentDefinition?: () => void;
 	onNewPlanFile: () => void;
 	newPlanFileDisabled: boolean;
+	onOpenIndexingDocs?: () => void;
 	contextPct: string;
+	/** 0–100 from `chat_usage`; null until a completed assistant turn */
+	contextFillPct: number | null;
 	tokensDown: string;
 	tokensUp: string;
 	contextTitle: string;
@@ -231,6 +252,10 @@ export function SimpleApp({
 			chatStreamUiEnabled={chatStreamUiEnabled}
 			onChatStreamUiEnabledChange={onChatStreamUiEnabledChange}
 			chatQueuePending={chatQueuePending}
+			chatQueueItems={chatQueueItems}
+			onChatQueueEdit={editChatQueueItem}
+			onChatQueueDelete={deleteChatQueueItem}
+			onChatQueueForce={forceChatQueueItem}
 			connected={connected}
 			error={error}
 			modelLabel={modelLabel}
@@ -240,11 +265,15 @@ export function SimpleApp({
 			onReopenLlmFixModal={onReopenLlmFixModal}
 			appearanceDark={appearanceDark}
 			agents={agentsApi.data?.agents ?? []}
+			agentTeams={agentsApi.data?.teams ?? {}}
 			agentsLoading={agentsApi.loading}
 			chatAgentName={chatAgentName}
+			dispatchTurnAgent={dispatchTurnAgent}
 			onChatAgentChange={onChatAgentChange}
 			chatMode={chatMode}
 			onChatModeChange={onChatModeChange}
+			contextFillPct={contextFillPct}
+			contextTitle={contextTitle}
 		/>
 	);
 
@@ -298,6 +327,7 @@ export function SimpleApp({
 													content={content}
 													onChange={setContent}
 													persistEncoding={persistEncoding}
+													fileMimeType={fileMimeType}
 													loading={fileLoading}
 													error={fileError}
 													dirty={dirty}
@@ -342,6 +372,7 @@ export function SimpleApp({
 												content={content}
 												onChange={setContent}
 												persistEncoding={persistEncoding}
+												fileMimeType={fileMimeType}
 												loading={fileLoading}
 												error={fileError}
 												dirty={dirty}
@@ -392,6 +423,7 @@ export function SimpleApp({
 							{activeTab === "models" ? (
 								<SimpleModelsView
 									config={config}
+									workspaceRoot={root}
 									appearanceDark={appearanceDark}
 									effectiveModel={effectiveModel}
 									onSelectModel={onSelectLlmModel}
@@ -415,6 +447,8 @@ export function SimpleApp({
 									approvalQueue={approvalQueue}
 									onApprovalQueue={setApprovalQueue}
 									onSwitchToTechnical={() => setUiMode("technical")}
+									onOpenIndexingDocs={onOpenIndexingDocs}
+									serverConfig={config}
 								/>
 							) : null}
 						</div>
@@ -434,6 +468,7 @@ export function SimpleApp({
 									onToggleChatWorkspaceLayout={
 										activeTab === "chat" ? toggleChatWorkspaceLayout : undefined
 									}
+									onExplorerGitMutated={() => void refreshTree()}
 								/>
 							</div>
 						) : null}

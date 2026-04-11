@@ -22,7 +22,7 @@ For **memory vs skills**, see **[AGENT_MEMORY.md](AGENT_MEMORY.md)** §7. Upstre
 | **find-skills** | [`.pi/skills/find-skills/SKILL.md`](../.pi/skills/find-skills/SKILL.md) | Audit gaps vs **`.pi/skills/`**, **find + validate** on **[skills.sh](https://skills.sh/)** / **`npx skills`**, then **implement** into **`.pi/skills/`** and update **`docs/SKILLS.md`**. |
 | **github** | [`.pi/skills/github/SKILL.md`](../.pi/skills/github/SKILL.md) | **GitHub** remotes, **branches**, **`git worktree`** — parallel agents each in their own path on the same repo. |
 | **indexer** | [`.pi/skills/indexer/SKILL.md`](../.pi/skills/indexer/SKILL.md) | Build **`INDEX.md`**: folder map + what each important file does (handoff for other agents). |
-| **ralph** | [`.pi/skills/ralph/SKILL.md`](../.pi/skills/ralph/SKILL.md) | **Ralph** queue: `todo/` → `inprogress/` → `done/`, one HTML file per `.txt` ticket; delegation via agent-team. |
+| **ralph** | [`.pi/skills/ralph/SKILL.md`](../.pi/skills/ralph/SKILL.md) | **Ralph Wiggum** queue: `todo/` → `inprogress/` → `done/`, one HTML file per `.txt` ticket; delegation via agent-team. |
 
 Add a folder **`.pi/skills/<name>/SKILL.md`** (frontmatter **`name`** must match the directory) to register another skill. Pi also loads skills from packages and global paths (§2).
 

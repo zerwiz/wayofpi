@@ -8,7 +8,7 @@ import {
 	Square,
 	X,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import {
 	buildChatMessageWithAttachment,
 	MAX_CHAT_ATTACHMENT_CHARS,
@@ -17,7 +17,12 @@ import type { AgentMeta } from "../hooks/useAgents";
 import {
 	AgentTeamPulseGrid,
 	buildPulseMembersFromRoster,
+	overlayPulseMembersWithActiveChat,
+	useAgentPulseDoneFlash,
 } from "./AgentTeamPulseGrid";
+import type { ChatPulseMeters } from "../hooks/useWayOfPiSession";
+import type { ChatQueueItem } from "../utils/chatQueueTranscript";
+import { ChatQueueModal } from "./ChatQueueModal";
 import type { ChatRow, ChatSessionMode, ChatSessionTab } from "../hooks/useWayOfPiSession";
 import type { UiMode } from "../hooks/useUiMode";
 import { chatErrorSuggestsModelFix } from "../utils/chatErrorModelHint";
@@ -26,8 +31,16 @@ import {
 	slashMenuAtCursor,
 	type SlashMenuState,
 } from "../utils/chatSlashAutocomplete";
+import { usePlanWorkspaceSummary } from "../hooks/usePlanWorkspaceSummary";
+import { registerChatComposerInject } from "../utils/chatComposerInjectBus";
 import { examplePlanPathForToday } from "../utils/planModeArtifacts";
+import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../utils/planModeComposerTemplates";
+import { shouldSuggestPlanModeForMessage } from "../utils/planModeHeuristics";
+import { workspaceAgentDisplayName } from "../utils/workspaceAgentDisplay";
 import type { ChatDockRegion } from "../utils/technicalLayoutStorage";
+import { apiGet } from "../api/client";
+import { ContextUsageRing } from "./ContextUsageRing";
+import { agentsForSessionPicker, rosterNamesMissingFromAgents } from "../utils/workspaceChatAgentPicker";
 
 /** Technical UI: user-adjustable dock for the agent / session panel (Zed / Cursor–style). */
 export type TechnicalAgentDock = {
@@ -59,10 +72,21 @@ export function ChatPanel({
 	agentsLoading,
 	agentTeams,
 	onOpenAgentTeamInPane,
+	/** Bumped from App when user chooses “Pane team” — opens inline roster without a center workspace tab. */
+	openTeamPulseSignal,
 	chatAgentName,
+	/** Phrase-dispatch specialist for this turn (picker unchanged). */
+	dispatchTurnAgent,
 	onChatAgentChange,
 	/** Server-side messages waiting after the current assistant turn. */
 	chatQueuePending,
+	chatQueueItems,
+	editChatQueueItem,
+	deleteChatQueueItem,
+	forceChatQueueItem,
+	chatPulseMeters,
+	/** Tooltip for the context ring (same as status bar / `tokenMeter.contextTitle`). */
+	contextTitle,
 	/** When wrapped in TechnicalDockPanelFrame — omit outer border; frame provides the edge. */
 	dockPanelFrame,
 	/** Technical: chat fills a workspace editor pane tab (no fixed sidebar width). */
@@ -93,16 +117,27 @@ export function ChatPanel({
 	agentsLoading?: boolean;
 	/** `teams.yaml` rosters — same source Pi **agent-team** uses; drives the **Team** roster pane. */
 	agentTeams?: Record<string, string[]>;
-	/** Technical: open **Team pulse** in the main workspace tab stack (keeps chat messages visible). */
+	/** Technical: focus team roster in the agent dock (side/bottom), same panel as Session Chat. */
 	onOpenAgentTeamInPane?: () => void;
+	/** Incremented by App when `onOpenAgentTeamInPane` runs — expands the Team strip in this ChatPanel. */
+	openTeamPulseSignal?: number;
 	chatAgentName?: string | null;
+	dispatchTurnAgent?: string | null;
 	onChatAgentChange?: (name: string | null) => void;
 	chatQueuePending?: number;
+	chatQueueItems?: ChatQueueItem[];
+	editChatQueueItem?: (id: string, text: string) => void;
+	deleteChatQueueItem?: (id: string) => void;
+	forceChatQueueItem?: (id: string) => void;
+	chatPulseMeters?: ChatPulseMeters | null;
+	contextTitle?: string;
 	dockPanelFrame?: boolean;
 	embeddedInWorkspace?: boolean;
 }) {
+	const [queueModalOpen, setQueueModalOpen] = useState(false);
 	const technical = uiMode === "technical";
-	const chatTab = technical ? "Session Chat" : "Chat";
+	const activeChatTabLabel =
+		chatTabs.find((t) => t.id === activeChatTabId)?.label ?? (technical ? "New Chat" : "Chat");
 	const docked = technical && technicalDock != null;
 	const embedPane = Boolean(embeddedInWorkspace);
 	const widthClass = embedPane
@@ -114,19 +149,26 @@ export function ChatPanel({
 				: "";
 	const [input, setInput] = useState("");
 	const [teamPaneOpen, setTeamPaneOpen] = useState(false);
+	const lastTeamPulseSignalRef = useRef(0);
 	const [pulseTeam, setPulseTeam] = useState<string | null>(null);
 	const [pulseStreamDetail, setPulseStreamDetail] = useState(true);
 	const [attachment, setAttachment] = useState<{ name: string; text: string } | null>(null);
 	const [attachErr, setAttachErr] = useState<string | null>(null);
 	const [caretPos, setCaretPos] = useState(0);
 	const [slashHighlight, setSlashHighlight] = useState(0);
+	const [planNudgeOpen, setPlanNudgeOpen] = useState(false);
 	const endRef = useRef<HTMLDivElement>(null);
 	const assistantColEndRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const pending = chatQueuePending ?? 0;
-	const assistantShort = chatAgentName?.trim() || "Orchestrator";
+	const queueItems = chatQueueItems ?? [];
+	/** Session picker + chat headers — phrase-dispatch does not replace “Orchestrator” here. */
+	const sessionPick = chatAgentName?.trim() || null;
+	const assistantShort = sessionPick ? workspaceAgentDisplayName(sessionPick) : "Orchestrator";
+	/** Pulse grid / team highlight — includes auto-dispatch specialist for this turn. */
+	const pulseAgentName = sessionPick || dispatchTurnAgent?.trim() || null;
 	const embedSplit = embedPane && technical;
 	const assistantRows = useMemo(() => rows.filter((r) => r.role === "assistant"), [rows]);
 	const userRows = useMemo(() => rows.filter((r) => r.role === "user"), [rows]);
@@ -146,17 +188,69 @@ export function ChatPanel({
 		);
 	}, [agentTeams, teamNames]);
 
+	useEffect(() => {
+		const s = openTeamPulseSignal ?? 0;
+		if (s <= 0 || s === lastTeamPulseSignalRef.current) return;
+		lastTeamPulseSignalRef.current = s;
+		setTeamPaneOpen(true);
+	}, [openTeamPulseSignal]);
+
 	const pulseRoster = pulseTeam && agentTeams?.[pulseTeam] ? agentTeams[pulseTeam] : [];
-	const pulseMembers = useMemo(
-		() => buildPulseMembersFromRoster(pulseRoster, agents ?? []),
-		[pulseRoster, agents],
+	const pulseDoneFlashLower = useAgentPulseDoneFlash(streaming, pulseAgentName);
+	const lastUserTask = useMemo(() => {
+		for (let i = userRows.length - 1; i >= 0; i--) {
+			const t = String(userRows[i]?.content ?? "").trim();
+			if (t) return t;
+		}
+		return null;
+	}, [userRows]);
+	const pulseMembers = useMemo(() => {
+		const base = buildPulseMembersFromRoster(pulseRoster, agents ?? []);
+		return overlayPulseMembersWithActiveChat(base, {
+			activeAgentName: pulseAgentName,
+			streaming,
+			doneFlashAgentLower: pulseDoneFlashLower,
+			lastUserTask,
+			meters: chatPulseMeters ?? null,
+		});
+	}, [
+		pulseRoster,
+		agents,
+		pulseAgentName,
+		streaming,
+		pulseDoneFlashLower,
+		lastUserTask,
+		chatPulseMeters,
+	]);
+
+	const pickerAgents = useMemo(() => agentsForSessionPicker(agents ?? []), [agents]);
+	const rosterOnlyNames = useMemo(
+		() => rosterNamesMissingFromAgents(agentTeams, agents ?? []),
+		[agentTeams, agents],
 	);
 
 	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
 	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
+	const planSummary = usePlanWorkspaceSummary(Boolean(technical && connected));
 	useEffect(() => {
 		setSlashHighlight(0);
 	}, [slashMenuKey]);
+
+	const injectComposer = useCallback((t: string) => {
+		setInput((prev) => (prev.trim() ? `${prev.trim()}\n\n${t}` : t));
+		queueMicrotask(() => {
+			const el = textareaRef.current;
+			if (!el) return;
+			el.focus();
+			const len = el.value.length;
+			el.setSelectionRange(len, len);
+		});
+	}, []);
+
+	useEffect(() => {
+		registerChatComposerInject(injectComposer);
+		return () => registerChatComposerInject(null);
+	}, [injectComposer]);
 
 	useEffect(() => {
 		if (!embedSplit) return;
@@ -186,11 +280,33 @@ export function ChatPanel({
 		if (!connected) return;
 		const msg = buildChatMessageWithAttachment(input, attachment).trim();
 		if (!msg) return;
+		const wasBuild = chatMode === "build";
 		onSend(msg);
 		setInput("");
 		setAttachment(null);
 		setAttachErr(null);
+		if (technical && wasBuild && shouldSuggestPlanModeForMessage(msg)) {
+			setPlanNudgeOpen(true);
+		}
 		setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+	};
+
+	const applyPlanHandoff = async (kind: "implement" | "review") => {
+		try {
+			const d = await apiGet<{ latest: { path: string } | null }>("/api/plans");
+			const path = d.latest?.path;
+			if (!path) {
+				injectComposer(
+					kind === "implement"
+						? "No `plans/PLAN-*.md` file found yet — use **New plan file** or create one under `plans/`."
+						: "No `plans/PLAN-*.md` file found yet — create a plan file first, then run this again.",
+				);
+				return;
+			}
+			injectComposer(kind === "implement" ? buildImplementPlanPrompt(path) : buildReviewPlanPrompt(path));
+		} catch {
+			injectComposer("Could not read the plans index — check the workspace and server.");
+		}
 	};
 
 	const onPickFile = async (list: FileList | null) => {
@@ -254,7 +370,7 @@ export function ChatPanel({
 								const closeDisabled = streaming && activeChatTabId === tab.id;
 								const label = technical
 									? tab.label
-									: tab.label.replace(/^(Session Chat|New chat)$/, "Chat");
+									: tab.label.replace(/^(Session Chat|New Chat|New chat)$/, "Chat");
 								return (
 									<div
 										key={tab.id}
@@ -345,7 +461,7 @@ export function ChatPanel({
 									title={
 										streaming
 											? "Wait for the current reply to finish before starting a new session"
-											: "New chat — add a tab and start a fresh session on the server for this connection"
+											: "New Chat — add a tab and start a fresh session on the server for this connection"
 									}
 									disabled={!connected || streaming}
 									onClick={() => onNewSession()}
@@ -381,7 +497,7 @@ export function ChatPanel({
 										className="text-[#fb923c] underline"
 										onClick={() => setTeamPaneOpen(false)}
 									>
-										{chatTab}
+										{activeChatTabLabel}
 									</button>{" "}
 									— message the main session (dispatcher) here in the web UI.
 								</p>
@@ -639,9 +755,29 @@ export function ChatPanel({
 
 			<div className="shrink-0 border-t border-[#3c3c3c] bg-[#252526] p-3">
 				{pending > 0 && !teamPaneOpen ? (
-					<p className="mb-2 font-mono text-[10px] text-[#858585]">
+					<button
+						type="button"
+						onClick={() => setQueueModalOpen(true)}
+						disabled={!connected}
+						className="mb-2 w-full rounded border border-[#ea580c]/35 bg-[#ea580c]/10 px-2 py-1.5 text-left font-mono text-[10px] text-[#fdba74] transition-colors hover:bg-[#ea580c]/20 disabled:cursor-not-allowed disabled:opacity-50"
+						title="View, edit, remove, or prioritize queued messages"
+					>
 						{pending} message{pending === 1 ? "" : "s"} queued — will run after the current reply.
-					</p>
+						<span className="mt-0.5 block text-[9px] font-normal text-[#fdba74]/80">Click to manage queue</span>
+					</button>
+				) : null}
+				{queueModalOpen ? (
+					<ChatQueueModal
+						open={queueModalOpen}
+						onClose={() => setQueueModalOpen(false)}
+						items={queueItems}
+						connected={connected}
+						streaming={streaming}
+						onEdit={(id, text) => editChatQueueItem?.(id, text)}
+						onDelete={(id) => deleteChatQueueItem?.(id)}
+						onForce={(id) => forceChatQueueItem?.(id)}
+						appearanceDark
+					/>
 				) : null}
 				{attachErr ? (
 					<p className="mb-2 font-mono text-[11px] text-[#ce9178]">
@@ -662,6 +798,34 @@ export function ChatPanel({
 						>
 							<X size={14} />
 						</button>
+					</div>
+				) : null}
+				{planNudgeOpen && technical ? (
+					<div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded border border-[#c586c0]/40 bg-[#c586c0]/10 px-2 py-1.5 font-mono text-[10px] text-[#e9d5ff]">
+						<span className="min-w-0 flex-1">
+							That message looked multi-step. <strong>Plan mode</strong> adds planner-style instructions before the next
+							reply.
+						</span>
+						<div className="flex shrink-0 gap-1">
+							<button
+								type="button"
+								disabled={streaming || !onChatModeChange}
+								className="rounded border border-[#c586c0]/50 bg-[#c586c0]/25 px-2 py-0.5 font-bold text-white hover:bg-[#c586c0]/40 disabled:opacity-40"
+								onClick={() => {
+									onChatModeChange?.("plan");
+									setPlanNudgeOpen(false);
+								}}
+							>
+								Switch to Plan
+							</button>
+							<button
+								type="button"
+								className="rounded border border-[#555] px-2 py-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
+								onClick={() => setPlanNudgeOpen(false)}
+							>
+								Dismiss
+							</button>
+						</div>
 					</div>
 				) : null}
 				<form
@@ -742,6 +906,18 @@ export function ChatPanel({
 										return;
 									}
 								}
+								if (
+									e.key === "Tab" &&
+									e.shiftKey &&
+									technical &&
+									chatMode &&
+									onChatModeChange &&
+									!streaming
+								) {
+									e.preventDefault();
+									onChatModeChange(chatMode === "build" ? "plan" : "build");
+									return;
+								}
 								if (e.key === "Enter" && !e.shiftKey) {
 									e.preventDefault();
 									submit(e);
@@ -754,18 +930,27 @@ export function ChatPanel({
 									: "Not connected — type here; Send when the server is up"
 								: technical && chatMode === "plan"
 									? `> Plan: goal, constraints, files — save as ${examplePlanPathForToday()} — Enter to send`
-									: technical
+										: technical
 										? streaming
 											? "> Queue next message (Enter) — runs when the assistant finishes"
-											: "> Message (Enter to send, Shift+Enter newline)"
+											: "> Message (Enter to send, Shift+Enter newline, Shift+Tab Plan/Build)"
 										: streaming
 											? "Queue next message (Enter) — runs when the assistant finishes"
 											: "Type a message… (Enter to send, Shift+Enter for new line)"
 						}
-							className="max-h-48 min-h-[60px] w-full resize-none bg-transparent p-3 font-mono text-[13px] text-[#cccccc] outline-none placeholder:text-[#858585]"
+							className="max-h-48 min-h-[60px] w-full resize-none bg-transparent p-3 pr-10 pb-9 font-mono text-[13px] text-[#cccccc] outline-none placeholder:text-[#858585]"
 						/>
+						<div className="pointer-events-none absolute bottom-2 right-2 z-30 flex items-center justify-center rounded-full bg-[#1e1e1e]/85 p-0.5 shadow-sm ring-1 ring-[#555]/60">
+							<ContextUsageRing
+								contextFillPct={chatPulseMeters?.contextFillPct ?? null}
+								title={contextTitle}
+								appearanceDark
+								sizePx={18}
+								className="pointer-events-auto opacity-95"
+							/>
+						</div>
 					</div>
-					<div className="flex items-center justify-between gap-2 border-t border-[#3c3c3c] bg-[#2d2d2d] p-1.5">
+					<div className="flex items-center gap-2 border-t border-[#3c3c3c] bg-[#2d2d2d] p-1.5">
 						<div className="flex min-w-0 flex-1 items-center gap-2">
 							<button
 								type="button"
@@ -781,17 +966,27 @@ export function ChatPanel({
 								<select
 									value={chatAgentName ?? ""}
 									disabled={!connected || streaming || agentsLoading}
-									title="Orchestrator (no .md) = primary Pi-shaped session lead; or pick a workspace agent markdown (agents/, .claude/agents/, .pi/agents/, .cursor/agents/)"
+									title="Orchestrator = session lead. Pick an agent to load its `.md` on every turn. Phrase-dispatch can still merge a specialist for a single reply without moving this picker."
 									onChange={(e) => {
 										const v = e.target.value;
 										onChatAgentChange(v === "" ? null : v);
 									}}
 									className="min-w-0 max-w-[min(200px,50%)] shrink rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-1 font-mono text-[10px] text-[#cccccc] outline-none focus:border-[#ea580c] disabled:opacity-40"
 								>
-									<option value="">Orchestrator</option>
-									{(agents ?? []).map((a) => (
+									<option value="">Orchestrator (session lead)</option>
+									{pickerAgents.map((a) => (
 										<option key={a.name} value={a.name} title={a.description || a.relativePath}>
-											{a.name}
+											{workspaceAgentDisplayName(a.name)}
+										</option>
+									))}
+									{rosterOnlyNames.map((name) => (
+										<option
+											key={`roster-${name}`}
+											value={name}
+											disabled
+											title="In teams.yaml but no matching agent `.md` yet."
+										>
+											{workspaceAgentDisplayName(name)} (no .md)
 										</option>
 									))}
 								</select>
@@ -811,11 +1006,8 @@ export function ChatPanel({
 							{technical && onOpenAgentTeamInPane ? (
 								<button
 									type="button"
-									onClick={() => {
-										setTeamPaneOpen(false);
-										onOpenAgentTeamInPane();
-									}}
-									title="Open agent team roster as a workspace tab (chat stays on messages)"
+									onClick={() => onOpenAgentTeamInPane()}
+									title="Show the agent panel (if hidden) and expand Team here — roster beside the editor, like Cursor’s agent sidebar"
 									className="shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-[#858585] hover:border-[#555555] hover:text-[#cccccc]"
 								>
 									Pane team
@@ -824,48 +1016,83 @@ export function ChatPanel({
 						</div>
 						<div className="flex shrink-0 items-center gap-2">
 							{technical && chatMode && onChatModeChange && !teamPaneOpen ? (
-								<div
-									className="flex shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] p-0.5"
-									title="Build vs Plan — saved locally; the server applies it when the chat WebSocket is connected. Disabled only while a reply is streaming."
-								>
-									<button
-										type="button"
-										disabled={streaming}
-										onClick={() => onChatModeChange("build")}
-										className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
-											chatMode === "build" ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
-										} disabled:opacity-40`}
+								<div className="flex shrink-0 flex-col items-end gap-1">
+									<div
+										className="flex shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] p-0.5"
+										title="Build vs Plan — saved locally; the server applies it when the chat WebSocket is connected. Shift+Tab in the input toggles mode when not in slash completion."
 									>
-										Build
-									</button>
-									<button
-										type="button"
-										disabled={streaming}
-										onClick={() => onChatModeChange("plan")}
-										className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
-											chatMode === "plan" ? "bg-[#c586c0]/90 text-white" : "text-[#858585] hover:text-[#cccccc]"
-										} disabled:opacity-40`}
-									>
-										Plan
-									</button>
+										<button
+											type="button"
+											disabled={streaming}
+											onClick={() => onChatModeChange("build")}
+											className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
+												chatMode === "build" ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
+											} disabled:opacity-40`}
+										>
+											Build
+										</button>
+										<button
+											type="button"
+											disabled={streaming}
+											onClick={() => onChatModeChange("plan")}
+											className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
+												chatMode === "plan" ? "bg-[#c586c0]/90 text-white" : "text-[#858585] hover:text-[#cccccc]"
+											} disabled:opacity-40`}
+										>
+											Plan
+										</button>
+									</div>
+									{chatMode === "plan" && planSummary ? (
+										<span
+											className="max-w-[200px] truncate font-mono text-[9px] text-[#858585]"
+											title={planSummary.path}
+										>
+											Latest plan: {planSummary.doneTodos} done · {planSummary.openTodos} open
+										</span>
+									) : null}
+									{chatMode === "plan" ? (
+										<div className="flex flex-wrap justify-end gap-1">
+											<button
+												type="button"
+												disabled={streaming || !connected}
+												onClick={() => void applyPlanHandoff("implement")}
+												className="rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-[#cccccc] hover:border-[#ea580c]/50 disabled:opacity-40"
+												title="Insert a Build handoff prompt for the newest `plans/PLAN-*.md` (by modified time)"
+											>
+												From plan
+											</button>
+											<button
+												type="button"
+												disabled={streaming || !connected}
+												onClick={() => void applyPlanHandoff("review")}
+												className="rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-[#cccccc] hover:border-[#c586c0]/50 disabled:opacity-40"
+												title="Insert a short plan-review prompt for the newest `plans/PLAN-*.md`"
+											>
+												Review plan
+											</button>
+										</div>
+									) : null}
 								</div>
 							) : null}
-							{streaming && !teamPaneOpen ? (
+							{streaming ? (
 								<button
 									type="button"
 									onClick={onStop}
-									className={`flex items-center gap-2 border border-[#ff0000]/30 bg-[#801010] px-3 py-1 text-[#ffcccc] hover:bg-[#a01010] ${technical ? "font-mono text-[11px] uppercase tracking-wider" : "text-[12px]"}`}
+									aria-label="Stop generation"
+									className={`flex items-center gap-2 border border-[#ef4444] bg-[#450a0a] px-4 py-1 font-bold uppercase tracking-wide text-[#fecaca] hover:bg-[#7f1d1d] ${technical ? "font-mono text-[11px]" : "text-[12px]"}`}
 								>
-									<Square size={10} fill="currentColor" /> Stop
+									<Square size={12} className="shrink-0" fill="currentColor" /> Stop
 								</button>
-							) : null}
-							<button
-								type="submit"
-								disabled={(!input.trim() && !attachment) || !connected}
-								className={`flex items-center gap-2 bg-[#ea580c] px-4 py-1 text-white hover:bg-[#c2410c] disabled:opacity-50 ${technical ? "font-mono text-[11px] uppercase tracking-wider" : "text-[13px]"}`}
-							>
-								<Send size={12} /> Send
-							</button>
+							) : (
+								<button
+									type="submit"
+									disabled={(!input.trim() && !attachment) || !connected}
+									aria-label="Send message"
+									className={`flex items-center gap-2 bg-[#c2410c] px-4 py-1 font-bold uppercase tracking-wide text-[#d4d4d4] hover:bg-[#9a3412] disabled:opacity-50 ${technical ? "font-mono text-[11px]" : "text-[13px]"}`}
+								>
+									<Send size={12} className="shrink-0 text-[#d4d4d4]" /> Send
+								</button>
+							)}
 						</div>
 					</div>
 				</form>

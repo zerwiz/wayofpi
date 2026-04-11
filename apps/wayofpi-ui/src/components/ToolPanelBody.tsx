@@ -1,11 +1,23 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import type { LogRow } from "../hooks/useWayOfPiSession";
 import type { BottomPanelTab } from "../types/technicalShell";
+import {
+	isOutputPanelLog,
+	isToolLogPanelLog,
+	KNOWN_STATIC_TOOL_TRACE_SOURCES,
+} from "../../shared/session-log-metadata";
 import { EmbeddedTerminal } from "./EmbeddedTerminal";
+import { ProblemsPanelBody } from "./ProblemsPanelBody";
 
 const STICK_BOTTOM_PX = 56;
 
-function ToolLogScrollBody({ logs }: { logs: LogRow[] }) {
+const TOOL_LOG_STATIC_SOURCES_DISPLAY = (
+	<span className="text-[#c586c0]">{KNOWN_STATIC_TOOL_TRACE_SOURCES.join(" · ")}</span>
+);
+
+type ToolLogScrollVariant = "tool_log" | "output";
+
+function ToolLogScrollBody({ logs, variant = "tool_log" }: { logs: LogRow[]; variant?: ToolLogScrollVariant }) {
 	const scrollerRef = useRef<HTMLDivElement>(null);
 	const stickBottomRef = useRef(true);
 
@@ -22,20 +34,36 @@ function ToolLogScrollBody({ logs }: { logs: LogRow[] }) {
 		stickBottomRef.current = dist < STICK_BOTTOM_PX;
 	};
 
+	const empty =
+		variant === "output" ? (
+			<span className="block min-w-0 max-w-full break-words text-[#858585]">
+				No output lines yet. This tab shows connection, session, workspace navigation, indexing, diagnostics, and chat
+				errors — not per-tool traces (see <span className="text-[#c586c0]">Tool log</span>).
+			</span>
+		) : (
+			<span className="block min-w-0 max-w-full break-words text-[#858585]">
+				No tool traces yet. Tracked static <span className="text-[#cccccc]">source</span> ids: {TOOL_LOG_STATIC_SOURCES_DISPLAY}. Pi-style listing is{" "}
+				<span className="text-[#c586c0]">list_dir</span>. Headless Pi JSON-mode logs each extension tool by name. Session and workspace status live under{" "}
+				<span className="text-[#c586c0]">Output</span>.
+			</span>
+		);
+
 	return (
 		<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden font-mono text-[12px] leading-snug">
 			<div
 				ref={scrollerRef}
 				onScroll={onScroll}
-				className="min-h-0 flex-1 overflow-x-auto overflow-y-auto px-3 py-2"
+				className={`min-h-0 min-w-0 flex-1 overflow-y-auto px-3 py-2 ${logs.length === 0 ? "overflow-x-hidden" : "overflow-x-auto"}`}
 			>
-				<div className="flex min-w-max flex-col gap-1.5">
+				<div
+					className={
+						logs.length === 0
+							? "flex w-full min-w-0 max-w-full flex-col gap-1.5"
+							: "flex min-w-max flex-col gap-1.5"
+					}
+				>
 					{logs.length === 0 ? (
-						<span className="min-w-0 text-[#858585]">
-							No log lines yet. Opens <span className="text-[#c586c0]">read</span> /{" "}
-							<span className="text-[#c586c0]">write</span> / <span className="text-[#c586c0]">bash</span> when you use
-							the editor, workspace actions, integrated terminal, or Run script — plus chat server events.
-						</span>
+						empty
 					) : (
 						logs.map((log, idx) => (
 							<div key={`${log.time}-${idx}`} className="flex gap-4">
@@ -66,18 +94,17 @@ function ToolLogScrollBody({ logs }: { logs: LogRow[] }) {
 
 /** Body for tool tabs inside `PanelDockBand` — Problems / Output / Tool log / Terminal. */
 export function ToolPanelBody({ tab, logs }: { tab: BottomPanelTab; logs: LogRow[] }) {
+	const outputLogs = useMemo(() => logs.filter(isOutputPanelLog), [logs]);
+	const toolLogs = useMemo(() => logs.filter(isToolLogPanelLog), [logs]);
+
 	if (tab === "tool_log") {
-		return <ToolLogScrollBody logs={logs} />;
+		return <ToolLogScrollBody logs={toolLogs} />;
 	}
 	if (tab === "output") {
-		return (
-			<div className="text-[#cccccc]">
-				Server and client share one origin in dev (Vite proxy). Logs stream over WebSocket.
-			</div>
-		);
+		return <ToolLogScrollBody logs={outputLogs} variant="output" />;
 	}
 	if (tab === "problems") {
-		return <div className="text-[#858585]">No static analyzer wired yet.</div>;
+		return <ProblemsPanelBody />;
 	}
 	if (tab === "terminal") {
 		return <EmbeddedTerminal />;
@@ -85,8 +112,9 @@ export function ToolPanelBody({ tab, logs }: { tab: BottomPanelTab; logs: LogRow
 	if (tab === "agent_team") {
 		return (
 			<div className="p-3 font-mono text-[12px] text-[#858585]">
-				<strong className="text-[#cccccc]">Team pulse</strong> belongs in the main workspace. Use the editor **+** menu →
-				Team pulse, or chat <strong className="text-[#cccccc]">Pane team</strong>.
+				<strong className="text-[#cccccc]">Team pulse</strong> — full roster + session mirror as a workspace tab: editor{" "}
+				<strong className="text-[#cccccc]">+</strong> → Team pulse. For a Cursor-style strip next to chat, use Session
+				Chat <strong className="text-[#cccccc]">Pane team</strong> (agent dock).
 			</div>
 		);
 	}

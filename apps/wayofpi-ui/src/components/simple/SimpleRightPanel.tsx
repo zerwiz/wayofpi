@@ -17,6 +17,7 @@ export function SimpleRightPanel({
 	appearanceDark,
 	chatWorkspaceLayout,
 	onToggleChatWorkspaceLayout,
+	onExplorerGitMutated,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -29,6 +30,8 @@ export function SimpleRightPanel({
 	/** Chat tab: editor above chat vs chat left / editor right. */
 	chatWorkspaceLayout?: SimpleChatWorkspaceLayout;
 	onToggleChatWorkspaceLayout?: () => void;
+	/** After Git stage from file tree — refresh workspace tree. */
+	onExplorerGitMutated?: () => void;
 }) {
 	const [happeningOpen, setHappeningOpen] = useState(true);
 	const timeline =
@@ -101,6 +104,7 @@ export function SimpleRightPanel({
 							selectedPath={selectedPath}
 							onSelectFile={onSelectFile}
 							appearanceDark={appearanceDark}
+							onExplorerGitMutated={onExplorerGitMutated}
 						/>
 					)}
 				</div>
