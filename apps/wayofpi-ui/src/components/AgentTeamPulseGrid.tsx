@@ -143,11 +143,14 @@ export function AgentTeamPulseGrid({
 	members,
 	streamDetail,
 	onStreamDetailChange,
+	showSessionHint = true,
 }: {
 	activeTeamName: string;
 	members: AgentTeamPulseMember[];
 	streamDetail: boolean;
 	onStreamDetailChange?: (next: boolean) => void;
+	/** When false (workspace pane), omit the note about session chat / WebSocket plan. */
+	showSessionHint?: boolean;
 }) {
 	const cols = Math.min(rosterGridCols(members.length), Math.max(1, members.length));
 
@@ -176,11 +179,18 @@ export function AgentTeamPulseGrid({
 					<PulseCard key={m.name} member={m} streamDetail={streamDetail} />
 				))}
 			</div>
-			<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
-				Live running/done state, tools, thinking, and token streams will follow the multi-agent WebSocket plan (
-				<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). Session chat stays on the
-				other tab.
-			</p>
+			{showSessionHint ? (
+				<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
+					Live running/done state, tools, thinking, and token streams will follow the multi-agent WebSocket plan (
+					<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). Session chat stays on the
+					other tab.
+				</p>
+			) : (
+				<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
+					Use <strong className="text-[#858585]">Pane team</strong> in the chat bar to open this here; keep{" "}
+					<strong className="text-[#858585]">Team</strong> for a quick overlay in the chat column.
+				</p>
+			)}
 		</div>
 	);
 }

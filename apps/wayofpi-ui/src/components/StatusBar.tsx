@@ -21,7 +21,14 @@ import type { UiMode } from "../hooks/useUiMode";
 import type { BottomPanelTab } from "../types/technicalShell";
 import { HORIZONTAL_TOOL_DOCK_SLOTS, type HorizontalToolDockSlot } from "../utils/technicalLayoutStorage";
 
-const TOOL_TAB_ORDER: BottomPanelTab[] = ["problems", "output", "tool_log", "terminal"];
+const TOOL_TAB_ORDER: BottomPanelTab[] = [
+	"problems",
+	"output",
+	"tool_log",
+	"terminal",
+	"agent_team",
+	"agent_chat",
+];
 
 /**
  * Zed-style status bar icons (see Zed docs: project_panel, terminal, collaboration_panel,
@@ -125,6 +132,10 @@ export function StatusBar({
 				return <ScrollText size={12} />;
 			case "terminal":
 				return <TerminalSquare size={12} />;
+			case "agent_team":
+				return <Users size={12} />;
+			case "agent_chat":
+				return <MessageSquare size={12} />;
 			default:
 				return null;
 		}
@@ -140,6 +151,10 @@ export function StatusBar({
 				return "Tool log";
 			case "terminal":
 				return "Terminal";
+			case "agent_team":
+				return "Team pulse";
+			case "agent_chat":
+				return "Agent chat";
 			default:
 				return id;
 		}
@@ -235,7 +250,7 @@ export function StatusBar({
 							if (!row?.hasStrip) return null;
 							const Icon = slot === "top" ? PanelTop : PanelBottom;
 							const title =
-								slot === "top" ? "Toggle upper tool dock band" : "Toggle lower tool dock band";
+								slot === "top" ? "Toggle upper dock strip (legacy)" : "Toggle horizontal dock under editor";
 							return (
 								<button
 									key={slot}

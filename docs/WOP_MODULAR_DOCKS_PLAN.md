@@ -1,22 +1,45 @@
 # Modular dock shell — plan and TODO
 
-**Purpose:** Single backlog for making the **technical UI** a **modular, movable dock system**: equal chrome between editor and tool/file strips, drag-and-drop layout, optional **N** horizontal strips, **agent** and **primary sidebar** as repositionable docks—not fixed geometry forever.
+**Purpose:** Single backlog for making the **technical UI** a **modular, movable dock system**: equal chrome between the editor and **other docks** (same **tabs + body** model), drag-and-drop layout, optional **N** horizontal dock instances, **agent** and **primary sidebar** as repositionable docks—not fixed geometry forever.
 
 **Cursor rule (implementation discipline):** [`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc) (applies when editing `apps/wayofpi-ui/**`).
 
 **Rule → what to build:** [WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md](WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md) (rebuild / add / extend traceability).
 
-**Architecture context:** [WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md) · **Living gaps:** [WAY_OF_PI_OPEN_TODOS.md](WAY_OF_PI_OPEN_TODOS.md)
+**Architecture context:** [WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md) · **Living gaps:** [WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)
 
 ---
 
 ## Principles (product + engineering)
 
 1. **Peers, not tiers** — Regions that are “tabs + body” (main editor column, horizontal strips, future panes) should share the **same structural chrome** where it makes sense, so nothing feels like a second-class “panel” under a “real” editor unless we document an intentional exception.
-2. **Everything is a dock (target)** — **Editor stack**, **tool/file strips**, **agent chat**, **primary sidebar** (Explorer rail) are all **dock nodes** in a layout graph the user can rearrange.
+2. **Everything is a dock (target)** — **Editor stack**, **horizontal docks** (mixed tabs: files + panels + tools), **agent chat**, **primary sidebar** (Explorer rail) are all **dock nodes** in a layout graph the user can rearrange. There is **not** a product taxonomy of separate “tool dock” vs “file dock” **kinds**—only **one** dock primitive, **many** instances, movable.
 3. **Data-driven layout** — Persist **region tree + sizes + tab lists**; avoid JSX trees that hard-code one order with no migration path.
 4. **DnD is the interaction model** — Move **tabs** between strips; move **strips** or **major regions** when the layout engine supports it.
-5. **No artificial cap on strip count** — Today we have **two** persisted slots (`top` / `bottom`); the model should generalize to **many** strips (side-by-side or stacked) without renaming the world again.
+5. **No artificial cap on strip count** — **`TechnicalDockLayout`** still carries **`horizontalToolDockHeightsPx.top` / `.bottom`** keys; the **main column** is **`WorkspacePane`** (one stack per cell). The model should generalize to **many** horizontal dock instances and a **pane graph** without renaming the world again.
+6. **Splitter pointer parity** — **`DockSplitHandle`** `onDelta`: **+dx** = pointer **right**, **+dy** = **down**. Resize persisted sizes so the **grabbed edge follows the mouse** (see **`docs/WOP_TECHNICAL_UI.md`** § Splitter pointer parity). Avoid inverted vertical/horizontal drag unless documented.
+7. **Terminology** — In plans and UX copy, say **dock** / **docks**, not **tool dock** or other **special-case dock names**. Implementation may still use legacy type names (`ToolDockLayout`, …) until migrations land; see **`.cursor/rules/wop-ui-modular-docks.mdc`**.
+
+---
+
+## Zed reference model (center panes vs docks)
+
+Zed (reference UX for “one modular surface”):
+
+| Zed concept | Behavior (see docs) |
+|-------------|---------------------|
+| **Center / workspace panes** | A **pane** holds a **tab stack**. Tabs can be **files** or a **center terminal**—same chrome (**+**, split, zoom). Command palette: **`workspace: new center terminal`**. Splits: e.g. **`pane::SplitRight`**, **`pane::SplitDown`**. |
+| **Docks** (left / right / bottom) | **Project panel**, **terminal panel**, etc. Since the [new panel system](https://zed.dev/blog/new-panel-system), the **terminal panel** dock is **terminals only**; mixed file+terminal tabs belong in **center** panes. Toggles: `workspace::ToggleLeftDock`, … — [Terminal docs](https://zed.dev/docs/terminal.html) (*Terminal Panel vs Center Terminal*). |
+
+**Way of Pi today (gap vs Zed):**
+
+| Zed target | WOP shipped | Remaining gap |
+|------------|-------------|----------------|
+| One **tab stack** per center pane for **files ∪ tools** | **`WorkspacePane`** + **`PanelDockLayout.v3`** (`tabs` + `activeIndex`) per cell | **Done** for a **single stack**; multi-cell = fixed **grid**, not free splits. |
+| Recursive **pane tree** (split grid) | **`TechnicalWorkspaceGrid`** ≤ **3×4**; persistence **`workspaceGrid.v1`**; **resize** **`rowWeights`/`colWeights`**; **edge-grow** + **cross-cell tab** moves (interim) | No **arbitrary** DAG; **Phase E**/**Z** for a full graph + split-from-anywhere. |
+| **Zoom / split** on the **same** tab bar as files | Same tab row for files + tools; Zed-style **within-row** DnD hint | **Split** / **zoom** actions vs Zed’s full **`pane::`** model still shallow. |
+
+**Cursor rule:** **`.cursor/rules/wop-ui-modular-docks.mdc`** § *North star* states this explicitly so agents do not confuse **interim** layout with **final** modular design.
 
 ---
 
@@ -24,13 +47,13 @@
 
 | Area | Shipped | Gaps |
 |------|---------|------|
-| **Horizontal strips** | **UI:** one band (**`bottom`**, under editor). **`ToolDockLayout.strips`** still has **`top` / `bottom`** keys for persistence; **`top`** is cleared and merged into **`bottom`** on read/write. | Strips are **not** yet arbitrary N; **upper** band was removed (can be reintroduced via Phase C). |
-| **DnD** | Tab drag **reorders** within the bottom strip (and legacy payloads normalize to **`bottom`**). | No second strip to drag **between** until multi-strip work lands. |
-| **File in strip** | **`StripFilePreview`** (read-only fetch) for **`file`** entries; **+** menu adds new/open file **into the slot** where + was used. | Parity with **main editor** (breadcrumbs, **`WorkspaceTextBuffer`** read-only, shared chrome) is **partial** — see Phase B. |
-| **Main editor** | Single **`EditorPanel`** + **`selectedPath`**; empty state uses same chrome as open file. | **Not** yet “just another dock leaf” in a graph; **multi-file** as multiple columns is not shipped. |
+| **Center workspace** | **`WorkspacePane`**: mixed **file + tool** tabs; **`applyPanelTabMove`** within row; **`ToolPanelBody`** / **`WorkspaceTextBuffer`**. | **Phase Z** for **`PaneItem`** graph; full **pane DAG**. |
+| **Multi-pane** | **`TechnicalWorkspaceGrid`** (≤ **3×4**); **`workspaceGridStorage`**; flex + **`DockSplitHandle`** between cells. | Fixed **cols×rows** only; **Phase E** for graph + arbitrary split drops. |
+| **Legacy strips** | **`PanelDockBand`**, **`StripFilePreview`** still in tree for auxiliary use; **`horizontalToolDockHeightsPx`** in **`dockLayout`**. | **N** strips as first-class **`DockStripInstance[]`** — **Phase C**. |
+| **DnD** | Reorder **within** each **`WorkspacePane`** tab row; **cross-cell** **tab** moves + **tab-bar insert**; **files/panes** via **`WorkspaceCellDropSurface`** + edge-grow. | **Explorer file** path to specific **insert index** on tab bar (parity polish); strips vs center **unified** move list — **Phase Z**. |
 | **Agent (`ChatPanel`)** | Dock **right** or **bottom**; resize; hide/show; persisted in **`TechnicalDockLayout`**. | **Not** dockable **left**; not a generic node in a grid. |
 | **Primary sidebar** | Left only; width persisted; Ctrl/Cmd+B toggle. | **Not** movable to **right**; activity bar not mirrored. |
-| **Preview & review chrome** | — | No **Preview** bar, **Markdown** view toggle, **Review Next File**, or **Undo File** / **Keep File** (+ **Ctrl+Enter**) as first-class editor/dock actions — see **Phase F**. |
+| **Preview & review chrome** | **`WorkspacePane`:** Markdown **Source / Preview**, **Review Next File** (stub), **Undo File** / **Keep File**, **Ctrl+Enter** — see **CHANGELOG** / **Phase F** partial ship. | **Review queue** wiring; optional parity on **`StripFilePreview`** / **`PanelDockBand`** file tabs — **Phase F**. |
 
 ---
 
@@ -40,18 +63,18 @@ Use these as checklists; adjust order when dependencies demand it.
 
 ### Phase A — Visual parity (“equal docks”)
 
-Goal: User-visible **alignment** between **editor column** and **horizontal dock** chrome (per screenshots / UX complaints: one row vs “TOOL DOCK” + tabs).
+Goal: User-visible **alignment** between regions that are **tabs + body** (historically: editor vs horizontal strips). **Today** the **main column** is a single **`WorkspacePane`** stack—Phase A items below are **mostly superseded** for that column; they still apply where **`PanelDockBand`** / legacy strips remain.
 
-- [ ] **A1** — Merge **title row + tab row** for **`UnifiedHorizontalDock`** into **one** header row (grip + band label + **+** + tabs), or match **EditorPanel** tab row styling so both feel like the same family.
-- [ ] **A2** — Align typography, borders, and **accent** (active tab underline) between **`EditorPanel`** tab bar and **`DockableToolStrip`** tab bar.
+- [x] **A1** — *(Historical)* Unified header / tab row family — satisfied for **`WorkspacePane`**; legacy **`UnifiedHorizontalDock`** path removed from **main** column.
+- [x] **A2** — *(Historical)* Match **`WorkspacePane`** tab bar styling — **shipped** for center stack.
 - [ ] **A3** — For **file** tabs in a strip, add a **breadcrumb / path** sub-row or inline path when the active entry is `file` (mirror editor affordances at minimal cost).
 - [ ] **A4** — Document screenshots or short “before/after” in this file when A1–A3 land.
 
-### Phase B — File dock = editor-class surface (optional but high value)
+### Phase B — File tab in a dock ≈ editor-class surface (optional but high value)
 
-Goal: Pinned file in a strip feels like the **same document surface** as the main editor (read-only OK).
+Goal: A **file** tab inside a **horizontal dock** feels like the **same document surface** as the main editor (read-only OK)—not a different “file dock” product, the same dock with a file body.
 
-- [ ] **B1** — Replace or wrap **`StripFilePreview`** with **`WorkspaceTextBuffer`** **`readOnly`** + same line-number gutter option as **`EditorPanel`** where feasible.
+- [ ] **B1** — Replace or wrap **`StripFilePreview`** with **`WorkspaceTextBuffer`** **`readOnly`** + same line-number gutter option as **`WorkspacePane`** where feasible.
 - [ ] **B2** — Explicit **“Open in main editor”** control on file strip body (keyboard shortcut optional).
 - [ ] **B3** — Decide **single source of truth** for dirty buffers when the same path is open in main + strip (today: strip is read-only snapshot — document or evolve).
 
@@ -78,13 +101,25 @@ Goal: **ChatPanel** and **primary sidebar** become **movable dock regions**, not
 
 Goal: Zed/VS Code–class **arbitrary splits** (editor + tools + chat in one grid).
 
+**Partial (shipped):** **`TechnicalWorkspaceGrid`** — up to **3 columns × 4 rows**, each cell = **`WorkspacePane`** + own **`PanelDockLayout`** + (when grid > **1×1**) own **`useFileEditor`**. Layout uses **nested flex** + **`DockSplitHandle`** (**`rowWeights` / `colWeights`** in **`wayofpi.technical.workspaceGrid.v1`**). **View → Editor Layout** presets (**`EditorLayoutPreset`** `workspace_grid_*`). **`WorkspaceCellDropSurface`** per cell: **edge/center snap** overlay; **`growWorkspaceGridForEdgeDrop`** on drop when the implied neighbor was missing (**1×1**, **N×1**, **1×N** outer edges). **Cross-cell** **panel tab** moves (surface + **tab bar** with insert order). Not a **layout graph** yet — see **`docs/WOP_TECHNICAL_UI.md`**, **`apps/wayofpi-ui/src/utils/workspaceGridStorage.ts`**.
+
 - [ ] **E1** — Spec **layout graph** (nodes: region type, children, sizes); version field for migrations.
-- [ ] **E2** — Implement minimal **2×2** or **split drop targets** on editor edges; then generalize.
+- [ ] **E2** — **Split drop targets** / DnD that **subdivides** cells beyond the current **edge-grow** rules; generalize beyond fixed **cols×rows**.
 - [ ] **E3** — Per-workspace layout override (optional path in server or `localStorage` keyed by workspace id).
+
+### Phase Z — Zed-class workspace pane (target architecture)
+
+Goal: **One** modular **center** surface: **pane tree** + **tab stacks** of **`PaneItem`** (`file` \| `terminal` \| `output` \| …)—not ad-hoc **`App.tsx`** forks. Aligns with Zed **center panes** (mixed tabs, split, **`workspace: new center terminal`**) vs **docked panels** ([Terminal docs](https://zed.dev/docs/terminal.html), [panel system blog](https://zed.dev/blog/new-panel-system)).
+
+- [ ] **Z1** — **`PaneItem`** + **`WorkspacePaneNode`** types (leaf = tab stack, branch = split h/v); persistence + migration from **`selectedPath`** + **`PanelDockLayout`** / **`workspaceGrid.v1`** for the **center** region first. Interim type **`WorkspaceDockBandState`** (`technicalLayoutStorage.ts`) describes **N** identical tab stacks for migration.
+- [ ] **Z2** — **Single** tab-row + body host for all **center** items; today **`WorkspacePane`** is that host per cell — evolve toward a **tree** of hosts instead of a fixed **cols×rows** grid only.
+- [ ] **Z3** — **DnD**: move **any** center **item** tab between **any** center pane stack; unify payload with strip DnD where possible.
+- [ ] **Z4** — **Split** / **new tab** (+) on the **same** chrome for every center item type (files adjacent to terminal tabs, per Zed screenshot).
+- [ ] **Z5** — Product copy + settings: distinguish **center pane** stack vs **docked** horizontal strips (Zed: center terminal vs terminal **panel** dock).
 
 ### Phase F — Preview & review workflow (editor / dock parity)
 
-Goal: Match **IDE-style** controls for **preview modes**, **queued file review** (agent / team flows), and **accept vs revert** on edited files—implemented as **modular chrome** on the **editor stack** or **file dock** (same “tabs + title + actions” family as Phase A), not a one-off page.
+Goal: Match **IDE-style** controls for **preview modes**, **queued file review** (agent / team flows), and **accept vs revert** on edited files—implemented as **modular chrome** on the **editor stack** or on a **dock** showing a **file** tab (same “tabs + title + actions” family as Phase A), not a one-off page.
 
 **Reference UI (product target):**
 
@@ -120,7 +155,7 @@ Checklist:
 1. Check boxes above (or split into PR-sized sub-items).  
 2. Update **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** “Shipped / Next” tables.  
 3. Note user-visible changes in **[CHANGELOG.md](../CHANGELOG.md)** if applicable.  
-4. Keep **[WAY_OF_PI_OPEN_TODOS.md](WAY_OF_PI_OPEN_TODOS.md)** in sync (short pointer + link here).
+4. Keep **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** in sync (short pointer + link here).
 
 ---
 
@@ -130,4 +165,4 @@ Checklist:
 |------------|------|
 | [WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md) | Current topology, components, persistence keys |
 | [apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts](../apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts) | `ToolDockLayout`, `DockStripEntry`, migrations |
-| [PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md) | Product phases, production checklist |
+| [WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md) | Product phases, production checklist |

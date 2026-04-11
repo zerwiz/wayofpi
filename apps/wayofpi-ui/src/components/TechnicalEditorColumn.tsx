@@ -1,7 +1,8 @@
-import { forwardRef, useCallback, useEffect, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef } from "react";
 import { useFileEditor } from "../hooks/useFileEditor";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
-import { EditorPanel, type EditorPanelProps } from "./EditorPanel";
+import type { PanelTab } from "../utils/panelDockLayout";
+import { WorkspacePane, type WorkspacePaneProps } from "./WorkspacePane";
 
 export type MainEditorColumnApi = {
 	save: () => Promise<void>;
@@ -10,23 +11,32 @@ export type MainEditorColumnApi = {
 	dirty: boolean;
 };
 
-type SharedEditorPanelProps = Omit<
-	EditorPanelProps,
-	| "path"
+type SharedWorkspacePaneProps = Omit<
+	WorkspacePaneProps,
+	| "tabs"
+	| "activeIndex"
+	| "onActiveIndexChange"
+	| "onSelectFileTab"
+	| "onReorderTab"
+	| "onCloseTab"
+	| "onAddTool"
+	| "fileActions"
+	| "logs"
+	| "editorPath"
 	| "content"
 	| "onChange"
 	| "loading"
 	| "error"
 	| "dirty"
-	| "diskBaseline"
+	| "filePreview"
 	| "onSave"
+	| "onDiscardUnsaved"
 	| "onCursor"
-	| "onClosePanel"
-	| "isActiveColumn"
 >;
 
 /**
  * One main-workspace editor column with its own `useFileEditor` state (so multiple files stay open side by side).
+ * Uses the same {@link WorkspacePane} shell as the primary column (single file tab for this column).
  */
 export const TechnicalEditorColumn = forwardRef<
 	WorkspaceEditorRef,
@@ -39,15 +49,27 @@ export const TechnicalEditorColumn = forwardRef<
 		onColumnApi: (path: string, api: MainEditorColumnApi | null) => void;
 		onFocusedMeta: (meta: { dirty: boolean; loading: boolean; error: string | null }) => void;
 		onCursor?: (line: number, col: number) => void;
-		shared: SharedEditorPanelProps;
+		shared: SharedWorkspacePaneProps;
 	}
 >(function TechnicalEditorColumn(
 	{ path, isFocused, autoSave, onActivate, onClose, onColumnApi, onFocusedMeta, onCursor, shared },
 	ref,
 ) {
-	const { content, setContent, lastPersistedContent, loading, error, dirty, save, reload } = useFileEditor(path, {
+	const {
+		content,
+		setContent,
+		filePreview,
+		loading,
+		error,
+		dirty,
+		save,
+		reload,
+		discardUnsavedChanges,
+	} = useFileEditor(path, {
 		autoSave,
 	});
+
+	const tabs = useMemo<PanelTab[]>(() => [{ type: "file", path }], [path]);
 
 	const contentRef = useRef(content);
 	contentRef.current = content;
@@ -78,19 +100,29 @@ export const TechnicalEditorColumn = forwardRef<
 			onPointerDownCapture={() => onActivate()}
 			role="presentation"
 		>
-			<EditorPanel
+			<WorkspacePane
 				ref={ref}
-				path={path}
+				tabs={tabs}
+				activeIndex={0}
+				onActiveIndexChange={() => {}}
+				onSelectFileTab={() => {}}
+				onReorderTab={() => {}}
+				onCloseTab={() => {
+					void onClose();
+				}}
+				onAddTool={() => {}}
+				fileActions={[]}
+				logs={[]}
+				editorPath={path}
 				content={content}
 				onChange={setContent}
 				loading={loading}
 				error={error}
 				dirty={dirty}
-				diskBaseline={lastPersistedContent}
+				filePreview={filePreview}
+				onDiscardUnsaved={discardUnsavedChanges}
 				onSave={() => void save()}
 				onCursor={isFocused ? onCursor : undefined}
-				onClosePanel={onClose}
-				isActiveColumn={isFocused}
 				{...shared}
 			/>
 		</div>

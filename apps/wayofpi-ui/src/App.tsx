@@ -1,21 +1,33 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+	type ChangeEvent,
+	type DragEvent,
+	type MouseEvent,
+	type SetStateAction,
+} from "react";
 import { MessageSquare } from "lucide-react";
 import { apiGet, apiPostJson, apiPutJson } from "./api/client";
 import { requestNativePick } from "./api/nativeDialog";
 import { postWorkspaceOp } from "./api/workspace";
 import { ActivityBar } from "./components/ActivityBar";
-import { AgentSessionComposerBar } from "./components/AgentSessionComposerBar";
 import { ChatPanel } from "./components/ChatPanel";
 import { CommandPalette, type CommandItem } from "./components/CommandPalette";
 import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
 import { DockSplitHandle } from "./components/DockSplitHandle";
-import { EditorPanel } from "./components/EditorPanel";
 import { ExplorerSidebar } from "./components/ExplorerSidebar";
 import { MenuBar } from "./components/MenuBar";
 import { SimpleApp } from "./components/simple/SimpleApp";
 import type { SimpleTabId } from "./components/simple/SimpleNavRail";
 import { StatusBar } from "./components/StatusBar";
-import { UnifiedHorizontalDock } from "./components/UnifiedHorizontalDock";
+import { TechnicalWorkspaceGrid, type TechnicalWorkspaceCellSnapshot } from "./components/TechnicalWorkspaceGrid";
+import { WorkspaceCellDropSurface } from "./components/WorkspaceCellDropSurface";
+import type { WorkspaceGridPickerConfig } from "./components/WorkspaceGridLayoutPicker";
+import { WorkspacePane } from "./components/WorkspacePane";
 import {
 	ExtensionsSidePanel,
 	PlanningSidePanel,
@@ -44,6 +56,7 @@ import type {
 	HelpMenuHandlers,
 	RunMenuHandlers,
 	SelectionMenuHandlers,
+	SettingsMenuHandlers,
 	TerminalMenuHandlers,
 	WorkspaceEditorRef,
 } from "./types/workspaceEditor";
@@ -55,44 +68,104 @@ import type {
 	ViewMenuTechnicalOptions,
 } from "./types/technicalShell";
 import type { UiViewCatalogEntry } from "./types/uiViewsCatalog";
+import { buildCodeWorkspacePayload } from "./utils/codeWorkspaceFile";
 import { flattenTreeFiles } from "./utils/flattenTree";
 import { ancestorDirPaths, posixDirname } from "./utils/posixPath";
+import { createPlanArtifactInWorkspace } from "./utils/planModeWorkspace";
 import { readAutoSaveInitial, writeAutoSave } from "./utils/editorPreferences";
 import { pushRecentWorkspaceFolder, readRecentWorkspaceFolders } from "./utils/workspaceRecent";
 import {
-	applyActivateToolTab,
-	applyAddFileToStrip,
-	applyDockStripMoveEntry,
-	applyRemoveFileFromStrips,
-	applyToolPanelClose,
-	applyToolPanelShow,
+	applyAddFileTab,
+	applyAddPanelTab,
+	applyCloseToolTab,
+	applyEnsureFileTab,
+	applyFocusToolTab,
+	applyPanelTabMove,
+	applyRemoveFileTab,
+	applyRemoveTab,
+	applyShowToolTab,
+	cloneLayout,
+	PANEL_DOCK_DEFAULTS,
+	PANEL_TAB_DND_TYPE,
+	parseFilePathDragJson,
+	parsePanelTabJson,
+	parseWorkspacePaneCellIndex,
+	toolTabVisible,
+	WOP_DND_SOURCE_CELL_TYPE,
+	WOP_FILE_PATH_DND_TYPE,
+	WOP_WORKSPACE_PANE_DND_TYPE,
+	type PanelDockLayout,
+	type PanelTab,
+	type ToolTabId,
+} from "./utils/panelDockLayout";
+import {
+	chatSizePxWhenSwitchingDock,
 	clampBottomPanelHeight,
 	clampChatHeight,
 	clampChatWidth,
 	clampLeftSidebarWidth,
 	clampTopPanelHeight,
+	DEFAULT_COMPACT_BOTTOM_CHAT_HEIGHT_PX,
 	DOCK_DEFAULTS,
-	HORIZONTAL_TOOL_DOCK_UI,
 	readDockLayout,
 	readLeftSidebarVisibleInitial,
-	readToolDockLayout,
 	writeDockLayout,
 	writeLeftSidebarVisible,
-	writeToolDockLayout,
 	type ChatDockRegion,
-	type DockStripEntry,
-	type HorizontalToolDockSlot,
 	type TechnicalDockLayout,
-	type ToolDockLayout,
-	type ToolPanelZone,
 } from "./utils/technicalLayoutStorage";
 import {
 	readChromePreferences,
 	writeChromePreferences,
 	type ChromePreferences,
 } from "./utils/chromePreferences";
+import {
+	applyWorkspaceGridColResizeDelta,
+	applyWorkspaceGridRowResizeDelta,
+	growWorkspaceGridForEdgeDrop,
+	mapCellIndexAfterRemoval,
+	nextFocusAfterRemove,
+	readWorkspaceGridState,
+	remapWorkspaceCellIndexAfterEdgeGrow,
+	removeWorkspaceCellAt,
+	resizeWorkspaceGrid,
+	WORKSPACE_GRID_MAX_COLS,
+	WORKSPACE_GRID_MAX_ROWS,
+	writeWorkspaceGridState,
+	type WorkspaceGridState,
+} from "./utils/workspaceGridStorage";
+import type { WopDropZone } from "./utils/workspaceDropZones";
 import { sendTerminalInput } from "./utils/terminalInputBridge";
 import { runActiveFileShellLine } from "./utils/terminalRunCommands";
+
+function applyMovePanelTabBetweenCellsInGrid(
+	g: WorkspaceGridState,
+	from: number,
+	to: number,
+	tab: PanelTab,
+	before: PanelTab | null,
+): WorkspaceGridState {
+	const n = g.cols * g.rows;
+	if (from < 0 || from >= n || to < 0 || to >= n) return g;
+	if (from === to) {
+		const cells = [...g.cells];
+		const dock = cells[to] ?? cloneLayout(PANEL_DOCK_DEFAULTS);
+		const nextDock = applyPanelTabMove(dock, tab, before);
+		if (nextDock === dock) return g;
+		cells[to] = nextDock;
+		return { ...g, cells };
+	}
+	const cells = [...g.cells];
+	const fromDock = cells[from] ?? cloneLayout(PANEL_DOCK_DEFAULTS);
+	const toDock = cells[to] ?? cloneLayout(PANEL_DOCK_DEFAULTS);
+	const afterRemove = applyRemoveTab(fromDock, tab);
+	const afterAdd = applyAddPanelTab(toDock, tab);
+	const afterMove = before ? applyPanelTabMove(afterAdd, tab, before) : afterAdd;
+	if (afterRemove === fromDock && afterMove === toDock) return g;
+	cells[from] = afterRemove;
+	cells[to] = afterMove;
+	return { ...g, cells };
+}
 
 const TASKS_JSON_REL = ".vscode/tasks.json";
 const TASKS_JSON_TEMPLATE = `{
@@ -146,6 +219,7 @@ function languageFromPath(path: string | null): string {
 
 export default function App() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
+	const technical = uiMode === "technical";
 	const { root, nodes, folders, switchAllowed, error: treeError, loading: treeLoading, refresh } =
 		useWorkspaceTree();
 	const { config } = useServerConfig();
@@ -158,6 +232,12 @@ export default function App() {
 	}, []);
 	const session = useWayOfPiSession(refresh, bufferAssistantDeltasRef);
 	const agentsApi = useAgents();
+	const teamsYamlWritePath = useMemo(() => {
+		const tp = agentsApi.data?.teamsPath;
+		if (tp) return tp;
+		if (folders.length > 1 && folders[0]) return `${folders[0].label}/.pi/agents/teams.yaml`;
+		return ".pi/agents/teams.yaml";
+	}, [agentsApi.data?.teamsPath, folders]);
 	const uiViewsCatalog = useUiViewsCatalog();
 	const modelLabel = useMemo(() => {
 		if (!config) return "…";
@@ -167,25 +247,261 @@ export default function App() {
 		return p === "openrouter" ? `openrouter/${id}` : `ollama/${id}`;
 	}, [config, session.effectiveModel]);
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
+	const handleSimpleChatModeChange = useCallback(
+		(m: Parameters<typeof session.setChatMode>[0]) => {
+			session.setChatMode(m);
+			if (m !== "plan") return;
+			setSelectedPath((p) => {
+				if (!p) return null;
+				const norm = p.replace(/\\/g, "/");
+				if (/(^|\/)plans\/plan-[^/]+\.md$/i.test(norm)) return null;
+				return p;
+			});
+		},
+		[session],
+	);
 	const [explorerContextDir, setExplorerContextDir] = useState("");
 	const [treeExpand, setTreeExpand] = useState<{ rev: number; paths: string[] }>({ rev: 0, paths: [] });
 	const [autoSave, setAutoSave] = useState(readAutoSaveInitial);
 	const [recentTick, setRecentTick] = useState(0);
 	const workspaceFileInputRef = useRef<HTMLInputElement>(null);
 	const recentFolders = useMemo(() => readRecentWorkspaceFolders(), [recentTick]);
+	const [workspaceGrid, setWorkspaceGrid] = useState(() => readWorkspaceGridState());
+	const [wsFocusedCell, setWsFocusedCell] = useState(0);
+	const [wsMaximizedCell, setWsMaximizedCell] = useState<number | null>(null);
+
+	useEffect(() => {
+		if (wsMaximizedCell == null) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setWsMaximizedCell(null);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [wsMaximizedCell]);
+	const [techWsSnapshot, setTechWsSnapshot] = useState<TechnicalWorkspaceCellSnapshot | null>(null);
+	const [workspaceOpenSignal, setWorkspaceOpenSignal] = useState<{ path: string; rev: number } | null>(null);
+	const [line, setLine] = useState(1);
+	const [col, setCol] = useState(1);
+	const techWsSnapshotRef = useRef<TechnicalWorkspaceCellSnapshot | null>(null);
+	useLayoutEffect(() => {
+		techWsSnapshotRef.current = techWsSnapshot;
+	}, [techWsSnapshot]);
+	const isWsMulti = technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1);
+	const panelDock =
+		workspaceGrid.cells[wsFocusedCell] ??
+		workspaceGrid.cells[0] ??
+		cloneLayout(PANEL_DOCK_DEFAULTS);
+	const patchWorkspaceCellDock = useCallback((cellIndex: number, update: SetStateAction<PanelDockLayout>) => {
+		setWorkspaceGrid((g) => {
+			const cells = [...g.cells];
+			const cur = cells[cellIndex] ?? cloneLayout(PANEL_DOCK_DEFAULTS);
+			const nextDock =
+				typeof update === "function" ? (update as (p: PanelDockLayout) => PanelDockLayout)(cur) : update;
+			if (nextDock === cur) return g;
+			cells[cellIndex] = nextDock;
+			const out = { ...g, cells };
+			writeWorkspaceGridState(out);
+			return out;
+		});
+	}, []);
+
+	/** Single `setWorkspaceGrid` so remove-from + add-to cannot race when React batches updates. */
+	const movePanelTabBetweenCells = useCallback((from: number, to: number, tab: PanelTab, before: PanelTab | null) => {
+		if (from === to) return;
+		setWorkspaceGrid((g) => {
+			const out = applyMovePanelTabBetweenCellsInGrid(g, from, to, tab, before);
+			if (out === g) return g;
+			writeWorkspaceGridState(out);
+			return out;
+		});
+		setWsFocusedCell(to);
+	}, []);
+
+	const onWorkspaceGridRowResize = useCallback((rowEdge: number, dy: number) => {
+		setWorkspaceGrid((g) => {
+			const next = applyWorkspaceGridRowResizeDelta(g, rowEdge, dy);
+			if (next === g) return g;
+			writeWorkspaceGridState(next);
+			return next;
+		});
+	}, []);
+
+	const onWorkspaceGridColResize = useCallback((colEdge: number, dx: number) => {
+		setWorkspaceGrid((g) => {
+			const next = applyWorkspaceGridColResizeDelta(g, colEdge, dx);
+			if (next === g) return g;
+			writeWorkspaceGridState(next);
+			return next;
+		});
+	}, []);
+
+	const setPanelDock = useCallback(
+		(update: SetStateAction<PanelDockLayout>) => {
+			const multi = workspaceGrid.cols * workspaceGrid.rows > 1;
+			patchWorkspaceCellDock(multi ? wsFocusedCell : 0, update);
+		},
+		[workspaceGrid.cols, workspaceGrid.rows, wsFocusedCell, patchWorkspaceCellDock],
+	);
+	const onOpenToolPanelForCell = useCallback(
+		(cellIndex: number, tab: BottomPanelTab) => {
+			patchWorkspaceCellDock(cellIndex, (prev) => applyShowToolTab(prev, tab as ToolTabId));
+		},
+		[patchWorkspaceCellDock],
+	);
+
+	useEffect(() => {
+		if (workspaceGrid.cols * workspaceGrid.rows <= 1) setWsMaximizedCell(null);
+	}, [workspaceGrid.cols, workspaceGrid.rows]);
+
+	useEffect(() => {
+		const n = workspaceGrid.cols * workspaceGrid.rows;
+		if (wsMaximizedCell != null && (wsMaximizedCell < 0 || wsMaximizedCell >= n)) {
+			setWsMaximizedCell(null);
+		}
+	}, [workspaceGrid.cols, workspaceGrid.rows, wsMaximizedCell]);
+
+	const splitEditorRight = useCallback(() => {
+		setWorkspaceGrid((g) => {
+			if (g.cols >= WORKSPACE_GRID_MAX_COLS) return g;
+			const oldCols = g.cols;
+			const next = resizeWorkspaceGrid(g, oldCols + 1, g.rows);
+			writeWorkspaceGridState(next);
+			const fc = wsFocusedCell;
+			const row = Math.floor(fc / oldCols);
+			const newFocus = Math.min(row * next.cols + oldCols, next.cols * next.rows - 1);
+			queueMicrotask(() => setWsFocusedCell(newFocus));
+			return next;
+		});
+	}, [wsFocusedCell]);
+
+	const onWorkspaceSurfaceDrop = useCallback((e: DragEvent, surfaceCellIndex: number, zone: WopDropZone) => {
+		const dt = e.dataTransfer;
+		const rawPaneCell = dt.getData(WOP_WORKSPACE_PANE_DND_TYPE);
+		const paneSrc = parseWorkspacePaneCellIndex(rawPaneCell);
+		const rawTab = dt.getData(PANEL_TAB_DND_TYPE);
+		const rawPath = dt.getData(WOP_FILE_PATH_DND_TYPE);
+		const rawSrc = dt.getData(WOP_DND_SOURCE_CELL_TYPE);
+		const tab = parsePanelTabJson(rawTab);
+		const path =
+			rawPath.length > 0 ? parseFilePathDragJson(rawPath) : parseFilePathDragJson(dt.getData("text/plain"));
+		const srcParsed = parseInt(rawSrc, 10);
+		const sourceCell = Number.isFinite(srcParsed) ? srcParsed : undefined;
+
+		setWorkspaceGrid((g) => {
+			const { grid: g1, targetCell: t0 } = growWorkspaceGridForEdgeDrop(g, surfaceCellIndex, zone);
+			const n = g1.cols * g1.rows;
+			const t = Math.max(0, Math.min(t0, n - 1));
+
+			const paneSrcRem =
+				paneSrc != null
+					? remapWorkspaceCellIndexAfterEdgeGrow(g, g1, zone, surfaceCellIndex, paneSrc)
+					: null;
+			const srcRem =
+				sourceCell !== undefined
+					? remapWorkspaceCellIndexAfterEdgeGrow(g, g1, zone, surfaceCellIndex, sourceCell)
+					: undefined;
+
+			if (paneSrcRem != null && paneSrcRem >= 0 && paneSrcRem < n && paneSrcRem !== t) {
+				const cells = [...g1.cells];
+				const a = cells[paneSrcRem]!;
+				const b = cells[t]!;
+				cells[paneSrcRem] = b;
+				cells[t] = a;
+				const out = { ...g1, cells };
+				writeWorkspaceGridState(out);
+				queueMicrotask(() => setWsFocusedCell(t));
+				return out;
+			}
+
+			if (path) {
+				const cells = [...g1.cells];
+				const cur = cells[t] ?? cloneLayout(PANEL_DOCK_DEFAULTS);
+				cells[t] = applyAddFileTab(cur, path);
+				const out = { ...g1, cells };
+				writeWorkspaceGridState(out);
+				queueMicrotask(() => setWsFocusedCell(t));
+				return out;
+			}
+
+			if (tab) {
+				const src = srcRem !== undefined ? srcRem : t;
+				if (src !== t) {
+					const out = applyMovePanelTabBetweenCellsInGrid(g1, src, t, tab, null);
+					if (out === g1 && g1 === g) return g;
+					writeWorkspaceGridState(out);
+					queueMicrotask(() => setWsFocusedCell(t));
+					return out;
+				}
+				const cells = [...g1.cells];
+				const dock = cells[t] ?? cloneLayout(PANEL_DOCK_DEFAULTS);
+				const nextDock = applyPanelTabMove(dock, tab, null);
+				if (nextDock === dock) {
+					if (g1 !== g) {
+						writeWorkspaceGridState(g1);
+						queueMicrotask(() => setWsFocusedCell(t));
+					}
+					return g1 !== g ? g1 : g;
+				}
+				cells[t] = nextDock;
+				const out = { ...g1, cells };
+				writeWorkspaceGridState(out);
+				queueMicrotask(() => setWsFocusedCell(t));
+				return out;
+			}
+
+			return g;
+		});
+	}, []);
+
+	const onToggleWorkspaceMaximizeCell = useCallback((cellIndex: number) => {
+		setWsMaximizedCell((m) => (m === cellIndex ? null : cellIndex));
+	}, []);
+
+	const removeWorkspaceCellFromGrid = useCallback((cellIndex: number) => {
+		setWorkspaceGrid((g) => {
+			const next = removeWorkspaceCellAt(g, cellIndex);
+			if (next === g) return g;
+			writeWorkspaceGridState(next);
+			queueMicrotask(() => {
+				setWsFocusedCell((fc) => nextFocusAfterRemove(g, next, cellIndex, fc));
+				setWsMaximizedCell((m) => {
+					if (m == null) return m;
+					return mapCellIndexAfterRemoval(g, cellIndex, m);
+				});
+			});
+			return next;
+		});
+	}, []);
+
+	const onTechFocusedReport = useCallback((s: TechnicalWorkspaceCellSnapshot) => {
+		setTechWsSnapshot(s);
+		setSelectedPath(s.selectedPath);
+		if (s.selectedPath) setExplorerContextDir(posixDirname(s.selectedPath));
+	}, []);
+	const onTechFocusedCursor = useCallback((l: number, c: number) => {
+		setLine(l);
+		setCol(c);
+	}, []);
 	const {
 		content,
 		setContent,
-		lastPersistedContent,
+		lastPersistedContent: _lastPersistedContent,
 		filePreview,
 		loading: fileLoading,
 		error: fileError,
 		dirty,
 		save,
 		reload,
-	} = useFileEditor(selectedPath, { autoSave });
-	const [line, setLine] = useState(1);
-	const [col, setCol] = useState(1);
+		discardUnsavedChanges,
+	} = useFileEditor(isWsMulti ? null : selectedPath, { autoSave });
+	useEffect(() => {
+		if (isWsMulti) return;
+		setTechWsSnapshot(null);
+	}, [isWsMulti]);
+	const effSelectedPath = isWsMulti ? (techWsSnapshot?.selectedPath ?? null) : selectedPath;
+	const effDirty = isWsMulti ? !!techWsSnapshot?.dirty : dirty;
+	const effFileLoading = isWsMulti ? !!techWsSnapshot?.loading : fileLoading;
+	const effFileError = isWsMulti ? techWsSnapshot?.error ?? null : fileError;
 	const {
 		breakpointsByPath,
 		setBreakpointsByPath,
@@ -200,17 +516,6 @@ export default function App() {
 	const bumpSelectionPrefs = useCallback(() => setSelectionMenuTick((t) => t + 1), []);
 
 	const [activity, setActivity] = useState<TechnicalActivity>("explorer");
-	const primarySidebarDockDetail = useMemo(() => {
-		const m: Record<TechnicalActivity, string> = {
-			explorer: "Explorer",
-			search: "Search",
-			scm: "Source control",
-			extensions: "Run / Extensions",
-			planning: "Plan / Build",
-			settings: "Settings",
-		};
-		return m[activity];
-	}, [activity]);
 	const [simpleTab, setSimpleTab] = useState<SimpleTabId>("chat");
 	const [simpleProviderPath, setSimpleProviderPath] = useState<PiModelConfigPath | null>(null);
 	const [simpleProviderNonce, setSimpleProviderNonce] = useState(0);
@@ -218,16 +523,11 @@ export default function App() {
 	const [zenMode, setZenMode] = useState(false);
 	const zenBackupRef = useRef<{
 		leftSidebarVisible: boolean;
-		horizontalToolDockVisible: Record<HorizontalToolDockSlot, boolean>;
 		agentPanelVisible: boolean;
 		chatDock: ChatDockRegion;
 		chrome: ChromePreferences;
 	} | null>(null);
 	const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-	const [horizontalToolDockVisible, setHorizontalToolDockVisible] = useState<
-		Record<HorizontalToolDockSlot, boolean>
-	>({ top: false, bottom: true });
-	const [toolDock, setToolDock] = useState<ToolDockLayout>(readToolDockLayout);
 	const [leftSidebarVisible, setLeftSidebarVisible] = useState(readLeftSidebarVisibleInitial);
 	const [dockLayout, setDockLayoutState] = useState<TechnicalDockLayout>(readDockLayout);
 
@@ -259,29 +559,27 @@ export default function App() {
 	}, []);
 
 	const flipDockLayout = useCallback(() => {
-		updateDockLayout((d) => ({
-			...d,
-			chatDock: d.chatDock === "right" ? "bottom" : "right",
-		}));
+		updateDockLayout((d) => {
+			const next = d.chatDock === "right" ? "bottom" : "right";
+			return {
+				...d,
+				chatDock: next,
+				chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, next, d.chatSizePx),
+			};
+		});
 	}, [updateDockLayout]);
 
 	const focusToolTab = useCallback((t: BottomPanelTab) => {
-		setToolDock((prev) => {
-			const next = !prev.panels[t].visible ? applyToolPanelShow(prev, t) : applyActivateToolTab(prev, t);
-			writeToolDockLayout(next);
-			const z = next.panels[t].zone;
-			setHorizontalToolDockVisible((v) => ({ ...v, [z]: true }));
+		setPanelDock((prev) => {
+			const next = toolTabVisible(prev, t as ToolTabId)
+				? applyFocusToolTab(prev, t as ToolTabId)
+				: applyShowToolTab(prev, t as ToolTabId);
 			return next;
 		});
 	}, []);
 
-	const onOpenToolPanel = useCallback((tab: BottomPanelTab, zone: ToolPanelZone) => {
-		setHorizontalToolDockVisible((v) => ({ ...v, [zone]: true }));
-		setToolDock((prev) => {
-			const next = applyToolPanelShow(prev, tab, zone);
-			writeToolDockLayout(next);
-			return next;
-		});
+	const onOpenToolPanel = useCallback((tab: BottomPanelTab) => {
+		setPanelDock((prev) => applyShowToolTab(prev, tab as ToolTabId));
 	}, []);
 
 	useEffect(() => {
@@ -292,10 +590,6 @@ export default function App() {
 		setLeftSidebarVisible(visible);
 		writeLeftSidebarVisible(visible);
 	}, []);
-
-	const hidePrimarySidebar = useCallback(() => {
-		persistLeftSidebar(false);
-	}, [persistLeftSidebar]);
 
 	const toggleLeftSidebar = useCallback(() => {
 		setLeftSidebarVisible((v) => {
@@ -315,12 +609,16 @@ export default function App() {
 
 	const openPiModelConfigInEditor = useCallback(
 		(path: PiModelConfigPath) => {
-			setSelectedPath(path);
+			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				setWorkspaceOpenSignal((s) => ({ path, rev: (s?.rev ?? 0) + 1 }));
+			} else {
+				setSelectedPath(path);
+			}
 			setExplorerContextDir(posixDirname(path));
 			setActivity("explorer");
 			persistLeftSidebar(true);
 		},
-		[persistLeftSidebar],
+		[persistLeftSidebar, technical, workspaceGrid.cols, workspaceGrid.rows],
 	);
 
 	const openPiModelConfigInSimpleBrains = useCallback((path: PiModelConfigPath) => {
@@ -328,6 +626,94 @@ export default function App() {
 		setSimpleProviderPath(path);
 		setSimpleProviderNonce((n) => n + 1);
 	}, []);
+
+	/** Menu Settings → My Team (Pi `.pi/agents/*.md`, `teams.yaml`); Technical mode switches to Simple so the view exists. */
+	const openAgentSetupFromMenu = useCallback(() => {
+		setUiMode("simple");
+		setSimpleTab("team");
+	}, []);
+
+	/** Open a workspace-relative file from the menu (Technical: explorer / grid; Simple: editor + chat layout). */
+	const focusWorkspaceFileFromMenu = useCallback(
+		(rel: string) => {
+			setExplorerContextDir(posixDirname(rel));
+			if (technical) {
+				if (workspaceGrid.cols > 1 || workspaceGrid.rows > 1) {
+					setWorkspaceOpenSignal((s) => ({ path: rel, rev: (s?.rev ?? 0) + 1 }));
+				} else {
+					setSelectedPath(rel);
+				}
+				setActivity("explorer");
+				persistLeftSidebar(true);
+			} else {
+				setSelectedPath(rel);
+				setSimpleTab("chat");
+			}
+		},
+		[technical, workspaceGrid.cols, workspaceGrid.rows, persistLeftSidebar],
+	);
+
+	const openTeamsYamlFromMenu = useCallback(() => {
+		const rel = agentsApi.data?.teamsPath ?? ".pi/agents/teams.yaml";
+		focusWorkspaceFileFromMenu(rel);
+	}, [agentsApi.data?.teamsPath, focusWorkspaceFileFromMenu]);
+
+	const createNewAgentMarkdownFromMenu = useCallback(() => {
+		const teamsPath = agentsApi.data?.teamsPath;
+		const baseDir = teamsPath ? posixDirname(teamsPath) : ".pi/agents";
+		const raw = window.prompt(
+			"New agent id (filename and YAML name; letters, numbers, -, _, .)",
+			"my-agent",
+		);
+		if (raw == null) return;
+		const trimmed = raw.trim().replace(/\.md$/i, "");
+		if (!trimmed || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(trimmed)) {
+			window.alert("Use a non-empty id: letters, digits, hyphen, underscore, or dot (no slashes).");
+			return;
+		}
+		const rel = `${baseDir}/${trimmed}.md`;
+		const content = `---
+name: ${trimmed}
+description:
+---
+
+`;
+		void (async () => {
+			try {
+				await apiPutJson<{ ok: boolean }>("/api/file", { path: rel, content });
+				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
+				await refresh();
+				focusWorkspaceFileFromMenu(rel);
+				agentsApi.reload();
+			} catch (e) {
+				window.alert(e instanceof Error ? e.message : String(e));
+			}
+		})();
+	}, [agentsApi.data?.teamsPath, agentsApi.reload, focusWorkspaceFileFromMenu, refresh]);
+
+	const settingsMenuHandlers = useMemo<SettingsMenuHandlers>(
+		() => ({
+			onOpenSimpleAppSettings: () => {
+				setUiMode("simple");
+				setSimpleTab("settings");
+			},
+			onOpenAiBrains: () => {
+				setUiMode("simple");
+				setSimpleTab("models");
+			},
+			onOpenProjects: () => {
+				setUiMode("simple");
+				setSimpleTab("projects");
+			},
+			onEditWorkspaceViewsCatalog: () => {
+				const rel = uiViewsCatalog.data?.catalogRelPath ?? ".wayofpi/ui-views.json";
+				setUiMode("simple");
+				setSelectedPath(rel);
+				setSimpleTab("chat");
+			},
+		}),
+		[uiViewsCatalog.data?.catalogRelPath],
+	);
 
 	const consumeSimpleProviderFocus = useCallback(() => {
 		setSimpleProviderPath(null);
@@ -395,7 +781,45 @@ export default function App() {
 		}
 	}, [explorerContextDir, refresh]);
 
-	const technical = uiMode === "technical";
+	const handleNewPlanFile = useCallback(async () => {
+		if (!root && folders.length === 0) {
+			window.alert("Open a workspace folder first.");
+			return;
+		}
+		const rawSlug = window.prompt("Plan slug (short id, e.g. auth-refactor)", "feature");
+		if (rawSlug == null) return;
+		const defaultTitle = rawSlug.trim().replace(/[^a-zA-Z0-9]+/g, " ").trim() || "Plan";
+		const title = window.prompt("Plan title (document heading)", defaultTitle);
+		if (title == null) return;
+		try {
+			const { path } = await createPlanArtifactInWorkspace({
+				slugSuggestion: rawSlug,
+				title: title || defaultTitle,
+			});
+			setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(path) });
+			await refresh();
+			setSelectedPath(path);
+			if (technical) {
+				setUiMode("technical");
+				persistLeftSidebar(true);
+				setActivity("explorer");
+			} else {
+				setSimpleTab("chat");
+			}
+		} catch (e) {
+			window.alert(e instanceof Error ? e.message : String(e));
+		}
+	}, [
+		folders.length,
+		persistLeftSidebar,
+		refresh,
+		root,
+		setActivity,
+		setSelectedPath,
+		setSimpleTab,
+		setUiMode,
+		technical,
+	]);
 
 	const openWorkspaceSearch = useCallback(() => {
 		setUiMode("technical");
@@ -453,10 +877,10 @@ export default function App() {
 
 	useLayoutEffect(() => {
 		bumpEditorMenu();
-	}, [selectedPath, fileLoading, fileError, uiMode, simpleTab, bumpEditorMenu]);
+	}, [effSelectedPath, effFileLoading, effFileError, uiMode, simpleTab, bumpEditorMenu]);
 
 	const editMenu = useMemo((): EditMenuHandlers => {
-		const fileReady = !!selectedPath && !fileLoading && !fileError;
+		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		const canEdit = fileReady && (technical || simpleTab === "chat");
 		return {
 			canEdit,
@@ -484,9 +908,9 @@ export default function App() {
 			canRedo: workspaceEditorRef.current?.canRedo() ?? false,
 		};
 	}, [
-		selectedPath,
-		fileLoading,
-		fileError,
+		effSelectedPath,
+		effFileLoading,
+		effFileError,
 		technical,
 		simpleTab,
 		editorMenuTick,
@@ -496,7 +920,7 @@ export default function App() {
 
 	const selectionMenu = useMemo((): SelectionMenuHandlers => {
 		const ed = workspaceEditorRef.current;
-		const fileReady = !!selectedPath && !fileLoading && !fileError;
+		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		const canEdit = fileReady && (technical || simpleTab === "chat");
 		return {
 			canEdit,
@@ -527,9 +951,9 @@ export default function App() {
 			},
 		};
 	}, [
-		selectedPath,
-		fileLoading,
-		fileError,
+		effSelectedPath,
+		effFileLoading,
+		effFileError,
 		technical,
 		simpleTab,
 		editorMenuTick,
@@ -589,7 +1013,7 @@ export default function App() {
 			onSplitTerminal: () => {
 				setUiMode("technical");
 				persistLeftSidebar(true);
-				onOpenToolPanel("terminal", "bottom");
+				onOpenToolPanel("terminal");
 			},
 			onRunTask: () => {
 				setCommandPaletteOpen(true);
@@ -623,22 +1047,22 @@ export default function App() {
 		focusTerminalForCommands,
 		persistLeftSidebar,
 		onOpenToolPanel,
-		selectedPath,
+		effSelectedPath,
 		openTasksJsonInEditor,
 	]);
 
 	const runStartDebugging = useCallback(() => {
 		focusTerminalForCommands();
-		if (config?.terminalEnabled !== true || !selectedPath) return;
-		const shellLine = runActiveFileShellLine(selectedPath);
+		if (config?.terminalEnabled !== true || !effSelectedPath) return;
+		const shellLine = runActiveFileShellLine(effSelectedPath);
 		if (shellLine) sendTerminalInput(shellLine);
-	}, [focusTerminalForCommands, config?.terminalEnabled, selectedPath]);
+	}, [focusTerminalForCommands, config?.terminalEnabled, effSelectedPath]);
 
 	const toggleBreakpointAtCursor = useCallback(() => {
-		const fileReady = !!selectedPath && !fileLoading && !fileError;
+		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		if (!fileReady || !(technical || simpleTab === "chat")) return;
 		setBreakpointsByPath((prev: Record<string, number[]>) => {
-			const path = selectedPath as string;
+			const path = effSelectedPath as string;
 			const cur = prev[path] ? [...prev[path]] : [];
 			const idx = cur.indexOf(line);
 			if (idx >= 0) cur.splice(idx, 1);
@@ -650,11 +1074,11 @@ export default function App() {
 			}
 			return { ...prev, [path]: cur };
 		});
-	}, [selectedPath, line, fileLoading, fileError, technical, simpleTab]);
+	}, [effSelectedPath, line, effFileLoading, effFileError, technical, simpleTab]);
 
 	const runMenu = useMemo((): RunMenuHandlers => {
 		const termOk = config?.terminalEnabled === true;
-		const fileReady = !!selectedPath && !fileLoading && !fileError;
+		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		const canToggleBreakpoint = fileReady && (technical || simpleTab === "chat");
 		const hasBreakpoints = Object.values(breakpointsByPath as Record<string, number[]>).some(
 			(lines) => lines.length > 0,
@@ -698,9 +1122,9 @@ export default function App() {
 		};
 	}, [
 		config?.terminalEnabled,
-		selectedPath,
-		fileLoading,
-		fileError,
+		effSelectedPath,
+		effFileLoading,
+		effFileError,
 		technical,
 		simpleTab,
 		breakpointsByPath,
@@ -723,7 +1147,7 @@ export default function App() {
 
 	const goMenu = useMemo((): GoMenuHandlers => {
 		void navHistoryTick;
-		const fileReady = !!selectedPath && !fileLoading && !fileError;
+		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		const canEditSurface = fileReady && (technical || simpleTab === "chat");
 		const h = navHistoryRef.current;
 		return {
@@ -768,9 +1192,9 @@ export default function App() {
 		};
 	}, [
 		navHistoryTick,
-		selectedPath,
-		fileLoading,
-		fileError,
+		effSelectedPath,
+		effFileLoading,
+		effFileError,
 		technical,
 		simpleTab,
 		goHistoryBack,
@@ -782,6 +1206,7 @@ export default function App() {
 
 	const helpMenu = useMemo((): HelpMenuHandlers => {
 		const repo = "https://github.com/zerwiz/wayofpi";
+		const shell = typeof window !== "undefined" ? window.wopShell : undefined;
 		return {
 			onShowAllCommands: () => setCommandPaletteOpen(true),
 			onEditorPlayground: () =>
@@ -790,8 +1215,10 @@ export default function App() {
 				window.open("https://code.visualstudio.com/docs/editor/accessibility", "_blank", "noopener,noreferrer"),
 			onGiveFeedback: () => window.open(`${repo}/issues/new`, "_blank", "noopener,noreferrer"),
 			onViewLicense: () => window.open(repo, "_blank", "noopener,noreferrer"),
-			canToggleDeveloperTools: false,
-			onToggleDeveloperTools: () => {},
+			canToggleDeveloperTools: Boolean(shell?.toggleDevtools),
+			onToggleDeveloperTools: () => {
+				void shell?.toggleDevtools?.();
+			},
 			canOpenProcessExplorer: false,
 			onOpenProcessExplorer: () => {},
 			canDownloadUpdate: true,
@@ -800,9 +1227,21 @@ export default function App() {
 	}, []);
 
 	const saveAndRefresh = useCallback(async () => {
-		await save();
+		if (technical && workspaceGrid.cols * workspaceGrid.rows > 1) {
+			await techWsSnapshotRef.current?.save?.();
+		} else {
+			await save();
+		}
 		await refresh();
-	}, [save, refresh]);
+	}, [technical, workspaceGrid.cols, workspaceGrid.rows, save, refresh]);
+
+	const reloadFocusedOrMain = useCallback(async () => {
+		if (technical && workspaceGrid.cols * workspaceGrid.rows > 1) {
+			await techWsSnapshotRef.current?.reload?.();
+		} else {
+			await reload();
+		}
+	}, [technical, workspaceGrid.cols, workspaceGrid.rows, reload]);
 
 	const copyWorkspacePath = useCallback(() => {
 		const primary = folders[0]?.path ?? root;
@@ -867,12 +1306,19 @@ export default function App() {
 			if (parent) pushRecentWorkspaceFolder(parent);
 			bumpRecent();
 			if (r.selectPath) {
-				setSelectedPath(r.selectPath);
 				setExplorerContextDir(posixDirname(r.selectPath));
+				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+					setWorkspaceOpenSignal((s) => ({
+						path: r.selectPath!,
+						rev: (s?.rev ?? 0) + 1,
+					}));
+				} else {
+					setSelectedPath(r.selectPath);
+				}
 			}
 			await refresh();
 		})();
-	}, [bumpRecent, pickAbsoluteServerPath, refresh]);
+	}, [bumpRecent, pickAbsoluteServerPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
 
 	const handleAddFolderPrompt = useCallback(() => {
 		void (async () => {
@@ -922,8 +1368,8 @@ export default function App() {
 	}, [refresh]);
 
 	const downloadWorkspaceJson = useCallback(
-		(suggestedName: string) => {
-			const payload = { folders: folders.map((f) => ({ path: f.path, name: f.label })) };
+		(suggestedName: string, workspaceFileParentDir: string | null) => {
+			const payload = buildCodeWorkspacePayload(folders, workspaceFileParentDir);
 			const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
 			const a = document.createElement("a");
 			a.href = URL.createObjectURL(blob);
@@ -934,15 +1380,26 @@ export default function App() {
 		[folders],
 	);
 
+	const promptWorkspaceFileParentDir = useCallback((): string | null => {
+		const primary = folders[0]?.path ?? "";
+		const msg =
+			"Parent folder of the .code-workspace file — folder paths will be relative to this (VS Code / Cursor style). OK with empty = absolute paths only.";
+		return window.prompt(msg, primary);
+	}, [folders]);
+
 	const handleSaveWorkspaceAs = useCallback(() => {
-		downloadWorkspaceJson("wayof-pi.code-workspace");
-	}, [downloadWorkspaceJson]);
+		const raw = promptWorkspaceFileParentDir();
+		if (raw == null) return;
+		downloadWorkspaceJson("wayof-pi.code-workspace", raw.trim() || null);
+	}, [downloadWorkspaceJson, promptWorkspaceFileParentDir]);
 
 	const handleDuplicateWorkspace = useCallback(() => {
 		const name = window.prompt("Save duplicate workspace as", "wayof-pi-copy.code-workspace");
 		if (name == null) return;
-		downloadWorkspaceJson(name.trim() || "wayof-pi-copy.code-workspace");
-	}, [downloadWorkspaceJson]);
+		const raw = promptWorkspaceFileParentDir();
+		if (raw == null) return;
+		downloadWorkspaceJson(name.trim() || "wayof-pi-copy.code-workspace", raw.trim() || null);
+	}, [downloadWorkspaceJson, promptWorkspaceFileParentDir]);
 
 	const handleNewTextFile = useCallback(() => {
 		const name = window.prompt("New file name", "untitled.txt");
@@ -965,75 +1422,77 @@ export default function App() {
 		})();
 	}, [explorerContextDir, refresh]);
 
-	const handleNewTextFileInDock = useCallback(
-		(zone: HorizontalToolDockSlot) => {
-			const name = window.prompt("New file name", "untitled.txt");
-			if (name == null) return;
-			const safe = sanitizeNewEntryName(name);
-			if (!safe) {
-				window.alert("Invalid name.");
+	const handleNewTextFileInDock = useCallback(() => {
+		const name = window.prompt("New file name", "untitled.txt");
+		if (name == null) return;
+		const safe = sanitizeNewEntryName(name);
+		if (!safe) {
+			window.alert("Invalid name.");
+			return;
+		}
+		const rel = explorerContextDir ? `${explorerContextDir}/${safe}` : safe;
+		void (async () => {
+			try {
+				await apiPostJson("/api/fs/entry", { path: rel, kind: "file" });
+				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
+				await refresh();
+				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+					setWorkspaceOpenSignal((s) => ({ path: rel, rev: (s?.rev ?? 0) + 1 }));
+				} else {
+					setSelectedPath(rel);
+					setPanelDock((prev) => applyAddFileTab(prev, rel));
+				}
+			} catch (e) {
+				window.alert(e instanceof Error ? e.message : String(e));
+			}
+		})();
+	}, [explorerContextDir, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
+
+	const handleOpenFileInDock = useCallback(() => {
+		void (async () => {
+			const abs = await pickAbsoluteServerPath("file");
+			if (!abs) return;
+			const r = await postWorkspaceOp({ op: "open_file", path: abs });
+			if (r.error) {
+				window.alert(r.error);
 				return;
 			}
-			const rel = explorerContextDir ? `${explorerContextDir}/${safe}` : safe;
-			void (async () => {
-				try {
-					await apiPostJson("/api/fs/entry", { path: rel, kind: "file" });
-					setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
-					await refresh();
-					setSelectedPath(rel);
-					setToolDock((prev) => {
-						const next = applyAddFileToStrip(prev, zone, rel);
-						writeToolDockLayout(next);
-						return next;
-					});
-					setHorizontalToolDockVisible((v) => ({ ...v, [zone]: true }));
-				} catch (e) {
-					window.alert(e instanceof Error ? e.message : String(e));
-				}
-			})();
-		},
-		[explorerContextDir, refresh],
-	);
-
-	const handleOpenFileInDock = useCallback(
-		(zone: HorizontalToolDockSlot) => {
-			void (async () => {
-				const abs = await pickAbsoluteServerPath("file");
-				if (!abs) return;
-				const r = await postWorkspaceOp({ op: "open_file", path: abs });
-				if (r.error) {
-					window.alert(r.error);
-					return;
-				}
-				const parent = abs.replace(/[/\\][^/\\]*$/, "");
-				if (parent) pushRecentWorkspaceFolder(parent);
-				bumpRecent();
-				if (r.selectPath) {
+			const parent = abs.replace(/[/\\][^/\\]*$/, "");
+			if (parent) pushRecentWorkspaceFolder(parent);
+			bumpRecent();
+			if (r.selectPath) {
+				setExplorerContextDir(posixDirname(r.selectPath));
+				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+					setWorkspaceOpenSignal((s) => ({
+						path: r.selectPath!,
+						rev: (s?.rev ?? 0) + 1,
+					}));
+				} else {
 					setSelectedPath(r.selectPath);
-					setExplorerContextDir(posixDirname(r.selectPath));
-					setToolDock((prev) => {
-						const next = applyAddFileToStrip(prev, zone, r.selectPath!);
-						writeToolDockLayout(next);
-						return next;
-					});
-					setHorizontalToolDockVisible((v) => ({ ...v, [zone]: true }));
+					setPanelDock((prev) => applyAddFileTab(prev, r.selectPath!));
 				}
-				await refresh();
-			})();
-		},
-		[bumpRecent, pickAbsoluteServerPath, refresh],
-	);
+			}
+			await refresh();
+		})();
+	}, [bumpRecent, pickAbsoluteServerPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
 
 	const handleSaveAs = useCallback(() => {
-		if (!selectedPath) return;
-		const suggest = selectedPath;
+		const multi = technical && workspaceGrid.cols * workspaceGrid.rows > 1;
+		const path = multi ? (techWsSnapshotRef.current?.selectedPath ?? null) : selectedPath;
+		const fileContent = multi ? (techWsSnapshotRef.current?.content ?? "") : content;
+		if (!path) return;
+		const suggest = path;
 		const rel = window.prompt("Save as (path relative to workspace)", suggest);
 		if (rel == null || !rel.trim()) return;
 		const target = rel.trim().replace(/^[/\\]+/, "");
 		void (async () => {
 			try {
-				await apiPutJson("/api/file", { path: target, content });
-				setSelectedPath(target);
+				await apiPutJson("/api/file", { path: target, content: fileContent });
+				if (multi) {
+					setWorkspaceOpenSignal((s) => ({ path: target, rev: (s?.rev ?? 0) + 1 }));
+				} else {
+					setSelectedPath(target);
+				}
 				setExplorerContextDir(posixDirname(target));
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(target) });
 				await refresh();
@@ -1041,11 +1500,18 @@ export default function App() {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
 		})();
-	}, [content, selectedPath, refresh]);
+	}, [content, selectedPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
 
 	const handleSaveAll = useCallback(async () => {
-		if (dirty && selectedPath) await saveAndRefresh();
-	}, [dirty, selectedPath, saveAndRefresh]);
+		const multi = technical && workspaceGrid.cols * workspaceGrid.rows > 1;
+		if (multi) {
+			const s = techWsSnapshotRef.current;
+			if (s?.selectedPath && s.dirty) await s.save();
+			await refresh();
+		} else if (dirty && selectedPath) {
+			await saveAndRefresh();
+		}
+	}, [dirty, selectedPath, saveAndRefresh, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
 
 	const onWorkspaceFileChange = useCallback(
 		async (e: ChangeEvent<HTMLInputElement>) => {
@@ -1101,10 +1567,10 @@ export default function App() {
 				});
 			},
 			workspaceFolders: folders,
-			dirty,
-			hasOpenFile: !!selectedPath,
-			canSaveFile: !!selectedPath && dirty,
-			canRevertFile: !!selectedPath,
+			dirty: effDirty,
+			hasOpenFile: !!effSelectedPath,
+			canSaveFile: !!effSelectedPath && effDirty,
+			canRevertFile: !!effSelectedPath,
 			onRefreshWorkspaceTree: refresh,
 			onCopyWorkspacePath: copyWorkspacePath,
 			onNewTextFile: handleNewTextFile,
@@ -1126,7 +1592,7 @@ export default function App() {
 			onSave: saveAndRefresh,
 			onSaveAs: handleSaveAs,
 			onSaveAll: handleSaveAll,
-			onRevertFile: reload,
+			onRevertFile: reloadFocusedOrMain,
 			onCloseEditor: () => setSelectedPath(null),
 			onCloseWorkspace: handleCloseWorkspace,
 			onCloseWindow: () => {
@@ -1147,8 +1613,9 @@ export default function App() {
 			recentFolders,
 			autoSave,
 			folders,
-			dirty,
-			selectedPath,
+			effDirty,
+			effSelectedPath,
+			techWsSnapshot,
 			refresh,
 			copyWorkspacePath,
 			handleNewTextFile,
@@ -1161,7 +1628,7 @@ export default function App() {
 			saveAndRefresh,
 			handleSaveAs,
 			handleSaveAll,
-			reload,
+			reloadFocusedOrMain,
 			handleCloseWorkspace,
 			openPreferences,
 			handleRemoveWorkspaceFolder,
@@ -1172,7 +1639,6 @@ export default function App() {
 		setChrome((c) => {
 			zenBackupRef.current = {
 				leftSidebarVisible,
-				horizontalToolDockVisible: { ...horizontalToolDockVisible },
 				agentPanelVisible: dockLayout.agentPanelVisible,
 				chatDock: dockLayout.chatDock,
 				chrome: { ...c },
@@ -1180,23 +1646,14 @@ export default function App() {
 			return { ...c, statusBarVisible: false, menuBarVisible: false };
 		});
 		persistLeftSidebar(false);
-		setHorizontalToolDockVisible({ top: false, bottom: false });
 		updateDockLayout({ agentPanelVisible: false });
 		setZenMode(true);
-	}, [
-		horizontalToolDockVisible,
-		dockLayout.agentPanelVisible,
-		dockLayout.chatDock,
-		leftSidebarVisible,
-		persistLeftSidebar,
-		updateDockLayout,
-	]);
+	}, [dockLayout.agentPanelVisible, dockLayout.chatDock, leftSidebarVisible, persistLeftSidebar, updateDockLayout]);
 
 	const exitZen = useCallback(() => {
 		const b = zenBackupRef.current;
 		if (b) {
 			persistLeftSidebar(b.leftSidebarVisible);
-			setHorizontalToolDockVisible({ ...b.horizontalToolDockVisible, top: false });
 			updateDockLayout({ agentPanelVisible: b.agentPanelVisible, chatDock: b.chatDock });
 			setChrome(b.chrome);
 			zenBackupRef.current = null;
@@ -1213,12 +1670,22 @@ export default function App() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [zenMode, exitZen]);
 
+	const applyWorkspaceGridShape = useCallback((cols: number, rows: number) => {
+		setWorkspaceGrid((g) => {
+			const next = resizeWorkspaceGrid(g, cols, rows);
+			writeWorkspaceGridState(next);
+			return next;
+		});
+		setWsFocusedCell((f) => Math.min(f, cols * rows - 1));
+	}, []);
+
 	const applyEditorLayoutPreset = useCallback(
 		(preset: EditorLayoutPreset) => {
 			switch (preset) {
 				case "single":
 					persistLeftSidebar(true);
 					updateDockLayout((d) => ({ ...d, agentPanelVisible: false, chatDock: "right" }));
+					applyWorkspaceGridShape(1, 1);
 					break;
 				case "two_columns":
 					persistLeftSidebar(true);
@@ -1226,7 +1693,12 @@ export default function App() {
 					break;
 				case "two_rows":
 					persistLeftSidebar(true);
-					updateDockLayout((d) => ({ ...d, agentPanelVisible: true, chatDock: "bottom" }));
+					updateDockLayout((d) => ({
+						...d,
+						agentPanelVisible: true,
+						chatDock: "bottom",
+						chatSizePx: clampChatHeight(DEFAULT_COMPACT_BOTTOM_CHAT_HEIGHT_PX),
+					}));
 					break;
 				case "two_rows_right":
 					persistLeftSidebar(true);
@@ -1238,7 +1710,12 @@ export default function App() {
 					break;
 				case "two_columns_bottom":
 					persistLeftSidebar(true);
-					updateDockLayout((d) => ({ ...d, agentPanelVisible: true, chatDock: "bottom" }));
+					updateDockLayout((d) => ({
+						...d,
+						agentPanelVisible: true,
+						chatDock: "bottom",
+						chatSizePx: clampChatHeight(DEFAULT_COMPACT_BOTTOM_CHAT_HEIGHT_PX),
+					}));
 					break;
 				case "grid_2x2":
 					persistLeftSidebar(true);
@@ -1249,11 +1726,109 @@ export default function App() {
 					updateDockLayout((d) => ({ ...d, agentPanelVisible: false }));
 					focusToolTab("terminal");
 					break;
+				case "workspace_grid_1x1":
+					applyWorkspaceGridShape(1, 1);
+					break;
+				case "workspace_grid_3x1":
+					applyWorkspaceGridShape(3, 1);
+					break;
+				case "workspace_grid_1x3":
+					applyWorkspaceGridShape(1, 3);
+					break;
+				case "workspace_grid_2x2":
+					applyWorkspaceGridShape(2, 2);
+					break;
+				case "workspace_grid_3x4":
+					applyWorkspaceGridShape(3, 4);
+					break;
 				default:
 					break;
 			}
 		},
-		[focusToolTab, persistLeftSidebar, updateDockLayout],
+		[applyWorkspaceGridShape, focusToolTab, persistLeftSidebar, updateDockLayout],
+	);
+
+	const workspaceGridToolbar = useMemo((): WorkspaceGridPickerConfig | null => {
+		if (!technical) return null;
+		return {
+			cols: workspaceGrid.cols,
+			rows: workspaceGrid.rows,
+			maxCols: WORKSPACE_GRID_MAX_COLS,
+			maxRows: WORKSPACE_GRID_MAX_ROWS,
+			onSelect: applyWorkspaceGridShape,
+		};
+	}, [technical, workspaceGrid.cols, workspaceGrid.rows, applyWorkspaceGridShape]);
+
+	const agentTeamWorkspacePane = useMemo(
+		() => ({
+			agentTeams: agentsApi.data?.teams ?? {},
+			agents: agentsApi.data?.agents ?? [],
+			agentsLoading: agentsApi.loading,
+		}),
+		[agentsApi.data?.teams, agentsApi.data?.agents, agentsApi.loading],
+	);
+
+	const openAgentTeamInWorkspacePane = useCallback(() => {
+		if (!technical) return;
+		if (isWsMulti) {
+			patchWorkspaceCellDock(wsFocusedCell, (prev) => applyShowToolTab(prev, "agent_team"));
+		} else {
+			setPanelDock((prev) => applyShowToolTab(prev, "agent_team"));
+		}
+	}, [technical, isWsMulti, wsFocusedCell, patchWorkspaceCellDock, setPanelDock]);
+
+	const workspaceEmbeddedChat = useCallback(
+		() => (
+			<ChatPanel
+				uiMode={uiMode}
+				rows={session.rows}
+				chatTabs={session.chatTabs}
+				activeChatTabId={session.activeChatTabId}
+				onSelectChatTab={session.selectChatTab}
+				onCloseChatTab={session.closeChatTab}
+				streaming={session.streaming}
+				connected={session.connected}
+				error={session.error}
+				onSend={session.sendChat}
+				onStop={session.stop}
+				onClearError={session.clearError}
+				onNewSession={session.startNewSession}
+				chatMode={session.chatMode}
+				onChatModeChange={session.setChatMode}
+				agents={agentsApi.data?.agents ?? []}
+				agentsLoading={agentsApi.loading}
+				agentTeams={agentsApi.data?.teams ?? {}}
+				onOpenAgentTeamInPane={openAgentTeamInWorkspacePane}
+				chatAgentName={session.chatAgentName}
+				onChatAgentChange={session.setChatAgent}
+				chatQueuePending={session.chatQueuePending}
+				embeddedInWorkspace
+			/>
+		),
+		[
+			uiMode,
+			session.rows,
+			session.chatTabs,
+			session.activeChatTabId,
+			session.selectChatTab,
+			session.closeChatTab,
+			session.streaming,
+			session.connected,
+			session.error,
+			session.sendChat,
+			session.stop,
+			session.clearError,
+			session.startNewSession,
+			session.chatMode,
+			session.setChatMode,
+			agentsApi.data?.agents,
+			agentsApi.loading,
+			agentsApi.data?.teams,
+			openAgentTeamInWorkspacePane,
+			session.chatAgentName,
+			session.setChatAgent,
+			session.chatQueuePending,
+		],
 	);
 
 	const toggleFullScreen = useCallback(async () => {
@@ -1524,7 +2099,7 @@ export default function App() {
 				e.preventDefault();
 				setUiMode("technical");
 				persistLeftSidebar(true);
-				onOpenToolPanel("terminal", "bottom");
+				onOpenToolPanel("terminal");
 				return;
 			}
 			if (technical && e.altKey && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === "z") {
@@ -1606,94 +2181,81 @@ export default function App() {
 		promptGoToLine,
 	]);
 
-	const editorTechnicalChromeMain = useMemo(
+	const workspaceDockActionsMain = useMemo(
 		() => ({
 			onOpenFile: handleOpenFilePrompt,
-			onShowAgentChat: () => updateDockLayout((d) => ({ ...d, agentPanelVisible: true })),
+			onShowAgentChat: (cellIndex: number) => {
+				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+					setWsFocusedCell(cellIndex);
+					patchWorkspaceCellDock(cellIndex, (prev) => applyShowToolTab(prev, "agent_chat"));
+				} else {
+					setPanelDock((prev) => applyShowToolTab(prev, "agent_chat"));
+				}
+			},
 		}),
-		[handleOpenFilePrompt, updateDockLayout],
+		[handleOpenFilePrompt, technical, workspaceGrid.cols, workspaceGrid.rows, patchWorkspaceCellDock],
 	);
 
-	const setStripActiveIndex = useCallback((slot: HorizontalToolDockSlot, index: number) => {
-		setToolDock((prev) => {
-			const next = {
-				...prev,
-				activeIndexBySlot: { ...prev.activeIndexBySlot, [slot]: index },
-			};
-			writeToolDockLayout(next);
-			return next;
-		});
+	const setWorkspaceActiveIndex = useCallback((index: number) => {
+		setPanelDock((prev) => ({ ...prev, activeIndex: index }));
 	}, []);
 
-	const onDockEntryMove = useCallback(
-		(moving: DockStripEntry, targetZone: ToolPanelZone, before: DockStripEntry | null) => {
-			setHorizontalToolDockVisible((v) => ({ ...v, [targetZone]: true }));
-			setToolDock((prev) => {
-				const next = applyDockStripMoveEntry(prev, moving, targetZone, before);
-				writeToolDockLayout(next);
-				return next;
-			});
-		},
-		[],
-	);
-
-	const onDockEntryClose = useCallback((entry: DockStripEntry) => {
-		setToolDock((prev) => {
-			const next =
-				entry.type === "tool"
-					? applyToolPanelClose(prev, entry.id)
-					: applyRemoveFileFromStrips(prev, entry.path);
-			writeToolDockLayout(next);
-			return next;
-		});
+	const onDockEntryMove = useCallback((moving: PanelTab, before: PanelTab | null) => {
+		setPanelDock((prev) => applyPanelTabMove(prev, moving, before));
 	}, []);
 
-	const onSelectFileFromDock = useCallback((path: string) => {
+	const onDockEntryClose = useCallback((entry: PanelTab) => {
+		setPanelDock((prev) =>
+			entry.type === "tool"
+				? applyCloseToolTab(prev, entry.id)
+				: applyRemoveFileTab(prev, entry.path),
+		);
+	}, []);
+
+	const onSelectFileFromWorkspaceTab = useCallback((path: string) => {
 		setSelectedPath(path);
 		setExplorerContextDir(posixDirname(path));
 	}, []);
 
-	/** Lower band: editor-stack-attached tool dock (+ empty state: add via +). */
-	const workspaceLowerToolDock = horizontalToolDockVisible.bottom ? (
-		<>
-			<DockSplitHandle
-				orientation="horizontal"
-				ariaLabel={HORIZONTAL_TOOL_DOCK_UI.bottom.splitResizeAria}
-				onDelta={(_dx, dy) =>
-					updateDockLayout((d) => ({
-						...d,
-						horizontalToolDockHeightsPx: {
-							...d.horizontalToolDockHeightsPx,
-							bottom: clampBottomPanelHeight(d.horizontalToolDockHeightsPx.bottom - dy),
-						},
-					}))
-				}
-			/>
-			<UnifiedHorizontalDock
-				slot="bottom"
-				bandHeightPx={dockLayout.horizontalToolDockHeightsPx.bottom}
-				entries={toolDock.strips.bottom}
-				activeIndex={toolDock.activeIndexBySlot.bottom}
-				onActiveIndexChange={(i) => setStripActiveIndex("bottom", i)}
-				onSelectFilePath={onSelectFileFromDock}
-				onMoveEntry={onDockEntryMove}
-				onCloseEntry={onDockEntryClose}
-				onReorderInZone={(moving, before) => onDockEntryMove(moving, "bottom", before)}
-				logs={session.logs}
-				dropLabel={HORIZONTAL_TOOL_DOCK_UI.bottom.dropLabel}
-				onAddTool={(tab) => onOpenToolPanel(tab, "bottom")}
-				fileActions={[
-					{
-						label: "New text file…",
-						detail: "Create under the explorer folder",
-						run: () => handleNewTextFileInDock("bottom"),
-					},
-					{ label: "Open file in this dock…", run: () => handleOpenFileInDock("bottom") },
-				]}
-				allowEmpty
-			/>
-		</>
-	) : null;
+	const onExplorerSelectFile = useCallback(
+		(p: string, _ev?: MouseEvent) => {
+			setExplorerContextDir(posixDirname(p));
+			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				setWorkspaceOpenSignal((s) => ({ path: p, rev: (s?.rev ?? 0) + 1 }));
+			} else {
+				setSelectedPath(p);
+				setPanelDock((prev) => applyAddFileTab(prev, p));
+			}
+		},
+		[technical, workspaceGrid.cols, workspaceGrid.rows],
+	);
+
+	/** Keep a tab row entry when code paths set `selectedPath` without going through the explorer. */
+	useEffect(() => {
+		if (isWsMulti) return;
+		if (!selectedPath) return;
+		setPanelDock((prev) => {
+			const next = applyEnsureFileTab(prev, selectedPath);
+			return next === prev ? prev : next;
+		});
+	}, [selectedPath, isWsMulti]);
+
+	/** Active file tab drives the editor buffer; tool tabs leave `selectedPath` as last file (if any). */
+	useEffect(() => {
+		if (isWsMulti) return;
+		const a = panelDock.tabs[panelDock.activeIndex];
+		if (a?.type !== "file") return;
+		setSelectedPath((p) => (p === a.path ? p : a.path));
+		setExplorerContextDir(posixDirname(a.path));
+	}, [panelDock.activeIndex, panelDock.tabs, isWsMulti]);
+
+	useEffect(() => {
+		if (isWsMulti) return;
+		const hasFile = panelDock.tabs.some((t) => t.type === "file");
+		if (!hasFile) setSelectedPath(null);
+	}, [panelDock.tabs, isWsMulti]);
+
+	const dockForZedStrip = isWsMulti ? (techWsSnapshot?.panelDock ?? panelDock) : panelDock;
 
 	/** Zed-style status bar icons — see Zed docs (`project_panel`, `terminal`, `agent`, `search`, `git_panel`, `diagnostics`, `status_bar`). */
 	const technicalZedStrip = useMemo(
@@ -1701,7 +2263,7 @@ export default function App() {
 			onToggleLeftSidebar: toggleLeftSidebar,
 			leftSidebarVisible,
 			onFocusTerminal: () => focusToolTab("terminal"),
-			terminalDockedVisible: toolDock.panels.terminal.visible,
+			terminalDockedVisible: toolTabVisible(dockForZedStrip, "terminal"),
 			onFocusPlanning: () => {
 				persistLeftSidebar(true);
 				setActivity("planning");
@@ -1721,7 +2283,7 @@ export default function App() {
 			},
 			scmActive: activity === "scm",
 			onFocusDiagnostics: () => focusToolTab("problems"),
-			problemsVisible: toolDock.panels.problems.visible,
+			problemsVisible: toolTabVisible(dockForZedStrip, "problems"),
 			onOpenSettings: openPreferences,
 			diagnosticsCount: 0,
 		}),
@@ -1729,8 +2291,7 @@ export default function App() {
 			toggleLeftSidebar,
 			leftSidebarVisible,
 			focusToolTab,
-			toolDock.panels.terminal.visible,
-			toolDock.panels.problems.visible,
+			dockForZedStrip,
 			persistLeftSidebar,
 			activity,
 			updateDockLayout,
@@ -1738,11 +2299,6 @@ export default function App() {
 			openPreferences,
 		],
 	);
-
-	const onExplorerSelectFile = useCallback((p: string, _ev?: MouseEvent) => {
-		setExplorerContextDir(posixDirname(p));
-		setSelectedPath(p);
-	}, []);
 
 	const commandItems: CommandItem[] = useMemo(() => {
 		const setAct = (a: TechnicalActivity) => () => {
@@ -1803,7 +2359,7 @@ export default function App() {
 			{
 				id: "revert",
 				label: "File: Revert from disk",
-				run: () => void reload(),
+				run: () => void reloadFocusedOrMain(),
 			},
 			{
 				id: "refresh",
@@ -1816,28 +2372,34 @@ export default function App() {
 				run: copyWorkspacePath,
 			},
 			{
-				id: "bottom-tool-dock-band",
-				label: horizontalToolDockVisible.bottom
-					? "View: Hide tool dock (editor stack)"
-					: "View: Show tool dock (editor stack)",
-				keywords: ["terminal", "problems", "panel", "zed", "dock", "bottom"],
-				run: () =>
-					setHorizontalToolDockVisible((v) => ({
-						...v,
-						bottom: !v.bottom,
-					})),
+				id: "new-plan-file",
+				label: "File: New plan markdown (plans/PLAN-…)",
+				keywords: ["plan", "planner", "markdown", "spec"],
+				run: () => void handleNewPlanFile(),
 			},
 			{
 				id: "agent-dock-right",
 				label: "View: Dock agent panel to the right",
 				keywords: ["chat", "session", "sidebar", "zed", "cursor"],
-				run: () => updateDockLayout({ chatDock: "right", agentPanelVisible: true }),
+				run: () =>
+					updateDockLayout((d) => ({
+						...d,
+						chatDock: "right",
+						agentPanelVisible: true,
+						chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, "right", d.chatSizePx),
+					})),
 			},
 			{
 				id: "agent-dock-bottom",
 				label: "View: Dock agent panel to the bottom",
 				keywords: ["chat", "session", "terminal", "zed", "cursor"],
-				run: () => updateDockLayout({ chatDock: "bottom", agentPanelVisible: true }),
+				run: () =>
+					updateDockLayout((d) => ({
+						...d,
+						chatDock: "bottom",
+						agentPanelVisible: true,
+						chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, "bottom", d.chatSizePx),
+					})),
 			},
 			{
 				id: "agent-toggle",
@@ -1871,8 +2433,8 @@ export default function App() {
 			),
 		];
 	}, [
-		horizontalToolDockVisible,
-		toolDock,
+		panelDock.tabs,
+		panelDock.activeIndex,
 		dockLayout.chatDock,
 		copyWorkspacePath,
 		focusToolTab,
@@ -1880,7 +2442,7 @@ export default function App() {
 		openPiModelConfigInEditor,
 		persistLeftSidebar,
 		refresh,
-		reload,
+		reloadFocusedOrMain,
 		saveAndRefresh,
 		toggleLeftSidebar,
 		dockLayout.agentPanelVisible,
@@ -1888,6 +2450,7 @@ export default function App() {
 		session.setChatMode,
 		session.setChatAgent,
 		agentsApi.data?.agents,
+		handleNewPlanFile,
 	]);
 
 	const simpleCommandItems: CommandItem[] = useMemo(() => {
@@ -1914,6 +2477,24 @@ export default function App() {
 			{ id: "s-revert", label: "File: Revert from disk", run: () => void reload() },
 			{ id: "s-refresh", label: "Workspace: Refresh tree", run: () => void refresh() },
 			{ id: "s-copy", label: "Workspace: Copy path", run: copyWorkspacePath },
+			{
+				id: "s-chat-plan",
+				label: "Agent: Plan mode (Pi planner prompt)",
+				keywords: ["cursor", "planning"],
+				run: () => session.setChatMode("plan"),
+			},
+			{
+				id: "s-chat-build",
+				label: "Agent: Build mode",
+				keywords: ["cursor", "coding"],
+				run: () => session.setChatMode("build"),
+			},
+			{
+				id: "s-new-plan",
+				label: "File: New plan markdown (plans/PLAN-…)",
+				keywords: ["plan", "planner", "spec"],
+				run: () => void handleNewPlanFile(),
+			},
 			...PI_MODEL_CONFIG_ENTRIES.map(
 				(e) =>
 					({
@@ -1933,7 +2514,19 @@ export default function App() {
 				},
 			})),
 		];
-	}, [nodes, copyWorkspacePath, openPiModelConfigInSimpleBrains, refresh, reload, saveAndRefresh, setSelectedPath, setSimpleTab, setUiMode]);
+	}, [
+		nodes,
+		copyWorkspacePath,
+		handleNewPlanFile,
+		openPiModelConfigInSimpleBrains,
+		refresh,
+		reload,
+		saveAndRefresh,
+		session.setChatMode,
+		setSelectedPath,
+		setSimpleTab,
+		setUiMode,
+	]);
 
 	const leftPanel =
 		activity === "explorer" ? (
@@ -1949,6 +2542,7 @@ export default function App() {
 				error={treeError}
 				expandRevision={treeExpand.rev}
 				pathsToExpand={treeExpand.paths}
+				onClosePrimarySidebar={() => persistLeftSidebar(false)}
 			/>
 		) : activity === "search" ? (
 			<SearchSidePanel
@@ -1968,6 +2562,8 @@ export default function App() {
 				chatMode={session.chatMode}
 				onChatModeChange={session.setChatMode}
 				streaming={session.streaming}
+				hasWorkspace={!!root || folders.length > 0}
+				onNewPlanFile={() => void handleNewPlanFile()}
 			/>
 		) : (
 			<SettingsSidePanel
@@ -2017,7 +2613,19 @@ export default function App() {
 						runMenu={runMenu}
 						terminalMenu={terminalMenu}
 						helpMenu={helpMenu}
+						onOpenAgentSetup={openAgentSetupFromMenu}
+						settingsMenu={settingsMenuHandlers}
+						onOpenTeamsYaml={openTeamsYamlFromMenu}
+						onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
+						onReloadAgents={agentsApi.reload}
 						onOpenPiModelConfig={openPiModelConfigInSimpleBrains}
+						chatSessionControls={{
+							mode: session.chatMode,
+							switchDisabled: session.streaming,
+							onSetMode: handleSimpleChatModeChange,
+						}}
+						onNewPlanFile={() => void handleNewPlanFile()}
+						newPlanFileDisabled={!root && folders.length === 0}
 						viewSimple={viewSimpleMenu ?? undefined}
 					/>
 					<SimpleApp
@@ -2059,7 +2667,7 @@ export default function App() {
 						chatAgentName={session.chatAgentName}
 						onChatAgentChange={session.setChatAgent}
 						chatMode={session.chatMode}
-						onChatModeChange={session.setChatMode}
+						onChatModeChange={handleSimpleChatModeChange}
 						activeTab={simpleTab}
 						onTabChange={setSimpleTab}
 						providerConfigInitialPath={simpleProviderPath}
@@ -2070,6 +2678,12 @@ export default function App() {
 						onSelectionPrefsChange={bumpSelectionPrefs}
 						onFindInFiles={openWorkspaceSearch}
 						onReplaceInFiles={openWorkspaceSearch}
+						teamsYamlWritePath={teamsYamlWritePath}
+						workspaceReady={!!root}
+						onOpenTeamsYaml={openTeamsYamlFromMenu}
+						onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
+						onNewPlanFile={() => void handleNewPlanFile()}
+						newPlanFileDisabled={!root && folders.length === 0}
 					/>
 				</div>
 				<CommandPalette
@@ -2080,6 +2694,115 @@ export default function App() {
 			</>
 		);
 	}
+
+	const workspaceEditorBody = isWsMulti ? (
+		<TechnicalWorkspaceGrid
+			grid={workspaceGrid}
+			onPatchCell={patchWorkspaceCellDock}
+			focusedCell={wsFocusedCell}
+			onFocusCell={setWsFocusedCell}
+			onFocusedReport={onTechFocusedReport}
+			onFocusedCursor={onTechFocusedCursor}
+			workspaceEditorRef={workspaceEditorRef}
+			logs={session.logs}
+			fileActions={[
+				{
+					label: "New text file…",
+					detail: "Create under the explorer folder",
+					run: handleNewTextFileInDock,
+				},
+				{ label: "Open file in workspace…", run: handleOpenFileInDock },
+			]}
+			onOpenToolPanelForCell={onOpenToolPanelForCell}
+			onOpenWorkspace={refresh}
+			workspaceDockActions={workspaceDockActionsMain}
+			wordWrap={chrome.editorWordWrap}
+			showBreadcrumbs={chrome.breadcrumbsVisible}
+			onFindInFiles={openWorkspaceSearch}
+			onReplaceInFiles={openWorkspaceSearch}
+			onUndoRedoStackChange={bumpEditorMenu}
+			onSelectionPrefsChange={bumpSelectionPrefs}
+			refresh={refresh}
+			autoSave={autoSave}
+			externalOpenFile={workspaceOpenSignal}
+			onWorkspaceSurfaceDrop={onWorkspaceSurfaceDrop}
+			onSplitEditorRight={splitEditorRight}
+			splitEditorDisabled={workspaceGrid.cols >= WORKSPACE_GRID_MAX_COLS}
+			maximizedCell={wsMaximizedCell}
+			onToggleMaximizeCell={onToggleWorkspaceMaximizeCell}
+			onRemoveWorkspaceCell={removeWorkspaceCellFromGrid}
+			workspaceGridPicker={workspaceGridToolbar}
+			agentTeamPane={agentTeamWorkspacePane}
+			workspaceEmbeddedChat={workspaceEmbeddedChat}
+			onCrossCellTabMoveBetweenCells={movePanelTabBetweenCells}
+			onWorkspaceGridRowResize={onWorkspaceGridRowResize}
+			onWorkspaceGridColResize={onWorkspaceGridColResize}
+		/>
+	) : (
+		<WorkspaceCellDropSurface
+			cellIndex={0}
+			cols={1}
+			rows={1}
+			onDropPayload={onWorkspaceSurfaceDrop}
+			className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+		>
+			<WorkspacePane
+				ref={workspaceEditorRef}
+				tabs={panelDock.tabs}
+				activeIndex={panelDock.activeIndex}
+				onActiveIndexChange={setWorkspaceActiveIndex}
+				onSelectFileTab={onSelectFileFromWorkspaceTab}
+				onReorderTab={onDockEntryMove}
+				onCloseTab={onDockEntryClose}
+				onAddTool={onOpenToolPanel}
+				fileActions={[
+					{
+						label: "New text file…",
+						detail: "Create under the explorer folder",
+						run: handleNewTextFileInDock,
+					},
+					{ label: "Open file in workspace…", run: handleOpenFileInDock },
+				]}
+				logs={session.logs}
+				editorPath={selectedPath}
+				content={content}
+				onChange={setContent}
+				loading={fileLoading}
+				error={fileError}
+				dirty={dirty}
+				filePreview={filePreview}
+				onSave={async () => {
+					await save();
+					await refresh();
+				}}
+				onDiscardUnsaved={discardUnsavedChanges}
+				onCursor={onCursor}
+				compact
+				showExplorerHint={false}
+				onOpenWorkspace={refresh}
+				workspaceDockActions={workspaceDockActionsMain}
+				wordWrap={chrome.editorWordWrap}
+				showBreadcrumbs={chrome.breadcrumbsVisible}
+				onFindInFiles={openWorkspaceSearch}
+				onReplaceInFiles={openWorkspaceSearch}
+				onUndoRedoStackChange={bumpEditorMenu}
+				onSelectionPrefsChange={bumpSelectionPrefs}
+				dndSourceCellIndex={0}
+				onExternalFileDrop={(path, before) => {
+					setPanelDock((prev) => {
+						const next = applyAddFileTab(prev, path);
+						const moving: PanelTab = { type: "file", path };
+						return applyPanelTabMove(next, moving, before);
+					});
+				}}
+				onSplitEditorRight={splitEditorRight}
+				splitEditorDisabled={workspaceGrid.cols >= WORKSPACE_GRID_MAX_COLS}
+				workspaceGridPicker={workspaceGridToolbar}
+				agentTeamPane={agentTeamWorkspacePane}
+				workspaceEmbeddedChat={workspaceEmbeddedChat}
+			/>
+		</WorkspaceCellDropSurface>
+	);
 
 	return (
 		<div
@@ -2102,9 +2825,9 @@ export default function App() {
 					config={config}
 					onOpenCommandPalette={() => setCommandPaletteOpen(true)}
 					onSave={saveAndRefresh}
-					canSave={!!selectedPath && dirty}
-					onRevertFile={() => void reload()}
-					canRevert={!!selectedPath}
+					canSave={!!effSelectedPath && effDirty}
+					onRevertFile={() => void reloadFocusedOrMain()}
+					canRevert={!!effSelectedPath}
 					onRefreshWorkspace={refresh}
 					onCopyWorkspacePath={copyWorkspacePath}
 					onSelectActivity={selectActivityWithSidebar}
@@ -2113,7 +2836,14 @@ export default function App() {
 					onToggleLeftSidebar={toggleLeftSidebar}
 					agentPanelVisible={dockLayout.agentPanelVisible}
 					agentChatDock={dockLayout.chatDock}
-					onSetAgentChatDock={(r) => updateDockLayout({ chatDock: r, agentPanelVisible: true })}
+					onSetAgentChatDock={(r) =>
+						updateDockLayout((d) => ({
+							...d,
+							chatDock: r,
+							agentPanelVisible: true,
+							chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, r, d.chatSizePx),
+						}))
+					}
 					onToggleAgentPanel={() =>
 						updateDockLayout((d) => ({ ...d, agentPanelVisible: !d.agentPanelVisible }))
 					}
@@ -2124,17 +2854,20 @@ export default function App() {
 					runMenu={runMenu}
 					terminalMenu={terminalMenu}
 					helpMenu={helpMenu}
+					onOpenAgentSetup={openAgentSetupFromMenu}
+					settingsMenu={settingsMenuHandlers}
+					onOpenTeamsYaml={openTeamsYamlFromMenu}
+					onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
+					onReloadAgents={agentsApi.reload}
 					onOpenPiModelConfig={openPiModelConfigInEditor}
-					viewTechnical={viewTechnicalOptions}
-					horizontalToolDockToggles={{
-						bottom: {
-							hasTabs: true,
-							visible: horizontalToolDockVisible.bottom,
-							onToggle: () =>
-								setHorizontalToolDockVisible((v) => ({ ...v, bottom: !v.bottom })),
-							terminalSubmenuLabel: "Tool dock (editor stack)",
-						},
+					chatSessionControls={{
+						mode: session.chatMode,
+						switchDisabled: session.streaming,
+						onSetMode: session.setChatMode,
 					}}
+					onNewPlanFile={() => void handleNewPlanFile()}
+					newPlanFileDisabled={!root && folders.length === 0}
+					viewTechnical={viewTechnicalOptions}
 				/>
 			) : (
 				<div className="flex h-8 shrink-0 items-center gap-2 border-b border-[#252526] bg-[#2d2d2d] px-2">
@@ -2172,11 +2905,7 @@ export default function App() {
 				) : null}
 				{leftSidebarVisible ? (
 					<>
-						<TechnicalPrimarySidebar
-							widthPx={dockLayout.leftSidebarWidthPx}
-							activityDetail={primarySidebarDockDetail}
-							onHide={hidePrimarySidebar}
-						>
+						<TechnicalPrimarySidebar widthPx={dockLayout.leftSidebarWidthPx}>
 							{leftPanel}
 						</TechnicalPrimarySidebar>
 						<DockSplitHandle
@@ -2199,45 +2928,15 @@ export default function App() {
 						<div className="flex min-h-0 flex-1 overflow-hidden">
 							{dockLayout.agentPanelVisible && dockLayout.chatDock === "right" ? (
 								<>
-									<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-										<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
-											<EditorPanel
-												ref={workspaceEditorRef}
-												path={selectedPath}
-												content={content}
-												onChange={setContent}
-												loading={fileLoading}
-												error={fileError}
-												dirty={dirty}
-												diskBaseline={lastPersistedContent}
-												filePreview={filePreview}
-												onSave={async () => {
-													await save();
-													await refresh();
-												}}
-												onCursor={onCursor}
-												compact
-												showExplorerHint={false}
-												onOpenWorkspace={refresh}
-												technicalEditorChrome={editorTechnicalChromeMain}
-												wordWrap={chrome.editorWordWrap}
-												showBreadcrumbs={chrome.breadcrumbsVisible}
-												onFindInFiles={openWorkspaceSearch}
-												onReplaceInFiles={openWorkspaceSearch}
-												onUndoRedoStackChange={bumpEditorMenu}
-												onSelectionPrefsChange={bumpSelectionPrefs}
-											/>
-										</div>
-										{workspaceLowerToolDock}
-									</div>
+									<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{workspaceEditorBody}</div>
 									<DockSplitHandle
 										orientation="vertical"
 										ariaLabel="Resize editor vs agent panel width"
 										onDelta={(dx) =>
 											updateDockLayout((d) => ({
 												...d,
-												/* Drag splitter right (positive dx) → wider agent panel, narrower editor. */
-												chatSizePx: clampChatWidth(d.chatSizePx + dx),
+												/* Pointer right (+dx) → vertical edge follows cursor → wider editor, narrower agent. */
+												chatSizePx: clampChatWidth(d.chatSizePx - dx),
 											}))
 										}
 									/>
@@ -2249,6 +2948,10 @@ export default function App() {
 											<ChatPanel
 												uiMode={uiMode}
 												rows={session.rows}
+												chatTabs={session.chatTabs}
+												activeChatTabId={session.activeChatTabId}
+												onSelectChatTab={session.selectChatTab}
+												onCloseChatTab={session.closeChatTab}
 												streaming={session.streaming}
 												connected={session.connected}
 												error={session.error}
@@ -2261,6 +2964,7 @@ export default function App() {
 												agents={agentsApi.data?.agents ?? []}
 												agentsLoading={agentsApi.loading}
 												agentTeams={agentsApi.data?.teams ?? {}}
+												onOpenAgentTeamInPane={openAgentTeamInWorkspacePane}
 												chatAgentName={session.chatAgentName}
 												onChatAgentChange={session.setChatAgent}
 												chatQueuePending={session.chatQueuePending}
@@ -2272,10 +2976,7 @@ export default function App() {
 														updateDockLayout((d) => ({
 															...d,
 															chatDock: r,
-															chatSizePx:
-																r === "right"
-																	? clampChatWidth(d.chatSizePx)
-																	: clampChatHeight(d.chatSizePx),
+															chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, r, d.chatSizePx),
 														})),
 													onHidePanel: () => updateDockLayout({ agentPanelVisible: false }),
 												}}
@@ -2285,48 +2986,14 @@ export default function App() {
 								</>
 							) : dockLayout.agentPanelVisible && dockLayout.chatDock === "bottom" ? (
 								<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-									<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-										<div className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden">
-											<div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-												<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
-													<EditorPanel
-														ref={workspaceEditorRef}
-														path={selectedPath}
-														content={content}
-														onChange={setContent}
-														loading={fileLoading}
-														error={fileError}
-														dirty={dirty}
-														diskBaseline={lastPersistedContent}
-														filePreview={filePreview}
-														onSave={async () => {
-															await save();
-															await refresh();
-														}}
-														onCursor={onCursor}
-														compact
-														showExplorerHint={false}
-														onOpenWorkspace={refresh}
-														technicalEditorChrome={editorTechnicalChromeMain}
-														wordWrap={chrome.editorWordWrap}
-														showBreadcrumbs={chrome.breadcrumbsVisible}
-														onFindInFiles={openWorkspaceSearch}
-														onReplaceInFiles={openWorkspaceSearch}
-														onUndoRedoStackChange={bumpEditorMenu}
-														onSelectionPrefsChange={bumpSelectionPrefs}
-													/>
-												</div>
-											</div>
-										</div>
-										{workspaceLowerToolDock}
-									</div>
+									<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{workspaceEditorBody}</div>
 									<DockSplitHandle
 										orientation="horizontal"
 										ariaLabel="Resize agent session doc height"
 										onDelta={(_dx, dy) =>
 											updateDockLayout((d) => ({
 												...d,
-												chatSizePx: clampChatHeight(d.chatSizePx + dy),
+												chatSizePx: clampChatHeight(d.chatSizePx - dy),
 											}))
 										}
 									/>
@@ -2342,6 +3009,10 @@ export default function App() {
 											<ChatPanel
 												uiMode={uiMode}
 												rows={session.rows}
+												chatTabs={session.chatTabs}
+												activeChatTabId={session.activeChatTabId}
+												onSelectChatTab={session.selectChatTab}
+												onCloseChatTab={session.closeChatTab}
 												streaming={session.streaming}
 												connected={session.connected}
 												error={session.error}
@@ -2354,6 +3025,7 @@ export default function App() {
 												agents={agentsApi.data?.agents ?? []}
 												agentsLoading={agentsApi.loading}
 												agentTeams={agentsApi.data?.teams ?? {}}
+												onOpenAgentTeamInPane={openAgentTeamInWorkspacePane}
 												chatAgentName={session.chatAgentName}
 												onChatAgentChange={session.setChatAgent}
 												chatQueuePending={session.chatQueuePending}
@@ -2365,10 +3037,7 @@ export default function App() {
 														updateDockLayout((d) => ({
 															...d,
 															chatDock: r,
-															chatSizePx:
-																r === "right"
-																	? clampChatWidth(d.chatSizePx)
-																	: clampChatHeight(d.chatSizePx),
+															chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, r, d.chatSizePx),
 														})),
 													onHidePanel: () => updateDockLayout({ agentPanelVisible: false }),
 												}}
@@ -2378,37 +3047,7 @@ export default function App() {
 								</div>
 							) : (
 								<div className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden">
-									<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-										<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
-											<EditorPanel
-												ref={workspaceEditorRef}
-												path={selectedPath}
-												content={content}
-												onChange={setContent}
-												loading={fileLoading}
-												error={fileError}
-												dirty={dirty}
-												diskBaseline={lastPersistedContent}
-												filePreview={filePreview}
-												onSave={async () => {
-													await save();
-													await refresh();
-												}}
-												onCursor={onCursor}
-												compact
-												showExplorerHint={false}
-												onOpenWorkspace={refresh}
-												technicalEditorChrome={editorTechnicalChromeMain}
-												wordWrap={chrome.editorWordWrap}
-												showBreadcrumbs={chrome.breadcrumbsVisible}
-												onFindInFiles={openWorkspaceSearch}
-												onReplaceInFiles={openWorkspaceSearch}
-												onUndoRedoStackChange={bumpEditorMenu}
-												onSelectionPrefsChange={bumpSelectionPrefs}
-											/>
-										</div>
-										{workspaceLowerToolDock}
-									</div>
+									<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{workspaceEditorBody}</div>
 									<button
 										type="button"
 										title="Show agent panel"
@@ -2427,15 +3066,6 @@ export default function App() {
 								</div>
 							)}
 						</div>
-						{!dockLayout.agentPanelVisible ? (
-							<AgentSessionComposerBar
-								connected={session.connected}
-								streaming={session.streaming}
-								queuePending={session.chatQueuePending}
-								onSend={session.sendChat}
-								onRevealAgents={() => updateDockLayout({ agentPanelVisible: true })}
-							/>
-						) : null}
 					</div>
 				</main>
 			</div>
@@ -2457,15 +3087,7 @@ export default function App() {
 					technicalZedStrip={technicalZedStrip}
 					technicalToolDock={{
 						onReveal: (id) => focusToolTab(id),
-						isVisible: (id) => toolDock.panels[id].visible,
-						horizontalDockStrip: {
-							bottom: {
-								hasStrip: true,
-								onToggle: () =>
-									setHorizontalToolDockVisible((v) => ({ ...v, bottom: !v.bottom })),
-								stripHidden: !horizontalToolDockVisible.bottom,
-							},
-						},
+						isVisible: (id) => toolTabVisible(dockForZedStrip, id as ToolTabId),
 					}}
 				/>
 			) : null}

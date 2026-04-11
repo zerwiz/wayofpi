@@ -16,18 +16,20 @@ export function DockRegionTitleBar({
 }: {
 	/** e.g. GripHorizontal (draggable) or GripVertical (affordance only) */
 	grip?: ReactNode;
-	label: string;
+	/** Omit or leave empty to show only grip + trailing (e.g. primary sidebar). */
+	label?: string;
 	trailing?: ReactNode;
 	title?: string;
 	className?: string;
 }) {
+	const showLabel = Boolean(label?.trim());
 	return (
 		<div
 			className={`${dockRegionTitleBarRowClass()}${className ? ` ${className}` : ""}`}
 			title={titleAttr}
 		>
 			{grip ? <span className="inline-flex shrink-0 items-center text-[#555]">{grip}</span> : null}
-			<span className="min-w-0 select-none truncate">{label}</span>
+			{showLabel ? <span className="min-w-0 select-none truncate">{label}</span> : null}
 			{trailing ? (
 				<span className="ml-auto flex min-w-0 max-w-[min(100%,14rem)] shrink-0 items-center justify-end gap-2 font-normal normal-case">
 					{trailing}

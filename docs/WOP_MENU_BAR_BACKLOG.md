@@ -6,7 +6,7 @@
 
 **Living implementation:** `apps/wayofpi-ui/src/components/MenuBar.tsx`, `App.tsx` (handlers, shortcuts), `CommandPalette.tsx`, `types/workspaceEditor.ts` (`*MenuHandlers`).
 
-**Related:** **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** · **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** · **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** · **[WAY_OF_PI_OPEN_TODOS.md](WAY_OF_PI_OPEN_TODOS.md)**
+**Related:** **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** · **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** · **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)**
 
 ---
 
@@ -73,7 +73,7 @@
 | Command palette | `CommandPalette` + `App` items | **Shipped** |
 | Explorer / Search / SCM / Extensions / Settings | `TechnicalActivity` + side panels | **Partial** (SCM/Extensions shallow) |
 | Appearance (status bar, menu bar, zen, fullscreen, zoom, word wrap, breadcrumbs) | Chrome prefs + `MenuBar` | **Shipped** / **Partial** |
-| Editor layout presets | Dock layout storage | **Shipped** (subset) |
+| Editor layout presets | Agent dock (**`technicalLayoutStorage`**) + **workspace grid** (**`workspaceGridStorage`**, up to **3×4** **`WorkspacePane`** cells, resizable splits, edge-grow + cross-cell tab DnD) | **Shipped** (subset) |
 | Primary sidebar toggle | Ctrl+B, persistence | **Shipped** |
 | Agent chat dock (right/bottom) | `ChatPanel` + `technicalLayoutStorage` | **Shipped** |
 | Problems / output / terminal panel | Bottom panel tabs | **Partial** (Problems/Terminal depth) |
@@ -88,7 +88,7 @@
 |------------|---------------------|--------|
 | Back / forward (file history) | In-app navigation stack | **Shipped** |
 | Last edit location | Cross-file edit stack | **Planned** |
-| Switch editor / group | Multi-editor groups, tab strip | **Partial** (swap main/aux only) |
+| Switch editor / group | Multi-editor groups, tab strip | **Partial** — **technical:** click a **workspace grid** cell to focus; **1×1** = single stack. No editor groups beyond grid yet. |
 | Go to file | Quick open → Search activity | **Shipped** |
 | Symbol in workspace / editor | **API** + index or **Pi** symbol tool | **Partial** (palette stub) |
 | Definition / declaration / type / impl / references | **LSP** or **Pi** “resolve symbol” | **Planned** + **Pi** |
@@ -165,7 +165,7 @@
 2. **Workspace intelligence** — Problems from diagnostics; symbol index or LSP proxy; SCM actions beyond placeholder.  
 3. **Run/debug depth** — Task runner; debug session state; breakpoint persistence; optional DAP bridge.  
 4. **Editor upgrade** — Monaco or embedded LSP client; outline/timeline; multi-cursor parity.  
-5. **Product hardening** — Auth, rate limits, logging, update channel (see **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)**).
+5. **Product hardening** — Auth, rate limits, logging, update channel (see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**).
 
 ---
 

@@ -2,7 +2,13 @@ export type TechnicalActivity = "explorer" | "search" | "scm" | "extensions" | "
 
 import type { UiViewCatalogEntry } from "./uiViewsCatalog";
 
-export type BottomPanelTab = "problems" | "output" | "tool_log" | "terminal";
+export type BottomPanelTab =
+	| "problems"
+	| "output"
+	| "tool_log"
+	| "terminal"
+	| "agent_team"
+	| "agent_chat";
 
 /** View → Editor Layout — maps to dock presets in App (subset of VS Code). */
 export type EditorLayoutPreset =
@@ -12,7 +18,12 @@ export type EditorLayoutPreset =
 	| "two_rows_right"
 	| "two_columns_bottom"
 	| "grid_2x2"
-	| "focus_terminal";
+	| "focus_terminal"
+	| "workspace_grid_1x1"
+	| "workspace_grid_3x1"
+	| "workspace_grid_1x3"
+	| "workspace_grid_2x2"
+	| "workspace_grid_3x4";
 
 /** Optional bindings so View / Appearance match the technical shell. */
 export interface ViewMenuTechnicalOptions {

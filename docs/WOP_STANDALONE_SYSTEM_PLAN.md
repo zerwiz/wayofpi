@@ -6,15 +6,17 @@
 
 | Topic | Document |
 |-------|----------|
+| **Web UI ↔ Pi wiring** (APIs, `/ws`, phases) | **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** |
 | CLI, `WOP_*` env, `WOP_HOME`, `WOP_PI_BINARY` | **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** |
 | Commands / tools / extensions → UI | **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** |
 | Multi-agent WebSocket events | **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** |
 | Safe skills, extensions, packages, updates | **[WOP_SAFE_CUSTOMIZATION.md](WOP_SAFE_CUSTOMIZATION.md)** |
 | Current technical UI increment (Bun server + Vite React) | **[../apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)** |
 | **Upstream check + sync** | **[WOP_UPSTREAM_SYNC.md](WOP_UPSTREAM_SYNC.md)**, **`scripts/wop-pi-upstream.ts`**, **`just wop-upstream-check`** |
-| **Living backlog (missing work)** | **[WAY_OF_PI_OPEN_TODOS.md](WAY_OF_PI_OPEN_TODOS.md)** |
+| **Living backlog (missing work)** | **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** |
+| **Merged build checklist (all plans)** | **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** — includes this doc **§15** + planning hub **§16** |
 
-**Planning hub:** **[PLANNING.md](PLANNING.md)** links here and other roadmaps.
+**Planning hub:** **[WOP_PLANNING.md](WOP_PLANNING.md)** links here and other roadmaps.
 
 ---
 

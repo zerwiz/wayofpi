@@ -8,6 +8,7 @@ import {
 } from "../../lib/chatAttachment";
 import { languageLabel, parseMessageSegments } from "../../lib/parseMessageSegments";
 
+/** Simple shell — **wired**: chat rows, agent picker, WebSocket send/stop (Pi tools in browser per server notes). */
 export function SimpleChatView({
 	rows,
 	streaming,
@@ -429,8 +430,11 @@ export function SimpleChatView({
 								submit(e);
 							}
 						}}
-						placeholder={`Tell ${assistantTitle} what to do next…`}
-						disabled={!connected}
+						placeholder={
+							!connected
+								? `Tell ${assistantTitle} what to do next… (Send when connected)`
+								: `Tell ${assistantTitle} what to do next…`
+						}
 						rows={1}
 						className={`max-h-40 min-h-[48px] flex-1 resize-none border-none bg-transparent py-3 pl-2 pr-2 text-[15px] font-medium outline-none ring-0 placeholder:text-[#858585] ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
 					/>

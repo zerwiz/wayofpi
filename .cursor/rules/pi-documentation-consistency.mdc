@@ -21,6 +21,8 @@ You are editing **human-facing documentation** in this repo. Follow these rules 
 2. **`docs/REPO_INDEX.md`** — Folder/file map of the repo; update when you introduce a **new top-level area** or path that agents rely on.
 3. **Root `README.md`** — Boot doc; link new **user-facing** workflows here only when they matter for onboarding (not every tiny note).
 
+**`apps/wayofpi-ui` layout** — Canonical map: **`docs/WOP_TECHNICAL_UI.md`**. Keep **`docs/WOP_MODULAR_DOCKS_PLAN.md`** and **`.cursor/rules/wop-ui-modular-docks.mdc`** aligned on **`TechnicalWorkspaceGrid`**, **`WorkspacePane`**, and **`wayofpi.technical.workspaceGrid.v1`** (not legacy “center editor + separate horizontal strips” as the primary story).
+
 ## Terminology (do not mix)
 
 Use the same vocabulary as **[docs/CONCEPTS.md](docs/CONCEPTS.md)**:

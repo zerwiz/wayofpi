@@ -2,6 +2,15 @@ import { Brain, Cpu, Folder, MessageCircle, Settings, Users } from "lucide-react
 
 export type SimpleTabId = "chat" | "team" | "models" | "projects" | "settings";
 
+/**
+ * Simple shell primary nav. Stub / depth by target (see each view file header):
+ * - **chat** — `SimpleChatView`: wired to session WebSocket.
+ * - **team** — `SimpleTeamView`: agent catalog + persona merge wired; not Pi `dispatch_agent` orchestration.
+ * - **models** — `SimpleModelsView`: provider + model list wired; session model selection wired.
+ * - **projects** — `SimpleProjectsView`: workspace summary + refresh only (no multi-root UI / runner).
+ * - **settings** — `SimpleSettingsView`: theme + approvals + link to technical mode.
+ */
+
 export function SimpleNavRail({
 	activeTab,
 	onTab,

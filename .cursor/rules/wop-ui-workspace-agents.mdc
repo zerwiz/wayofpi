@@ -1,0 +1,43 @@
+---
+description: Way of Pi web UI — workspace agents (.pi/agents), API parity with Pi scan order, simple vs technical mode
+globs: apps/wayofpi-ui/**/*
+alwaysApply: false
+---
+
+# Way of Pi UI: workspace agents
+
+Use this when changing **`apps/wayofpi-ui/`** agent discovery, **My AI Team**, **workspace agent** selection, chat system prompts, or anything that should stay aligned with **Pi `agent-team` / `system-select`** semantics.
+
+## Canonical sources on disk
+
+- **Agent definitions:** Markdown + YAML frontmatter (`name`, `description`, `tools`, `skills`, body), same as **[docs/AGENTS.md](docs/AGENTS.md)**.
+- **Primary playground location:** **`.pi/agents/`** (plus **`agents/`**, **`.claude/agents/`**, **`.cursor/agents/`** per Pi-style scan).
+- **Rosters:** **`.pi/agents/teams.yaml`** — team names → agent `name` lists; first file win for duplicate `name` across scan roots (mirror **`extensions/agent-team.ts`** / server **`server/agents.ts`**).
+
+## Server responsibilities (do not bypass)
+
+- **Catalog:** **`GET /api/agents`** — implemented in **`apps/wayofpi-ui/server/agents.ts`** (`loadWorkspaceAgents`). Keep scan order and de-dupe rules identical to Pi’s agent-team behavior unless product explicitly diverges (then document in **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`**).
+- **Active persona:** WebSocket message (e.g. `agent` / `set_agent` handling in **`apps/wayofpi-ui/server/index.ts`**) resolves the chosen **`name`** with **`getAgentBodyByName`**, updates **`cachedAgentBody`**, and reapplies **`applyLeadSystem`** — same agent file the TUI would load for a single-session persona switch.
+
+## Simple vs technical UI
+
+- **One source of truth in the client:** **`useAgents()`** (`/api/agents`) and **`useWayOfPiSession`** agent state. **Simple** (**`SimpleTeamView`**, **`SimpleChatView`**) and **technical** (**`ChatPanel`**) must not fork separate discovery logic or different API paths.
+- **Technical workspace grid:** When **View → Editor Layout** uses multiple **`WorkspacePane`** cells, file/buffer state is **per cell**; **explorer open** targets the **focused** cell (see **`docs/WOP_TECHNICAL_UI.md`**, **`TechnicalWorkspaceGrid.tsx`**). Agent/chat behavior is unchanged—still **`ChatPanel`** docked right/bottom.
+- **Workspace agent** dropdown: populated from the same `agents[]` list; changing mode must not reset catalog behavior—only layout/chrome differs.
+
+## 404 and “API not found”
+
+- The SPA uses **relative** `fetch("/api/…")` (**`src/api/client.ts`**). **`/api/agents`** and **`/api/llm/models`** exist only on the **Way of Pi Bun server** (`WOP_SERVER_PORT`, default **3333**). **Vite dev** proxies **`/api`** and **`/ws`** to that server (**`vite.config.ts`**).
+- If the user opens **only** static **`dist/`** (or any host without the API), the browser returns **404** — not an empty agent list. Fixes are **operational** (run the server) or **product** (documented in the workspace agents plan: health banner, base URL, or embed API). Do not “fix” 404 by silently faking agents in the client.
+
+## Pi parity: what the web stack does today vs later
+
+- **Today (single model, one connection):** Choosing an agent **merges that agent’s markdown body** into the chat system prompt (**`server/session-prompts.ts`**). The **`tools:`** line does **not** enable Pi tools in the browser; the appended **Way of Pi web session** note states that. This matches “pick a persona” like **`system-select`**, not subprocess **`dispatch_agent`**.
+- **Target (multi-agent / dispatcher):** True **organizer → dispatch_agent → specialist** flows require **Pi subprocesses** and a richer protocol — see **`docs/WOP_MULTI_AGENT_WEBSOCKET.md`**, **`docs/AGENT_TEAMS.md`**, and **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`**. UI work should anticipate **team presets** and **per-agent streams** without pretending **`dispatch_agent`** already exists in the web server.
+
+## Related docs
+
+- Plan and phases: **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`**
+- Agent definitions: **`docs/AGENTS.md`**, **`docs/AGENT_TEAMS.md`**
+- Technical shell overview: **`docs/WOP_TECHNICAL_UI.md`**
+- Modular docks (where agent panels live): **`.cursor/rules/wop-ui-modular-docks.mdc`**

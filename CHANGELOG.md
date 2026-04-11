@@ -8,29 +8,53 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Added
+
+- **`apps/wayofpi-ui`** — **Workspace grid resize:** **`DockSplitHandle`** splitters between workspace **rows** and **columns**; optional **`rowWeights`** / **`colWeights`** persisted in **`wayofpi.technical.workspaceGrid.v1`**. **`TechnicalWorkspaceGrid`** uses **nested flex** (not a bare CSS `grid` only) so splitters sit between **`WorkspacePane`** cells.
+- **`apps/wayofpi-ui`** — **Implicit grid growth on drop:** **`growWorkspaceGridForEdgeDrop`** — dropping a **file**, **panel tab**, or **pane swap** on an **edge snap zone** when the layout is **1×1** or on the **outer edge** of an **N×1** / **1×N** strip **adds** the neighbor cell before applying the drop (**`workspaceGridStorage.ts`**, **`App.tsx`** **`onWorkspaceSurfaceDrop`** with **`surfaceCellIndex` + zone**).
+- **`apps/wayofpi-ui`** — **Cross-cell tab moves:** another pane’s **tab bar** (**`data-wop-workspace-tab-bar`**) accepts **insert-before** drops; **`WorkspaceCellDropSurface`** hides the orange snap overlay while the pointer is over the tab bar so insert hints stay readable.
+
+- **`apps/wayofpi-ui`** — **Technical workspace grid** (**`TechnicalWorkspaceGrid`**): up to **3×4** (**columns × rows**) **`WorkspacePane`** cells, each with its own **`PanelDockLayout`** and (when grid > **1×1**) **`useFileEditor`**. **View → Editor Layout** presets (**workspace grid 2×2**, **3×4**, three columns/rows). Persistence **`wayofpi.technical.workspaceGrid.v1`** (**`workspaceGridStorage.ts`**). Explorer / open-file actions target the **focused** cell. Docs: **`docs/WOP_TECHNICAL_UI.md`**, **`apps/wayofpi-ui/README.md`**, root **`README.md`**, **`docs/README.md`**; agent pointers **`agent/AGENTS.md`**; rule **`.cursor/rules/wop-ui-modular-docks.mdc`**; plans **`docs/WOP_MODULAR_DOCKS_PLAN.md`** (Phase E partial), **`docs/WOP_OPEN_TODOS.md`**, **`docs/WOP_MENU_BAR_BACKLOG.md`**, **`docs/IDE_EXPLORER_PARITY.md`**, **`docs/WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md`**, **`docs/WOP_COMBINED_BUILD_TODO.md`** (Z2 wording).
+
+### Fixed
+
+- **`apps/wayofpi-ui`** — **`StripFilePreview`** uses **`apiGet`** (same as **`useFileEditor`**) and **`AbortController`** so fast tab switches do not apply stale **`/api/file`** responses.
+
 ### Changed
 
-- **`apps/wayofpi-ui`** — **Upper horizontal tool dock removed**; a single **tool/file strip** remains **under the editor stack**. Legacy **`strips.top`** is merged into **`bottom`** (`collapseTopToolDockIntoBottom` in **`technicalLayoutStorage.ts`**). Docs: **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**, **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)**, **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)**.
+- **`apps/wayofpi-ui`** — **Phase A dock parity:** **`EditorPanel`** and **`DockableToolStrip`** share the same **tab chrome** (orange active top border, **`h-9`**, **13px** labels, **Lucide** icons per panel / **`FileCode2`** for files, hover-reveal close). **Editor** + **Panels** region labels (grip + title) mirror each other; user-facing copy favors **Panels** over “tool dock”. Docs: **`docs/WOP_MODULAR_DOCKS_PLAN.md`**, **`docs/WOP_TECHNICAL_UI.md`**.
+
+- **Docs** — Renamed planning entrypoints to **`WOP_*`**: **`docs/PLAN_WEB_STANDALONE_SYSTEM.md`** → **`docs/WOP_STANDALONE_SYSTEM_PLAN.md`**, **`docs/PLANNING.md`** → **`docs/WOP_PLANNING.md`**, **`docs/WAY_OF_PI_OPEN_TODOS.md`** → **`docs/WOP_OPEN_TODOS.md`**. All in-repo links updated (root **`README.md`**, **`docs/README.md`**, **`docs/REPO_INDEX.md`**, **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**, and cross-references).
+
+### Fixed
+
+- **`apps/wayofpi-ui`** — **Splitter drag** now **follows the pointer** for the **editor ↔ agent (vertical)** split and the **editor stack ↔ bottom tool dock (horizontal)** split (corrected delta sign). Documented in **`docs/WOP_TECHNICAL_UI.md`** and **`.cursor/rules/wop-ui-modular-docks.mdc`**.
+
+### Changed
+
+- **`apps/wayofpi-ui`** — **Upper horizontal tool dock removed**; a single **tool/file strip** remains **under the editor stack**. Legacy **`strips.top`** is merged into **`bottom`** (`collapseTopToolDockIntoBottom` in **`technicalLayoutStorage.ts`**). Docs: **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**, **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)**, **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)**.
 
 ### Added
 
+- **`apps/wayofpi-ui`** — **Phase F (partial):** **Markdown** `.md` files get a **Preview** toolbar (**Source** ↔ **rendered** via **`marked`** + **`DOMPurify`**), **Review Next File** (disabled until a queue is wired), and when dirty **Undo File** / **Keep File** plus **Ctrl+Enter** / **⌘↩** (when focus is outside the editor textarea). **`useFileEditor.discardUnsavedChanges`**, **`MarkdownPreviewPane.tsx`**.
+
 - **`apps/wayofpi-ui`** — **Team Pulse** tab (**`ChatPanel`**) shows an **agent-team–style** roster grid (Pi TUI card parity: status, context bar, tokens, optional stream lines) from **`teams.yaml`** + **`/api/agents`**; live multi-agent streams still planned per **[docs/WOP_MULTI_AGENT_WEBSOCKET.md](docs/WOP_MULTI_AGENT_WEBSOCKET.md)**. **`AgentTeamPulseGrid.tsx`**.
 
-- **Docs** — **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)** (phased TODO: dock parity, **N** strips, movable agent + primary sidebar, layout graph); **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** updated for **`DockStripEntry`** / **`activeIndexBySlot`**; **[docs/PLANNING.md](docs/PLANNING.md)**, **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)**, **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**, **[docs/README.md](docs/README.md)** cross-links.
+- **Docs** — **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)** (phased TODO: dock parity, **N** strips, movable agent + primary sidebar, layout graph); **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** updated for **`DockStripEntry`** / **`activeIndexBySlot`**; **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)**, **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)**, **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**, **[docs/README.md](docs/README.md)** cross-links.
 
 - **Docs** — **[docs/WOP_GENERATED_FILES_AND_LINE_PARITY.md](docs/WOP_GENERATED_FILES_AND_LINE_PARITY.md)** (Cursor `.cursorignore` / `.cursorindexingignore`, Zed/Git `linguist-*`, doc ↔ code line parity, `wayofpi-ui` binary/image handling); indexed from **[docs/README.md](docs/README.md)** and linked from **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**.
 
-- **Way of Pi planning docs** — **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** (canonical web + headless Pi plan), **[docs/PLANNING.md](docs/PLANNING.md)** (hub), **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**, **[docs/WOP_UI_MANIFEST.md](docs/WOP_UI_MANIFEST.md)**, **[docs/WOP_MULTI_AGENT_WEBSOCKET.md](docs/WOP_MULTI_AGENT_WEBSOCKET.md)**, **[docs/WOP_SAFE_CUSTOMIZATION.md](docs/WOP_SAFE_CUSTOMIZATION.md)**; indexed from **[docs/README.md](docs/README.md)** and **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**.
+- **Way of Pi planning docs** — **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** (canonical web + headless Pi plan), **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** (hub), **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**, **[docs/WOP_UI_MANIFEST.md](docs/WOP_UI_MANIFEST.md)**, **[docs/WOP_MULTI_AGENT_WEBSOCKET.md](docs/WOP_MULTI_AGENT_WEBSOCKET.md)**, **[docs/WOP_SAFE_CUSTOMIZATION.md](docs/WOP_SAFE_CUSTOMIZATION.md)**; indexed from **[docs/README.md](docs/README.md)** and **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)**.
 
 - **`apps/wayofpi-ui`** — **Simple** vs **Technical** UI toggle (top bar); **`wayofpi.uiMode`** in `localStorage` (default **Simple**). Technical restores activity bar, explorer, bottom panel, and dense status details.
 
 - **`./start-wayofpi-ui.sh`** (repo root) — Starts **`apps/wayofpi-ui`** dev servers and opens the default browser when Vite is ready; sources repo **`.env`**, defaults **`WOP_WORKSPACE`** to the playground root, prepends **`~/.bun/bin`** to **`PATH`**. **`README.md`**, **`apps/wayofpi-ui/README.md`**.
 
-- **Planning** — **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** and **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**: **critical** requirement to **rename Way of Pi backend** files, packages, and log/service identifiers so they are **not** named **`pi`** / **`ppi`** in ways that confuse them with **upstream Pi**; production checklist + backlog note.
+- **Planning** — **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** and **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**: **critical** requirement to **rename Way of Pi backend** files, packages, and log/service identifiers so they are **not** named **`pi`** / **`ppi`** in ways that confuse them with **upstream Pi**; production checklist + backlog note.
 
 - **Way of Pi upstream sync** — **`scripts/wop-pi-upstream.ts`**: **`check`** queries **`badlogic/pi-mono`** tags and **`@mariozechner/pi-coding-agent`** npm **`latest`** vs **`wop.upstream.lock.json`**; **`sync --apply`** downloads a tag and copies configured subtrees into **`vendor/wop-upstream/`** with **`pathRewrites`** (gitignored). **`just wop-upstream-check`**, **`just wop-upstream-sync`**. Docs **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)**, **`scripts/wop-upstream/README.md`**, **`scripts/README.md`**.
 
-- **Docs** — **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)** aggregates missing Way of Pi / **`apps/wayofpi-ui`** / script work; indexed from **`docs/README.md`**, **`docs/PLANNING.md`**, **`docs/REPO_INDEX.md`**, root **`README.md`**.
+- **Docs** — **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)** aggregates missing Way of Pi / **`apps/wayofpi-ui`** / script work; indexed from **`docs/README.md`**, **`docs/WOP_PLANNING.md`**, **`docs/REPO_INDEX.md`**, root **`README.md`**.
 
 ### Fixed
 
@@ -42,7 +66,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 - **`apps/wayofpi-ui`** — Shell **accent color** shifted from VS Code blue to **orange** (`#ea580c` / `#c2410c` hover). **`GET /api/file`** returns **base64** for **images** and other **binary** files; UI shows a **scrollable image preview** or a binary notice. Text editor: **wheel events** on the textarea **scroll** the shared gutter+editor region (fixes scroll when the pointer is over the buffer).
 
-- **Project origin** — Canonical upstream is **[zerwiz/wayofpi](https://github.com/zerwiz/wayofpi)** (`git` **`origin`**, root **`package.json`** **`repository`**, **`README.md`**, **`docs/PLANNING.md`**, **`docs/REPO_INDEX.md`**).
+- **Project origin** — Canonical upstream is **[zerwiz/wayofpi](https://github.com/zerwiz/wayofpi)** (`git` **`origin`**, root **`package.json`** **`repository`**, **`README.md`**, **`docs/WOP_PLANNING.md`**, **`docs/REPO_INDEX.md`**).
 
 - **`just pi`** — Bash wrapper **sources playground `.env`** before **`exec pi`** so **`OPENROUTER_API_KEY`** is always set when launching via **`just`**. **`agent/auth.json`** (gitignored) may also hold an **`openrouter`** API key for bare **`pi`** / Pi auth storage. **`docs/REPO_INDEX.md`**.
 

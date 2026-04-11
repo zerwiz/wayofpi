@@ -3,6 +3,10 @@ import { useCallback, type PointerEvent as ReactPointerEvent } from "react";
 /**
  * Draggable splitter between dock regions (Zed / VS Code–style resize).
  * Does not persist — parent updates layout state and may write `localStorage` on change.
+ *
+ * **Pointer contract:** `onDelta(dx, dy)` uses **screen coordinates**: **positive `dx`** = pointer moved **right**,
+ * **positive `dy`** = pointer moved **down**. Parents should resize so the **grabbed edge follows the pointer**
+ * (no inverted horizontal/vertical feel). See **`docs/WOP_TECHNICAL_UI.md`** § Splitter pointer parity.
  */
 export function DockSplitHandle({
 	orientation,
@@ -48,8 +52,8 @@ export function DockSplitHandle({
 
 	const base =
 		vertical
-			? "group relative z-10 w-2 shrink-0 cursor-col-resize bg-[#2d2d2d] hover:bg-[#ea580c]/40 active:bg-[#ea580c]/60"
-			: "group relative z-10 h-2 shrink-0 cursor-row-resize bg-[#2d2d2d] hover:bg-[#ea580c]/40 active:bg-[#ea580c]/60";
+			? "group relative z-30 w-2.5 shrink-0 cursor-col-resize bg-[#2d2d2d] hover:bg-[#3c3c3c] active:bg-[#454545]"
+			: "group relative z-30 h-3 shrink-0 cursor-row-resize bg-[#2d2d2d] hover:bg-[#3c3c3c] active:bg-[#454545]";
 
 	return (
 		<div
@@ -60,6 +64,14 @@ export function DockSplitHandle({
 			onPointerDown={onPointerDown}
 			className={className ? `${base} ${className}` : base}
 		>
+			<span
+				className={
+					vertical
+						? "pointer-events-none absolute inset-y-3 left-1/2 z-0 w-px -translate-x-1/2 bg-[#555] group-hover:bg-[#ea580c]/70 group-active:bg-[#ea580c]"
+						: "pointer-events-none absolute inset-x-3 top-1/2 z-0 h-px -translate-y-1/2 bg-[#555] group-hover:bg-[#ea580c]/70 group-active:bg-[#ea580c]"
+				}
+				aria-hidden
+			/>
 			<span className="sr-only">{ariaLabel}</span>
 		</div>
 	);

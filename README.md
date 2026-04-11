@@ -4,7 +4,7 @@
 
 This repo is a **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** workspace: extensions, skills, agents, and docs for customizing the **UI**, **agent orchestration**, **safety auditing**, and **cross-agent** integrations.
 
-**This repository also includes:** **[apps/wayofpi-ui/](apps/wayofpi-ui/)** (Way of Pi technical web shell — see **`apps/wayofpi-ui/README.md`**), **[docs/PLANNING.md](docs/PLANNING.md)** and **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** (Way of Pi product plan), a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **project-scanner** and **ralph** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for branches + **git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
+**This repository also includes:** **[apps/wayofpi-ui/](apps/wayofpi-ui/)** (Way of Pi technical web shell — see **`apps/wayofpi-ui/README.md`**), **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** and **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** (Way of Pi product plan), a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **project-scanner** and **ralph** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for branches + **git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
 
 <p align="center">
   <img src="./images/pi-logo.svg" alt="Pi Coding Agent extension playground" width="520">
@@ -95,7 +95,19 @@ Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openr
 
 ## Way of Pi web UI
 
-From the repo root, run **`./start-wayofpi-ui.sh`** to start **`apps/wayofpi-ui`** in dev mode (Bun API on port **3333** + Vite on **5173**), wait until the page responds, then open your default browser (default URL **`http://localhost:5173/`**). The script prepends **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. It sources the repo **`.env`** when present and sets **`WOP_WORKSPACE`** to the playground root unless you already exported **`WOP_WORKSPACE`**. Override the opened URL with **`WOP_UI_URL`**. Full setup: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
+From the repo root, run **`./start-wayofpi-ui.sh`** (or **`./start-full-system.sh`**, same entrypoint) to start **`apps/wayofpi-ui`** in dev mode (Bun API on port **3333** + Vite on **5173**), wait until the page responds, then open your default browser (default URL **`http://localhost:5173/`**). The script prepends **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. It sources the repo **`.env`** when present and sets **`WOP_WORKSPACE`** to the playground root unless you already exported **`WOP_WORKSPACE`**. Override the opened URL with **`WOP_UI_URL`**. Full setup, API table, Electron, and terminal env: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
+
+### Recent Way of Pi updates (see [CHANGELOG.md](CHANGELOG.md) § Unreleased)
+
+- **Simple vs Technical UI** — Top-bar toggle; **`wayofpi.uiMode`** in **`localStorage`** (**Simple** default: chat-first; **Technical**: activity bar, explorer, tool log, dense status). Build vs plan handoff: **[docs/WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)**.
+- **Technical workspace grid** — **`TechnicalWorkspaceGrid`**: up to **3×4** **`WorkspacePane`** cells (columns × rows), each with its own **`PanelDockLayout`** and file buffer; **View → Editor Layout** presets; persistence **`wayofpi.technical.workspaceGrid.v1`**. Explorer open targets the **focused** cell. **Draggable splitters** between panes resize row/column shares (**`rowWeights`** / **`colWeights`** in the same `localStorage` key). Dropping files, tabs, or pane grips on an **edge snap zone** when the grid is still **1×1** (or on the outer edge of an **N×1** / **1×N** strip) **grows the grid** so the implied neighbor cell exists; **cross-cell** tab drops can target another pane’s **tab bar** for insert-before order. Shell map: **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**.
+- **Modular docks** — Single **Dock** tab strip under the editor stack (legacy upper horizontal tool dock merged into **bottom**); shared **Zed-style** tab chrome, **in-pane** tab drag-and-drop, splitter handles that **follow the pointer**. Roadmap: **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)**.
+- **Editor and files** — Markdown **Source / Preview** toolbar; **`GET /api/file`** returns **base64** for images and other binary types; preview strip uses **`apiGet`** + **`AbortController`** so fast tab switches do not show stale reads.
+- **Workspace agents** — **`GET /api/agents`** mirrors playground agent discovery; chat can merge a chosen agent body into the system prompt (persona parity with TUI **system-select** style, not subprocess **`dispatch_agent`** yet). Team Pulse roster in chat from **`teams.yaml`**. Plans: **[docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md](docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md)**, **[docs/WOP_MULTI_AGENT_WEBSOCKET.md](docs/WOP_MULTI_AGENT_WEBSOCKET.md)**.
+- **Pi integration map** — HTTP/WebSocket inventory and phased wiring: **[docs/WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)**.
+- **Upstream Pi mirror** — **`just wop-upstream-check`**, **`just wop-upstream-sync`**: **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)**.
+- **Docs and naming** — Way of Pi planning entrypoints use the **`WOP_*`** prefix (**[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** hub, **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)**, **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**). Gaps and stubs: **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)**.
+- **Optional desktop shell** — Set **`WOP_USE_ELECTRON=1`** with the start script, or **`just wayofpi-electron`**; **`npm run electron:*`** targets in **`apps/wayofpi-ui/package.json`**.
 
 ---
 
@@ -120,9 +132,9 @@ Full index: **[docs/README.md](docs/README.md)**. Highlights:
 | **Changes** | **[CHANGELOG.md](CHANGELOG.md)** |
 | **Porting Codex subagents** | **[docs/PLAN_AWESOME_CODEX_SUBAGENTS.md](docs/PLAN_AWESOME_CODEX_SUBAGENTS.md)** (from [awesome-codex-subagents](https://github.com/zerwiz/awesome-codex-subagents)) |
 | **Agent / model routing** | **[docs/PLAN_AGENT_MODEL_ROUTING.md](docs/PLAN_AGENT_MODEL_ROUTING.md)** |
-| **Way of Pi** (web UI plan + `WOP_*`) | **[docs/PLANNING.md](docs/PLANNING.md)**, **[docs/PLAN_WEB_STANDALONE_SYSTEM.md](docs/PLAN_WEB_STANDALONE_SYSTEM.md)** — dev: **`./start-wayofpi-ui.sh`**, **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** |
+| **Way of Pi** (web UI plan + `WOP_*`) | **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)**, **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)**, **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** (shell), **[docs/WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)** (API map) — dev: **`./start-wayofpi-ui.sh`**, **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** |
 | **Upstream Pi** (GitHub/npm check + mirror) | **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)** — **`just wop-upstream-check`**, **`just wop-upstream-sync`** |
-| **Way of Pi backlog** | **[docs/WAY_OF_PI_OPEN_TODOS.md](docs/WAY_OF_PI_OPEN_TODOS.md)** |
+| **Way of Pi backlog** | **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)** |
 
 ---
 

@@ -9,6 +9,7 @@ Pi Coding Agent extension examples and experiments.
 
 ## Project Structure
 - Folder map (what lives where): **`docs/REPO_INDEX.md`**
+- **`apps/wayofpi-ui/`** — Way of Pi web shell (Bun + Vite/React); technical UI uses **`WorkspacePane`** (Zed-style tab stack) and optional **`TechnicalWorkspaceGrid`** (up to **3×4**, flex + **`DockSplitHandle`**, persisted **`rowWeights`/`colWeights`**, edge-drop grid grow, cross-cell tab moves). See **`apps/wayofpi-ui/README.md`**, **`docs/WOP_TECHNICAL_UI.md`**, **`.cursor/rules/wop-ui-modular-docks.mdc`**
 - `projects/` — Per-project documentation while Pi works on a codebase (`projects/<slug>/`, copy from `projects/_template/`). See `projects/README.md` and `.cursor/rules/pi-projects-docs.mdc`.
 - `extensions/` — Pi extension source files (.ts)
 - `.pi/extensions/` — Re-export shims (`export { default } from "../../extensions/…"`); do not put `themeMap.ts` here—Pi loads every `*.ts` as an extension. [extension locations](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md#extension-locations)

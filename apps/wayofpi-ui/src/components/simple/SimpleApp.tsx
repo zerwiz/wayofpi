@@ -12,6 +12,7 @@ import type { TreeNode } from "../../types/tree";
 import type { FilePreview } from "../../types/workspaceFile";
 import { SimpleChatView } from "./SimpleChatView";
 import { SimpleFilePanel } from "./SimpleFilePanel";
+import { SimplePlanWorkspacePane } from "./SimplePlanWorkspacePane";
 import { SimpleModelsView } from "./SimpleModelsView";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
 import type { SimpleTabId } from "./SimpleNavRail";
@@ -89,6 +90,12 @@ export function SimpleApp({
 	onSelectionPrefsChange,
 	onFindInFiles,
 	onReplaceInFiles,
+	teamsYamlWritePath,
+	workspaceReady,
+	onOpenTeamsYaml,
+	onCreateAgentDefinition,
+	onNewPlanFile,
+	newPlanFileDisabled,
 }: {
 	uiMode: UiMode;
 	setUiMode: (m: UiMode) => void;
@@ -139,10 +146,25 @@ export function SimpleApp({
 	onSelectionPrefsChange?: () => void;
 	onFindInFiles?: () => void;
 	onReplaceInFiles?: () => void;
+	/** Primary `teams.yaml` path for GET/PUT (matches `/api/agents` + multi-root). */
+	teamsYamlWritePath: string;
+	workspaceReady: boolean;
+	onOpenTeamsYaml?: () => void;
+	onCreateAgentDefinition?: () => void;
+	onNewPlanFile: () => void;
+	newPlanFileDisabled: boolean;
 }) {
 	const [leftOpen, setLeftOpen] = useState(true);
 	const [rightOpen, setRightOpen] = useState(true);
-	const { approvalQueue, setApprovalQueue, isDark, colorMode, setColorMode } = useSimplePreferences();
+	const {
+		approvalQueue,
+		setApprovalQueue,
+		isDark,
+		colorMode,
+		setColorMode,
+		markdownPaneMode,
+		setMarkdownPaneMode,
+	} = useSimplePreferences();
 	const {
 		chatWorkspaceLayout,
 		setChatWorkspaceLayout,
@@ -214,6 +236,7 @@ export function SimpleApp({
 	);
 
 	const emptyEditorHint = appearanceDark ? "text-[#858585]" : "text-[#616161]";
+	const showPlanWorkspace = chatMode === "plan" && !selectedPath;
 
 	return (
 		<div
@@ -277,6 +300,15 @@ export function SimpleApp({
 													onFindInFiles={onFindInFiles}
 													onReplaceInFiles={onReplaceInFiles}
 													columnLayout="besideChat"
+													markdownPaneMode={markdownPaneMode}
+													onMarkdownPaneModeChange={setMarkdownPaneMode}
+												/>
+											) : showPlanWorkspace ? (
+												<SimplePlanWorkspacePane
+													appearanceDark={appearanceDark}
+													columnLayout="besideChat"
+													canCreatePlan={!newPlanFileDisabled}
+													onNewPlanFile={onNewPlanFile}
 												/>
 											) : (
 												<div
@@ -312,6 +344,15 @@ export function SimpleApp({
 												onFindInFiles={onFindInFiles}
 												onReplaceInFiles={onReplaceInFiles}
 												columnLayout="stacked"
+												markdownPaneMode={markdownPaneMode}
+												onMarkdownPaneModeChange={setMarkdownPaneMode}
+											/>
+										) : showPlanWorkspace ? (
+											<SimplePlanWorkspacePane
+												appearanceDark={appearanceDark}
+												columnLayout="stacked"
+												canCreatePlan={!newPlanFileDisabled}
+												onNewPlanFile={onNewPlanFile}
 											/>
 										) : null}
 										<div className="flex min-h-0 flex-1 flex-col overflow-hidden">{chatViewEl}</div>
@@ -324,10 +365,14 @@ export function SimpleApp({
 									agents={agentsApi.data?.agents ?? []}
 									teams={agentsApi.data?.teams ?? {}}
 									teamsPath={agentsApi.data?.teamsPath ?? null}
+									teamsYamlWritePath={teamsYamlWritePath}
+									workspaceReady={workspaceReady}
 									loading={agentsApi.loading}
 									error={agentsApi.error}
 									onReload={agentsApi.reload}
 									onOpenAgentFile={openAgentFile}
+									onOpenTeamsYaml={onOpenTeamsYaml}
+									onCreateAgentDefinition={onCreateAgentDefinition}
 									appearanceDark={appearanceDark}
 								/>
 							) : null}
@@ -376,9 +421,6 @@ export function SimpleApp({
 									onToggleChatWorkspaceLayout={
 										activeTab === "chat" ? toggleChatWorkspaceLayout : undefined
 									}
-									onQuickRun={() => {
-										/* optional: wire run modal from parent later */
-									}}
 								/>
 							</div>
 						) : null}

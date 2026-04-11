@@ -1,4 +1,4 @@
-/** Imperative API for the workspace file editor (technical EditorPanel or simple file strip). */
+/** Imperative API for the workspace text buffer (technical `MainDockPanel` / `SimpleFilePanel`). */
 export type WorkspaceEditorRef = {
 	undo: () => boolean;
 	redo: () => boolean;
@@ -101,6 +101,18 @@ export type RunMenuHandlers = {
 	onDisableAllBreakpoints: () => void;
 	onRemoveAllBreakpoints: () => void;
 	onInstallAdditionalDebuggers: () => void;
+};
+
+/** Menu bar Settings → preferences, sidebars, and technical chrome (wired from App). */
+export type SettingsMenuHandlers = {
+	/** Simple UI **Settings** tab (appearance, approvals, switch to Technical). */
+	onOpenSimpleAppSettings: () => void;
+	/** Simple **AI Brains** tab (models / provider). */
+	onOpenAiBrains: () => void;
+	/** Simple **Projects** tab. */
+	onOpenProjects: () => void;
+	/** Open `.wayofpi/ui-views.json` in the Simple editor (optional). */
+	onEditWorkspaceViewsCatalog?: () => void;
 };
 
 /** Menu bar Help → … (documentation links; some items are inert in the browser). */

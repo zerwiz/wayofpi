@@ -2,6 +2,7 @@ import type { LogRow } from "../hooks/useWayOfPiSession";
 import type { BottomPanelTab } from "../types/technicalShell";
 import { EmbeddedTerminal } from "./EmbeddedTerminal";
 
+/** Body for tool tabs inside `PanelDockBand` — Problems / Output / Tool log / Terminal. */
 export function ToolPanelBody({ tab, logs }: { tab: BottomPanelTab; logs: LogRow[] }) {
 	if (tab === "tool_log") {
 		return (
@@ -45,6 +46,22 @@ export function ToolPanelBody({ tab, logs }: { tab: BottomPanelTab; logs: LogRow
 	}
 	if (tab === "terminal") {
 		return <EmbeddedTerminal />;
+	}
+	if (tab === "agent_team") {
+		return (
+			<div className="p-3 font-mono text-[12px] text-[#858585]">
+				<strong className="text-[#cccccc]">Team pulse</strong> belongs in the main workspace. Use the editor **+** menu →
+				Team pulse, or chat <strong className="text-[#cccccc]">Pane team</strong>.
+			</div>
+		);
+	}
+	if (tab === "agent_chat") {
+		return (
+			<div className="p-3 font-mono text-[12px] text-[#858585]">
+				<strong className="text-[#cccccc]">Agent chat</strong> is available in the main workspace pane (toolbar message
+				icon or **+** → Agent chat).
+			</div>
+		);
 	}
 	return (
 		<div className="text-[#858585]">

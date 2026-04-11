@@ -6,7 +6,7 @@ export interface ServerConfig {
 	ollamaHost: string;
 	ollamaModel: string;
 	openrouterModel: string;
-	/** True when `WOP_ALLOW_TERMINAL=1` — WebSocket `/ws/terminal` is allowed. */
+	/** True when `WOP_ALLOW_TERMINAL` is enabled (`1`, `true`, `yes`, `on`) — WebSocket `/ws/terminal` is allowed. */
 	terminalEnabled?: boolean;
 }
 

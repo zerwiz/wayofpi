@@ -4,73 +4,87 @@ This document describes the **IDE-style technical shell** in `apps/wayofpi-ui`: 
 
 **Modular dock vision + phased TODO plan:** **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** (parity, N strips, movable agent/sidebar, layout graph). **Cursor rule** for agents working in the UI tree: **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)**.
 
-For product scope and roadmap, see **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)**. For Explorer parity with common IDE trees, see **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)**. For **generated/binary files**, **Cursor/Zed-style** repo conventions, and **line-number parity** with docs, see **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)**. For **menu bar / command coverage**, see **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)**. For run/setup and API tables, see **`apps/wayofpi-ui/README.md`**.
+For product scope and roadmap, see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**. For Explorer parity with common IDE trees, see **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)**. For **generated/binary files**, **Cursor/Zed-style** repo conventions, and **line-number parity** with docs, see **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)**. For **menu bar / command coverage**, see **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)**. For run/setup and API tables, see **`apps/wayofpi-ui/README.md`**.
 
-## Unified horizontal docks — plan (shipped baseline + next)
+### Terminology (plans + UX)
 
-**Intent:** One **horizontal tool/file dock** at the **bottom of the editor stack** only (**`UnifiedHorizontalDock`** `slot="bottom"` + **`DockableToolStrip`**). The **upper** band under the menu was **removed**; legacy `strips.top` is **folded into `strips.bottom`** on load/save (`collapseTopToolDockIntoBottom` in **`technicalLayoutStorage.ts`**). Height is **`TechnicalDockLayout.horizontalToolDockHeightsPx.bottom`** (the `top` key is still clamped when reading/writing layout JSON for backward compatibility but is unused in the UI). When the agent is docked **right**, the dock does **not** sit under the agent. The **agent column** is **chat-only**. **Drag-and-drop** reorders entries in the **bottom** strip (the `top` zone in types normalizes to **`bottom`** for all mutations).
+- **Zed’s model (official):** A window’s **`Workspace`** has a **center `PaneGroup`** (editor tabs, splits, items) and **`DockStructure { left, right, bottom }`** — each **dock** holds **`Panel`** entries (e.g. project panel, terminal **panel**). See [Introducing Zed’s new panel system](https://zed.dev/blog/new-panel-system) (v0.88+), persistence shapes in [`DockStructure` / `DockData`](https://github.com/zed-industries/zed/blob/main/crates/workspace/src/persistence/model.rs). **Terminal** can be **panel** (docked, `terminal.panel: toggle`) or **center pane** tab (`workspace: new center terminal`) — [Zed docs: *Terminal Panel vs Center Terminal*](https://zed.dev/docs/terminal.html).
+- **Way of Pi mapping (shipped):** The **main column** is **`WorkspacePane`**: one **tab row** mixes **file** and **tool** tabs (**terminal**, **output**, **problems**, **tool_log**) with the same **Dock**-family chrome (**`WOP_UNIFIED_DOCK_BAND_LABEL`**, **`dockChrome.ts`**). **`PanelDockLayout`** v3 is **`{ tabs: PanelTab[]; activeIndex }`** (legacy **`strips` / `activeIndexByBand`** migrates on read in **`panelDockLayout.ts`**). **Optional multi-pane:** **`TechnicalWorkspaceGrid`** — up to **3 columns × 4 rows** (**`WORKSPACE_GRID_MAX_COLS`** / **`WORKSPACE_GRID_MAX_ROWS`**); layout is a **nested flex** tree (rows × columns) with **`DockSplitHandle`** splitters so users can **resize** pane shares; optional **`rowWeights`** / **`colWeights`** arrays persist in **`wayofpi.technical.workspaceGrid.v1`**. Each cell mounts **`WorkspacePane`** + its own dock slice + (when grid > 1×1) its own **`useFileEditor`**. Each cell’s surface is wrapped by **`WorkspaceCellDropSurface`** (Zed-style **edge/center snap overlay** for drag-over; drop routing uses **`surfaceCellIndex` + `WopDropZone`** in **`App.tsx`**). **Edge drop growth:** dropping a **file**, **tab**, or **pane swap** on an outer **edge** when the grid is **1×1** (or on the outer edge of an **N×1** / **1×N** strip) **`growWorkspaceGridForEdgeDrop`** expands the grid so the implied neighbor exists. **Cross-cell tabs:** dragging a tab to another cell’s **tab bar** (**`data-wop-workspace-tab-bar`**) supports **insert-before** order via **`onCrossCellTabMoveBetweenCells`**. Legacy-only **`wayofpi.panelDock`** seeds cell 0. **Agent `ChatPanel`** remains a docked region (right/bottom). **Explorer + activity bar** ≈ left sidebar. Menus / save / revert follow the **focused** grid cell via **`TechnicalWorkspaceCellSnapshot`**.
+- **Target (still open):** Arbitrary pane **DAG** / free **split graph** (not only fixed **cols×rows**), **N** movable horizontal strips, agent **left** / sidebar **right** — **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** Phases **C–Z**. See **`.cursor/rules/wop-ui-modular-docks.mdc`**.
 
-**Product target** (movable agent, N strips, sidebar edge, full parity): see **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** — this section stays the **as-built** summary.
+## Main column: `WorkspacePane` + optional workspace grid
 
-### Shipped (current code)
+**As-built:** There is **no** separate “main editor” vs “panels strip” in the center — **files and tools share one stack** per cell (**Zed-style**). **DnD** reorders tabs **within** that stack (**`WorkspacePane.tsx`**, **`applyPanelTabMove`**).
 
 | Item | Detail |
 |------|--------|
-| **Slots** | **UI:** **`bottom`** only (under editor stack). **Types** still use **`HorizontalToolDockSlot`**: `strips.top` is kept **empty**; **`top`** is normalized to **`bottom`** on all mutations. Legacy **`right`** / **`middle`** / **`top`** panel zones migrate to **`bottom`**. |
-| **Chrome** | **`UnifiedHorizontalDock`** (`slot="bottom"`): **`DockRegionTitleBar`** + **`DockableToolStrip`**. **+** adds **Files** and **Panels** into the bottom strip. |
-| **Strip model** | **`ToolDockLayout.strips.bottom`**: ordered **`DockStripEntry`**. **`activeIndexBySlot.bottom`**. On read/write, **`collapseTopToolDockIntoBottom`** merges any legacy **`strips.top`** into **`bottom`** (deduped). |
-| **File body in strip** | **`StripFilePreview`**: read-only **`GET /api/file`** for `file` entries; activating a file tab can set **`selectedPath`** for the main editor. |
-| **Defaults** | **`TechnicalDockLayout`**: `horizontalToolDockHeightsPx: { top: 280, bottom: 140 }` (`readDockLayout` / `wayofpi.technical.dockLayout`). Legacy JSON keys `topPanelHeightPx` / `bottomPanelHeightPx` are still read on load. |
-| **Default tools** | **`ToolDockLayout`**: **terminal + output** → **`top`**; **problems + tool_log** → **`bottom`** (defaults in **`technicalLayoutStorage`**). |
-| **Migration** | Legacy **`middle`** → **`top`**; legacy **`right`** (tools under agent) → **`bottom`**. Removed: **`bandOrderTopMiddle`**, **`middlePanelHeightPx`**, **`bottomToolStripAttach`**, **`rightChatToolsCollapsed`**, **`rightToolStripHeightPx`**, **`rightToolColumnWidthPx`**, **`rightActiveTab`**. |
-| **Removed UI** | **`TechnicalDockPanelFrame`** (“Workspace document” / “Agent session” title rows) — center editor and chat use a simple bordered container. **`DockBandHandle`** (swap top/middle) deleted. **Terminal “Play”** strip button removed in favor of **+** / focus commands. |
-| **DnD reliability** | **`dataTransferHasType`** (`utils/dataTransferTypes.ts`) — `DataTransfer.types` is not always an array with `.includes`. Strip payload: **`application/x-wop-dockstrip-entry`** (JSON **`DockStripEntry`**). |
-| **Toggles** | Status bar + command palette + menus: one visibility flag per slot (`horizontalToolDockVisible` in `App.tsx`). Bands can show **empty** ( **+** only ) when visible. |
+| **Components** | **`WorkspacePane`** (`components/WorkspacePane.tsx`) — tab row (**`data-wop-workspace-tab-bar`**) + **`WorkspaceTextBuffer`** / **`ToolPanelBody`**. **`TechnicalWorkspaceGrid`** (`components/TechnicalWorkspaceGrid.tsx`) — nested **flex** rows/columns, **`DockSplitHandle`** between panes, focus ring on active cell, **`externalOpenFile`** so Explorer / dock actions open into the **focused** cell. **`WorkspaceCellDropSurface`** per cell — snap overlay + **`onDropPayload(e, surfaceCellIndex, zone)`**. |
+| **Layout presets** | **View → Editor Layout**: **Single** resets agent UI preset **and** workspace grid to **1×1**. **Workspace grid (2×2)**, **(3×4 max)**, **Three columns (workspace)** (3×1), **Three rows (workspace)** (1×3) — **`EditorLayoutPreset`** in **`types/technicalShell.ts`**, handled in **`App.tsx`** **`applyEditorLayoutPreset`**. **Grid (2×2)** next to them still refers to **agent panel** layout only (unchanged). |
+| **Persistence** | **`writeWorkspaceGridState` / `readWorkspaceGridState`** — clamps **1–3** cols, **1–4** rows; **`cells[]`** length **`cols * rows`**, row-major; optional **`rowWeights`** / **`colWeights`**. Changing grid shape from the menu clears custom weights (equal split). **`writePanelDockLayout`** remains for migration / compatibility paths. |
+| **`TechnicalDockLayout`** | **`readDockLayout`** / **`wayofpi.technical.dockLayout`** — agent dock side, **`leftSidebarWidthPx`**, **`chatSizePx`**, **`horizontalToolDockHeightsPx`** (**`top`** / **`bottom`** keys retained in JSON for splitter state; the **main column** no longer hosts separate **`PanelDockBand`** rows around the editor). |
 
 ### Next (not shipped)
 
 | Item | Detail |
 |------|--------|
-| **Visual parity** | Editor tab row vs dock tab row should feel **equal** (single chrome row, matching styles) — **Phase A** in **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**. |
-| **File strip = editor-class** | Optional **`WorkspaceTextBuffer`** read-only + breadcrumbs in strip — **Phase B** in same plan. |
-| **N strips / layout graph** | More than two horizontal strips, side-by-side stacks, persisted **`DockStripInstance[]`** — **Phase C**. |
-| **Movable agent + sidebar** | Agent **left**; primary sidebar **right**; data-driven region order — **Phase D**. |
-| **Full pane grid** | Multi-column editor, split drop targets — **Phase E**; see **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)**. |
+| **Phase A–D gaps** | **A3–A4**, **N** movable strips, agent **left**, sidebar **right** — **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**. |
+| **Beyond fixed grid** | **Arbitrary** split graph (not only **cols×rows**); DnD to **create** new splits beyond edge-grow rules; unified **pane DAG** persistence — **Phase E / Z**. *(Shipped interim: cross-cell **tab** moves, **edge-grow** on 1×1 / N×1 / 1×N outer edges, **row/col resize** via splitters.)* |
 
 ---
 
-## Target: one strip model for files and tools (movable between docks)
+## Target: modular layout graph (beyond fixed grid)
 
-**Shipped baseline:** **`DockStripEntry`** unifies **tool** and **file** tabs; two zones **`top` \| `bottom`**; DnD between zones; file body is **`StripFilePreview`** (read-only), not full **`EditorPanel`**.
+**Shipped today:** One **`PanelTab`** stack **per workspace cell** (see § Main column). **Multi-cell** layout is a **fixed cols×rows** matrix implemented as **nested flex** + **`DockSplitHandle`** (resizable shares), not yet a free-form pane DAG.
 
-**Long-term goal (modular shell):** Treat **major regions** (editor stack, strips, agent, primary sidebar) as **docks** in a **layout graph**; support **N** strips, **movable agent** (e.g. left), **sidebar on right**, and **editor splits**. Roadmap and checklists: **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**.
+**Long-term:** **N** strips, **movable agent**, **sidebar edge**, **arbitrary splits** — **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**.
 
 | | Today (`App.tsx`) | Target |
 |---|-------------------|--------|
-| **Tool + file strips** | **`DockStripEntry[]`** per **`top` / `bottom`**; DnD; **`activeIndexBySlot`**. | **N** strip instances; optional side-by-side strips; same entry model. |
-| **Open files (main)** | Single **`selectedPath`** + one **`EditorPanel`** in the center band. | Multi-column / split editors; optional: open file list as first-class layout nodes. |
-| **File in strip** | Read-only preview + “open in main” via tab activation. | Optional **`WorkspaceTextBuffer`** parity, explicit **Open in main editor** — **Phase B** in plan doc. |
-| **Persistence** | **`toolDock`** + **`dockLayout`** + ephemeral **`selectedPath`**. | Merged **layout graph**, optional per-workspace — **Phases C–E**. |
+| **Tabs** | **`PanelDockLayout.tabs`** + **`activeIndex`** per cell. | Same **`PaneItem`** model in a **tree** / graph. |
+| **Open files** | **1×1:** App **`selectedPath`** + one **`useFileEditor`**. **Grid:** per-cell path + hook; **focused** cell syncs global menus. | Optional quick-open as layout nodes; arbitrary graph moves beyond fixed grid. |
+| **Persistence** | **`workspaceGrid.v1`** + **`wayofpi.panelDock`** migration + **`dockLayout`**. | Single merged **layout graph** JSON. |
 
 **Implementation types (shipped names in code):**
 
 ```ts
-// apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts
-type DockStripEntry =
-  | { type: "tool"; id: ToolPanelId }
+// apps/wayofpi-ui/src/utils/panelDockLayout.ts
+type PanelTab =
+  | { type: "tool"; id: ToolTabId }
   | { type: "file"; path: string };
 
-type ToolPanelZone = "top" | "bottom"; // placement keys today; generalize in Phase C
+interface PanelDockLayout {
+  tabs: PanelTab[];
+  activeIndex: number;
+}
 ```
 
 ## Scope
 
 | Surface | Location | Notes |
 |---------|----------|--------|
-| **Technical UI** | `src/App.tsx` when `useUiMode().mode === "technical"` | **Dock layout**: activity + left activities, **upper** tool band (full `main` width), **center row** = editor stack (with **lower** tool band under the editor only) + optional **`ChatPanel`** when docked **right**, **`ChatPanel`** (right or bottom), status bar. |
+| **Technical UI** | `src/App.tsx` when `useUiMode().mode === "technical"` | **Dock layout**: activity bar + primary left sidebar, **main column** = **`TechnicalWorkspaceGrid`** (if cols×rows > 1) or one **`WorkspacePane`** + optional **`ChatPanel`**, status bar. |
 | **Simple UI** | `src/components/simple/SimpleApp.tsx` | Chat-forward layout; shares hooks and tree/file/session state with `App`. **`App.tsx`** owns **`simpleTab`** and **`CommandPalette`** for Simple mode. Not detailed further here. |
 
 Both modes share **`useWorkspaceTree`**, **`useFileEditor`**, **`useWayOfPiSession`**, and **`useServerConfig`** instantiated in `App.tsx`.
+
+## Splitter pointer parity (`DockSplitHandle`)
+
+**Contract:** **`onDelta(dx, dy)`** uses pointer movement in **screen space** — **positive `dx`** = moved **right**, **positive `dy`** = moved **down** (see `DockSplitHandle.tsx`).
+
+**Product rule:** the **splitter edge** should track the pointer (**same direction** as the mouse), not feel inverted.
+
+| Splitter | Layout order (left / top → right / bottom) | Correct delta use (typical) |
+|----------|--------------------------------------------|-----------------------------|
+| **Vertical** | **Left pane** \| handle \| **right pane** (e.g. editor \| \| agent when chat docked right) | Pointer **right** → boundary moves **right** → left grows, right shrinks → apply **`−dx`** to the **right** pane’s persisted **width** if that state stores the right column width. |
+| **Vertical** | **Left sidebar** \| handle \| **main** | Pointer **right** → sidebar **wider** → **`+dx`** on **`leftSidebarWidthPx`**. |
+| **Horizontal** | **Upper** region \| handle \| **lower** (legacy **`horizontalToolDockHeightsPx`** fields) | Pointer **down** → grow the **lower** persisted height when that split is wired to **`dockLayout`**. |
+| **Horizontal** | **Main workspace** \| handle \| **bottom chat** | **`chatSizePx`**: **`−dy`** in **`App.tsx`** when **`chatDock === "bottom"`** (sash drag direction matches the live strip). |
+| **Horizontal** | **Workspace row *r*** \| handle \| **workspace row *r+1*** (multi-row grid) | Pointer **down** → grow the **lower** row’s flex weight — **`applyWorkspaceGridRowResizeDelta`** (**`workspaceGridStorage.ts`**). |
+| **Vertical** | **Workspace column *c*** \| handle \| **workspace column *c+1*** (multi-column grid) | Pointer **right** → grow the **right** column’s flex weight — **`applyWorkspaceGridColResizeDelta`**. |
+
+**Simple UI** side-by-side chat: chat is **left** of the handle, editor **right** — **`applyChatSplitDelta`** widens chat with **`+dx`** when dragging the handle **right** (edge follows pointer).
+
+If a new split inverts by mistake, fix the sign in the **`onDelta`** handler rather than changing **`DockSplitHandle`**.
 
 ## Runtime topology
 
@@ -90,10 +104,8 @@ flowchart TB
 			LP[Left dock: Explorer / Search / SCM / Extensions / Settings]
 			subgraph main [Main flex-1 column]
 				subgraph centerRow [Editor + agent column flex row]
-					subgraph edStack [Editor stack flex-1 column]
-						ED[EditorPanel]
-						TS[Tool dock bottom slot optional]
-						ED --> TS
+					subgraph edStack [Main workspace flex-1 column]
+						ED[WorkspacePane ×1 or TechnicalWorkspaceGrid]
 					end
 					subgraph agentCol [Agent column when chat right]
 						CH[ChatPanel chat only]
@@ -109,7 +121,7 @@ flowchart TB
 
 - **Root container**: `data-ui-mode`, `wop-density-compact`, VS Code–like palette (`#1e1e1e` background, **`#ea580c` focus accents** — warm orange instead of default blue).
 - **Left dock** is chosen by `TechnicalActivity` (see below); width comes from **`dockLayout.leftSidebarWidthPx`**.
-- **Tool strip** today: one **`UnifiedHorizontalDock`** (**`bottom`** only, under **`EditorPanel`**). **Mixed** **`DockStripEntry`** (tools + optional pinned files); see § *Unified horizontal docks*.
+- **Main workspace:** one or more **`WorkspacePane`** instances (**`TechnicalWorkspaceGrid`** or single pane). **Mixed** **`PanelTab`** per pane; **DnD** reorders within the row; **cross-cell** tab moves and **edge snap** drops (see § Main column). Same **Dock** chip (**`dockChrome.ts`**).
 
 ### Primary sidebar visibility (common IDE pattern)
 
@@ -131,30 +143,31 @@ Persistence: **`localStorage`** key **`wayofpi.technical.leftSidebarVisible`** (
 
 Full-featured shells use a **pane grid**: editors, terminals, and auxiliary views in **dock regions**, often with **draggable tabs**, **splits**, and **splitters**, plus a **bottom panel** and **secondary sidebar** (e.g. for session chat) — layout often persisted per workspace.
 
-Way of Pi does **not** implement arbitrary tab drag-and-drop or N-way splits yet. The technical UI implements a **small, explicit subset** that matches common expectations:
+Way of Pi does **not** implement an arbitrary **pane DAG** or N-way **free** splits yet. The technical UI implements a **growing subset** that matches common expectations:
 
 | Capability | Behavior |
 |------------|----------|
-| **Dock region** | Session / agent chat (**`ChatPanel`**) docks **to the right** (secondary sidebar) or **along the bottom** (below the editor stack and **lower** tool band). |
-| **Resize** | **`DockSplitHandle`** splitters: vertical handle between editor stack and right chat; horizontal handle between editor stack and bottom-docked chat; horizontal handles on each tool-dock band. |
+| **Dock region** | Session / agent chat (**`ChatPanel`**) docks **to the right** (secondary sidebar) or **along the bottom** (below the editor stack and **Panels** strip when present). |
+| **Resize** | **`DockSplitHandle`** splitters: vertical handle between main workspace and right chat; horizontal handle between main workspace and bottom-docked chat; **between workspace grid rows/columns** (see § Splitter pointer parity). **`horizontalToolDockHeightsPx`** keys remain in persisted **`dockLayout`** for compatibility. |
 | **Hide / show** | Header buttons on **`ChatPanel`** (dock icons + hide) and **View** menu + command palette. When hidden, a slim **Agents** strip on the right restores the panel. |
 | **Persistence** | **`localStorage`** key **`wayofpi.technical.dockLayout`** — agent geometry, sidebar width, **`horizontalToolDockHeightsPx`**. Helpers in **`src/utils/technicalLayoutStorage.ts`**. |
 
-**Roadmap:** unify **file** and **tool** tabs (this doc § Target); then optional workspace-specific layout, splits, and Zed-like **zoom** — see **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** and **[WAY_OF_PI_OPEN_TODOS.md](WAY_OF_PI_OPEN_TODOS.md)**.
+**Roadmap:** unify **file** and **tool** tabs (this doc § Target); then optional workspace-specific layout, splits, and Zed-like **zoom** — see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** and **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)**.
 
 ## Types and navigation
 
 Defined in **`src/types/technicalShell.ts`** and **`src/utils/technicalLayoutStorage.ts`**:
 
 - **`TechnicalActivity`**: `"explorer" | "search" | "scm" | "extensions" | "planning" | "settings"` — drives the left dock content and **`ActivityBar`** selection.
-- **`BottomPanelTab`** (tool ids in menus / **`ToolPanelBody`**): `"problems" | "output" | "tool_log" | "terminal"`. Strip persistence uses **`DockStripEntry`** (`tool` \| `file`).
-- **`ToolPanelZone`** (= **`HorizontalToolDockSlot`**): `"top" | "bottom"` — which **slot** hosts a strip; **`ToolDockLayout`** persists **`strips`**, derived **`panels`** visibility/order for tools, and **`activeIndexBySlot`** (legacy **`activeTabBySlot`** in JSON is migrated on read).
+- **`BottomPanelTab`** (tool ids in menus / **`ToolPanelBody`**): `"problems" | "output" | "tool_log" | "terminal"`.
+- **`EditorLayoutPreset`** — includes **`workspace_grid_*`** presets for the multi-pane grid; see **`types/technicalShell.ts`**.
+- **Legacy:** **`PanelBand`** **`top` \| `bottom`**, **`PANEL_BAND_CHROME`**, **`HorizontalToolDockSlot`** — still referenced for migration and **`technicalLayoutStorage`** field names; **not** the center column layout model anymore.
 
 ## Component responsibilities
 
 | Component | File | Role |
 |-----------|------|------|
-| **MenuBar** | `components/MenuBar.tsx` | File/workspace actions, UI mode toggle (Simple/Technical), **primary sidebar** toggle (technical), **agent panel** dock (right/bottom) and visibility (technical), activity shortcuts, command palette trigger. **`horizontalToolDockToggles`** drives **upper** / **lower** band visibility in View / Terminal menus. |
+| **MenuBar** | `components/MenuBar.tsx` | File/workspace actions, UI mode toggle (Simple/Technical), **primary sidebar** toggle (technical), **agent panel** dock (right/bottom) and visibility (technical), **View → Editor Layout** (agent presets + **workspace grid** presets), activity shortcuts, command palette trigger. |
 | **CommandPalette** | `components/CommandPalette.tsx` | Modal command list; items are built in `App.tsx` (`commandItems`). |
 | **ActivityBar** | `components/ActivityBar.tsx` | Maps each `TechnicalActivity` to an icon button; active indicator strip. |
 | **ExplorerSidebar** | `components/ExplorerSidebar.tsx` | Explorer header, collapsible workspace folder section, new file/folder toolbar, **`FileTree`**, Outline/Timeline placeholders. |
@@ -163,22 +176,24 @@ Defined in **`src/types/technicalShell.ts`** and **`src/utils/technicalLayoutSto
 | **ScmSidePanel** | `components/TechnicalSidePanels.tsx` | SCM placeholder / refresh hook. |
 | **ExtensionsSidePanel** | `components/TechnicalSidePanels.tsx` | Extensions placeholder. |
 | **SettingsSidePanel** | `components/TechnicalSidePanels.tsx` | Shows server config / workspace path. |
-| **EditorPanel** | `components/EditorPanel.tsx` | Text buffer UI, save, dirty state, cursor reporting. |
-| **ChatPanel** | `components/ChatPanel.tsx` | Session / agent chat; **docked** right or bottom via **`technicalDock`**; dock toolbar (**PanelRight** / **PanelBottom** / hide); transcript, send/stop, **New session**. **Team Pulse** tab: roster grid aligned with Pi TUI **`agent-team`** cards ([`AgentTeamPulseGrid.tsx`](../apps/wayofpi-ui/src/components/AgentTeamPulseGrid.tsx)) — data from **`/api/agents`** `teams` + agent `.md` descriptions; live run/stream state is **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)**. |
+| **WorkspacePane** | `components/WorkspacePane.tsx` | **Main workspace:** **`h-9`** tab row (**Dock** chip, **`dockChrome.ts`**) + **`WorkspaceTextBuffer`** / **`ToolPanelBody`**; Zed-style tab DnD (**`PANEL_TAB_DND_TYPE`**). **`data-wop-workspace-pane`**. |
+| **TechnicalWorkspaceGrid** | `components/TechnicalWorkspaceGrid.tsx` | **3×4 max** matrix of **`WorkspacePane`** cells (flex + **`DockSplitHandle`**); focus ring; **`onFocusedReport`** syncs menus; **`externalOpenFile`** for explorer → focused cell; **`onWorkspaceGridRowResize`** / **`onWorkspaceGridColResize`** from **`App`**. |
+| **WorkspaceCellDropSurface** | `components/WorkspaceCellDropSurface.tsx` | Per-cell Zed-style **snap zones** on drag-over; delegates drop to **`onWorkspaceSurfaceDrop`** with **`surfaceCellIndex`** + **`WopDropZone`**; overlay suppressed over **`data-wop-workspace-tab-bar`** so tab-strip insert hints win. |
+| **ChatPanel** | `components/ChatPanel.tsx` | Session / agent chat; **docked** right or bottom via **`technicalDock`**; dock toolbar (**PanelRight** / **PanelBottom** / hide); transcript, send/stop, **New session**. **Team Pulse** tab: roster grid ([`AgentTeamPulseGrid.tsx`](../apps/wayofpi-ui/src/components/AgentTeamPulseGrid.tsx)); live multi-agent streams — **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)**. |
 | **DockSplitHandle** | `components/DockSplitHandle.tsx` | Pointer-driven splitters between dock regions (resize). |
-| **UnifiedHorizontalDock** | `components/UnifiedHorizontalDock.tsx` | **Single** dock-band shell (`slot`: upper \| lower): title row + **`DockableToolStrip`**. |
-| **DockableToolStrip** | `components/DockableToolStrip.tsx` | Tab bar + **+** menu; drag reorder / move **tool and file** entries between **`top` / `bottom`**; hosts **`ToolPanelBody`** or **`StripFilePreview`**. |
-| **StripFilePreview** | `components/StripFilePreview.tsx` | Read-only file body for **`file`** strip entries. |
-| **ToolPanelBody** | `components/ToolPanelBody.tsx` | Content for Problems / Output / Tool log / Terminal inside a strip. |
+| **PanelDockBand** | `components/PanelDockBand.tsx` | Legacy / auxiliary strip host (same **`PanelTab`** model); **not** used for the main editor column in current **`App.tsx`**. |
+| **ToolPanelBody** | `components/ToolPanelBody.tsx` | Problems / Output / Tool log / Terminal body inside an **active tool tab** of **`WorkspacePane`**. |
+| **StripFilePreview** | `components/StripFilePreview.tsx` | Read-only file preview helper (still used where **`PanelDockBand`** or previews need **`apiGet`**). |
 | **DockRegionTitleBar** | `components/DockRegionTitleBar.tsx` | Shared chrome for docked regions. |
-| **BottomPanel** | `components/BottomPanel.tsx` | Standalone tabbed strip component (simpler than **`DockableToolStrip`**); **not** the primary technical-shell host—**`App.tsx`** uses **`DockableToolStrip`**. |
-| **StatusBar** | `components/StatusBar.tsx` | **Zed-style** icon cluster (project / terminal / plan / chat / search / Git / diagnostics / check), **`horizontalDockStrip`** toggles per tool-dock **slot**, tool tabs, connection (**Activity**), workspace path; right: diagnostics badge, **Settings**, **Sparkles** (agent), line/col/language. Behaviour aligned with [Zed visual customization](https://zed.dev/docs/visual-customization) status bar panel buttons (`project_panel`, `terminal`, `agent`, `search`, `git_panel`, `diagnostics`, etc.). |
+| **StatusBar** | `components/StatusBar.tsx` | **Zed-style** icon cluster, **`technicalToolDock`** focus (**`toolTabVisible`** on **focused** cell’s dock when grid active), connection, workspace path; line/col/language. [Zed visual customization](https://zed.dev/docs/visual-customization) alignment. |
 
 Supporting utilities:
 
 - **`src/utils/sortTreeNodes.ts`** — directory-first tree ordering.
 - **`src/utils/posixPath.ts`** — `posixDirname`, `ancestorDirPaths` (browser-safe, workspace paths use `/`).
 - **`src/utils/flattenTree.ts`** — used by search (and Simple mode file list helpers).
+- **`src/utils/workspaceGridStorage.ts`** — **`readWorkspaceGridState`**, **`writeWorkspaceGridState`**, **`resizeWorkspaceGrid`**, **`growWorkspaceGridForEdgeDrop`**, **`applyWorkspaceGridRowResizeDelta`**, **`applyWorkspaceGridColResizeDelta`**, **`remapWorkspaceCellIndexAfterEdgeGrow`** (**`wayofpi.technical.workspaceGrid.v1`**).
+- **`src/utils/panelDockLayout.ts`** — **`PanelDockLayout`**, **`readPanelDockLayout`**, **`writePanelDockLayout`**, tab moves/add/close helpers, **`cloneLayout`**.
 
 ## State coordination (`App.tsx`)
 
@@ -186,17 +201,19 @@ Supporting utilities:
 
 | State | Purpose |
 |-------|---------|
-| `selectedPath` | Open file path (relative to workspace); feeds **`useFileEditor`**. |
+| `workspaceGrid` | **`{ cols, rows, cells, rowWeights?, colWeights? }`** — **`readWorkspaceGridState`**; **`writeWorkspaceGridState`** on patch. |
+| `wsFocusedCell` | Index **0 … cols×rows−1**; Explorer / open-file signals target this cell; **`panelDock`** derived as **`cells[focused]`** for **1×1** or multi. |
+| `techWsSnapshot` | **`TechnicalWorkspaceCellSnapshot`** from focused cell — drives **`effSelectedPath`**, **`effDirty`**, save/revert when grid **> 1×1**. |
+| `workspaceOpenSignal` | **`{ path, rev }`** — bumps focused cell to open a file from explorer / dock dialogs. |
+| `selectedPath` | Open file path; with **1×1** grid feeds **`useFileEditor`**; with multi-cell synced from focused cell snapshot. |
 | `explorerContextDir` | Target folder for **New File** / **New Folder**; updated when selecting a file (parent dir) or clicking a directory in the tree. |
 | `treeExpand` | `{ rev, paths }` to force-expand folder paths after creating a file/folder. |
 | `activity` | Current **`TechnicalActivity`** (left panel). |
 | `leftSidebarVisible` | **Technical:** activity bar + left panel visible; persisted via **`technicalLayoutStorage`**. |
 | `commandPaletteOpen` | Command palette visibility. |
-| `horizontalToolDockVisible` | Per-slot visibility for **upper** / **lower** tool-dock bands (same system; splitters are part of each band’s block in the tree). |
-| `toolDock` | **`ToolDockLayout`**: **`strips`** (**`DockStripEntry[]`** per slot), **`activeIndexBySlot`**, derived **`panels`** for tools; persisted as **`wayofpi.technical.toolDock`**. |
 | `dockLayout` | **`TechnicalDockLayout`**: agent dock, sidebar width, **`horizontalToolDockHeightsPx`**; persisted as **`wayofpi.technical.dockLayout`**. |
 | `simpleTab` | Simple UI only: active **`SimpleTabId`** for the left nav rail (lifted in **`App.tsx`**). |
-| `line`, `col` | Cursor position from **`EditorPanel`** for **`StatusBar`**. |
+| `line`, `col` | Cursor position from **focused** **`WorkspacePane`** (**`onCursor`** / **`onTechFocusedCursor`**) for **`StatusBar`**. |
 
 **Keyboard (window-level):**
 
@@ -223,7 +240,7 @@ Supporting utilities:
 ## Styling conventions
 
 - **Tailwind** utility classes throughout; no separate design-token file yet.
-- Technical shell mimics **Dark+** style: grays `#252526`, `#2d2d2d`, `#3c3c3c` borders; blue `#007acc` for focus/active.
+- Technical shell mimics **Dark+** style: grays `#252526`, `#2d2d2d`, `#3c3c3c` borders; active **workspace** tabs use warm orange **`#ea580c`** top border (**`WorkspacePane`**). Legacy blue **`#007acc`** may still appear in menus/hover.
 - **`ChatPanel`** and tool bodies receive **`uiMode`** where shared components adjust density or copy.
 
 ## Adding a feature (checklist)
@@ -239,8 +256,8 @@ Supporting utilities:
 | Doc | Use |
 |-----|-----|
 | **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)** | Explorer UX vs Cursor/Zed. |
-| **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** | Product plan, phases, production. |
-| **[WAY_OF_PI_OPEN_TODOS.md](WAY_OF_PI_OPEN_TODOS.md)** | Known gaps and stubs. |
+| **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** | Product plan, phases, production. |
+| **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** | Known gaps and stubs. |
 | **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** | Modular dock TODO: parity, N strips, movable agent/sidebar, phases. |
 | **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)** | Agent rule when editing **`apps/wayofpi-ui`**. |
 | **`apps/wayofpi-ui/README.md`** | Commands, env vars, API table, WebSocket summary. |

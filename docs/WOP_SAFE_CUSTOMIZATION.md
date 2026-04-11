@@ -34,4 +34,4 @@ For any change to **`settings.json`**, **`agent/settings.json`**, **`packages`**
 ## Related
 
 - **[extensions/pi-doctor.ts](../extensions/pi-doctor.ts)** — inspiration for Diagnostics checks.
-- **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** — full backlog and UI surfaces.
+- **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** — full backlog and UI surfaces.

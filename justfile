@@ -10,6 +10,19 @@ wop-upstream-check:
 wop-upstream-sync *args:
     bun scripts/wop-pi-upstream.ts sync {{args}}
 
+# Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofpi-ui `npm run dev`
+wayofpi-full:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    exec "{{justfile_directory()}}/start-full-system.sh"
+
+# Way of Pi web shell in an Electron window (same stack as wayofpi-full; no default browser open)
+wayofpi-electron:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export WOP_USE_ELECTRON=1
+    exec "{{justfile_directory()}}/start-wayofpi-ui.sh"
+
 # g1
 
 # 1. default pi (always load playground .env so OPENROUTER_API_KEY is set)

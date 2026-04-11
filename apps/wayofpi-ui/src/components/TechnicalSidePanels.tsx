@@ -94,11 +94,16 @@ export function PlanningSidePanel({
 	chatMode,
 	onChatModeChange,
 	streaming,
+	hasWorkspace,
+	onNewPlanFile,
 }: {
 	chatMode: ChatSessionMode;
 	onChatModeChange: (m: ChatSessionMode) => void;
 	streaming: boolean;
+	hasWorkspace: boolean;
+	onNewPlanFile: () => void;
 }) {
+	const newPlanDisabled = !hasWorkspace || streaming;
 	return (
 		<div className="flex min-h-0 min-w-0 w-full flex-1 flex-col border-r border-[#3c3c3c] bg-[#252526]">
 			<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3 text-[13px] leading-relaxed text-[#cccccc]">
@@ -163,8 +168,20 @@ export function PlanningSidePanel({
 						Plan
 					</button>
 				</div>
+				<button
+					type="button"
+					disabled={newPlanDisabled}
+					title="Creates plans/PLAN-YYYYMMDD-slug.md with a template (overwrites if that path already exists)"
+					onClick={onNewPlanFile}
+					className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-2 py-2 text-left font-mono text-[11px] text-[#cccccc] hover:bg-[#2d2d2d] disabled:cursor-not-allowed disabled:opacity-40"
+				>
+					New plan file…
+				</button>
 				{streaming ? (
 					<p className="font-mono text-[11px] text-[#ce9178]">Finish the current reply before switching mode.</p>
+				) : null}
+				{!hasWorkspace ? (
+					<p className="font-mono text-[11px] text-[#858585]">Open a workspace folder to create plan files.</p>
 				) : null}
 			</div>
 		</div>

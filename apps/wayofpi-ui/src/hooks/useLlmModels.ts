@@ -15,6 +15,8 @@ export interface LlmModelsResponse {
 	models: LlmCatalogModel[];
 	error?: string;
 	catalogNote?: string;
+	/** True when `WOP_LLM_PROVIDER` is not `ollama` or `openrouter` (web chat unsupported). */
+	unsupportedProvider?: boolean;
 }
 
 export function useLlmModels() {

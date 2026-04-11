@@ -1,8 +1,10 @@
 import { FileCode2, Save, X } from "lucide-react";
 import type { FormEvent } from "react";
 import { forwardRef } from "react";
+import type { SimpleMarkdownPaneMode } from "../../hooks/useSimplePreferences";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
 import type { FilePreview } from "../../types/workspaceFile";
+import { MarkdownPreviewPane } from "../MarkdownPreviewPane";
 import { WorkspaceTextBuffer } from "../WorkspaceTextBuffer";
 
 export const SimpleFilePanel = forwardRef<
@@ -25,6 +27,8 @@ export const SimpleFilePanel = forwardRef<
 		onReplaceInFiles?: () => void;
 		/** `besideChat` = chat left / editor right column (no stacked header height cap). */
 		columnLayout?: "stacked" | "besideChat";
+		markdownPaneMode?: SimpleMarkdownPaneMode;
+		onMarkdownPaneModeChange?: (m: SimpleMarkdownPaneMode) => void;
 	}
 >(function SimpleFilePanel(
 	{
@@ -44,10 +48,14 @@ export const SimpleFilePanel = forwardRef<
 		onFindInFiles,
 		onReplaceInFiles,
 		columnLayout = "stacked",
+		markdownPaneMode = "source",
+		onMarkdownPaneModeChange,
 	},
 	ref,
 ) {
 	const fileName = path.split("/").pop() ?? path;
+	const isMarkdown = path.toLowerCase().endsWith(".md") && !filePreview;
+	const mdView = isMarkdown ? markdownPaneMode : "source";
 
 	const shell = appearanceDark
 		? "border-[#3c3c3c] bg-[#252526]"
@@ -59,6 +67,10 @@ export const SimpleFilePanel = forwardRef<
 		appearanceDark
 			? "rounded-lg px-3 py-1.5 text-xs font-semibold text-[#cccccc] hover:bg-[#3c3c3c]"
 			: "rounded-lg px-3 py-1.5 text-xs font-semibold text-[#616161] hover:bg-[#e5e5e5]";
+	const segWrap = appearanceDark ? "rounded-lg border border-[#3c3c3c] p-0.5" : "rounded-lg border border-[#e5e5e5] p-0.5";
+	const segOn = appearanceDark ? "bg-[#3c3c3c] text-[#f5f5f5]" : "bg-[#e5e5e5] text-[#111827]";
+	const segOff =
+		appearanceDark ? "text-[#a3a3a3] hover:bg-[#2d2d2d]" : "text-[#6b7280] hover:bg-[#f3f4f6]";
 	const btnPrimary =
 		appearanceDark
 			? "inline-flex items-center gap-1.5 rounded-lg bg-[#ea580c] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#c2410c] disabled:opacity-40"
@@ -100,7 +112,25 @@ export const SimpleFilePanel = forwardRef<
 						</div>
 					</div>
 				</div>
-				<div className="flex shrink-0 items-center gap-2">
+				<div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+					{isMarkdown && onMarkdownPaneModeChange ? (
+						<div className={`inline-flex ${segWrap}`} role="group" aria-label="Markdown view">
+							<button
+								type="button"
+								className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${mdView === "source" ? segOn : segOff}`}
+								onClick={() => onMarkdownPaneModeChange("source")}
+							>
+								Source
+							</button>
+							<button
+								type="button"
+								className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${mdView === "preview" ? segOn : segOff}`}
+								onClick={() => onMarkdownPaneModeChange("preview")}
+							>
+								Preview
+							</button>
+						</div>
+					) : null}
 					{dirty && !filePreview ? (
 						<form onSubmit={submitSave}>
 							<button type="submit" disabled={loading} className={btnPrimary}>
@@ -137,6 +167,8 @@ export const SimpleFilePanel = forwardRef<
 							</p>
 						</div>
 					</div>
+				) : isMarkdown && mdView === "preview" && !loading && !error ? (
+					<MarkdownPreviewPane markdown={content} appearanceDark={appearanceDark} />
 				) : (
 					<WorkspaceTextBuffer
 						ref={ref}

@@ -33,6 +33,16 @@ import {
 	type TerminalWsData,
 } from "./terminal-ws";
 
+// Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
+// In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
+// `npm run dev` forces NODE_ENV=development for the Bun process so an inherited NODE_ENV=production cannot skip this default.
+if (process.env.NODE_ENV !== "production") {
+	const v = process.env.WOP_ALLOW_TERMINAL?.trim();
+	if (v === undefined || v === "") {
+		process.env.WOP_ALLOW_TERMINAL = "1";
+	}
+}
+
 const PORT = Number(process.env.WOP_SERVER_PORT || "3333");
 const DIST = join(import.meta.dir, "..", "dist");
 
@@ -312,7 +322,19 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				envDefaultOpenrouter,
 				models: [] as unknown[],
 				catalogNote:
-					"Provider is OpenRouter. Set OPENROUTER_MODEL on the server or use the UI to type a model id after we add OpenRouter catalog.",
+					"OpenRouter: set OPENROUTER_API_KEY on the host; default model OPENROUTER_MODEL. Type any OpenRouter model id below (same strings Pi uses with OpenRouter).",
+			});
+		}
+
+		if (provider !== "ollama") {
+			return json({
+				provider,
+				ollamaHost,
+				envDefaultOllama,
+				envDefaultOpenrouter,
+				models: [] as unknown[],
+				unsupportedProvider: true,
+				catalogNote: `This server only implements web chat for WOP_LLM_PROVIDER=ollama or openrouter. Current value "${provider}" is unsupported — change host env or use Pi TUI for other providers.`,
 			});
 		}
 
@@ -645,6 +667,15 @@ const server = Bun.serve<ServerWsData>({
 				}
 				const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
 				const id = String(msg.model ?? "").trim();
+				if (provider !== "openrouter" && provider !== "ollama") {
+					ws.send(
+						JSON.stringify({
+							type: "error",
+							message: `WOP_LLM_PROVIDER="${provider}" — web chat only supports ollama or openrouter; cannot set session model.`,
+						}),
+					);
+					return;
+				}
 				if (provider === "openrouter") {
 					if (!isValidOpenRouterModelId(id)) {
 						ws.send(JSON.stringify({ type: "error", message: "Invalid OpenRouter model id" }));
@@ -735,6 +766,48 @@ const server = Bun.serve<ServerWsData>({
 						ws.data.agentName
 							? `Agent persona: ${ws.data.agentName} (markdown system prompt from workspace).`
 							: "Agent persona: default (no workspace .md agent).",
+					),
+				);
+				return;
+			}
+			if (msg.type === "activate_session") {
+				if (ws.data.busy) {
+					ws.send(
+						JSON.stringify({
+							type: "error",
+							message: "Cannot switch chat tab while a reply is still streaming.",
+						}),
+					);
+					return;
+				}
+				const raw = (msg as { transcript?: unknown }).transcript;
+				if (!Array.isArray(raw)) {
+					ws.send(
+						JSON.stringify({
+							type: "error",
+							message: "activate_session requires a transcript array of user/assistant messages.",
+						}),
+					);
+					return;
+				}
+				const next: ChatMessage[] = [];
+				for (const item of raw.slice(0, 500)) {
+					if (!item || typeof item !== "object") continue;
+					const role = (item as { role?: unknown }).role;
+					const content = String((item as { content?: unknown }).content ?? "");
+					if (role === "user" || role === "assistant") {
+						next.push({ role, content });
+					}
+				}
+				ws.data.messages = next;
+				ws.data.pendingChatTexts = [];
+				sendQueueState(ws, 0);
+				applyLeadFromCache(ws.data);
+				ws.send(
+					logLine(
+						"INFO",
+						"chat",
+						`Chat tab active — restored ${next.length} message${next.length === 1 ? "" : "s"} for this connection.`,
 					),
 				);
 				return;

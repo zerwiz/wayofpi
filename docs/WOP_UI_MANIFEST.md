@@ -48,5 +48,5 @@ Ship as **`manifest.json`** (or embedded in server bundle). **Merge** with runti
 ## Related
 
 - **[WOP_SIMPLE_UI_VIEWS.md](WOP_SIMPLE_UI_VIEWS.md)** — Simple UI **View → Workspace views** catalog (editable `.wayofpi/ui-views.json`; extension and doc shortcuts).
-- **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** — full product plan.
+- **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** — full product plan.
 - **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** — streaming events beyond manifest.

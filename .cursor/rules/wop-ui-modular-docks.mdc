@@ -10,7 +10,20 @@ Use this when changing **`apps/wayofpi-ui/`** layout, docking, or technical-shel
 
 ## North star
 
-Treat **editor**, **horizontal tool/file strips**, **agent / session chat**, and the **primary sidebar** as the same class of thing: **docks** in a **modular** shell. The user may rearrange them; the codebase should not bake in a single permanent geometry as if it were the only valid UI.
+**Product target (Zed-class):** The **center workspace** should behave like **Zed’s panes**: each **pane** is a **tab stack** of **items**, and an item can be a **file buffer**, a **terminal**, or another **tool surface**—**the same tab chrome and split affordances** (`+`, split, zoom), not a separate “real editor” vs “secondary panels” hierarchy. See **Zed**: [Terminal — *Terminal Panel vs Center Terminal*](https://zed.dev/docs/terminal.html) (e.g. **`workspace: new center terminal`** in the center vs docked terminal **panel**), [Introducing Zed’s new panel system](https://zed.dev/blog/new-panel-system) (left / right / bottom **docks** vs workspace content). **Pane splits** are the modular unit (e.g. `pane::SplitRight` / `pane::SplitDown` in Zed’s action model).
+
+**Honest status of `wayofpi-ui` today:** The **main column** is **`WorkspacePane`**: one **Zed-style tab row** per cell (**files ∪ terminal ∪ problems ∪ output ∪ tool log**), backed by **`PanelDockLayout`** v3 (`tabs` + `activeIndex` in **`panelDockLayout.ts`**). **Multi-cell layout:** **`TechnicalWorkspaceGrid`** (up to **3×4**, **nested flex** + **`DockSplitHandle`**, persisted **`rowWeights`/`colWeights`**) mounts one **`WorkspacePane`** per cell—each cell has its own dock state and **`useFileEditor`** when the grid is active; each cell uses **`WorkspaceCellDropSurface`** (edge snap overlay + drop routing). Persistence **`wayofpi.technical.workspaceGrid.v1`** (**`workspaceGridStorage.ts`**): includes **`growWorkspaceGridForEdgeDrop`**, **`applyWorkspaceGridRowResizeDelta`**, **`applyWorkspaceGridColResizeDelta`**. **Cross-cell** **panel tab** DnD (surface + **tab bar** insert) and **edge-drop** expansion (**1×1** / **N×1** / **1×N** outer edges) are **shipped**. Legacy single-pane users may still have **`wayofpi.panelDock`** only—migrated into grid cell 0 on read. This is **much closer** to Zed’s center stack than the old **center editor vs separate strips** split, but it is **not** yet an arbitrary **pane DAG**—that remains **Phase E / Z** (**`docs/WOP_MODULAR_DOCKS_PLAN.md`**).
+
+**Still true:** **Agent chat**, **primary sidebar**, and **docked regions** remain **peers** in the long-term **layout graph**—same persistence and movability rules—not permanent sacred geometry.
+
+## Terminology (product + docs) — **equal chrome** (Zed-class UI)
+
+Zed’s **implementation** still has center **panes** vs edge **docks**; the **Way of Pi web shell** uses **`WOP_UNIFIED_DOCK_BAND_LABEL`** → **Dock** (`dockChrome.ts`) on **`WorkspacePane`** (and **`PanelDockBand`** where it still appears). Do **not** ship a second label (**Pane** vs **Dock**) for the workspace tab row — users read that as two product kinds.
+
+- **Workspace tab stack** (`WorkspacePane`): **`Dock`**-family **`h-9`** tab row, **+** menu, DnD **`PanelTab`** reorder within the stack (**`PANEL_TAB_DND_TYPE`**). Each **grid cell** (or the single **1×1** pane) owns one **`PanelDockLayout`** slice.
+- **Single-cell (1×1) technical UI:** App-level **`selectedPath`** + one **`useFileEditor`** feed the lone **`WorkspacePane`**. **Multi-cell grid:** focused cell drives **`selectedPath`** / menus via **`TechnicalWorkspaceCellSnapshot`**; other cells keep local path state.
+- Avoid framing **tool** vs **file** tabs as unrelated **kinds**; both belong to the same dock interaction model (**tabs + body**).
+- **Layout JSON:** Per-cell docks live in **`workspaceGridStorage.ts`** (**`wayofpi.technical.workspaceGrid.v1`**) when using the grid; **`readPanelDockLayout` / `writePanelDockLayout`** (**`wayofpi.panelDock`**) remain for migration and any code paths that sync cell 0. **`PanelDockLayout`** is v3: **`{ tabs, activeIndex }`** (legacy **`strips`** migrates on read). Chat/sidebar geometry: **`readDockLayout`** (`technicalLayoutStorage.ts`). Legacy **`wayofpi.technical.toolDock`** migrates into **`panelDock`** once then is removed.
 
 ## Appearances and dock composition
 
@@ -24,13 +37,13 @@ When adding or wiring an appearance, prefer **versioned layout JSON + dock regio
 
 ## Visual parity (“equal docks”)
 
-Any region that is **tabs + body** (e.g. main editor column vs. a horizontal tool dock) should follow the **same structural pattern**: tab row, optional path/breadcrumb or title row where it makes sense, body. Avoid a pattern where one area looks like a full document surface and another looks like a downgrade-only “panel” unless the difference is an intentional, documented product choice.
+Any region that is **tabs + body** (e.g. main editor column vs. another horizontal dock) should follow the **same structural pattern**: tab row, optional path/breadcrumb or title row where it makes sense, body. Avoid a pattern where one area looks like a full document surface and another looks like a downgrade-only “panel” unless the difference is an intentional, documented product choice.
 
 ## Movability (product target)
 
 Design and persist layout so these become possible **without a rewrite**:
 
-- **Tool / file dock bands** can move relative to the editor (e.g. above vs. below the editor stack, or additional bands).
+- **Horizontal dock bands** (tab strips) can move relative to the editor (e.g. above vs. below the editor stack, or additional instances).
 - **Agent / session** can attach to **left**, **right**, or **bottom** (and future edges), not only one hard-coded side.
 - **Primary sidebar** (Explorer, etc.) can live on **left or right** (activity bar follows or mirrors as needed).
 
@@ -38,17 +51,31 @@ Prefer **data-driven layout** (saved regions, split sizes, ordering) over JSX th
 
 ## Multiplicity (product target)
 
-Users may want **several** horizontal dock strips (e.g. side-by-side or multiple stacked rows), each holding **mixed** tool panels and pinned files. **Do not** assume exactly two strips forever; avoid names and types that encode “only top and bottom” as a permanent ceiling unless the UI explicitly documents a temporary limitation.
+Users may want **several** horizontal docks (e.g. side-by-side or stacked rows), each holding **mixed** tabs (files, panels, tools). **Do not** assume exactly two persisted slots forever; avoid names and types that encode “only top and bottom” as a permanent ceiling unless the UI explicitly documents a temporary limitation.
 
-## Drag-and-drop
+## Drag-and-drop (required parity)
 
-**Tabs** (tools and files) should be **draggable** between compatible strips where the product allows it. When implementing drops, use a **single payload model** for strip entries (tool vs file) so all strips stay peers.
+Within each **`WorkspacePane`** tab row, **tool** and **file** **`PanelTab`** entries are **draggable** for **reorder** (Zed-style insert hint). **Payload:** **`application/x-wop-panel-tab`** + **`serializePanelTab`** / **`parsePanelTabJson`** (`panelDockLayout.ts`), **`WorkspacePane.tsx`**. Moves: **`applyPanelTabMove`**. Persist the affected cell’s layout via **`writeWorkspaceGridState`** (grid) or the **`patchWorkspaceCellDock`** path in **`App.tsx`**.
+
+**Shipped (interim):** **Panel tab** DnD **between** grid cells (workspace surface + **tab-bar** insert); **edge** drops that **grow** the grid when the neighbor did not exist (**`growWorkspaceGridForEdgeDrop`**). **Not yet:** arbitrary **split-from-anywhere** graph; **explorer file** drops onto tab bar at a chosen index (polish); a single persisted **pane DAG**—still **Phase E / Z** (**`docs/WOP_MODULAR_DOCKS_PLAN.md`**).
+
+## Splitter pointer parity (`DockSplitHandle`)
+
+**`DockSplitHandle`** reports deltas in **screen space**: **positive `dx`** = pointer moved **right**, **positive `dy`** = moved **down** (`apps/wayofpi-ui/src/components/DockSplitHandle.tsx`).
+
+When wiring **`onDelta`** to widths/heights:
+
+- The **edge under the user’s grip** should move in the **same direction** as the pointer (natural resize — not “inverse” steering).
+- **Vertical bar** between a **left** region and a **right** region: dragging **right** moves the boundary **right** → typically **grow the left** / **shrink the right** (apply **`−dx`** to the **right** pane’s stored width if that width is the right column’s size).
+- **Horizontal bar** between **upper** and **lower** regions: dragging **down** moves the boundary **down** with the pointer. If the **upper** region is the **top horizontal dock** and the **lower** is the **editor**, **grow the upper dock** (**`+dy`** on **`horizontalToolDockHeightsPx.top`**). If the **upper** is the **editor** and the **lower** is the **bottom dock**, **grow the lower dock** (**`+dy`** on **`horizontalToolDockHeightsPx.bottom`**).
+
+Document any intentional exception in `docs/WOP_TECHNICAL_UI.md`; default is **follow the mouse** for both axes.
 
 ## Implementation discipline
 
 - Persist layout in **versioned or migratable** JSON (localStorage or server) so dock geometry can evolve.
 - When full modular docking is not implemented yet, **do not** add layout logic that blocks future moves (e.g. unmovable wrappers, one-off CSS that only works for a single split).
-- If the current build only supports a **subset** (e.g. **one** horizontal strip under the editor, with legacy `strips.top` merged away), document that as **current limitation** in code comments or `docs/WOP_TECHNICAL_UI.md`, not as eternal architecture.
+- If the current build only supports a **subset** (e.g. **two** fixed slots `top` / `bottom` instead of **N** `DockStripInstance[]`), document that as **current limitation** in code comments or `docs/WOP_TECHNICAL_UI.md`, not as eternal architecture.
 
 ## Related docs
 
@@ -56,4 +83,4 @@ Users may want **several** horizontal dock strips (e.g. side-by-side or multiple
 - Phased checklist: `docs/WOP_MODULAR_DOCKS_PLAN.md`.
 - Extension appearances → web views (planning): `docs/WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md`.
 - Technical UI notes: `docs/WOP_TECHNICAL_UI.md` (keep in sync when dock behavior or limits change).
-- Layout storage types: `apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts`.
+- Layout storage types: `apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts`, `apps/wayofpi-ui/src/utils/workspaceGridStorage.ts`, `apps/wayofpi-ui/src/utils/panelDockLayout.ts`.

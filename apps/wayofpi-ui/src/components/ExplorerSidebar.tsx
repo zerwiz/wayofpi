@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, FilePlus, FolderPlus } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus, FolderPlus, SidebarClose } from "lucide-react";
 import { useState, type MouseEvent } from "react";
 import { FileTree } from "./FileTree";
 import type { TreeNode } from "../types/tree";
@@ -17,6 +17,7 @@ export function ExplorerSidebar({
 	error,
 	expandRevision,
 	pathsToExpand,
+	onClosePrimarySidebar,
 }: {
 	nodes: TreeNode[];
 	rootLabel: string;
@@ -31,6 +32,8 @@ export function ExplorerSidebar({
 	error: string | null;
 	expandRevision?: number;
 	pathsToExpand?: string[];
+	/** Hide the whole primary (left) sidebar — same as menu bar / Ctrl+B. */
+	onClosePrimarySidebar?: () => void;
 }) {
 	const [outlineOpen, setOutlineOpen] = useState(false);
 	const [timelineOpen, setTimelineOpen] = useState(false);
@@ -38,20 +41,36 @@ export function ExplorerSidebar({
 
 	return (
 		<div className="flex min-h-0 min-w-0 w-full flex-1 flex-col border-r border-[#3c3c3c] bg-[#252526]">
-			<button
-				type="button"
-				onClick={() => setWorkspaceTreeOpen((o) => !o)}
-				className="flex shrink-0 w-full cursor-pointer items-center bg-[#2d2d2d] px-1 py-1 text-left text-[11px] font-bold uppercase text-[#cccccc] hover:bg-[#383838]"
-			>
-				{workspaceTreeOpen ? (
-					<ChevronDown size={14} className="mr-1 shrink-0" />
-				) : (
-					<ChevronRight size={14} className="mr-1 shrink-0" />
-				)}
-				<span className="truncate" title={rootLabel}>
-					{rootLabel || "WORKSPACE"}
-				</span>
-			</button>
+			<div className="flex shrink-0 w-full min-w-0 items-stretch bg-[#2d2d2d]">
+				<button
+					type="button"
+					onClick={() => setWorkspaceTreeOpen((o) => !o)}
+					className="flex min-w-0 flex-1 cursor-pointer items-center px-1 py-1 text-left text-[11px] font-bold uppercase text-[#cccccc] hover:bg-[#383838]"
+				>
+					{workspaceTreeOpen ? (
+						<ChevronDown size={14} className="mr-1 shrink-0" />
+					) : (
+						<ChevronRight size={14} className="mr-1 shrink-0" />
+					)}
+					<span className="truncate" title={rootLabel}>
+						{rootLabel || "WORKSPACE"}
+					</span>
+				</button>
+				{onClosePrimarySidebar ? (
+					<button
+						type="button"
+						title="Close primary sidebar (Ctrl+B)"
+						aria-label="Close primary sidebar"
+						onClick={(e) => {
+							e.stopPropagation();
+							onClosePrimarySidebar();
+						}}
+						className="flex shrink-0 items-center border-l border-[#3c3c3c] px-1.5 text-[#858585] hover:bg-[#383838] hover:text-[#cccccc]"
+					>
+						<SidebarClose size={14} strokeWidth={1.75} aria-hidden />
+					</button>
+				) : null}
+			</div>
 			{workspaceTreeOpen ? (
 				<div className="flex shrink-0 items-center justify-end gap-0.5 border-b border-[#3c3c3c] bg-[#252526] px-1 py-0.5">
 					<button

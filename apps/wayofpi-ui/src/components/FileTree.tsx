@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, FileCode2, FileJson, File as FileIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type ReactNode } from "react";
 import type { TreeNode } from "../types/tree";
+import { serializeFilePathForDrag, WOP_FILE_PATH_DND_TYPE } from "../utils/panelDockLayout";
 import { sortTreeNodes } from "../utils/sortTreeNodes";
 
 function fileIcon(name: string) {
@@ -43,6 +44,7 @@ export function FileTree({
 }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	const sorted = useMemo(() => sortTreeNodes(nodes), [nodes]);
+	const suppressFileClickRef = useRef(false);
 
 	useEffect(() => {
 		if (expandRevision === undefined || !pathsToExpand?.length) return;
@@ -67,6 +69,7 @@ export function FileTree({
 			<div key={node.path}>
 				<button
 					type="button"
+					draggable={node.type === "file"}
 					className={`flex w-full cursor-pointer items-center px-2 py-1 text-left hover:bg-[#2a2d2e] ${
 						selectedPath === node.path
 							? "bg-[#37373d]"
@@ -75,9 +78,32 @@ export function FileTree({
 								: node.type === "file" && openInMainEditorPaths?.includes(node.path)
 									? "bg-[#2d2d2d] text-[#cccccc] ring-1 ring-inset ring-[#858585]/35"
 									: "text-[#cccccc]"
-					}`}
+					} ${node.type === "file" ? "cursor-grab active:cursor-grabbing" : ""}`}
 					style={{ paddingLeft: `${depth * 12 + 8}px` }}
+					onDragStart={
+						node.type === "file"
+							? (e: DragEvent<HTMLButtonElement>) => {
+									suppressFileClickRef.current = true;
+									e.dataTransfer.setData(WOP_FILE_PATH_DND_TYPE, serializeFilePathForDrag(node.path));
+									e.dataTransfer.setData("text/plain", node.path);
+									e.dataTransfer.effectAllowed = "copyMove";
+								}
+							: undefined
+					}
+					onDragEnd={
+						node.type === "file"
+							? () => {
+									window.setTimeout(() => {
+										suppressFileClickRef.current = false;
+									}, 150);
+								}
+							: undefined
+					}
 					onClick={(e) => {
+						if (node.type === "file" && suppressFileClickRef.current) {
+							e.preventDefault();
+							return;
+						}
 						if (node.type === "dir") {
 							toggle(node.path);
 							onSelectDirectory?.(node.path);

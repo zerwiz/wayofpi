@@ -1,0 +1,28 @@
+---
+description: Critical — wayofpi-ui must fully wire to the Way of Pi / Pi backend; no fake Pi parity in the UI
+alwaysApply: true
+---
+
+# Way of Pi web UI ↔ Pi backend (critical)
+
+## Non-negotiable
+
+- **`apps/wayofpi-ui/`** affordances that mirror **Pi** (agents, teams, tools, extensions, chat/session behavior, model selection, orchestration, terminals, workspace operations) must be **actually implemented** against the **Way of Pi server** (`apps/wayofpi-ui/server/`), **Pi CLI/runtime**, or another **documented bridge** — not controls that only change local React state while implying Pi did the work.
+- If **full Pi parity** for a feature is **not** shipped yet, the UI must **not masquerade as complete**: use explicit **stub / not wired** labeling, disable the control, or hide it until the backend exists — and track the gap in **`docs/WOP_*.md`**, **`docs/PLAN_*.md`** (non-WOP plans), or **`docs/WOP_OPEN_TODOS.md`**.
+- **`/api/*`** and **`/ws`** are part of the product surface. Do not merge client changes that depend on new server behavior **without** the server (or document a breaking follow-up blocked on the same milestone).
+
+## Implementation discipline
+
+- **Simple** and **technical** UI modes share the **same product**: prefer **one real data path** (shared hooks, shared handlers). Do not add a feature in one mode and leave the other as a non-functional duplicate without a tracked, time-bounded gap.
+- **Agents and teams** — follow **`.cursor/rules/wop-ui-workspace-agents.mdc`** (catalog, WebSocket persona, **`teams.yaml`**, and the distinction between **merged system prompt** vs real **`dispatch_agent`** / subprocess orchestration).
+- **Layout and docks** — follow **`.cursor/rules/wop-ui-modular-docks.mdc`** so new Pi-backed panels stay modular and persistent without forking the shell per mode.
+- **Isolation and naming** — respect **`WOP_*`**, **`docs/WOP_NAMESPACE.md`**, and **`docs/WOP_STANDALONE_SYSTEM_PLAN.md`** so the UI never blurs **Way of Pi** with upstream **`pi`** identifiers or processes.
+
+## Contract docs (keep in sync when behavior changes)
+
+- **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** — master map: HTTP/WebSocket inventory, UI surface matrix, phased Pi integration.
+- **`docs/WOP_TECHNICAL_UI.md`** — shell, hooks, server boundaries.
+- **`docs/WOP_MULTI_AGENT_WEBSOCKET.md`** — multi-agent / orchestration events when implemented.
+- **`docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md`** — agent UI roadmap and Pi alignment phases.
+
+When you add or change Pi-facing UI, **verify** the backend path (API, WebSocket message, or Pi spawn) in code — do not ship “looks done” without it.

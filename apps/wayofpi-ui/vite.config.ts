@@ -6,8 +6,17 @@ export default defineConfig({
 	server: {
 		proxy: {
 			"/api": { target: "http://127.0.0.1:3333", changeOrigin: true },
-			"/ws/terminal": { target: "ws://127.0.0.1:3333", ws: true },
-			"/ws": { target: "ws://127.0.0.1:3333", ws: true },
+			// Longer path first so `/ws` does not steal terminal upgrades.
+			"/ws/terminal": {
+				target: "ws://127.0.0.1:3333",
+				ws: true,
+				changeOrigin: true,
+			},
+			"/ws": {
+				target: "ws://127.0.0.1:3333",
+				ws: true,
+				changeOrigin: true,
+			},
 		},
 	},
 });

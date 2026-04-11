@@ -146,10 +146,13 @@ export function EmbeddedTerminal() {
 			<div className="space-y-2 p-4 font-mono text-[12px] leading-relaxed">
 				<p className="text-[#ce9178]">Interactive terminal is off on the server.</p>
 				<p className="text-[#858585]">
-					Set{" "}
-					<code className="rounded bg-[#2d2d2d] px-1.5 py-0.5 text-[#dcdcaa]">WOP_ALLOW_TERMINAL=1</code> in
-					the environment for the Way of Pi UI server, restart it, then reload this page. That starts a real
-					shell with your workspace as the working directory (only use on trusted machines).
+					For a real shell (cwd = workspace), set{" "}
+					<code className="rounded bg-[#2d2d2d] px-1.5 py-0.5 text-[#dcdcaa]">WOP_ALLOW_TERMINAL=1</code> on
+					the Way of Pi UI server, restart it, then reload. Development normally enables this by default when
+					unset; if you disabled it with{" "}
+					<code className="rounded bg-[#2d2d2d] px-1.5 py-0.5 text-[#dcdcaa]">WOP_ALLOW_TERMINAL=0</code>,
+					remove that or set to{" "}
+					<code className="rounded bg-[#2d2d2d] px-1.5 py-0.5 text-[#dcdcaa]">1</code>. Trusted machines only.
 				</p>
 			</div>
 		);

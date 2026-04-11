@@ -5,6 +5,10 @@ export type SimpleColorMode = "dark" | "light";
 
 const KEY_MODE = "wayofpi.simple.colorMode";
 const LEGACY_DARK = "wayofpi.simple.darkMode";
+const KEY_MD_PANE = "wayofpi.simple.mdPane";
+
+/** Markdown in Simple file panel: raw source vs rendered preview (GitHub-style). */
+export type SimpleMarkdownPaneMode = "source" | "preview";
 
 /** Simple chat: show token-by-token reply vs wait for full message (localStorage). */
 export const SIMPLE_CHAT_STREAM_UI_KEY = "wayofpi.simple.chatStreamUi";
@@ -38,12 +42,24 @@ function readColorMode(): SimpleColorMode {
 	return "dark";
 }
 
+function readMarkdownPaneMode(): SimpleMarkdownPaneMode {
+	try {
+		const v = localStorage.getItem(KEY_MD_PANE);
+		if (v === "source" || v === "preview") return v;
+	} catch {
+		/* ignore */
+	}
+	return "preview";
+}
+
 export function useSimplePreferences() {
 	const [colorMode, setColorModeState] = useState<SimpleColorMode>("dark");
 	const [approvalQueue, setApprovalQueueState] = useState(true);
+	const [markdownPaneMode, setMarkdownPaneModeState] = useState<SimpleMarkdownPaneMode>("preview");
 
 	useEffect(() => {
 		setColorModeState(readColorMode());
+		setMarkdownPaneModeState(readMarkdownPaneMode());
 		try {
 			const aq = localStorage.getItem("wayofpi.simple.approvalQueue");
 			if (aq === "1") setApprovalQueueState(true);
@@ -72,6 +88,15 @@ export function useSimplePreferences() {
 		}
 	}, []);
 
+	const setMarkdownPaneMode = useCallback((next: SimpleMarkdownPaneMode) => {
+		setMarkdownPaneModeState(next);
+		try {
+			localStorage.setItem(KEY_MD_PANE, next);
+		} catch {
+			/* ignore */
+		}
+	}, []);
+
 	const isDark = colorMode === "dark";
 
 	/** @deprecated use colorMode — kept for settings toggle wiring */
@@ -84,6 +109,8 @@ export function useSimplePreferences() {
 		isDark,
 		approvalQueue,
 		setApprovalQueue,
+		markdownPaneMode,
+		setMarkdownPaneMode,
 		darkMode,
 		setDarkMode,
 	};

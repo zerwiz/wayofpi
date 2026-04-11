@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Start Way of Pi web UI (Bun API + Vite) and open the default browser when ready.
+# Start Way of Pi web UI (Bun API + Vite). By default opens the default browser when ready.
+# Set WOP_USE_ELECTRON=1 to open an Electron window instead (no separate browser tab).
+# Same full stack as ./start-full-system.sh or: just wayofpi-full
 # Usage: from repo root: ./start-wayofpi-ui.sh
 set -euo pipefail
 
@@ -57,6 +59,10 @@ open_browser_when_ready() {
 	done
 	echo "warning: UI did not respond at $URL in time; open it manually." >&2
 }
+
+if [[ "${WOP_USE_ELECTRON:-}" == "1" ]]; then
+	exec npm run electron:dev
+fi
 
 open_browser_when_ready &
 exec npm run dev

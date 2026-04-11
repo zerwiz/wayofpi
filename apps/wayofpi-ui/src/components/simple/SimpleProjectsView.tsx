@@ -1,5 +1,6 @@
 import { Folder } from "lucide-react";
 
+/** Simple shell — **stub / shallow**: current workspace path + refresh tree only; no project list, roots picker, or tasks. */
 export function SimpleProjectsView({
 	rootLabel,
 	rootPath,

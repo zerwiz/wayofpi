@@ -2,7 +2,9 @@
 
 Single place to track **what is not done yet** for the **Way of Pi** direction (web UI + headless Pi + `WOP_*` isolation), the **`apps/wayofpi-ui`** shell, supporting **scripts**, and **planning follow-through**. It complements checkbox lists in other docs (e.g. **[SUPERPOWERS_TODO.md](SUPERPOWERS_TODO.md)**) without duplicating every playground extension idea.
 
-**Canonical roadmap:** **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** · **Planning hub:** **[PLANNING.md](PLANNING.md)**
+**Merged build checklist (all WOP plans):** **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** — trim there and here when you ship.
+
+**Canonical roadmap:** **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **End-to-end wiring map (UI ↔ Pi):** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** · **Planning hub:** **[WOP_PLANNING.md](WOP_PLANNING.md)**
 
 ---
 
@@ -26,13 +28,13 @@ Single place to track **what is not done yet** for the **Way of Pi** direction (
 | Not shipped | **Playground link** wizard (replace `enable-playground-in-project` scripts in product form). |
 | Not shipped | **Runtime manifest** for slash commands / tools (**[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**) + UI driven by introspection. |
 | Not shipped | **Safe customization** pipeline: backup → preflight → apply → doctor → rollback (**[WOP_SAFE_CUSTOMIZATION.md](WOP_SAFE_CUSTOMIZATION.md)**). |
-| Open | Plan **open questions**: single-user vs multi-tenant; `pi install` / `pi update` pinning; subprocess sandbox; session format vs Pi JSONL; backend rename schedule (**[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md#open-questions)**). |
+| Open | Plan **open questions**: single-user vs multi-tenant; `pi install` / `pi update` pinning; subprocess sandbox; session format vs Pi JSONL; backend rename schedule (**[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md#open-questions)**). |
 
 ---
 
 ## Production and safety (unchecked plan checklist)
 
-Items from **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** production readiness that are still **not done** for a hosted product:
+Items from **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** production readiness that are still **not done** for a hosted product:
 
 - [ ] **Authn** for the web UI.  
 - [ ] **Workspace allowlist** / symlink-hardening beyond path join (verify server behavior).  
@@ -69,7 +71,7 @@ Items from **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** pr
 |------|----------------|
 | **Menu** | Many items are **Shipped** in UI; gaps per **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)** (LSP, task runner, manifest-driven palette, etc.). |
 | **Editor** | No Monaco / LSP; textarea-only. **Outline** sidebar = placeholder. **Timeline** = placeholder. |
-| **Unified dock strips** | **Shipped:** **bottom** strip only (under editor stack); legacy **`strips.top`** merged into **`bottom`** on load; **`DockStripEntry`** (tool \| file); DnD reorder in strip; **`StripFilePreview`** for file tabs — per **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**. **Not shipped:** **visual parity** with editor chrome; **N** strips / upper band again if desired; **agent** docked **left**; **primary sidebar** on **right**; full **layout graph** — **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**. **`EditorPanel`** remains a single center buffer keyed by **`selectedPath`**. |
+| **Center workspace** | **Shipped:** **`WorkspacePane`** — one tab stack per cell (**files ∪ tools**), v3 **`PanelDockLayout`**, Zed-style tab DnD — **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**. **Shipped (partial Phase E):** **`TechnicalWorkspaceGrid`** up to **3×4** cells (**`workspaceGridStorage.ts`**); **nested flex** + **`DockSplitHandle`** (**`rowWeights` / `colWeights`**); **View → Editor Layout** workspace presets; Explorer opens into **focused** cell; **edge-drop grid grow** (**1×1** / **N×1** / **1×N** outer edges); **cross-cell** **tab** moves (surface + **tab-bar** insert). **Still open:** arbitrary **split graph** (not only fixed **cols×rows**), **N** movable horizontal strips, **agent** **left**, **sidebar** **right** — **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**. |
 | **Tool strips (current)** | **Problems** — no analyzer. **Terminal** — no host shell (by design until approvals exist). |
 | **Chat** | **Team pulse** tab = placeholder (orchestration not connected). **Attachments** = not implemented (hint only). |
 | **Status bar** | **Problems count**, **ctx %**, **tokens** are placeholders (display-only tooltips). |
@@ -103,7 +105,7 @@ Items from **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** pr
 
 | Item |
 |------|
-| Keep **[this file](WAY_OF_PI_OPEN_TODOS.md)** in sync when closing large gaps. |
+| Keep **[this file](WOP_OPEN_TODOS.md)** in sync when closing large gaps. |
 | **`wop` spelling** final vs **`wayofpi`** (**[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**). |
 
 ---
@@ -116,4 +118,4 @@ Items from **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** pr
 
 ---
 
-**Last updated:** 2026-04-10
+**Last updated:** 2026-04-11

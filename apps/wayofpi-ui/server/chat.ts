@@ -73,7 +73,14 @@ export async function streamChatCompletion(
 		return { ok: true };
 	}
 
-	/* default: ollama OpenAI-compatible */
+	if (provider !== "ollama") {
+		return {
+			ok: false,
+			error: `WOP_LLM_PROVIDER="${provider}" is not supported by Way of Pi web chat. Set it to "ollama" or "openrouter" on the server, or use Pi TUI for other backends.`,
+		};
+	}
+
+	/* ollama OpenAI-compatible */
 	const host = (runtime?.ollamaHost || process.env.OLLAMA_HOST || "http://127.0.0.1:11434").replace(/\/$/, "");
 	const model = runtime?.ollamaModel?.trim() || process.env.OLLAMA_MODEL?.trim() || "llama3";
 	onLog("INFO", "ollama", `${host} model=${model}`);

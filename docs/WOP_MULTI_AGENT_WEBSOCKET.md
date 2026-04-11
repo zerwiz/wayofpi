@@ -47,4 +47,4 @@ If a Pi build hides thinking or skill edges, emit **no** `thinking_*` / `skill_*
 ## Related
 
 - **[docs/AGENT_TEAMS.md](AGENT_TEAMS.md)** — current TUI orchestration behavior.
-- **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** — orchestration screen spec.
+- **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** — orchestration screen spec.

@@ -94,6 +94,13 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 		}
 	}, [path]);
 
+	/** Drop in-memory edits and match last saved snapshot (no network). */
+	const discardUnsavedChanges = useCallback(() => {
+		if (!path || filePreview) return;
+		setContent(lastPersistedContent);
+		setDirty(false);
+	}, [path, filePreview, lastPersistedContent]);
+
 	const saveRef = useRef(save);
 	saveRef.current = save;
 
@@ -115,5 +122,6 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 		dirty,
 		save,
 		reload,
+		discardUnsavedChanges,
 	};
 }

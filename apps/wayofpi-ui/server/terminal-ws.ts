@@ -3,8 +3,13 @@ import { existsSync } from "node:fs";
 import type { ServerWebSocket } from "bun";
 import { getWorkspaceRoot } from "./paths";
 
+function terminalEnvTruthy(): boolean {
+	const v = process.env.WOP_ALLOW_TERMINAL?.trim().toLowerCase();
+	return v === "1" || v === "true" || v === "yes" || v === "on";
+}
+
 export function terminalAllowed(): boolean {
-	return process.env.WOP_ALLOW_TERMINAL?.trim() === "1";
+	return terminalEnvTruthy();
 }
 
 export type TerminalWsData = {

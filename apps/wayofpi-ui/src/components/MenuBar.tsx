@@ -1,8 +1,9 @@
-import { ChevronDown, ChevronRight, CircleDot, Search, TerminalSquare } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, CircleDot, Search, TerminalSquare } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PiModelConfigPath } from "../constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
 import type { ServerConfig } from "../hooks/useServerConfig";
+import type { ChatSessionMode } from "../hooks/useWayOfPiSession";
 import type { UiMode } from "../hooks/useUiMode";
 import type {
 	BottomPanelTab,
@@ -17,6 +18,7 @@ import type {
 	HelpMenuHandlers,
 	RunMenuHandlers,
 	SelectionMenuHandlers,
+	SettingsMenuHandlers,
 	TerminalMenuHandlers,
 } from "../types/workspaceEditor";
 import {
@@ -72,7 +74,17 @@ export function MenuBar({
 	runMenu,
 	terminalMenu,
 	helpMenu,
+	/** Settings → workspace agents (Pi `.pi/agents`, `teams.yaml`) via My Team view. */
+	onOpenAgentSetup,
+	settingsMenu,
+	/** Agents → teams.yaml, new agent files, reload catalog. */
+	onOpenTeamsYaml,
+	onCreateAgentMarkdown,
+	onReloadAgents,
 	onOpenPiModelConfig,
+	chatSessionControls,
+	onNewPlanFile,
+	newPlanFileDisabled,
 	viewTechnical,
 	viewSimple,
 }: {
@@ -123,6 +135,25 @@ export function MenuBar({
 	terminalMenu?: TerminalMenuHandlers;
 	/** Help → commands, docs, about-adjacent links. */
 	helpMenu?: HelpMenuHandlers;
+	/** Settings → open agent/team setup (Simple **My Team**; switches from Technical when needed). */
+	onOpenAgentSetup: () => void;
+	/** Settings → Simple pages, sidebars, layout, chrome toggles. */
+	settingsMenu?: SettingsMenuHandlers;
+	/** Optional: mirror chat Build/Plan + new plan file (Settings menu). */
+	chatSessionControls?: {
+		mode: ChatSessionMode;
+		/** When true, mode switches are disabled (assistant reply streaming). */
+		switchDisabled: boolean;
+		onSetMode: (m: ChatSessionMode) => void;
+	};
+	onNewPlanFile?: () => void;
+	newPlanFileDisabled?: boolean;
+	/** Agents → open Pi **teams.yaml** in the workspace editor. */
+	onOpenTeamsYaml: () => void;
+	/** Agents → create a new `.md` agent stub under `.pi/agents` (or primary root). */
+	onCreateAgentMarkdown: () => void;
+	/** Agents → re-fetch **GET /api/agents**. */
+	onReloadAgents: () => void;
 	/** Open Pi workspace JSON (simple: AI Brains → Provider files; technical: main editor). */
 	onOpenPiModelConfig?: (path: PiModelConfigPath) => void;
 	/** Technical UI: View → Appearance / Editor Layout + chrome toggles. */
@@ -131,7 +162,18 @@ export function MenuBar({
 	viewSimple?: ViewMenuSimpleOptions | null;
 }) {
 	/** Shared chrome for Technical and Simple layouts (WAY OF PI, mode toggle, menus, search, model). */
-	const menuLabels = ["File", "Edit", "Selection", "View", "Go", "Run", "Terminal", "Help"] as const;
+	const menuLabels = [
+		"File",
+		"Edit",
+		"Selection",
+		"View",
+		"Go",
+		"Run",
+		"Terminal",
+		"Help",
+		"Agents",
+		"Settings",
+	] as const;
 
 	const [openMenu, setOpenMenu] = useState<string | null>(null);
 	const [viewFlyout, setViewFlyout] = useState<null | "appearance" | "layout">(null);
@@ -178,6 +220,28 @@ export function MenuBar({
 				<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
 					<TerminalSquare size={14} className="text-[#007acc]" />
 					WAY OF PI
+					{uiMode === "technical" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
+						<button
+							type="button"
+							title={
+								leftSidebarVisible
+									? "Hide primary sidebar (Ctrl+B)"
+									: "Show primary sidebar (Ctrl+B)"
+							}
+							aria-label={
+								leftSidebarVisible ? "Hide primary sidebar" : "Show primary sidebar"
+							}
+							aria-pressed={leftSidebarVisible}
+							onClick={() => onToggleLeftSidebar()}
+							className="-ml-0.5 flex shrink-0 items-center rounded p-0.5 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
+						>
+							{leftSidebarVisible ? (
+								<ChevronLeft size={14} strokeWidth={2} aria-hidden />
+							) : (
+								<ChevronRight size={14} strokeWidth={2} aria-hidden />
+							)}
+						</button>
+					) : null}
 				</div>
 				<UiModeToggle uiMode={uiMode} onUiModeChange={onUiModeChange} />
 				<nav ref={navRef} className="relative flex min-w-0 gap-1 text-[13px] text-[#cccccc]">
@@ -685,6 +749,40 @@ export function MenuBar({
 											Open view…{menuKbd("Ctrl+Shift+P")}
 										</button>
 									</li>
+									{import.meta.env.DEV || (typeof window !== "undefined" && window.wopShell) ? (
+										<>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													onClick={() => {
+														if (window.wopShell?.reload) void window.wopShell.reload();
+														else window.location.reload();
+														closeMenus();
+													}}
+												>
+													Reload window
+													{menuKbd("Ctrl+R")}
+												</button>
+											</li>
+											{window.wopShell?.reloadHard ? (
+												<li>
+													<button
+														type="button"
+														className={menuBtnClass()}
+														onClick={() => {
+															void window.wopShell?.reloadHard();
+															closeMenus();
+														}}
+													>
+														Reload window (ignore cache)
+														{menuKbd("Ctrl+Shift+R")}
+													</button>
+												</li>
+											) : null}
+										</>
+									) : null}
 									{viewSimple ? (
 										<>
 											<li className="relative">
@@ -962,26 +1060,30 @@ export function MenuBar({
 																) : null}
 															</button>
 														</li>
-														{horizontalToolDockToggles?.bottom?.hasTabs ? (
-															<li>
-																<button
-																	type="button"
-																	className={menuBtnClass()}
-																	onClick={() => {
-																		horizontalToolDockToggles.bottom!.onToggle();
-																		closeMenus();
-																	}}
-																>
-																	Panel (lower tool dock)
-																	<span className="float-right font-mono text-[10px] text-[#858585]">
-																		{horizontalToolDockToggles.bottom.visible ? (
-																			<span className="mr-2 text-[#89d185]">✓</span>
-																		) : null}
-																		Ctrl+J
-																	</span>
-																</button>
-															</li>
-														) : null}
+														{HORIZONTAL_TOOL_DOCK_SLOTS.map((slot) => {
+															const row = horizontalToolDockToggles?.[slot];
+															if (!row?.hasTabs) return null;
+															return (
+																<li key={slot}>
+																	<button
+																		type="button"
+																		className={menuBtnClass()}
+																		onClick={() => {
+																			row.onToggle();
+																			closeMenus();
+																		}}
+																	>
+																		{row.terminalSubmenuLabel}
+																		<span className="float-right font-mono text-[10px] text-[#858585]">
+																			{row.visible ? (
+																				<span className="mr-2 text-[#89d185]">✓</span>
+																			) : null}
+																			{slot === "bottom" ? "Ctrl+J" : ""}
+																		</span>
+																	</button>
+																</li>
+															);
+														})}
 														<li>
 															<button type="button" disabled className={menuBtnClass(true)}>
 																Move primary side bar right <span className="text-[#555]">(n/a)</span>
@@ -1133,8 +1235,15 @@ export function MenuBar({
 															</button>
 														</li>
 														<li>
-															<button type="button" disabled className={menuBtnClass(true)}>
-																Three columns <span className="text-[#555]">(n/a)</span>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																onClick={() => {
+																	viewTechnical.onApplyLayoutPreset("workspace_grid_3x1");
+																	closeMenus();
+																}}
+															>
+																Three columns (workspace)
 															</button>
 														</li>
 														<li>
@@ -1150,8 +1259,15 @@ export function MenuBar({
 															</button>
 														</li>
 														<li>
-															<button type="button" disabled className={menuBtnClass(true)}>
-																Three rows <span className="text-[#555]">(n/a)</span>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																onClick={() => {
+																	viewTechnical.onApplyLayoutPreset("workspace_grid_1x3");
+																	closeMenus();
+																}}
+															>
+																Three rows (workspace)
 															</button>
 														</li>
 														<li>
@@ -1164,6 +1280,30 @@ export function MenuBar({
 																}}
 															>
 																Grid (2×2) <span className="text-[#555]">(agent + panel)</span>
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																onClick={() => {
+																	viewTechnical.onApplyLayoutPreset("workspace_grid_2x2");
+																	closeMenus();
+																}}
+															>
+																Workspace grid (2×2)
+															</button>
+														</li>
+														<li>
+															<button
+																type="button"
+																className={menuBtnClass()}
+																onClick={() => {
+																	viewTechnical.onApplyLayoutPreset("workspace_grid_3x4");
+																	closeMenus();
+																}}
+															>
+																Workspace grid (3×4)
 															</button>
 														</li>
 														<li>
@@ -2494,7 +2634,7 @@ export function MenuBar({
 													className={menuBtnClass(!helpMenu.canToggleDeveloperTools)}
 													title={
 														!helpMenu.canToggleDeveloperTools
-															? "Use the browser’s developer tools (e.g. F12); not controllable from the page."
+															? "In a normal browser, use F12 or the browser menu. In the Way of Pi Electron window, this row is enabled."
 															: undefined
 													}
 													onClick={() => {
@@ -2502,7 +2642,7 @@ export function MenuBar({
 														closeMenus();
 													}}
 												>
-													Toggle Developer Tools
+													Toggle Developer Tools{menuKbd("Ctrl+Shift+I")}
 												</button>
 											</li>
 											<li>
@@ -2584,6 +2724,418 @@ export function MenuBar({
 											</li>
 										</>
 									)}
+								</ul>
+							) : null}
+							{openMenu === "Agents" && label === "Agents" ? (
+								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Browse rosters, open agent files, and add definitions (Pi agent-team scan order)."
+											onClick={() => {
+												onOpenAgentSetup();
+												closeMenus();
+											}}
+										>
+											Teams & agents overview…
+										</button>
+									</li>
+									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Create or edit team names and member agent ids (Pi agent-team / dispatch_agent)."
+											onClick={() => {
+												onOpenTeamsYaml();
+												closeMenus();
+											}}
+										>
+											Edit team rosters (teams.yaml)…
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Adds a Markdown file with YAML frontmatter under .pi/agents (same folder as teams.yaml when present)."
+											onClick={() => {
+												onCreateAgentMarkdown();
+												closeMenus();
+											}}
+										>
+											New agent definition…
+										</button>
+									</li>
+									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Re-scan workspace agent files and teams.yaml (GET /api/agents)."
+											onClick={() => {
+												onReloadAgents();
+												closeMenus();
+											}}
+										>
+											Reload agent catalog
+										</button>
+									</li>
+								</ul>
+							) : null}
+							{openMenu === "Settings" && label === "Settings" ? (
+								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[min(340px,92vw)] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title={
+												"Pi-style workspace agents: markdown under .pi/agents (and scan roots), plus .pi/agents/teams.yaml for agent-team rosters."
+											}
+											onClick={() => {
+												onOpenAgentSetup();
+												closeMenus();
+											}}
+										>
+											Workspace agents & teams…
+										</button>
+									</li>
+									{settingsMenu ? (
+										<>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Simple UI: appearance, approval queue preview, switch to Technical layout."
+													onClick={() => {
+														settingsMenu.onOpenSimpleAppSettings();
+														closeMenus();
+													}}
+												>
+													Appearance & app preferences…
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Models, provider, and workspace Pi JSON paths."
+													onClick={() => {
+														settingsMenu.onOpenAiBrains();
+														closeMenus();
+													}}
+												>
+													AI Brains & models…
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Workspace root summary and refresh."
+													onClick={() => {
+														settingsMenu.onOpenProjects();
+														closeMenus();
+													}}
+												>
+													Projects workspace…
+												</button>
+											</li>
+											{settingsMenu.onEditWorkspaceViewsCatalog ? (
+												<li>
+													<button
+														type="button"
+														className={menuBtnClass()}
+														title="Edit `.wayofpi/ui-views.json` (Simple workspace views catalog)."
+														onClick={() => {
+															settingsMenu.onEditWorkspaceViewsCatalog?.();
+															closeMenus();
+														}}
+													>
+														Workspace views catalog…
+													</button>
+												</li>
+											) : null}
+										</>
+									) : null}
+									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Technical sidebar: server config, Pi provider files, workspace path."
+											onClick={() => {
+												onSelectActivity("settings");
+												closeMenus();
+											}}
+										>
+											Workspace & server (sidebar)…
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Open Planning side panel (chat mode, build/plan context)."
+											onClick={() => {
+												onSelectActivity("planning");
+												closeMenus();
+											}}
+										>
+											Planning tools (sidebar)…
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											className={menuBtnClass()}
+											title="Extensions side panel."
+											onClick={() => {
+												onSelectActivity("extensions");
+												closeMenus();
+											}}
+										>
+											Extensions (sidebar)…
+										</button>
+									</li>
+									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+									<li>
+										<button
+											type="button"
+											disabled={uiMode === "simple"}
+											className={menuBtnClass(uiMode === "simple")}
+											title={uiMode === "simple" ? "Already using Simple layout." : "Switch to Simple layout."}
+											onClick={() => {
+												onUiModeChange("simple");
+												closeMenus();
+											}}
+										>
+											Use Simple layout
+											{uiMode === "simple" ? (
+												<span className="float-right text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											disabled={uiMode === "technical"}
+											className={menuBtnClass(uiMode === "technical")}
+											title={
+												uiMode === "technical" ? "Already using Technical layout." : "Switch to IDE-style layout."
+											}
+											onClick={() => {
+												onUiModeChange("technical");
+												closeMenus();
+											}}
+										>
+											Use Technical layout
+											{uiMode === "technical" ? (
+												<span className="float-right text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+									{viewTechnical ? (
+										<>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													onClick={() => {
+														viewTechnical.onToggleStatusBar();
+														closeMenus();
+													}}
+												>
+													Status bar
+													{viewTechnical.statusBarVisible ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													onClick={() => {
+														viewTechnical.onToggleMenuBar();
+														closeMenus();
+													}}
+												>
+													Menu bar
+													{viewTechnical.menuBarVisible ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													onClick={() => {
+														viewTechnical.onToggleWordWrap();
+														closeMenus();
+													}}
+												>
+													Editor word wrap
+													{viewTechnical.wordWrap ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													onClick={() => {
+														viewTechnical.onToggleBreadcrumbs();
+														closeMenus();
+													}}
+												>
+													Breadcrumbs
+													{viewTechnical.breadcrumbsVisible ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													onClick={() => {
+														viewTechnical.onToggleCenteredLayout();
+														closeMenus();
+													}}
+												>
+													Centered editor layout
+													{viewTechnical.centeredLayout ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											{onToggleAgentPanel != null && agentPanelVisible != null ? (
+												<li>
+													<button
+														type="button"
+														className={menuBtnClass()}
+														title="Show or hide the agent / chat dock region."
+														onClick={() => {
+															onToggleAgentPanel();
+															closeMenus();
+														}}
+													>
+														Agent / chat panel
+														{agentPanelVisible ? (
+															<span className="float-right text-[#89d185]">✓</span>
+														) : null}
+													</button>
+												</li>
+											) : null}
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title={viewTechnical.zenMode ? "Leave Zen (full editor)." : "Zen mode — hide side activity and panels."}
+													onClick={() => {
+														if (viewTechnical.zenMode) viewTechnical.onExitZen();
+														else viewTechnical.onEnterZen();
+														closeMenus();
+													}}
+												>
+													{viewTechnical.zenMode ? "Exit Zen mode" : "Enter Zen mode"}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Reset chrome zoom to 100% (Technical layout)."
+													onClick={() => {
+														viewTechnical.onZoomReset();
+														closeMenus();
+													}}
+												>
+													Reset UI zoom (100%)
+													<span className="float-right font-mono text-[10px] text-[#858585]">
+														{viewTechnical.uiZoomPercent}%
+													</span>
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Browser full-screen API when available."
+													onClick={() => {
+														viewTechnical.onToggleFullScreen();
+														closeMenus();
+													}}
+												>
+													Full screen
+												</button>
+											</li>
+										</>
+									) : null}
+									{chatSessionControls ? (
+										<>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													disabled={chatSessionControls.switchDisabled}
+													className={menuBtnClass(chatSessionControls.switchDisabled)}
+													title="Build mode — default assistant posture for implementation"
+													onClick={() => {
+														chatSessionControls.onSetMode("build");
+														closeMenus();
+													}}
+												>
+													Chat mode: Build
+													{chatSessionControls.mode === "build" ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													disabled={chatSessionControls.switchDisabled}
+													className={menuBtnClass(chatSessionControls.switchDisabled)}
+													title="Plan mode — injects planner.md (or fallback) for structured plans"
+													onClick={() => {
+														chatSessionControls.onSetMode("plan");
+														closeMenus();
+													}}
+												>
+													Chat mode: Plan
+													{chatSessionControls.mode === "plan" ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+										</>
+									) : null}
+									{onNewPlanFile ? (
+										<>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													disabled={newPlanFileDisabled}
+													className={menuBtnClass(!!newPlanFileDisabled)}
+													title="Creates plans/PLAN-YYYYMMDD-slug.md with a template (overwrites if path exists)"
+													onClick={() => {
+														onNewPlanFile();
+														closeMenus();
+													}}
+												>
+													New plan file (plans/PLAN-…)…
+												</button>
+											</li>
+										</>
+									) : null}
 								</ul>
 							) : null}
 						</div>

@@ -1,5 +1,8 @@
-export async function apiGet<T>(path: string): Promise<T> {
-	const res = await fetch(path, { headers: { Accept: "application/json" } });
+export async function apiGet<T>(path: string, options?: { signal?: AbortSignal }): Promise<T> {
+	const res = await fetch(path, {
+		headers: { Accept: "application/json" },
+		signal: options?.signal,
+	});
 	if (!res.ok) {
 		const t = await res.text();
 		throw new Error(`${res.status}: ${t}`);

@@ -84,7 +84,7 @@ Versioned JSON (aligned with **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLA
 
 - **`appearanceId`** — stable string, e.g. `pi-e-full`, `pi-e-project-local`, `stack:pure-focus+minimal`, or hash of sorted `-e` paths.
 - **`dockPreset`** — which regions exist by default, order, split fractions; references shared **region IDs** (editor, primarySidebar, chat, horizontalStripN, …).
-- **`defaultStripEntries`** — optional seed list of tool/file tabs per strip (see **`DockStripEntry`** in **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**).
+- **`defaultStripEntries`** — optional seed list of **dock** tabs per strip (**`DockStripEntry`** — mixed tools + files; see **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**).
 - **`flags`** — e.g. `hideMainMenu`, `agentGridLayout`, `focusMode` (parallel **pure-focus** / **agent-team** semantics).
 
 User overrides remain **per-appearance or global** (product decision); document choice in **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** when implemented.
@@ -98,7 +98,7 @@ User overrides remain **per-appearance or global** (product decision); document 
 | **P0 — Inventory** | Table above + extension → “suggested dock role” matrix | Maintain **one** canonical table; link from **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** if manifest lists tools per extension. |
 | **P1 — Presets without Pi** | Built-in **`appearanceId`** presets in **`wayofpi-ui`** (simple / technical / “dense IDE” / “focus”) | Validates **dock JSON** schema; no Pi process required. |
 | **P2 — Pi-e parity** | Optional UI: “load preset from **`pi-e`** selection” or paste **`-e`** list → maps to **`appearanceId`** + dock preset | May read **`.pi/settings.json`** locally via existing server for **FULL** vs **empty `extensions[]`**. |
-| **P3 — Live session sync** | Web reflects **actual** loaded Pi extensions (future headless/session API) | Depends on **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** / agent bridge. |
+| **P3 — Live session sync** | Web reflects **actual** loaded Pi extensions (future headless/session API) | Depends on **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** / agent bridge. |
 
 ---
 

@@ -1,6 +1,6 @@
 # Way of Pi — command and environment namespace
 
-This document defines **user-facing names** and **environment variables** for Way of Pi so it **never collides** with an upstream **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** install. Canonical product plan: **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)**.
+This document defines **user-facing names** and **environment variables** for Way of Pi so it **never collides** with an upstream **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** install. Canonical product plan: **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**.
 
 ## Principles
 
@@ -58,5 +58,5 @@ Final spelling (`wop` vs `wayofpi`) is a product decision; this repo uses **`wop
 
 ## Related
 
-- **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** — full architecture and UI plan.
+- **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** — full architecture and UI plan.
 - **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)** — current server env vars for the technical UI increment.

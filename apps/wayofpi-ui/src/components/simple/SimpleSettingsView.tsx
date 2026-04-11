@@ -41,6 +41,7 @@ function ToggleRow({
 	);
 }
 
+/** Simple shell — **wired for local prefs**: appearance, approval queue toggle, switch to technical UI. */
 export function SimpleSettingsView({
 	colorMode,
 	onColorMode,

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { parseTeamsYaml } from "../src/utils/teamsYaml";
 import { shouldSkipDir } from "./paths";
 import { listWorkspaceFolders } from "./workspace-state";
 
@@ -59,24 +60,6 @@ function parseAgentMarkdownPiStyle(raw: string): {
 		skills: unquoteFrontmatterField(frontmatter.skills || ""),
 		body: match[2].trim(),
 	};
-}
-
-export function parseTeamsYaml(text: string): Record<string, string[]> {
-	const teams: Record<string, string[]> = {};
-	let current: string | null = null;
-	for (const line of text.split(/\r?\n/)) {
-		const t = line.trimEnd();
-		if (/^\s*#/.test(t) || t === "") continue;
-		const hm = /^([a-zA-Z0-9_-]+):\s*$/.exec(t);
-		if (hm) {
-			current = hm[1];
-			teams[current] = [];
-			continue;
-		}
-		const im = /^\s*-\s*([a-zA-Z0-9_.-]+)\s*$/.exec(line);
-		if (im && current) teams[current].push(im[1]);
-	}
-	return teams;
 }
 
 /** Same recursive `*.md` collection as `extensions/agent-dir-scan.ts` (no filename skips). */

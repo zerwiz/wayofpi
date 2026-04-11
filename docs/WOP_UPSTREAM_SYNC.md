@@ -22,4 +22,4 @@
 ## Related
 
 - **[scripts/wop-upstream/README.md](../scripts/wop-upstream/README.md)** — usage and examples  
-- **[PLAN_WEB_STANDALONE_SYSTEM.md](PLAN_WEB_STANDALONE_SYSTEM.md)** — product context  
+- **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** — product context  

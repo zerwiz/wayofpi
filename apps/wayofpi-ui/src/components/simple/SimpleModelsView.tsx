@@ -17,6 +17,7 @@ function formatBytes(n: number | undefined): string {
 	return `${v < 10 && i > 0 ? v.toFixed(1) : Math.round(v)} ${u[i]}`;
 }
 
+/** Simple shell — **mostly wired**: LLM catalog + provider editor + session model; gaps tracked in `docs/WOP_*.md` if any. */
 export function SimpleModelsView({
 	config,
 	appearanceDark,
@@ -41,6 +42,23 @@ export function SimpleModelsView({
 	useEffect(() => {
 		if (providerConfigInitialPath) setSection("providers");
 	}, [providerConfigInitialPath, providerConfigInitialNonce]);
+
+	const providerKey = (config?.provider || data?.provider || "ollama").toLowerCase();
+	const unsupported = data?.unsupportedProvider === true;
+	const ollamaHost = config?.ollamaHost ?? data?.ollamaHost ?? "—";
+	const envDefault =
+		providerKey === "openrouter"
+			? (config?.openrouterModel ?? data?.envDefaultOpenrouter)
+			: (config?.ollamaModel ?? data?.envDefaultOllama);
+
+	useEffect(() => {
+		if (providerKey !== "openrouter" || unsupported) return;
+		setOpenRouterDraft((prev) => {
+			const seed = (effectiveModel ?? envDefault ?? "").trim();
+			if (prev.trim() !== "" || !seed) return prev;
+			return seed;
+		});
+	}, [providerKey, unsupported, effectiveModel, envDefault]);
 
 	const pageBg = appearanceDark ? "" : "bg-[#f3f3f3]";
 	const heading = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
@@ -75,10 +93,6 @@ export function SimpleModelsView({
 			? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
 			: "border-[#d4d4d4] bg-white text-[#333333]";
 
-	const providerKey = (config?.provider || data?.provider || "ollama").toLowerCase();
-	const ollamaHost = config?.ollamaHost ?? data?.ollamaHost ?? "—";
-	const envDefault = providerKey === "openrouter" ? config?.openrouterModel ?? data?.envDefaultOpenrouter : config?.ollamaModel ?? data?.envDefaultOllama;
-
 	const rows: Array<{
 		key: string;
 		displayName: string;
@@ -88,7 +102,7 @@ export function SimpleModelsView({
 		sizeLabel?: string;
 	}> = [];
 
-	if (providerKey === "openrouter") {
+	if (!unsupported && providerKey === "openrouter") {
 		const cur = effectiveModel ?? envDefault ?? "—";
 		rows.push({
 			key: `or-${cur}`,
@@ -97,7 +111,7 @@ export function SimpleModelsView({
 			providerLabel: "OpenRouter (api.openrouter.ai)",
 			type: "cloud",
 		});
-	} else {
+	} else if (!unsupported) {
 		const seen = new Set<string>();
 		for (const m of data?.models ?? []) {
 			if (!m.name || seen.has(m.name)) continue;
@@ -165,8 +179,10 @@ export function SimpleModelsView({
 				{section === "providers" ? (
 					<div className="mb-6">
 						<p className={`mb-3 text-sm font-medium ${sub}`}>
-							Edit the same JSON Pi uses for <span className="font-mono">/models</span>, workspace routing, and defaults.
-							Invalid JSON cannot be saved.
+							Edit the same workspace JSON Pi uses for <span className="font-mono">/models</span>, provider routing, and
+							model lists (Ollama, OpenRouter, etc. in Pi). The Bun server still reads{" "}
+							<span className="font-mono">WOP_LLM_PROVIDER</span> for <em>this</em> web chat stream. Invalid JSON cannot be
+							saved.
 						</p>
 						<ProviderConfigEditor
 							appearanceDark={appearanceDark}
@@ -180,13 +196,75 @@ export function SimpleModelsView({
 
 				{section === "session" ? (
 					<>
-				<p className={`mb-6 font-medium ${sub}`}>
-					Choose the model for this browser session. The server uses{" "}
-					<span className="font-mono">{providerKey === "openrouter" ? "OpenRouter" : "Ollama"}</span> from
-					host env; your pick is sent over the WebSocket and remembered in this browser.
-				</p>
+				<div
+					className={`mb-6 space-y-3 rounded-2xl border p-4 text-sm leading-relaxed shadow-sm ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-white"}`}
+				>
+					<p className={`font-semibold ${heading}`}>
+						Providers (Pi-style) —{" "}
+						<span className="font-mono text-[13px] font-normal text-[#9cdcfe]">WOP_LLM_PROVIDER</span> on the
+						server
+					</p>
+					<p className={sub}>
+						Pi&apos;s TUI reads workspace JSON (models / routing) via{" "}
+						<span className="font-mono text-xs">/models</span>. Here, <strong className={heading}>Provider files</strong>{" "}
+						lets you edit the same JSON; the <strong className={heading}>running Bun server</strong> still needs the
+						right host env to match how you want chat to run:
+					</p>
+					<ul className={`list-inside list-disc space-y-1.5 pl-0.5 ${sub}`}>
+						<li>
+							<span className="font-mono text-xs">ollama</span> — Local OpenAI-compatible API at{" "}
+							<span className="font-mono text-xs">OLLAMA_HOST</span> (shown below); catalog from Ollama tags; session
+							pick = model tag (e.g. <span className="font-mono text-xs">llama3</span>). Matches Pi using Ollama.
+						</li>
+						<li>
+							<span className="font-mono text-xs">openrouter</span> — Cloud models at OpenRouter; host must set{" "}
+							<span className="font-mono text-xs">OPENROUTER_API_KEY</span>; optional default{" "}
+							<span className="font-mono text-xs">OPENROUTER_MODEL</span>. Session pick = OpenRouter model id (e.g.{" "}
+							<span className="font-mono text-xs">anthropic/claude-3.5-sonnet</span>).
+						</li>
+					</ul>
+					<p className={sub}>
+						<strong className={heading}>This tab:</strong> choose the model id for <em>this browser session</em> — sent
+						over the WebSocket (<span className="font-mono text-xs">set_model</span>) and remembered in{" "}
+						<span className="font-mono text-xs">localStorage</span>. It does not switch{" "}
+						<span className="font-mono text-xs">WOP_LLM_PROVIDER</span>; restart the server with different env to change
+						Ollama vs OpenRouter.
+					</p>
+					<p className={`border-t pt-3 text-xs ${mono}`}>
+						Active backend: <span className="font-mono text-[#9cdcfe]">{providerKey}</span>
+						{unsupported ? (
+							<span className="ml-2 text-red-400">— web chat supports only ollama or openrouter</span>
+						) : providerKey === "openrouter" ? (
+							<span className="ml-2">— use custom id field + table below</span>
+						) : (
+							<span className="ml-2">
+								— <span className="font-mono">OLLAMA_HOST</span>={ollamaHost}
+							</span>
+						)}
+					</p>
+				</div>
 
-				{providerKey === "openrouter" ? (
+				{unsupported ? (
+					<div
+						className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
+							appearanceDark ? "border-red-900/60 bg-red-950/40 text-red-200" : "border-red-200 bg-red-50 text-red-900"
+						}`}
+					>
+						<p className="font-bold">Unsupported provider for web chat</p>
+						<p className={`mt-1 ${appearanceDark ? "text-red-100/90" : "text-red-900/90"}`}>
+							Set <span className="font-mono">WOP_LLM_PROVIDER</span> to <span className="font-mono">ollama</span> or{" "}
+							<span className="font-mono">openrouter</span> on the Way of Pi server host, then restart. You can still
+							edit Pi provider JSON under <strong>Provider files</strong> for TUI / future wiring.
+						</p>
+						{data?.catalogNote ? (
+							<p className={`mt-2 border-t border-red-500/20 pt-2 text-xs ${appearanceDark ? "text-red-200/80" : "text-red-900/80"}`}>
+								{data.catalogNote}
+							</p>
+						) : null}
+					</div>
+				) : null}
+
+				{providerKey === "openrouter" && !unsupported ? (
 					<div
 						className={`mb-6 rounded-2xl border p-4 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-white shadow-sm"}`}
 					>
@@ -224,7 +302,7 @@ export function SimpleModelsView({
 						{error}
 					</div>
 				) : null}
-				{data?.error && providerKey !== "openrouter" ? (
+				{data?.error && providerKey !== "openrouter" && !unsupported ? (
 					<div
 						className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
 							appearanceDark ? "border-amber-900/50 bg-amber-950/30 text-amber-100" : "border-amber-200 bg-amber-50 text-amber-950"
@@ -245,7 +323,12 @@ export function SimpleModelsView({
 						{loading && !rows.length ? (
 							<div className={`p-6 text-sm ${sub}`}>Loading models…</div>
 						) : null}
-						{!loading && !rows.length && providerKey !== "openrouter" ? (
+						{!loading && !rows.length && unsupported ? (
+							<div className={`p-6 text-sm ${sub}`}>
+								{data?.catalogNote ?? "Change WOP_LLM_PROVIDER on the server to ollama or openrouter to pick a session model here."}
+							</div>
+						) : null}
+						{!loading && !rows.length && providerKey !== "openrouter" && !unsupported ? (
 							<div className={`p-6 text-sm ${sub}`}>
 								No models returned from Ollama. Pull a model on the host (e.g.{" "}
 								<span className="font-mono">ollama pull llama3</span>) and refresh.

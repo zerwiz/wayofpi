@@ -30,6 +30,10 @@ This file is loaded into **[Context]** for sessions using this agent directory. 
 
 **`docs/CONCEPTS.md`** maps the four ideas. **`docs/TOOLS.md`** explains Pi **tools** (built-in, extension-registered, agent **`tools:`** restrictions). Root **`TOOLS.md`** lists core **`read` / `bash` / `edit` / `write`** signatures.
 
+## Way of Pi web UI (`apps/wayofpi-ui`)
+
+Shell layout ( **`TechnicalWorkspaceGrid`** ≤ **3×4**, **`WorkspacePane`**, **`WorkspaceCellDropSurface`**, **`rowWeights`/`colWeights`** splitters, edge-drop **grid grow**, cross-cell **tab** DnD, persistence, explorer → **focused** cell): **`docs/WOP_TECHNICAL_UI.md`**. Dock roadmap + Cursor rule: **`docs/WOP_MODULAR_DOCKS_PLAN.md`**, **`.cursor/rules/wop-ui-modular-docks.mdc`**.
+
 ## TillDone + checklist file
 
 When **`tilldone`** is loaded, each task list update writes **`.pi/tilldone-checklist.md`** (checkbox markdown + summary). **`read`** it for handoffs or to align with the user; **`tilldone`** tool results remain authoritative—editing the markdown does not update TillDone.
