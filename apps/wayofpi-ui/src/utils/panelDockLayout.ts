@@ -10,6 +10,7 @@ export type ToolTabId =
 	| "problems"
 	| "output"
 	| "tool_log"
+	| "agent_log"
 	| "terminal"
 	| "agent_team"
 	| "agent_chat";
@@ -18,6 +19,7 @@ export const TOOL_TAB_IDS: ToolTabId[] = [
 	"problems",
 	"output",
 	"tool_log",
+	"agent_log",
 	"terminal",
 	"agent_team",
 	"agent_chat",

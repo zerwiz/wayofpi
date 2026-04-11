@@ -91,6 +91,7 @@ type WorkspaceGridCellProps = {
 		chatAgentName?: string | null;
 		dispatchTurnAgent?: string | null;
 		chatPulseMeters?: ChatPulseMeters | null;
+		onEditTeam?: () => void;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
 		fromCell: number,
@@ -100,6 +101,8 @@ type WorkspaceGridCellProps = {
 	) => void;
 	/** Multi-cell: register per-cell save + dirty for File → Save All. */
 	registerCellSave?: (cellIndex: number, entry: { dirty: boolean; save: () => Promise<boolean> } | null) => void;
+	/** First breadcrumb segment in the editor chrome (workspace folder name). */
+	breadcrumbWorkspaceLabel?: string | null;
 };
 
 function WorkspaceGridCell({
@@ -141,6 +144,7 @@ function WorkspaceGridCell({
 	onCrossCellTabMoveBetweenCells,
 	registerCellSave,
 	externalCloseEditor,
+	breadcrumbWorkspaceLabel = null,
 }: WorkspaceGridCellProps) {
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
 	const lastExternalRev = useRef(0);
@@ -370,6 +374,7 @@ function WorkspaceGridCell({
 					workspaceGridPicker={workspaceGridPicker}
 					agentTeamPane={agentTeamPane}
 					workspaceEmbeddedChat={workspaceEmbeddedChat}
+					breadcrumbWorkspaceLabel={breadcrumbWorkspaceLabel}
 				/>
 			</div>
 		</WorkspaceCellDropSurface>
@@ -419,6 +424,7 @@ export type TechnicalWorkspaceGridProps = {
 		chatAgentName?: string | null;
 		dispatchTurnAgent?: string | null;
 		chatPulseMeters?: ChatPulseMeters | null;
+		onEditTeam?: () => void;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
 		fromCell: number,
@@ -433,6 +439,8 @@ export type TechnicalWorkspaceGridProps = {
 	/** File → Save All across editor cells. */
 	onBindMultiCellSaveApi?: (api: { saveAllDirty: () => Promise<boolean> } | null) => void;
 	onMultiCellAnyDirtyChange?: (anyDirty: boolean) => void;
+	/** First breadcrumb segment in the editor chrome (workspace folder name). */
+	breadcrumbWorkspaceLabel?: string | null;
 };
 
 export function TechnicalWorkspaceGrid({
@@ -472,6 +480,7 @@ export function TechnicalWorkspaceGrid({
 	onWorkspaceGridColResize,
 	onBindMultiCellSaveApi,
 	onMultiCellAnyDirtyChange,
+	breadcrumbWorkspaceLabel = null,
 }: TechnicalWorkspaceGridProps) {
 	const total = grid.cols * grid.rows;
 
@@ -554,6 +563,7 @@ export function TechnicalWorkspaceGrid({
 					workspaceEmbeddedChat={workspaceEmbeddedChat}
 					onCrossCellTabMoveBetweenCells={onCrossCellTabMoveBetweenCells}
 					registerCellSave={registerCellSave}
+					breadcrumbWorkspaceLabel={breadcrumbWorkspaceLabel}
 				/>
 			</div>
 		);
@@ -647,6 +657,7 @@ export function TechnicalWorkspaceGrid({
 											workspaceEmbeddedChat={workspaceEmbeddedChat}
 											onCrossCellTabMoveBetweenCells={onCrossCellTabMoveBetweenCells}
 											registerCellSave={registerCellSave}
+											breadcrumbWorkspaceLabel={breadcrumbWorkspaceLabel}
 										/>
 									</div>
 								</Fragment>

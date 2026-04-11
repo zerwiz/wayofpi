@@ -1,4 +1,5 @@
 import {
+	Brain,
 	MessageSquarePlus,
 	PanelBottom,
 	PanelRight,
@@ -31,16 +32,16 @@ import {
 	slashMenuAtCursor,
 	type SlashMenuState,
 } from "../utils/chatSlashAutocomplete";
-import { usePlanWorkspaceSummary } from "../hooks/usePlanWorkspaceSummary";
+import { usePlanHandoffSelection } from "../hooks/usePlanHandoffSelection";
 import { registerChatComposerInject } from "../utils/chatComposerInjectBus";
 import { examplePlanPathForToday } from "../utils/planModeArtifacts";
 import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../utils/planModeComposerTemplates";
 import { shouldSuggestPlanModeForMessage } from "../utils/planModeHeuristics";
 import { workspaceAgentDisplayName } from "../utils/workspaceAgentDisplay";
 import type { ChatDockRegion } from "../utils/technicalLayoutStorage";
-import { apiGet } from "../api/client";
 import { ContextUsageRing } from "./ContextUsageRing";
 import { agentsForSessionPicker, rosterNamesMissingFromAgents } from "../utils/workspaceChatAgentPicker";
+import { readShowModelThinking, writeShowModelThinking } from "../utils/showModelThinkingPreference";
 
 /** Technical UI: user-adjustable dock for the agent / session panel (Zed / Cursor–style). */
 export type TechnicalAgentDock = {
@@ -74,6 +75,8 @@ export function ChatPanel({
 	onOpenAgentTeamInPane,
 	/** Bumped from App when user chooses “Pane team” — opens inline roster without a center workspace tab. */
 	openTeamPulseSignal,
+	/** Opens Simple **My Team** (teams.yaml + new teams) — same path as Settings → My Team. */
+	onEditTeam,
 	chatAgentName,
 	/** Phrase-dispatch specialist for this turn (picker unchanged). */
 	dispatchTurnAgent,
@@ -91,13 +94,17 @@ export function ChatPanel({
 	dockPanelFrame,
 	/** Technical: chat fills a workspace editor pane tab (no fixed sidebar width). */
 	embeddedInWorkspace,
+	/** After resolving latest `plans/PLAN-*.md`, open it in the workspace editor (Plan → Review plan). */
+	onOpenPlanFileForReview,
+	/** Primary workspace folder path (or `""`) — scopes saved **Plan document** choice in localStorage. */
+	planHandoffWorkspaceKey = "",
 }: {
 	uiMode: UiMode;
 	rows: ChatRow[];
 	chatTabs: ChatSessionTab[];
 	activeChatTabId: string;
 	onSelectChatTab: (id: string) => void;
-	/** Remove a session tab (at least one tab always remains). */
+	/** Remove a session tab, or clear the last tab (fresh session; tab row stays). */
 	onCloseChatTab?: (id: string) => void;
 	streaming: boolean;
 	connected: boolean;
@@ -121,6 +128,8 @@ export function ChatPanel({
 	onOpenAgentTeamInPane?: () => void;
 	/** Incremented by App when `onOpenAgentTeamInPane` runs — expands the Team strip in this ChatPanel. */
 	openTeamPulseSignal?: number;
+	/** Simple UI: **My Team** tab to edit `teams.yaml` rosters and create teams. */
+	onEditTeam?: () => void;
 	chatAgentName?: string | null;
 	dispatchTurnAgent?: string | null;
 	onChatAgentChange?: (name: string | null) => void;
@@ -133,9 +142,11 @@ export function ChatPanel({
 	contextTitle?: string;
 	dockPanelFrame?: boolean;
 	embeddedInWorkspace?: boolean;
+	onOpenPlanFileForReview?: (workspaceRelativePath: string) => void;
+	planHandoffWorkspaceKey?: string;
 }) {
 	const [queueModalOpen, setQueueModalOpen] = useState(false);
-	const technical = uiMode === "technical";
+	const technical = uiMode !== "simple";
 	const activeChatTabLabel =
 		chatTabs.find((t) => t.id === activeChatTabId)?.label ?? (technical ? "New Chat" : "Chat");
 	const docked = technical && technicalDock != null;
@@ -157,6 +168,9 @@ export function ChatPanel({
 	const [caretPos, setCaretPos] = useState(0);
 	const [slashHighlight, setSlashHighlight] = useState(0);
 	const [planNudgeOpen, setPlanNudgeOpen] = useState(false);
+	const [showModelThinking, setShowModelThinking] = useState(() =>
+		typeof window !== "undefined" ? readShowModelThinking() : true,
+	);
 	const endRef = useRef<HTMLDivElement>(null);
 	const assistantColEndRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
@@ -176,6 +190,14 @@ export function ChatPanel({
 	const streamingNeedsPlaceholder =
 		streaming &&
 		(!lastRow || lastRow.role !== "assistant" || !String(lastRow.content ?? "").trim());
+
+	const toggleShowModelThinking = useCallback(() => {
+		setShowModelThinking((prev) => {
+			const next = !prev;
+			writeShowModelThinking(next);
+			return next;
+		});
+	}, []);
 
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	useEffect(() => {
@@ -231,7 +253,13 @@ export function ChatPanel({
 
 	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
 	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
-	const planSummary = usePlanWorkspaceSummary(Boolean(technical && connected));
+	const {
+		planCatalogReady,
+		planFiles,
+		handoffPath,
+		handoffSummary,
+		setHandoffPath,
+	} = usePlanHandoffSelection(planHandoffWorkspaceKey, Boolean(technical && connected));
 	useEffect(() => {
 		setSlashHighlight(0);
 	}, [slashMenuKey]);
@@ -291,22 +319,20 @@ export function ChatPanel({
 		setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
 	};
 
-	const applyPlanHandoff = async (kind: "implement" | "review") => {
-		try {
-			const d = await apiGet<{ latest: { path: string } | null }>("/api/plans");
-			const path = d.latest?.path;
-			if (!path) {
-				injectComposer(
-					kind === "implement"
-						? "No `plans/PLAN-*.md` file found yet — use **New plan file** or create one under `plans/`."
-						: "No `plans/PLAN-*.md` file found yet — create a plan file first, then run this again.",
-				);
-				return;
-			}
-			injectComposer(kind === "implement" ? buildImplementPlanPrompt(path) : buildReviewPlanPrompt(path));
-		} catch {
-			injectComposer("Could not read the plans index — check the workspace and server.");
+	const applyPlanHandoff = (kind: "implement" | "review") => {
+		const path = handoffPath;
+		if (!path) {
+			injectComposer(
+				kind === "implement"
+					? "No `plans/PLAN-*.md` file found yet — use **New plan file** or create one under `plans/`."
+					: "No `plans/PLAN-*.md` file found yet — create a plan file first, then run this again.",
+			);
+			return;
 		}
+		if (kind === "review") {
+			onOpenPlanFileForReview?.(path);
+		}
+		injectComposer(kind === "implement" ? buildImplementPlanPrompt(path) : buildReviewPlanPrompt(path));
 	};
 
 	const onPickFile = async (list: FileList | null) => {
@@ -361,13 +387,22 @@ export function ChatPanel({
 					>
 						<div
 							className={`flex h-full items-stretch ${
-								docked ? "pr-[9.5rem]" : onNewSession && !teamPaneOpen ? "pr-24" : "pr-1"
+								docked
+									? "pr-[11.75rem]"
+									: technical
+										? onNewSession && !teamPaneOpen
+											? "pr-[7.5rem]"
+											: "pr-12"
+										: onNewSession && !teamPaneOpen
+											? "pr-24"
+											: "pr-1"
 							}`}
 						>
 							{chatTabs.map((tab) => {
 								const active = activeChatTabId === tab.id && !teamPaneOpen;
-								const canClose = Boolean(onCloseChatTab) && chatTabs.length > 1;
+								const canClose = Boolean(onCloseChatTab);
 								const closeDisabled = streaming && activeChatTabId === tab.id;
+								const soleTab = chatTabs.length <= 1;
 								const label = technical
 									? tab.label
 									: tab.label.replace(/^(Session Chat|New Chat|New chat)$/, "Chat");
@@ -399,11 +434,17 @@ export function ChatPanel({
 										{canClose ? (
 											<button
 												type="button"
-												aria-label={`Close ${tab.label}`}
+												aria-label={
+													soleTab
+														? `Clear chat ${tab.label} and start fresh`
+														: `Close ${tab.label}`
+												}
 												title={
 													closeDisabled
 														? "Wait for the current reply to finish before closing this tab"
-														: `Close ${tab.label}`
+														: soleTab
+															? "Clear this chat and start a fresh session"
+															: `Close ${tab.label}`
 												}
 												disabled={closeDisabled}
 												onClick={(e) => {
@@ -455,6 +496,26 @@ export function ChatPanel({
 									</button>
 								</>
 							) : null}
+							{technical ? (
+								<button
+									type="button"
+									title={
+										showModelThinking
+											? "Hide model thinking — reasoning blocks already in the transcript stay saved"
+											: "Show model thinking — when the provider streams reasoning (e.g. some OpenRouter models), it appears above each assistant reply"
+									}
+									aria-label={showModelThinking ? "Hide model thinking" : "Show model thinking"}
+									aria-pressed={showModelThinking}
+									onClick={toggleShowModelThinking}
+									className={`rounded p-1.5 ${
+										showModelThinking
+											? "bg-[#312e81]/60 text-[#c7d2fe]"
+											: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+									}`}
+								>
+									<Brain size={15} strokeWidth={1.75} />
+								</button>
+							) : null}
 							{onNewSession && !teamPaneOpen ? (
 								<button
 									type="button"
@@ -504,21 +565,38 @@ export function ChatPanel({
 							</div>
 						) : (
 							<>
-								{teamNames.length > 1 ? (
-									<label className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-[#cccccc]">
+								{pulseTeam ? (
+									<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-[#cccccc]">
 										<span className="text-[#858585]">Team</span>
-										<select
-											value={pulseTeam ?? ""}
-											onChange={(e) => setPulseTeam(e.target.value || null)}
-											className="max-w-full rounded border border-[#3c3c3c] bg-[#252526] px-2 py-1 font-mono text-[11px] text-[#d4d4d4]"
-										>
-											{teamNames.map((n: string) => (
-												<option key={n} value={n}>
-													{n}
-												</option>
-											))}
-										</select>
-									</label>
+										{teamNames.length > 1 ? (
+											<select
+												value={pulseTeam}
+												onChange={(e) => setPulseTeam(e.target.value || null)}
+												className="max-w-full rounded border border-[#fb923c]/45 bg-[#252526] px-2 py-1 font-mono text-[11px] text-[#d4d4d4]"
+												aria-label="Workspace team roster"
+											>
+												{teamNames.map((n: string) => (
+													<option key={n} value={n}>
+														{n}
+													</option>
+												))}
+											</select>
+										) : (
+											<span className="rounded border border-[#fb923c]/45 bg-[#252526] px-2 py-1 font-mono text-[11px] text-[#d4d4d4]">
+												{pulseTeam}
+											</span>
+										)}
+										{onEditTeam ? (
+											<button
+												type="button"
+												onClick={onEditTeam}
+												title="Edit team members and create teams (My Team — writes teams.yaml)"
+												className="shrink-0 rounded border border-[#fb923c]/45 bg-[#252526] px-2 py-1 font-mono text-[11px] uppercase tracking-wide text-[#fdba74] hover:bg-[#ea580c]/15"
+											>
+												Edit team
+											</button>
+										) : null}
+									</div>
 								) : null}
 								{pulseTeam && pulseMembers.length > 0 ? (
 									<AgentTeamPulseGrid
@@ -593,6 +671,16 @@ export function ChatPanel({
 											<span className="font-mono text-[10px] text-[#555555]">{msg.timestamp}</span>
 										</div>
 										<div className="w-full border border-[#3c3c3c] bg-[#252526] p-3 font-mono leading-relaxed text-[#cccccc]">
+											{showModelThinking && msg.reasoning?.trim() ? (
+												<div className="mb-3 border border-[#6366f1]/30 bg-[#1e1b4b]/35 p-2">
+													<div className="mb-1 font-mono text-[9px] uppercase tracking-wide text-[#a5b4fc]">
+														Thinking
+													</div>
+													<div className="whitespace-pre-wrap text-[11px] leading-relaxed text-[#c7d2fe]">
+														{msg.reasoning}
+													</div>
+												</div>
+											) : null}
 											<div className="whitespace-pre-wrap">{msg.content}</div>
 										</div>
 									</div>
@@ -707,6 +795,16 @@ export function ChatPanel({
 											: "border border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
 									}`}
 								>
+									{technical && showModelThinking && msg.role === "assistant" && msg.reasoning?.trim() ? (
+										<div className="mb-3 border border-[#6366f1]/30 bg-[#1e1b4b]/35 p-2">
+											<div className="mb-1 font-mono text-[9px] uppercase tracking-wide text-[#a5b4fc]">
+												Thinking
+											</div>
+											<div className="whitespace-pre-wrap text-[11px] leading-relaxed text-[#c7d2fe]">
+												{msg.reasoning}
+											</div>
+										</div>
+									) : null}
 									<div className="whitespace-pre-wrap">{msg.content}</div>
 								</div>
 							</div>
@@ -950,6 +1048,53 @@ export function ChatPanel({
 							/>
 						</div>
 					</div>
+					{technical && chatMode === "plan" ? (
+						<div className="flex items-center gap-2 border-t border-[#3c3c3c] bg-[#252526] px-2 py-1">
+							<div className="flex min-w-0 flex-1 items-center gap-2">
+								{planCatalogReady && planFiles.length > 0 ? (
+									<select
+										disabled={streaming}
+										value={handoffPath ?? planFiles[0]!.path}
+										onChange={(e) => setHandoffPath(e.target.value)}
+										className="min-w-0 max-w-[220px] shrink cursor-pointer truncate rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-0.5 font-mono text-[9px] text-[#c586c0] outline-none focus:border-[#c586c0]/60 disabled:opacity-40"
+										title="Plan file for From plan / Review plan (saved per workspace)"
+										aria-label="Plan file"
+									>
+										{planFiles.map((f) => (
+											<option key={f.path} value={f.path} title={f.path}>
+												{f.path.replace(/^plans\//, "")}
+											</option>
+										))}
+									</select>
+								) : null}
+								{handoffSummary ? (
+									<span className="shrink-0 font-mono text-[9px] text-[#858585]" title={handoffSummary.path}>
+										{handoffSummary.doneTodos} done · {handoffSummary.openTodos} open
+									</span>
+								) : null}
+							</div>
+							<div className="flex shrink-0 items-center gap-1">
+								<button
+									type="button"
+									disabled={streaming || !connected || !planCatalogReady || !handoffPath}
+									onClick={() => applyPlanHandoff("implement")}
+									className="rounded border border-[#3c3c3c] bg-[#1e1e1e] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-[#cccccc] hover:border-[#ea580c]/50 disabled:opacity-40"
+									title="Insert a Build handoff for the selected plan file"
+								>
+									From plan
+								</button>
+								<button
+									type="button"
+									disabled={streaming || !connected || !planCatalogReady || !handoffPath}
+									onClick={() => applyPlanHandoff("review")}
+									className="rounded border border-[#3c3c3c] bg-[#1e1e1e] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-[#cccccc] hover:border-[#c586c0]/50 disabled:opacity-40"
+									title="Open the selected plan in the editor and insert a short review prompt"
+								>
+									Review plan
+								</button>
+							</div>
+						</div>
+					) : null}
 					<div className="flex items-center gap-2 border-t border-[#3c3c3c] bg-[#2d2d2d] p-1.5">
 						<div className="flex min-w-0 flex-1 items-center gap-2">
 							<button
@@ -973,22 +1118,22 @@ export function ChatPanel({
 									}}
 									className="min-w-0 max-w-[min(200px,50%)] shrink rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-1 font-mono text-[10px] text-[#cccccc] outline-none focus:border-[#ea580c] disabled:opacity-40"
 								>
-									<option value="">Orchestrator (session lead)</option>
-									{pickerAgents.map((a) => (
-										<option key={a.name} value={a.name} title={a.description || a.relativePath}>
-											{workspaceAgentDisplayName(a.name)}
-										</option>
-									))}
-									{rosterOnlyNames.map((name) => (
-										<option
-											key={`roster-${name}`}
-											value={name}
-											disabled
-											title="In teams.yaml but no matching agent `.md` yet."
-										>
-											{workspaceAgentDisplayName(name)} (no .md)
-										</option>
-									))}
+								<option value="">Orchestrator (session lead)</option>
+								{pickerAgents.map((a) => (
+									<option key={a.name} value={a.name} title={a.description || a.relativePath}>
+										{workspaceAgentDisplayName(a.name)}
+									</option>
+								))}
+								{rosterOnlyNames.map((name) => (
+									<option
+										key={`roster-${name}`}
+										value={name}
+										disabled
+										title="In teams.yaml but no matching agent `.md` yet."
+									>
+										{workspaceAgentDisplayName(name)} (no .md)
+									</option>
+								))}
 								</select>
 							) : null}
 							<button
@@ -1016,62 +1161,30 @@ export function ChatPanel({
 						</div>
 						<div className="flex shrink-0 items-center gap-2">
 							{technical && chatMode && onChatModeChange && !teamPaneOpen ? (
-								<div className="flex shrink-0 flex-col items-end gap-1">
-									<div
-										className="flex shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] p-0.5"
-										title="Build vs Plan — saved locally; the server applies it when the chat WebSocket is connected. Shift+Tab in the input toggles mode when not in slash completion."
+								<div
+									className="flex shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] p-0.5"
+									title="Build vs Plan — saved locally; the server applies it when the chat WebSocket is connected. Shift+Tab in the input toggles mode when not in slash completion."
+								>
+									<button
+										type="button"
+										disabled={streaming}
+										onClick={() => onChatModeChange("build")}
+										className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
+											chatMode === "build" ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
+										} disabled:opacity-40`}
 									>
-										<button
-											type="button"
-											disabled={streaming}
-											onClick={() => onChatModeChange("build")}
-											className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
-												chatMode === "build" ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
-											} disabled:opacity-40`}
-										>
-											Build
-										</button>
-										<button
-											type="button"
-											disabled={streaming}
-											onClick={() => onChatModeChange("plan")}
-											className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
-												chatMode === "plan" ? "bg-[#c586c0]/90 text-white" : "text-[#858585] hover:text-[#cccccc]"
-											} disabled:opacity-40`}
-										>
-											Plan
-										</button>
-									</div>
-									{chatMode === "plan" && planSummary ? (
-										<span
-											className="max-w-[200px] truncate font-mono text-[9px] text-[#858585]"
-											title={planSummary.path}
-										>
-											Latest plan: {planSummary.doneTodos} done · {planSummary.openTodos} open
-										</span>
-									) : null}
-									{chatMode === "plan" ? (
-										<div className="flex flex-wrap justify-end gap-1">
-											<button
-												type="button"
-												disabled={streaming || !connected}
-												onClick={() => void applyPlanHandoff("implement")}
-												className="rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-[#cccccc] hover:border-[#ea580c]/50 disabled:opacity-40"
-												title="Insert a Build handoff prompt for the newest `plans/PLAN-*.md` (by modified time)"
-											>
-												From plan
-											</button>
-											<button
-												type="button"
-												disabled={streaming || !connected}
-												onClick={() => void applyPlanHandoff("review")}
-												className="rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-[#cccccc] hover:border-[#c586c0]/50 disabled:opacity-40"
-												title="Insert a short plan-review prompt for the newest `plans/PLAN-*.md`"
-											>
-												Review plan
-											</button>
-										</div>
-									) : null}
+										Build
+									</button>
+									<button
+										type="button"
+										disabled={streaming}
+										onClick={() => onChatModeChange("plan")}
+										className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${
+											chatMode === "plan" ? "bg-[#c586c0]/90 text-white" : "text-[#858585] hover:text-[#cccccc]"
+										} disabled:opacity-40`}
+									>
+										Plan
+									</button>
 								</div>
 							) : null}
 							{streaming ? (

@@ -146,23 +146,33 @@ export function SimpleModelsView({
 	return (
 		<div className={`flex-1 overflow-y-auto p-8 ${pageBg}`}>
 			<div className="mx-auto max-w-5xl">
-				<div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-					<h1 className={`text-2xl font-extrabold ${heading}`}>AI Brains</h1>
-					<button
-						type="button"
-						onClick={() => void reload()}
-						disabled={loading}
-						className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-wider ${
-							appearanceDark
-								? "border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c] disabled:opacity-50"
-								: "border-[#d4d4d4] text-[#616161] hover:bg-[#e5e5e5] disabled:opacity-50"
-						}`}
-					>
-						<RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-						Refresh list
-					</button>
-				</div>
-				<div className="mb-4 flex flex-wrap gap-1">
+			<div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+				<h1 className={`text-2xl font-extrabold ${heading}`}>AI Brains</h1>
+				<button
+					type="button"
+					onClick={() => void reload()}
+					disabled={loading}
+					className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-wider ${
+						appearanceDark
+							? "border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c] disabled:opacity-50"
+							: "border-[#d4d4d4] text-[#616161] hover:bg-[#e5e5e5] disabled:opacity-50"
+					}`}
+				>
+					<RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+					Refresh list
+				</button>
+			</div>
+
+			{/* Plain-English explainer */}
+			<p className={`mb-5 max-w-3xl text-sm leading-relaxed ${sub}`}>
+				<strong className={heading}>AI Brains</strong> is where you choose <em>which AI model</em> powers your chat and agents.
+				Think of it like picking an engine for a car — a bigger, smarter model gives better answers but may be slower,
+				while a smaller model replies faster. The <strong className={heading}>Session model</strong> tab lets you pick the
+				model for your current chat. The <strong className={heading}>Provider files</strong> tab is for advanced setup
+				(connecting to Ollama on your computer, or OpenRouter in the cloud) — you can ignore that tab until you need it.
+			</p>
+
+			<div className="mb-4 flex flex-wrap gap-1">
 					<button
 						type="button"
 						onClick={() => setSection("session")}

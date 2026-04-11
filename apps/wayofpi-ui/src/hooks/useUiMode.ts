@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type UiMode = "simple" | "technical";
+export type UiMode = "simple" | "technical" | "claw";
 
 const STORAGE_KEY = "wayofpi.uiMode";
 
 function readStored(): UiMode {
 	try {
 		const v = localStorage.getItem(STORAGE_KEY);
-		if (v === "technical" || v === "simple") return v;
+		if (v === "technical" || v === "simple" || v === "claw") return v;
 	} catch {
 		/* ignore */
 	}
@@ -34,7 +34,7 @@ export function useUiMode() {
 
 	const toggleMode = useCallback(() => {
 		setModeState((m) => {
-			const next: UiMode = m === "simple" ? "technical" : "simple";
+			const next: UiMode = m === "simple" ? "technical" : m === "technical" ? "claw" : "simple";
 			try {
 				localStorage.setItem(STORAGE_KEY, next);
 			} catch {
@@ -44,5 +44,5 @@ export function useUiMode() {
 		});
 	}, []);
 
-	return { mode, setMode, toggleMode, isTechnical: mode === "technical" };
+	return { mode, setMode, toggleMode, isTechnical: mode === "technical", isClaw: mode === "claw" };
 }

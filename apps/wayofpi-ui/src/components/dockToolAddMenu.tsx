@@ -9,6 +9,11 @@ export const DOCK_ADD_TOOL_ITEMS: { tab: BottomPanelTab; label: string; detail?:
 	{ tab: "agent_chat", label: "Agent chat", detail: "Session chat in this editor pane" },
 	{ tab: "agent_team", label: "Team pulse", detail: "Pi agent-team roster (from teams.yaml)" },
 	{ tab: "tool_log", label: "Tool log", detail: "Traces: read, list_dir, grep, write, bash, team_*, mv, mkdir + Pi tools" },
+	{
+		tab: "agent_log",
+		label: "Agent log",
+		detail: "Merged timeline: session, chat, orchestrator + every tool trace (debug stalls, git, push)",
+	},
 	{ tab: "output", label: "Output", detail: "Session, workspace nav, index, diagnostics, chat errors" },
 	{ tab: "problems", label: "Problems", detail: "ESLint or tsc — workspace static analysis" },
 ];

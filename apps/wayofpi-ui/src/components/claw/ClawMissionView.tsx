@@ -1,0 +1,543 @@
+import {
+	Activity,
+	AlertTriangle,
+	Bot,
+	CalendarDays,
+	CheckCircle2,
+	Cpu,
+	ExternalLink,
+	FileText,
+	MessageCircle,
+	Play,
+	Radio,
+	RefreshCw,
+	Shield,
+	Terminal,
+	Users,
+	Zap,
+} from "lucide-react";
+import type { AgentMeta } from "../../hooks/useAgents";
+import type { LogRow } from "../../hooks/useWayOfPiSession";
+import type { ServerConfig } from "../../hooks/useServerConfig";
+import { useClawWorkspace } from "../../hooks/useClawWorkspace";
+import { ClawWorkspaceCard } from "./ClawWorkspaceCard";
+
+function Card({
+	children,
+	className = "",
+	dark,
+}: {
+	children: React.ReactNode;
+	className?: string;
+	dark: boolean;
+}) {
+	return (
+		<div
+			className={`rounded-xl border ${
+				dark ? "border-[#2a2a2a] bg-[#1e1e1e]" : "border-[#e5e5e5] bg-white shadow-sm"
+			} ${className}`}
+		>
+			{children}
+		</div>
+	);
+}
+
+function CardHeader({
+	icon: Icon,
+	title,
+	dark,
+	action,
+}: {
+	icon: typeof Activity;
+	title: string;
+	dark: boolean;
+	action?: React.ReactNode;
+}) {
+	return (
+		<div
+			className={`flex items-center justify-between border-b px-4 py-3 ${
+				dark ? "border-[#2a2a2a]" : "border-[#f0f0f0]"
+			}`}
+		>
+			<div className="flex items-center gap-2">
+				<Icon
+					size={14}
+					className={dark ? "text-[#fb923c]" : "text-[#ea580c]"}
+				/>
+				<span
+					className={`text-[11px] font-bold uppercase tracking-wider ${
+						dark ? "text-[#858585]" : "text-[#888888]"
+					}`}
+				>
+					{title}
+				</span>
+			</div>
+			{action}
+		</div>
+	);
+}
+
+function StatusDot({ ok, dark }: { ok: boolean; dark: boolean }) {
+	return (
+		<span
+			className={`inline-flex h-2 w-2 shrink-0 rounded-full ${
+				ok ? "bg-[#4ec9b0]" : dark ? "bg-[#f14c4c]" : "bg-[#cd3131]"
+			}`}
+		/>
+	);
+}
+
+function EngineChip({ config, dark }: { config: ServerConfig | null; dark: boolean }) {
+	if (!config) return <span className={`text-[11px] ${dark ? "text-[#858585]" : "text-[#888888]"}`}>…</span>;
+	const ispi = config.piDrivesChat;
+	return (
+		<span
+			className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+				ispi
+					? dark
+						? "bg-[#4ec9b0]/15 text-[#4ec9b0]"
+						: "bg-[#4ec9b0]/20 text-[#0a7a68]"
+					: dark
+						? "bg-[#fb923c]/15 text-[#fb923c]"
+						: "bg-[#ea580c]/12 text-[#c2410c]"
+			}`}
+		>
+			<span
+				className={`h-1.5 w-1.5 rounded-full ${ispi ? "bg-[#4ec9b0]" : "bg-[#fb923c]"}`}
+			/>
+			{ispi ? "Pi engine" : config.chatEngine === "auto" ? "auto (Bun)" : `Bun · ${config.provider ?? "ollama"}`}
+		</span>
+	);
+}
+
+/** Mission control dashboard for Claw UI. */
+export function ClawMissionView({
+	config,
+	connected,
+	streaming,
+	agents,
+	agentsLoading,
+	logs,
+	workspacePath,
+	onStartChat,
+	onNewPlan,
+	onOpenHostDoctor,
+	onSwitchToTeam,
+	onSwitchToSchedule,
+	onSwitchToChannels,
+	onOpenFile,
+	dark,
+}: {
+	config: ServerConfig | null;
+	connected: boolean;
+	streaming: boolean;
+	agents: AgentMeta[];
+	agentsLoading: boolean;
+	logs: LogRow[];
+	workspacePath: string;
+	onStartChat: () => void;
+	onNewPlan: () => void;
+	onOpenHostDoctor: () => void;
+	onSwitchToTeam: () => void;
+	onSwitchToSchedule?: () => void;
+	onSwitchToChannels?: () => void;
+	/** Navigate to a workspace file (switches to Files tab and opens it). */
+	onOpenFile: (path: string) => void;
+	dark: boolean;
+}) {
+	const bg = dark ? "bg-[#161616]" : "bg-[#f5f5f5]";
+	const text = dark ? "text-[#cccccc]" : "text-[#333333]";
+	const muted = dark ? "text-[#858585]" : "text-[#888888]";
+	const sep = dark ? "border-[#252526]" : "border-[#e5e5e5]";
+
+	const recentLogs = logs.slice(-20).reverse();
+	const clawWs = useClawWorkspace(workspacePath !== "—");
+
+	return (
+		<div className={`flex min-h-0 min-w-0 w-full flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-4 ${bg} ${text}`}>
+			{/* ── Status strip ── */}
+			<div
+				className={`flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 ${
+					dark ? "border-[#ea580c]/20 bg-[#ea580c]/5" : "border-[#ea580c]/15 bg-[#ea580c]/5"
+				}`}
+			>
+				<div className="flex items-center gap-2">
+					<StatusDot ok={connected} dark={dark} />
+					<span className={`text-[12px] font-medium ${connected ? (dark ? "text-[#4ec9b0]" : "text-[#0a7a68]") : (dark ? "text-[#f14c4c]" : "text-[#cd3131]")}`}>
+						{connected ? "Connected" : "Disconnected"}
+					</span>
+				</div>
+				<span className={`text-[11px] ${sep} border-l pl-3 ${muted}`}>Engine:</span>
+				<EngineChip config={config} dark={dark} />
+				<span className={`hidden truncate text-[11px] sm:block ${sep} border-l pl-3 ${muted}`}>
+					<span className="mr-1 font-mono text-[10px]">ws:</span>
+					{workspacePath === "—" ? <span className={muted}>No folder open</span> : workspacePath}
+				</span>
+				{streaming ? (
+					<span
+						className={`ml-auto flex items-center gap-1 text-[11px] font-semibold ${
+							dark ? "text-[#fb923c]" : "text-[#ea580c]"
+						}`}
+					>
+						<span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+						Running…
+					</span>
+				) : null}
+			</div>
+
+			{/* ── Main grid ── */}
+			<div className="grid min-h-0 gap-4 lg:grid-cols-3">
+				{/* Left column: Quick actions + Agents */}
+				<div className="flex min-w-0 flex-col gap-4">
+					{/* Quick actions */}
+					<Card dark={dark}>
+						<CardHeader icon={Zap} title="Quick actions" dark={dark} />
+						<div className="flex flex-col gap-1.5 p-3">
+							<QuickBtn
+								icon={MessageCircle}
+								label="Open Chat"
+								desc="Start or continue conversation"
+								dark={dark}
+								onClick={onStartChat}
+								accent
+							/>
+							<QuickBtn
+								icon={FileText}
+								label="New Plan"
+								desc="plans/PLAN-….md"
+								dark={dark}
+								onClick={onNewPlan}
+							/>
+							<QuickBtn
+								icon={Users}
+								label="My Team"
+								desc="View and manage agents"
+								dark={dark}
+								onClick={onSwitchToTeam}
+							/>
+						<QuickBtn
+							icon={Terminal}
+							label="Host Doctor"
+							desc="Workspace and env diagnostics"
+							dark={dark}
+							onClick={onOpenHostDoctor}
+						/>
+						<QuickBtn
+							icon={CalendarDays}
+							label="Schedules"
+							desc="Timer-driven Pi turns (Phase D)"
+							dark={dark}
+							onClick={onSwitchToSchedule ?? (() => {})}
+						/>
+						<QuickBtn
+							icon={Radio}
+							label="Channels"
+							desc="Telegram status + setup; webhook & email planned"
+							dark={dark}
+							onClick={onSwitchToChannels ?? (() => {})}
+						/>
+						</div>
+					</Card>
+
+					{/* Claw status legend */}
+					<Card dark={dark}>
+						<CardHeader icon={Shield} title="Claw status" dark={dark} />
+						<div className="flex flex-col gap-2.5 p-4">
+							<StatusRow
+								icon={config?.piDrivesChat ? CheckCircle2 : AlertTriangle}
+								label="Engine"
+								value={
+									config?.piDrivesChat
+										? "Pi (full tools + extensions)"
+										: "Bun (interim, no Pi tools)"
+								}
+								ok={!!config?.piDrivesChat}
+								dark={dark}
+							/>
+							<StatusRow
+								icon={config?.orchestratorTools ? CheckCircle2 : AlertTriangle}
+								label="Orchestrator tools"
+								value={config?.orchestratorTools ? "Enabled" : "Disabled"}
+								ok={!!config?.orchestratorTools}
+								dark={dark}
+							/>
+							<StatusRow
+								icon={CheckCircle2}
+								label="Schedules / channels"
+								value="UI ready · execution Phase D–F"
+								ok={false}
+								planned
+								dark={dark}
+							/>
+							<button
+								type="button"
+								onClick={onOpenHostDoctor}
+								className={`mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-medium transition-colors ${
+									dark
+										? "border-[#2a2a2a] text-[#858585] hover:border-[#3c3c3c] hover:text-[#cccccc]"
+										: "border-[#e5e5e5] text-[#888888] hover:border-[#d5d5d5] hover:text-[#333333]"
+								}`}
+							>
+								<ExternalLink size={11} />
+								Full diagnostics
+							</button>
+						</div>
+					</Card>
+
+				{/* Claw workspace */}
+				<ClawWorkspaceCard
+					ws={clawWs}
+					workspacePath={workspacePath}
+					dark={dark}
+					onOpenFile={onOpenFile}
+					onOpenChannels={onSwitchToChannels}
+				/>
+				</div>
+
+				{/* Center: Activity feed */}
+				<div className="lg:col-span-2 flex min-w-0 flex-col gap-4">
+					<Card dark={dark} className="flex min-h-0 flex-col">
+						<CardHeader
+							icon={Activity}
+							title="Activity"
+							dark={dark}
+							action={
+								<span className={`text-[10px] ${muted}`}>last {recentLogs.length} events</span>
+							}
+						/>
+						<div className="min-h-[200px] overflow-y-auto">
+							{recentLogs.length === 0 ? (
+								<div className={`flex flex-col items-center justify-center gap-3 py-12 ${muted}`}>
+									<Radio size={28} className="opacity-30" />
+									<span className="text-[12px]">No activity yet — start a chat or run an agent.</span>
+								</div>
+							) : (
+								<ul className="divide-y divide-transparent p-1">
+									{recentLogs.map((log, i) => (
+										<ActivityRow key={i} log={log} dark={dark} />
+									))}
+								</ul>
+							)}
+						</div>
+					</Card>
+
+					{/* Agent roster summary */}
+					<Card dark={dark}>
+						<CardHeader
+							icon={Bot}
+							title="Agent roster"
+							dark={dark}
+							action={
+								<button
+									type="button"
+									onClick={onSwitchToTeam}
+									className={`flex items-center gap-1 text-[10px] font-medium ${
+										dark ? "text-[#fb923c] hover:text-[#fed7aa]" : "text-[#ea580c] hover:text-[#9a3412]"
+									}`}
+								>
+									Manage <ExternalLink size={9} />
+								</button>
+							}
+						/>
+						{agentsLoading ? (
+							<div className={`flex items-center justify-center py-6 ${muted}`}>
+								<RefreshCw size={14} className="animate-spin mr-2" />
+								<span className="text-[12px]">Loading agents…</span>
+							</div>
+						) : agents.length === 0 ? (
+							<div className={`py-6 text-center text-[12px] ${muted}`}>
+								No agents found in <span className="font-mono text-[11px]">.pi/agents/</span>
+							</div>
+						) : (
+							<div className="flex flex-wrap gap-2 p-3">
+								{agents.slice(0, 12).map((a) => (
+									<AgentPill key={a.name} agent={a} dark={dark} />
+								))}
+								{agents.length > 12 ? (
+									<button
+										type="button"
+										onClick={onSwitchToTeam}
+										className={`rounded-full border px-3 py-1 text-[11px] font-medium ${
+											dark
+												? "border-[#3c3c3c] text-[#858585] hover:text-[#cccccc]"
+												: "border-[#e5e5e5] text-[#888888] hover:text-[#333333]"
+										}`}
+									>
+										+{agents.length - 12} more
+									</button>
+								) : null}
+							</div>
+						)}
+					</Card>
+				</div>
+			</div>
+
+			{/* ── Roadmap notice ── */}
+			<div
+				className={`w-full min-w-0 rounded-xl border border-dashed px-4 py-3 text-[11px] leading-relaxed break-words ${
+					dark
+						? "border-[#ea580c]/25 text-[#858585]"
+						: "border-[#ea580c]/30 text-[#888888]"
+				}`}
+			>
+				<span className={`mr-1.5 font-semibold ${dark ? "text-[#fb923c]" : "text-[#ea580c]"}`}>
+					Claw roadmap
+				</span>
+				Scheduled ops, inbound channels, and deep multi-agent orchestration are planned in phases — see{" "}
+				<span className="font-mono text-[10px] break-all">docs/WOP_CLAW_MODE_PLAN.md</span> and{" "}
+				<span className="font-mono text-[10px] break-all">docs/WOP_CLAW_UI_PLAN.md</span> for the build order.
+			</div>
+		</div>
+	);
+}
+
+function QuickBtn({
+	icon: Icon,
+	label,
+	desc,
+	dark,
+	onClick,
+	accent = false,
+}: {
+	icon: typeof MessageCircle;
+	label: string;
+	desc: string;
+	dark: boolean;
+	onClick: () => void;
+	accent?: boolean;
+}) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+				accent
+					? dark
+						? "bg-[#ea580c]/15 text-[#fb923c] hover:bg-[#ea580c]/25"
+						: "bg-[#ea580c]/10 text-[#ea580c] hover:bg-[#ea580c]/18"
+					: dark
+						? "text-[#cccccc] hover:bg-[#252526]"
+						: "text-[#333333] hover:bg-[#f5f5f5]"
+			}`}
+		>
+			<Icon size={16} className="shrink-0" />
+			<div className="min-w-0">
+				<div className="text-[12px] font-semibold leading-none">{label}</div>
+				<div className={`mt-0.5 truncate text-[10px] ${dark ? "text-[#585858]" : "text-[#aaaaaa]"}`}>
+					{desc}
+				</div>
+			</div>
+		</button>
+	);
+}
+
+function StatusRow({
+	icon: Icon,
+	label,
+	value,
+	ok,
+	planned = false,
+	dark,
+}: {
+	icon: typeof CheckCircle2;
+	label: string;
+	value: string;
+	ok: boolean;
+	planned?: boolean;
+	dark: boolean;
+}) {
+	return (
+		<div className="flex items-start gap-2.5">
+			<Icon
+				size={13}
+				className={`mt-0.5 shrink-0 ${
+					planned
+						? dark
+							? "text-[#585858]"
+							: "text-[#aaaaaa]"
+						: ok
+							? "text-[#4ec9b0]"
+							: dark
+								? "text-[#fb923c]"
+								: "text-[#ea580c]"
+				}`}
+			/>
+			<div className="min-w-0">
+				<span className={`text-[11px] font-semibold ${dark ? "text-[#858585]" : "text-[#888888]"}`}>
+					{label}:{" "}
+				</span>
+				<span className={`text-[11px] ${dark ? "text-[#cccccc]" : "text-[#444444]"}`}>{value}</span>
+			</div>
+		</div>
+	);
+}
+
+function ActivityRow({ log, dark }: { log: LogRow; dark: boolean }) {
+	const isTool =
+		log.source === "tool" ||
+		log.msg.startsWith("▶") ||
+		log.msg.startsWith("✓") ||
+		log.msg.startsWith("✗") ||
+		log.msg.toLowerCase().includes("tool");
+	const isSystem = log.level === "info" && !isTool;
+
+	const Icon = isTool ? Cpu : isSystem ? Play : MessageCircle;
+	const iconColor = isTool
+		? dark
+			? "text-[#fb923c]"
+			: "text-[#ea580c]"
+		: dark
+			? "text-[#858585]"
+			: "text-[#aaaaaa]";
+
+	return (
+		<li
+			className={`flex items-start gap-2 rounded-lg px-3 py-2 transition-colors ${
+				dark ? "hover:bg-[#252526]" : "hover:bg-[#f5f5f5]"
+			}`}
+		>
+			<Icon size={12} className={`mt-0.5 shrink-0 ${iconColor}`} />
+			<span
+				className={`min-w-0 break-all font-mono text-[11px] leading-relaxed ${
+					isTool
+						? dark
+							? "text-[#d4d4d4]"
+							: "text-[#333333]"
+						: dark
+							? "text-[#858585]"
+							: "text-[#888888]"
+				}`}
+			>
+				{log.msg}
+			</span>
+		</li>
+	);
+}
+
+function AgentPill({ agent, dark }: { agent: AgentMeta; dark: boolean }) {
+	const initials = agent.name
+		.split("-")
+		.map((w) => w[0]?.toUpperCase() ?? "")
+		.join("")
+		.slice(0, 2);
+
+	return (
+		<div
+			title={agent.description || agent.name}
+			className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] ${
+				dark
+					? "border-[#2a2a2a] bg-[#252526] text-[#cccccc]"
+					: "border-[#e5e5e5] bg-[#fafafa] text-[#444444]"
+			}`}
+		>
+			<span
+				className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
+					dark ? "bg-[#ea580c]/20 text-[#fb923c]" : "bg-[#ea580c]/12 text-[#ea580c]"
+				}`}
+			>
+				{initials}
+			</span>
+			<span className="max-w-[80px] truncate font-medium">{agent.name}</span>
+		</div>
+	);
+}

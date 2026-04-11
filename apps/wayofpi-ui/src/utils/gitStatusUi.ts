@@ -15,6 +15,8 @@ export type GitBadgeHelp = {
 	summary: string;
 	detail: string;
 	fix?: GitExplorerFix;
+	/** `git add -A` in the repo that contains this row (anchor path for multi-root). */
+	fixStageAll?: { label: string; workspaceRelPath: string };
 };
 
 /** Best-effort quoting for `git add "…"` in a terminal (reference only). */
@@ -26,12 +28,15 @@ export function shellGitAddQuoted(relPath: string): string {
 
 /** Rich copy for the explorer Git badge popover (??, *, two-letter codes). */
 export function gitBadgeHelp(gitStatus: string, relPath: string): GitBadgeHelp {
+	const stageAll = { label: "Stage all changes", workspaceRelPath: relPath };
+
 	if (gitStatus === "??") {
 		return {
 			summary: "Untracked (Git ??)",
 			detail:
 				"Git has not recorded this path in the index yet—common for new files or folders. Stage it before it can be committed, or add a .gitignore rule if it should stay local-only.",
 			fix: { kind: "stage", label: "Stage for commit", workspaceRelPath: relPath },
+			fixStageAll: stageAll,
 		};
 	}
 	if (gitStatus === "*") {
@@ -40,6 +45,7 @@ export function gitBadgeHelp(gitStatus: string, relPath: string): GitBadgeHelp {
 			detail:
 				"Something inside this folder was modified, added, deleted, renamed, or is untracked. Expand the folder to see each entry’s status (M, A, D, ??, …).",
 			fix: { kind: "refresh_tree", label: "Refresh tree" },
+			fixStageAll: stageAll,
 		};
 	}
 
@@ -62,5 +68,6 @@ export function gitBadgeHelp(gitStatus: string, relPath: string): GitBadgeHelp {
 		summary: `Git status: ${gitStatus}`,
 		detail,
 		fix: { kind: "stage", label: "Stage for commit", workspaceRelPath: relPath },
+		fixStageAll: stageAll,
 	};
 }

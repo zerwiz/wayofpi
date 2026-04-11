@@ -1,6 +1,6 @@
 import { FileCode2, Save, X } from "lucide-react";
 import type { FormEvent } from "react";
-import { forwardRef, useEffect, useMemo, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import type { SimpleMarkdownPaneMode } from "../../hooks/useSimplePreferences";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
@@ -26,6 +26,8 @@ export const SimpleFilePanel = forwardRef<
 		error: string | null;
 		dirty: boolean;
 		onSave: () => void | Promise<void>;
+		/** Revert buffer to last saved snapshot (same as technical workspace). */
+		onDiscardUnsaved?: () => void;
 		onClose: () => void;
 		onCursor?: (line: number, col: number) => void;
 		appearanceDark: boolean;
@@ -49,6 +51,7 @@ export const SimpleFilePanel = forwardRef<
 		error,
 		dirty,
 		onSave,
+		onDiscardUnsaved,
 		onClose,
 		onCursor,
 		appearanceDark,
@@ -96,8 +99,12 @@ export const SimpleFilePanel = forwardRef<
 		appearanceDark ? "text-[#a3a3a3] hover:bg-[#2d2d2d]" : "text-[#6b7280] hover:bg-[#f3f4f6]";
 	const btnPrimary =
 		appearanceDark
-			? "inline-flex items-center gap-1.5 rounded-lg bg-[#ea580c] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#c2410c] disabled:opacity-40"
-			: "inline-flex items-center gap-1.5 rounded-lg bg-[#ea580c] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#c2410c] disabled:opacity-40";
+			? "inline-flex items-center gap-1.5 rounded-lg border border-[#0e639c] bg-[#0e639c] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#1177bb] disabled:opacity-40"
+			: "inline-flex items-center gap-1.5 rounded-lg border border-[#007acc] bg-[#007acc] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0062a3] disabled:opacity-40";
+	const btnUndo =
+		appearanceDark
+			? "inline-flex items-center gap-1.5 rounded-lg border border-[#3c3c3c] bg-[#2d2d2d] px-3 py-1.5 text-xs font-semibold text-[#cccccc] hover:bg-[#3c3c3c]"
+			: "inline-flex items-center gap-1.5 rounded-lg border border-[#e5e5e5] bg-[#f3f3f3] px-3 py-1.5 text-xs font-semibold text-[#333333] hover:bg-[#e5e5e5]";
 	const bodyBg = appearanceDark ? "bg-[#1e1e1e]" : "bg-[#f3f3f3]";
 	const lineNums = appearanceDark ? "text-[#858585]" : "text-[#858585]";
 	const textArea = appearanceDark
@@ -110,6 +117,22 @@ export const SimpleFilePanel = forwardRef<
 		void onSave();
 	};
 
+	const panelRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (!dirty) return;
+		const root = panelRef.current;
+		if (!root) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Enter" || (!e.ctrlKey && !e.metaKey)) return;
+			const t = e.target;
+			if (!(t instanceof HTMLTextAreaElement) || !root.contains(t)) return;
+			e.preventDefault();
+			if (!loading) void onSave();
+		};
+		document.addEventListener("keydown", onKey, true);
+		return () => document.removeEventListener("keydown", onKey, true);
+	}, [dirty, loading, onSave]);
+
 	const outer =
 		columnLayout === "besideChat"
 			? `flex min-h-0 flex-1 flex-col overflow-hidden ${shell}`
@@ -118,7 +141,7 @@ export const SimpleFilePanel = forwardRef<
 	const fileIconClass = appearanceDark ? "text-[#fb923c]" : "text-[#ea580c]";
 
 	return (
-		<div className={outer}>
+		<div ref={panelRef} className={outer}>
 			<div className={`flex shrink-0 items-center gap-3 border-b px-4 py-3 ${header}`}>
 				<div className="flex min-w-0 flex-1 items-center gap-3">
 					<div
@@ -173,12 +196,25 @@ export const SimpleFilePanel = forwardRef<
 						</div>
 					) : null}
 					{dirty ? (
-						<form onSubmit={submitSave}>
-							<button type="submit" disabled={loading} className={btnPrimary}>
-								<Save size={14} />
-								Save
-							</button>
-						</form>
+						<div className="flex flex-wrap items-center justify-end gap-2">
+							{onDiscardUnsaved ? (
+								<button
+									type="button"
+									onClick={onDiscardUnsaved}
+									className={btnUndo}
+									title="Revert editor to last saved version"
+								>
+									Undo changes
+								</button>
+							) : null}
+							<form onSubmit={submitSave} className="inline-flex">
+								<button type="submit" disabled={loading} className={btnPrimary} title="Save file (Ctrl+Enter)">
+									<Save size={14} aria-hidden />
+									Keep file
+									<span className="ml-1.5 hidden font-normal opacity-90 sm:inline">Ctrl+Enter</span>
+								</button>
+							</form>
+						</div>
 					) : null}
 					<button type="button" onClick={onClose} className={`inline-flex items-center gap-1 ${btnGhost}`}>
 						<X size={14} />

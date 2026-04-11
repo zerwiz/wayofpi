@@ -17,7 +17,7 @@ import {
 	serializeFilePathForDrag,
 	WOP_FILE_PATH_DND_TYPE,
 } from "../utils/panelDockLayout";
-import { posixBasename } from "../utils/posixPath";
+import { posixBasename, posixDirname } from "../utils/posixPath";
 import { GitExplorerStatusBadge } from "./GitExplorerStatusBadge";
 import { gitExplorerRowTitle } from "../utils/gitStatusUi";
 import { sortTreeNodes } from "../utils/sortTreeNodes";
@@ -60,6 +60,7 @@ export function FileTree({
 	expandRevision,
 	pathsToExpand,
 	onExplorerGitMutated,
+	allowWorkspaceRootDrop,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -68,6 +69,8 @@ export function FileTree({
 	openInMainEditorPaths?: readonly string[];
 	onSelectDirectory?: (dirPath: string) => void;
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
+	/** Single-root workspace: empty tree area / padding accepts drop → workspace root (`""`). */
+	allowWorkspaceRootDrop?: boolean;
 	onRenameNode?: (path: string, kind: "file" | "dir", currentName: string) => Promise<void>;
 	onDeleteNode?: (path: string, kind: "file" | "dir") => Promise<void>;
 	onCopyPath?: (path: string) => void;
@@ -80,6 +83,7 @@ export function FileTree({
 	const sorted = useMemo(() => sortTreeNodes(nodes), [nodes]);
 	const suppressFileClickRef = useRef(false);
 	const [dropTargetDir, setDropTargetDir] = useState<string | null>(null);
+	const [rootEmptyDropActive, setRootEmptyDropActive] = useState(false);
 	const [menu, setMenu] = useState<ContextMenuState | null>(null);
 	const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -165,6 +169,56 @@ export function FileTree({
 		[onMoveFileToDirectory, runMove],
 	);
 
+	const onFileRowDrop = useCallback(
+		async (e: DragEvent, filePath: string) => {
+			if (!onMoveFileToDirectory) return;
+			e.preventDefault();
+			e.stopPropagation();
+			setDropTargetDir(null);
+			const from = readDraggedExplorerFilePath(e.dataTransfer);
+			if (!from || from === filePath) return;
+			const toDir = posixDirname(filePath);
+			await runMove(from, toDir);
+			setExpanded((prev) => {
+				const next = new Set(prev);
+				if (toDir) next.add(toDir);
+				return next;
+			});
+		},
+		[onMoveFileToDirectory, runMove],
+	);
+
+	const onTreeRootEmptyDragOver = useCallback(
+		(e: DragEvent<HTMLDivElement>) => {
+			if (!allowWorkspaceRootDrop || !onMoveFileToDirectory || !isExplorerFilePathDrag(e.dataTransfer)) return;
+			if (e.target !== e.currentTarget) return;
+			e.preventDefault();
+			e.dataTransfer.dropEffect = "move";
+			setRootEmptyDropActive(true);
+		},
+		[allowWorkspaceRootDrop, onMoveFileToDirectory],
+	);
+
+	const onTreeRootEmptyDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+		const rel = e.relatedTarget as Node | null;
+		if (rel && e.currentTarget.contains(rel)) return;
+		setRootEmptyDropActive(false);
+	}, []);
+
+	const onTreeRootEmptyDrop = useCallback(
+		async (e: DragEvent<HTMLDivElement>) => {
+			if (!allowWorkspaceRootDrop || !onMoveFileToDirectory) return;
+			if (e.target !== e.currentTarget) return;
+			e.preventDefault();
+			setRootEmptyDropActive(false);
+			const from = readDraggedExplorerFilePath(e.dataTransfer);
+			if (!from) return;
+			if (posixDirname(from) === "") return;
+			await onMoveFileToDirectory(from, "");
+		},
+		[allowWorkspaceRootDrop, onMoveFileToDirectory],
+	);
+
 	const onRowContextMenu = useCallback((e: MouseEvent, node: TreeNode) => {
 		if (!onRenameNode && !onDeleteNode && !onCopyPath) return;
 		e.preventDefault();
@@ -212,7 +266,6 @@ export function FileTree({
 								? (e: DragEvent<HTMLButtonElement>) => {
 										if (!isExplorerFilePathDrag(e.dataTransfer)) return;
 										e.preventDefault();
-										e.stopPropagation();
 									}
 								: undefined
 					}
@@ -221,9 +274,7 @@ export function FileTree({
 						node.type === "dir"
 							? (e) => void onFolderDrop(e, node.path)
 							: onMoveFileToDirectory
-								? (e: DragEvent<HTMLButtonElement>) => {
-										e.stopPropagation();
-									}
+								? (e: DragEvent<HTMLButtonElement>) => void onFileRowDrop(e, node.path)
 								: undefined
 					}
 					onDragStart={
@@ -372,8 +423,19 @@ export function FileTree({
 			document.body,
 		);
 
+	const rootDropChrome =
+		allowWorkspaceRootDrop && rootEmptyDropActive
+			? "bg-[#264f78]/25 outline outline-1 outline-[#ea580c]/40 -outline-offset-1"
+			: "";
+
 	return (
-		<div className="py-1" data-explorer-tree>
+		<div
+			className={`min-h-full py-1 ${rootDropChrome}`}
+			data-explorer-tree
+			onDragOver={allowWorkspaceRootDrop && onMoveFileToDirectory ? onTreeRootEmptyDragOver : undefined}
+			onDragLeave={allowWorkspaceRootDrop && onMoveFileToDirectory ? onTreeRootEmptyDragLeave : undefined}
+			onDrop={allowWorkspaceRootDrop && onMoveFileToDirectory ? (e) => void onTreeRootEmptyDrop(e) : undefined}
+		>
 			{renderNodes(sorted, 0)}
 			{menuPortal}
 		</div>

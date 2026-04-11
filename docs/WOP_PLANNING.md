@@ -6,6 +6,8 @@ High-level **roadmaps and product plans** for this repository.
 
 | Document | Scope |
 |----------|--------|
+| **[WOP_PRODUCT_CAPABILITIES.md](WOP_PRODUCT_CAPABILITIES.md)** | **Product capabilities** — what ships today vs partial vs planned (Pi playground + Way of Pi); links to wiring plan, namespace, backlog |
+| **[WOP_PRODUCT_OVERVIEW.md](WOP_PRODUCT_OVERVIEW.md)** | **Product overview** — narrative onboarding: pitch, why, component map, typical journeys, links to capabilities + standalone plan |
 | **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** | **Way of Pi** — web UI + headless Pi, namespace isolation, UI sitemap, MVP phases, production checklist (**critical:** rename *our* backend files/ids so they are never ambiguous with upstream **`pi`**) |
 | **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** | **Single build checklist** — merged TODOs from WOP plans **+ [WOP_STANDALONE_SYSTEM_PLAN](WOP_STANDALONE_SYSTEM_PLAN.md)** (**§15**), **+ [WOP_PLANNING](WOP_PLANNING.md)** hub notes (**§16**); sources in doc header |
 | **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** | **Pi backend wiring** — **§0 critical lock** (all agents = Pi runtime for tools/extensions); current Bun APIs vs Pi target, `/ws` map, phases 0–6 (**manifest**, **`pi-agent-runtime.ts`**, sessions, **`WOP_MULTI_AGENT_WEBSOCKET`**) |
@@ -21,6 +23,8 @@ High-level **roadmaps and product plans** for this repository.
 | **[WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md](WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md)** | **`pi-e` menu / extension stacks** → **`wayofpi-ui`** **views** via **dock presets** (inventory table, phases, open questions) |
 | **[WOP_WORKSPACE_AGENTS_UI_PLAN.md](WOP_WORKSPACE_AGENTS_UI_PLAN.md)** | **Web UI ↔ `.pi/agents`** — catalog/API, simple vs technical parity, teams surfacing, roadmap to real **`dispatch_agent`** / **[WOP_MULTI_AGENT_WEBSOCKET](WOP_MULTI_AGENT_WEBSOCKET.md)** |
 | **[WOP_BUILD_PLAN_MODE.md](WOP_BUILD_PLAN_MODE.md)** | **Build vs Plan** — chat toggle workflows, artifacts under **`plans/`**, browser limits vs Pi **`planner`** / **agent-team** |
+| **[WOP_CLAW_MODE_PLAN.md](WOP_CLAW_MODE_PLAN.md)** | **Claw UI mode** — third shell track (IDE chrome + roadmap banner today); phased plan for Claw-class autonomy (Pi-backed turns, orchestration, schedules, channels) without a Bun-only agent runtime |
+| **[WOP_CLAW_UI_PLAN.md](WOP_CLAW_UI_PLAN.md)** | **Claw UI** — operator-shell design: market scan (ClawPort, Mission Control, OpenClaw TUI), IDE approval patterns, dock presets, UI phasing vs Pi wiring |
 | **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)** | **Menu bar & shell parity** — File→Help and related commands mapped to Way of Pi / Pi / server (**Planning** side panel links here) |
 | **[PLAN_AWESOME_CODEX_SUBAGENTS.md](PLAN_AWESOME_CODEX_SUBAGENTS.md)** | Port Codex subagents → Pi `.md` agents |
 | **[PLAN_AGENT_MODEL_ROUTING.md](PLAN_AGENT_MODEL_ROUTING.md)** | Agent/model routing experiments |

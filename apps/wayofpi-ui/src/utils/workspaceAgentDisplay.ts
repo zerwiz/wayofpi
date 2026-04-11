@@ -15,6 +15,7 @@ export function titleCaseAgentRosterId(name: string): string {
 
 /** Ids where title-casing alone is not the desired product label. */
 const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
+	claw: "Claw",
 	ralph: "Ralph Wiggum",
 };
 

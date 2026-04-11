@@ -23,7 +23,7 @@ export function GitExplorerStatusBadge({
 }) {
 	const help = useMemo(() => gitBadgeHelp(gitStatus, relativePath), [gitStatus, relativePath]);
 	const [open, setOpen] = useState(false);
-	const [fixBusy, setFixBusy] = useState(false);
+	const [fixBusy, setFixBusy] = useState<null | "primary" | "stage_all">(null);
 	const [fixHint, setFixHint] = useState<string | null>(null);
 	const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const wrapRef = useRef<HTMLDivElement>(null);
@@ -57,7 +57,7 @@ export function GitExplorerStatusBadge({
 
 	const onLeaveWrap = useCallback(() => {
 		clearLeaveTimer();
-		leaveTimer.current = window.setTimeout(() => setOpen(false), 200);
+		leaveTimer.current = window.setTimeout(() => setOpen(false), 200) as unknown as ReturnType<typeof setTimeout>;
 	}, [clearLeaveTimer]);
 
 	const onEnterTip = useCallback(() => {
@@ -66,7 +66,7 @@ export function GitExplorerStatusBadge({
 
 	const onLeaveTip = useCallback(() => {
 		clearLeaveTimer();
-		leaveTimer.current = window.setTimeout(() => setOpen(false), 200);
+		leaveTimer.current = window.setTimeout(() => setOpen(false), 200) as unknown as ReturnType<typeof setTimeout>;
 	}, [clearLeaveTimer]);
 
 	useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer]);
@@ -86,32 +86,52 @@ export function GitExplorerStatusBadge({
 		};
 	}, [open, updateTipPos]);
 
-	const applyFix = useCallback(async () => {
-		if (!help.fix || fixBusy) return;
-		if (help.fix.kind === "refresh_tree") {
-			onExplorerGitMutated?.();
-			setOpen(false);
-			return;
-		}
-		setFixBusy(true);
-		setFixHint(null);
-		try {
-			const r = await apiPostJson<{ ok?: boolean; error?: string }>("/api/git/stage", {
-				path: help.fix.workspaceRelPath,
-			});
-			if (!r.ok) {
-				setFixHint(r.error?.trim() || "Could not stage this path.");
-				return;
+	const applyFix = useCallback(
+		async (mode: "primary" | "stage_all") => {
+			if (fixBusy) return;
+			let relPath: string;
+			let stageEntireRepo: boolean;
+			if (mode === "primary") {
+				const fx = help.fix;
+				if (!fx) return;
+				if (fx.kind === "refresh_tree") {
+					onExplorerGitMutated?.();
+					setOpen(false);
+					return;
+				}
+				relPath = fx.workspaceRelPath;
+				stageEntireRepo = false;
+				setFixBusy("primary");
+			} else {
+				if (!help.fixStageAll) return;
+				relPath = help.fixStageAll.workspaceRelPath;
+				stageEntireRepo = true;
+				setFixBusy("stage_all");
 			}
-			setFixHint("Staged.");
-			onExplorerGitMutated?.();
-			window.setTimeout(() => setOpen(false), 700);
-		} catch (e) {
-			setFixHint(e instanceof Error ? e.message : String(e));
-		} finally {
-			setFixBusy(false);
-		}
-	}, [fixBusy, help.fix, onExplorerGitMutated]);
+			setFixHint(null);
+			try {
+				const r = await apiPostJson<{ ok?: boolean; error?: string }>("/api/git/stage", {
+					path: relPath,
+					...(stageEntireRepo ? { all: true as const } : {}),
+				});
+				if (!r.ok) {
+					setFixHint(
+						r.error?.trim() ||
+							(stageEntireRepo ? "Could not stage all changes." : "Could not stage this path."),
+					);
+					return;
+				}
+				setFixHint(stageEntireRepo ? "All changes staged." : "Staged.");
+				onExplorerGitMutated?.();
+				window.setTimeout(() => setOpen(false), 700);
+			} catch (e) {
+				setFixHint(e instanceof Error ? e.message : String(e));
+			} finally {
+				setFixBusy(null);
+			}
+		},
+		[fixBusy, help.fix, help.fixStageAll, onExplorerGitMutated],
+	);
 
 	const badgeMuted =
 		gitStatus === "*"
@@ -127,19 +147,23 @@ export function GitExplorerStatusBadge({
 			? "border border-[#454545] bg-[#252526] text-[#cccccc] shadow-xl"
 			: "border border-neutral-300 bg-white text-neutral-800 shadow-lg";
 
-	const btn =
-		appearanceDark
-			? "mt-2 w-full rounded bg-[#007acc] px-2 py-1.5 text-left text-[11px] font-medium text-white hover:bg-[#006bb3] disabled:opacity-50"
-			: "mt-2 w-full rounded bg-[#ea580c] px-2 py-1.5 text-left text-[11px] font-medium text-white hover:bg-[#c2410c] disabled:opacity-50";
+	const btnPrimary =
+		"mt-2 w-full rounded bg-[#ea580c] px-2 py-1.5 text-left text-[11px] font-medium text-white hover:bg-[#c2410c] disabled:opacity-50";
+	const btnStageAll = appearanceDark
+		? "mt-1.5 w-full rounded border border-[#ea580c]/55 bg-transparent px-2 py-1.5 text-left text-[11px] font-medium text-[#fb923c] hover:bg-[#ea580c]/15 disabled:opacity-50"
+		: "mt-1.5 w-full rounded border border-orange-400 bg-transparent px-2 py-1.5 text-left text-[11px] font-medium text-orange-800 hover:bg-orange-50 disabled:opacity-50";
 
 	const labelCls = variant === "simple" ? "font-mono text-[10px] font-bold uppercase" : "font-mono text-[11px] font-bold";
 
-	const fixLabel =
-		help.fix && fixBusy
+	const fixLabelPrimary =
+		help.fix && fixBusy === "primary"
 			? help.fix.kind === "refresh_tree"
 				? "Refreshing…"
 				: "Staging…"
 			: help.fix?.label;
+
+	const fixLabelStageAll =
+		fixBusy === "stage_all" ? "Staging all…" : help.fixStageAll?.label;
 
 	const tip =
 		open &&
@@ -160,20 +184,34 @@ export function GitExplorerStatusBadge({
 					<>
 						<button
 							type="button"
-							className={btn}
-							disabled={fixBusy}
+							className={btnPrimary}
+							disabled={fixBusy !== null}
 							onClick={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
-								void applyFix();
+								void applyFix("primary");
 							}}
 						>
-							{fixLabel}
+							{fixLabelPrimary}
 						</button>
+						{help.fixStageAll ? (
+							<button
+								type="button"
+								className={btnStageAll}
+								disabled={fixBusy !== null}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									void applyFix("stage_all");
+								}}
+							>
+								{fixLabelStageAll}
+							</button>
+						) : null}
 						{fixHint ? (
 							<p
 								className={`mt-1.5 m-0 font-mono text-[10px] ${
-									fixHint === "Staged."
+									fixHint === "Staged." || fixHint === "All changes staged."
 										? appearanceDark
 											? "text-[#89d185]"
 											: "text-green-700"

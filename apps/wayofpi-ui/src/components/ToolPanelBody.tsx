@@ -15,7 +15,7 @@ const TOOL_LOG_STATIC_SOURCES_DISPLAY = (
 	<span className="text-[#c586c0]">{KNOWN_STATIC_TOOL_TRACE_SOURCES.join(" · ")}</span>
 );
 
-type ToolLogScrollVariant = "tool_log" | "output";
+type ToolLogScrollVariant = "tool_log" | "output" | "agent_log";
 
 function ToolLogScrollBody({ logs, variant = "tool_log" }: { logs: LogRow[]; variant?: ToolLogScrollVariant }) {
 	const scrollerRef = useRef<HTMLDivElement>(null);
@@ -39,6 +39,12 @@ function ToolLogScrollBody({ logs, variant = "tool_log" }: { logs: LogRow[]; var
 			<span className="block min-w-0 max-w-full break-words text-[#858585]">
 				No output lines yet. This tab shows connection, session, workspace navigation, indexing, diagnostics, and chat
 				errors — not per-tool traces (see <span className="text-[#c586c0]">Tool log</span>).
+			</span>
+		) : variant === "agent_log" ? (
+			<span className="block min-w-0 max-w-full break-words text-[#858585]">
+				No log lines yet. <span className="text-[#cccccc]">Agent log</span> merges everything the server streams for this
+				connection — same rows as <span className="text-[#c586c0]">Output</span> plus <span className="text-[#c586c0]">Tool log</span>{" "}
+				— in one timeline (chat / orchestrator steps next to <span className="text-[#c586c0]">git_push</span>, reads, …).
 			</span>
 		) : (
 			<span className="block min-w-0 max-w-full break-words text-[#858585]">
@@ -99,6 +105,9 @@ export function ToolPanelBody({ tab, logs }: { tab: BottomPanelTab; logs: LogRow
 
 	if (tab === "tool_log") {
 		return <ToolLogScrollBody logs={toolLogs} />;
+	}
+	if (tab === "agent_log") {
+		return <ToolLogScrollBody logs={logs} variant="agent_log" />;
 	}
 	if (tab === "output") {
 		return <ToolLogScrollBody logs={outputLogs} variant="output" />;

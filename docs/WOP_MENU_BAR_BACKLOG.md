@@ -129,6 +129,7 @@
 | Capability | Target in Way of Pi | Status |
 |------------|---------------------|--------|
 | Show all commands | Command palette | **Shipped** |
+| How to use Way of Pi | **`HowToUseModal`** + Help menu + palette; links to GitHub docs | **Shipped** |
 | Editor / accessibility docs | Links + in-repo docs | **Shipped** |
 | Feedback / license / releases | Repository links | **Shipped** |
 | Toggle developer tools | Electron/Tauri only; browser uses F12 | **Partial** (disabled in web) |

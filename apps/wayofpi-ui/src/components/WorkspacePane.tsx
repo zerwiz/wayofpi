@@ -4,6 +4,7 @@
  */
 import {
 	AlertCircle,
+	Bot,
 	Braces,
 	ChevronLeft,
 	ChevronRight,
@@ -45,14 +46,17 @@ import { DockZoneAddMenu, type DockFileActionItem } from "./dockToolAddMenu";
 import { WorkspaceGridLayoutPicker, type WorkspaceGridPickerConfig } from "./WorkspaceGridLayoutPicker";
 import { ToolPanelBody } from "./ToolPanelBody";
 import { WorkspaceAgentTeamPane } from "./WorkspaceAgentTeamPane";
+import { MarkdownPreviewPane } from "./MarkdownPreviewPane";
 import { MermaidPreviewPane } from "./MermaidPreviewPane";
 import { WorkspaceSvgPreview } from "./WorkspaceSvgPreview";
 import { WorkspaceTextBuffer } from "./WorkspaceTextBuffer";
+import { firstMarkdownHeadingLine, workspacePathBreadcrumbSegments } from "../utils/workspaceEditorChrome";
 
 const TAB_LABELS: Record<ToolTabId, string> = {
 	problems: "Problems",
 	output: "Output",
 	tool_log: "Tool Log",
+	agent_log: "Agent Log",
 	terminal: "Terminal",
 	agent_team: "Team pulse",
 	agent_chat: "Agent chat",
@@ -83,6 +87,8 @@ function PanelTabIcon({ entry, active }: { entry: PanelTab; active: boolean }) {
 			return <Braces size={14} className={iconClass} aria-hidden />;
 		case "tool_log":
 			return <ScrollText size={14} className={iconClass} aria-hidden />;
+		case "agent_log":
+			return <Bot size={14} className={iconClass} aria-hidden />;
 		case "terminal":
 			return <TerminalSquare size={14} className={iconClass} aria-hidden />;
 		case "agent_team":
@@ -161,7 +167,10 @@ export type WorkspacePaneProps = {
 		chatAgentName?: string | null;
 		dispatchTurnAgent?: string | null;
 		chatPulseMeters?: ChatPulseMeters | null;
+		onEditTeam?: () => void;
 	} | null;
+	/** First breadcrumb segment (e.g. workspace folder name); optional. */
+	breadcrumbWorkspaceLabel?: string | null;
 };
 
 export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(function WorkspacePane(
@@ -210,9 +219,11 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 		closeWorkspacePaneDisabled = false,
 		workspaceGridPicker = null,
 		agentTeamPane = null,
+		breadcrumbWorkspaceLabel = null,
 	},
 	ref,
 ) {
+	const paneRootRef = useRef<HTMLDivElement>(null);
 	const dropHintRef = useRef<DropHint | null>(null);
 	const tabStripScrollRef = useRef<HTMLDivElement>(null);
 	const [dropHint, setDropHint] = useState<DropHint | null>(null);
@@ -220,6 +231,8 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 	const [histFuture, setHistFuture] = useState<number[]>([]);
 	/** Preview (image / SVG / Mermaid render) vs Source (buffer). */
 	const [visualMediaMode, setVisualMediaMode] = useState<"preview" | "source">("preview");
+	/** Markdown `.md` UTF-8: rendered preview vs source editor. */
+	const [markdownViewMode, setMarkdownViewMode] = useState<"preview" | "source">("source");
 
 	const syncDropHint = (h: DropHint | null) => {
 		dropHintRef.current = h;
@@ -323,7 +336,23 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 
 	useEffect(() => {
 		setVisualMediaMode("preview");
+		setMarkdownViewMode("source");
 	}, [editorPath]);
+
+	useEffect(() => {
+		if (!dirty) return;
+		const root = paneRootRef.current;
+		if (!root) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Enter" || (!e.ctrlKey && !e.metaKey)) return;
+			const t = e.target;
+			if (!(t instanceof HTMLTextAreaElement) || !root.contains(t)) return;
+			e.preventDefault();
+			void onSave();
+		};
+		document.addEventListener("keydown", onKey, true);
+		return () => document.removeEventListener("keydown", onKey, true);
+	}, [dirty, onSave]);
 
 	useEffect(() => {
 		const el = tabStripScrollRef.current;
@@ -382,29 +411,72 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 		if (e?.type === "file") onSelectFileTab(e.path);
 	}, [histFuture, entries, safeIndex, onActiveIndexChange, onSelectFileTab]);
 
+	const goAdjacentFileForReview = useCallback(
+		(direction: 1 | -1) => {
+			const idxs = entries.map((e, i) => (e.type === "file" ? i : -1)).filter((i): i is number => i >= 0);
+			if (idxs.length < 2) return;
+			let k = idxs.indexOf(safeIndex);
+			if (k < 0) k = direction > 0 ? idxs.length - 1 : 0;
+			const next = idxs[(k + direction + idxs.length) % idxs.length]!;
+			if (dirty && onDiscardUnsaved) {
+				if (!window.confirm("Discard unsaved changes and open another file?")) return;
+				onDiscardUnsaved();
+			}
+			userActivateTab(next);
+		},
+		[entries, safeIndex, dirty, onDiscardUnsaved, userActivateTab],
+	);
+
 	const canHistBack = entries.length > 0 && histPast.length > 0;
 	const canHistForward = entries.length > 0 && histFuture.length > 0;
 
+	/** File is active and loaded — drive ALL document chrome (Preview/Source, Keep, nav). */
+	const showDocChrome =
+		Boolean(activeEntry?.type === "file" && activeEntry.path === editorPath && editorPath && !loading && !error);
+	/** Only show the breadcrumb path text when the View → Breadcrumbs setting is on. */
 	const showBread =
-		showBreadcrumbs && activeEntry?.type === "file" && activeEntry.path === editorPath && editorPath;
+		showBreadcrumbs && showDocChrome;
 
 	const mediaDualChrome =
 		Boolean(
-			activeEntry?.type === "file" &&
-				activeEntry.path === editorPath &&
+			showDocChrome &&
 				filePreview &&
-				filePreviewSupportsSourceToggle(filePreview) &&
-				!loading &&
-				!error,
+				filePreviewSupportsSourceToggle(filePreview),
 		);
 	const showMediaAsSource = mediaDualChrome && visualMediaMode === "source";
 
 	const mediaSegOn = "rounded-md border border-[#ea580c]/60 bg-[#3c3c3c] px-2.5 py-1 font-mono text-[11px] text-[#fed7aa]";
 	const mediaSegOff =
 		"rounded-md border border-[#3c3c3c] bg-[#2d2d2d] px-2.5 py-1 font-mono text-[11px] text-[#cccccc] hover:bg-[#3c3c3c]";
+	const reviewBtnGhost =
+		"rounded-md border border-[#3c3c3c] bg-[#2d2d2d] px-2.5 py-1 font-mono text-[11px] text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40";
+	const reviewBtnPrimary =
+		"rounded-md border border-[#0e639c] bg-[#0e639c] px-2.5 py-1 font-mono text-[11px] font-semibold text-white hover:bg-[#1177bb] disabled:cursor-not-allowed disabled:opacity-40";
+
+	const pathSegments = editorPath ? workspacePathBreadcrumbSegments(editorPath) : [];
+	const isMarkdownUtf8 =
+		Boolean(
+			showDocChrome &&
+				persistEncoding === "utf8" &&
+				editorPath &&
+				/\.md$/i.test(editorPath) &&
+				!filePreview,
+		);
+	const mdHeading = isMarkdownUtf8 && showBread ? firstMarkdownHeadingLine(content) : null;
+	const fileTabIndices = entries.map((e, i) => (e.type === "file" ? i : -1)).filter((i): i is number => i >= 0);
+	const fileReviewTotal = fileTabIndices.length;
+	const rawPosInFileTabs =
+		activeEntry?.type === "file" ? fileTabIndices.indexOf(safeIndex) : -1;
+	const fileReviewIndexLabel =
+		activeEntry?.type === "file" && fileReviewTotal > 0 && rawPosInFileTabs >= 0
+			? `${rawPosInFileTabs + 1} / ${fileReviewTotal}`
+			: "";
+	const canNextFileForReview = fileReviewTotal >= 2;
+	const showMdPreview = isMarkdownUtf8 && markdownViewMode === "preview";
 
 	return (
 		<div
+			ref={paneRootRef}
 			className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]"
 			data-wop-workspace-pane
 		>
@@ -683,11 +755,121 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 				</div>
 			</div>
 
-			{showBread ? (
-				<div className="flex h-6 shrink-0 items-center border-b border-[#2d2d2d] bg-[#1e1e1e] px-3 font-mono text-[11px] text-[#858585]">
-					<span className="truncate" title={activeEntry!.path}>
-						{activeEntry!.path}
-					</span>
+			{showDocChrome ? (
+				<div
+					className="flex min-h-9 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#2d2d2d] bg-[#252526] px-3 py-2"
+					role="region"
+					aria-label="Document"
+				>
+					{showBread ? (
+						<div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 gap-y-1 font-mono text-[11px] text-[#d4d4d4]">
+							{breadcrumbWorkspaceLabel ? (
+								<>
+									<span className="shrink-0 text-[#cccccc]" title={breadcrumbWorkspaceLabel}>
+										{breadcrumbWorkspaceLabel}
+									</span>
+									<span className="shrink-0 text-[#858585]" aria-hidden>
+										›
+									</span>
+								</>
+							) : null}
+							{pathSegments.map((seg, i) => (
+								<span key={`${seg}-${i}`} className="flex min-w-0 items-center gap-x-1">
+									{i > 0 ? (
+										<span className="shrink-0 text-[#858585]" aria-hidden>
+											›
+										</span>
+									) : null}
+									<span className={i === pathSegments.length - 1 ? "truncate font-medium text-[#fed7aa]" : "truncate"}>
+										{seg}
+									</span>
+								</span>
+							))}
+							{mdHeading ? (
+								<>
+									<span className="shrink-0 text-[#858585]" aria-hidden>
+										›
+									</span>
+									<span className="min-w-0 truncate text-[#a3a3a3]" title={mdHeading}>
+										{mdHeading}
+									</span>
+								</>
+							) : null}
+						</div>
+					) : (
+						<div className="min-w-0 flex-1 truncate font-mono text-[11px] text-[#fed7aa]" title={editorPath ?? ""}>
+							{pathSegments[pathSegments.length - 1] ?? ""}
+						</div>
+					)}
+					<div className="flex flex-wrap items-center justify-end gap-2">
+						{isMarkdownUtf8 ? (
+							<div className="flex items-center gap-1.5" role="group" aria-label="Markdown view">
+								<button
+									type="button"
+									onClick={() => setMarkdownViewMode("preview")}
+									className={markdownViewMode === "preview" ? mediaSegOn : mediaSegOff}
+								>
+									Preview
+								</button>
+								<button
+									type="button"
+									onClick={() => setMarkdownViewMode("source")}
+									className={markdownViewMode === "source" ? mediaSegOn : mediaSegOff}
+								>
+									Source
+								</button>
+								<span className="font-mono text-[10px] text-[#858585]">Markdown</span>
+							</div>
+						) : null}
+						{canNextFileForReview ? (
+							<div className="flex items-center gap-1 border-l border-[#3c3c3c] pl-2 font-mono text-[11px] text-[#858585]">
+								<button
+									type="button"
+									onClick={() => goAdjacentFileForReview(-1)}
+									className="rounded p-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
+									title="Previous open file tab in this pane"
+									aria-label="Previous file in review"
+								>
+									<ChevronLeft size={14} strokeWidth={2} aria-hidden />
+								</button>
+								<span className="min-w-[3.25rem] text-center tabular-nums" title="Open file tabs in this workspace pane">
+									{fileReviewIndexLabel || "—"}
+								</span>
+								<button
+									type="button"
+									onClick={() => goAdjacentFileForReview(1)}
+									className="rounded p-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
+									title="Next open file tab in this pane"
+									aria-label="Next file in review"
+								>
+									<ChevronRight size={14} strokeWidth={2} aria-hidden />
+								</button>
+							</div>
+						) : null}
+						{dirty ? (
+							<div className="flex flex-wrap items-center gap-2 border-l border-[#3c3c3c] pl-2">
+								{onDiscardUnsaved ? (
+									<button
+										type="button"
+										onClick={onDiscardUnsaved}
+										className={reviewBtnGhost}
+										title="Revert editor to last saved version"
+									>
+										Undo changes
+									</button>
+								) : null}
+								<button
+									type="button"
+									onClick={() => void onSave()}
+									className={reviewBtnPrimary}
+									title="Save file (Ctrl+Enter)"
+								>
+									Keep file
+									<span className="ml-1.5 hidden font-normal opacity-80 sm:inline">Ctrl+Enter</span>
+								</button>
+							</div>
+						) : null}
+					</div>
 				</div>
 			) : null}
 			{mediaDualChrome ? (
@@ -758,6 +940,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								chatAgentName={agentTeamPane.chatAgentName}
 								dispatchTurnAgent={agentTeamPane.dispatchTurnAgent}
 								chatPulseMeters={agentTeamPane.chatPulseMeters}
+								onEditTeam={agentTeamPane.onEditTeam}
 							/>
 						) : (
 							<p className="p-3 font-mono text-[12px] text-[#858585]">Team pulse data not wired for this pane.</p>
@@ -840,6 +1023,10 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								Open it externally or use the workspace on disk.
 							</p>
 						</div>
+					</div>
+				) : showMdPreview ? (
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
+						<MarkdownPreviewPane markdown={content} appearanceDark />
 					</div>
 				) : (
 					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

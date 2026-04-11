@@ -21,8 +21,10 @@ import { AgentPermissionsModal } from "./components/AgentPermissionsModal";
 import { HostDoctorModal } from "./components/HostDoctorModal";
 import { IndexingDocsModal } from "./components/IndexingDocsModal";
 import { InstallDebuggersModal } from "./components/InstallDebuggersModal";
+import { HowToUseModal } from "./components/HowToUseModal";
 import { MitLicenseModal } from "./components/MitLicenseModal";
 import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
+import { NewPlanFileModal } from "./components/NewPlanFileModal";
 import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
 import { LlmFixModal } from "./components/LlmFixModal";
 import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
@@ -31,6 +33,10 @@ import { ExplorerSidebar } from "./components/ExplorerSidebar";
 import { MenuBar } from "./components/MenuBar";
 import { SimpleApp } from "./components/simple/SimpleApp";
 import type { SimpleTabId } from "./components/simple/SimpleNavRail";
+import { ClawApp } from "./components/claw/ClawApp";
+import { ClawHelpModal, type ClawHelpSectionId } from "./components/claw/ClawHelpModal";
+import type { ClawTabId } from "./components/claw/ClawNavRail";
+import "./claw/clawUserUiModules";
 import { StatusBar } from "./components/StatusBar";
 import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalysisContext";
 import { TechnicalWorkspaceGrid, type TechnicalWorkspaceCellSnapshot } from "./components/TechnicalWorkspaceGrid";
@@ -248,7 +254,8 @@ function languageFromPath(path: string | null): string {
 
 export default function App() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
-	const technical = uiMode === "technical";
+	/** IDE-style shell (Technical or Claw); Simple uses `SimpleApp`. */
+	const technical = uiMode !== "simple";
 	const { root, nodes, folders, git, switchAllowed, error: treeError, loading: treeLoading, refresh } =
 		useWorkspaceTree();
 	/** Server-backed workspace roots from `/api/tree` — not tied to the active editor tab (`selectedPath`). */
@@ -268,7 +275,13 @@ export default function App() {
 	const reloadAgentsCatalog = useCallback(() => {
 		agentsApi.reload();
 	}, [agentsApi.reload]);
-	const session = useWayOfPiSession(refresh, bufferAssistantDeltasRef, reloadAgentsCatalog);
+	const focusAgentWrittenWorkspaceFileRef = useRef<(rel: string) => void>(() => {});
+	const session = useWayOfPiSession(
+		refresh,
+		bufferAssistantDeltasRef,
+		reloadAgentsCatalog,
+		(rel) => focusAgentWrittenWorkspaceFileRef.current(rel),
+	);
 	const { isDark: simpleIsDark } = useSimplePreferences();
 	const llmFixModalAppearanceDark = technical || simpleIsDark;
 	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
@@ -601,6 +614,7 @@ export default function App() {
 
 	const [activity, setActivity] = useState<TechnicalActivity>("explorer");
 	const [simpleTab, setSimpleTab] = useState<SimpleTabId>("chat");
+	const [clawTab, setClawTab] = useState<ClawTabId>("mission");
 	const [simpleProviderPath, setSimpleProviderPath] = useState<PiModelConfigPath | null>(null);
 	const [simpleProviderNonce, setSimpleProviderNonce] = useState(0);
 	const [chrome, setChrome] = useState(() => readChromePreferences());
@@ -819,6 +833,7 @@ export default function App() {
 		},
 		[technical, workspaceGrid.cols, workspaceGrid.rows, persistLeftSidebar],
 	);
+	focusAgentWrittenWorkspaceFileRef.current = focusWorkspaceFileFromMenu;
 
 	const openTeamsYamlFromMenu = useCallback(() => {
 		const rel = agentsApi.data?.teamsPath ?? ".pi/agents/teams.yaml";
@@ -1100,44 +1115,40 @@ description:
 		[effDirty, effSelectedPath, refresh],
 	);
 
-	const handleNewPlanFile = useCallback(async () => {
+	const [newPlanFileModalOpen, setNewPlanFileModalOpen] = useState(false);
+
+	const handleNewPlanFile = useCallback(() => {
 		if (!workspaceOperational) {
 			window.alert("No workspace loaded — use File → Open Folder, or wait until the file tree finishes loading.");
 			return;
 		}
-		const rawSlug = window.prompt("Plan slug (short id, e.g. auth-refactor)", "feature");
-		if (rawSlug == null) return;
-		const defaultTitle = rawSlug.trim().replace(/[^a-zA-Z0-9]+/g, " ").trim() || "Plan";
-		const title = window.prompt("Plan title (document heading)", defaultTitle);
-		if (title == null) return;
-		try {
-			const { path } = await createPlanArtifactInWorkspace({
-				slugSuggestion: rawSlug,
-				title: title || defaultTitle,
-			});
-			setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(path) });
-			await refresh();
-			setSelectedPath(path);
-			if (technical) {
-				setUiMode("technical");
-				persistLeftSidebar(true);
-				setActivity("explorer");
-			} else {
-				setSimpleTab("chat");
+		setNewPlanFileModalOpen(true);
+	}, [workspaceOperational]);
+
+	const handleNewPlanFileCreate = useCallback(
+		async (title: string, slugSuggestion: string) => {
+			setNewPlanFileModalOpen(false);
+			try {
+				const { path } = await createPlanArtifactInWorkspace({ slugSuggestion, title });
+				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(path) });
+				await refresh();
+				setSelectedPath(path);
+				if (uiMode === "claw") {
+					// Stay in Claw mode — open the plan file in the Files tab
+					setClawTab("files");
+				} else if (technical) {
+					setUiMode("technical");
+					persistLeftSidebar(true);
+					setActivity("explorer");
+				} else {
+					setSimpleTab("chat");
+				}
+			} catch (e) {
+				window.alert(e instanceof Error ? e.message : String(e));
 			}
-		} catch (e) {
-			window.alert(e instanceof Error ? e.message : String(e));
-		}
-	}, [
-		workspaceOperational,
-		persistLeftSidebar,
-		refresh,
-		setActivity,
-		setSelectedPath,
-		setSimpleTab,
-		setUiMode,
-		technical,
-	]);
+		},
+		[persistLeftSidebar, refresh, setActivity, setClawTab, setSelectedPath, setSimpleTab, setUiMode, technical, uiMode],
+	);
 
 	const orchestratorPlanBootstrapLockRef = useRef(false);
 
@@ -1758,6 +1769,21 @@ description:
 	const [launchConfigAddOpen, setLaunchConfigAddOpen] = useState(false);
 	const [installDebuggersModalOpen, setInstallDebuggersModalOpen] = useState(false);
 	const [mitLicenseModalOpen, setMitLicenseModalOpen] = useState(false);
+	const [howToUseModalOpen, setHowToUseModalOpen] = useState(false);
+	const [clawHelpOpen, setClawHelpOpen] = useState(false);
+	const [clawHelpDefaultSection, setClawHelpDefaultSection] = useState<ClawHelpSectionId | null>(null);
+	/** Per visit to Claw mode: auto-pick `claw` once when catalog has it and picker is on session lead. */
+	const clawDefaultAgentBootstrappedRef = useRef(false);
+	useEffect(() => {
+		if (uiMode !== "claw") {
+			clawDefaultAgentBootstrappedRef.current = false;
+			return;
+		}
+		const hasClaw = (agentsApi.data?.agents ?? []).some((a) => a.name === "claw");
+		if (!hasClaw || session.chatAgentName !== null || clawDefaultAgentBootstrappedRef.current) return;
+		session.setChatAgent("claw");
+		clawDefaultAgentBootstrappedRef.current = true;
+	}, [uiMode, agentsApi.data?.agents, session.chatAgentName, session.setChatAgent]);
 	const [newWorkspaceFileDraft, setNewWorkspaceFileDraft] = useState<{
 		defaultPath: string;
 		initialContent?: string;
@@ -1771,6 +1797,7 @@ description:
 		const shell = typeof window !== "undefined" ? window.wopShell : undefined;
 		return {
 			onShowAllCommands: () => setCommandPaletteOpen(true),
+			onHowToUse: () => setHowToUseModalOpen(true),
 			onOpenHostDoctor: openHostDoctor,
 			onEditorPlayground: () =>
 				window.open(`${repo}/blob/main/docs/PLAYGROUND.md`, "_blank", "noopener,noreferrer"),
@@ -2573,6 +2600,7 @@ description:
 			chatAgentName: session.chatAgentName,
 			dispatchTurnAgent: session.dispatchTurnAgent,
 			chatPulseMeters: session.chatPulseMeters,
+			onEditTeam: openAgentSetupFromMenu,
 		}),
 		[
 			agentsApi.data?.teams,
@@ -2583,8 +2611,12 @@ description:
 			session.chatAgentName,
 			session.dispatchTurnAgent,
 			session.chatPulseMeters,
+			openAgentSetupFromMenu,
 		],
 	);
+
+	/** Stable localStorage key scoped to the primary workspace root — passed to plan-handoff pickers. */
+	const planHandoffWorkspaceKey = folders[0]?.path ?? root ?? "";
 
 	/** Cursor-style: roster beside the editor — show the agent dock and expand Team in Session Chat (not a center tab). */
 	const [teamPulseDockSignal, setTeamPulseDockSignal] = useState(0);
@@ -2593,6 +2625,23 @@ description:
 		updateDockLayout({ agentPanelVisible: true });
 		setTeamPulseDockSignal((n) => n + 1);
 	}, [technical, updateDockLayout]);
+
+	const openPlanFileForReview = useCallback(
+		(workspaceRelativePath: string) => {
+			const p = workspaceRelativePath.replace(/^[/\\]+/, "");
+			if (!p) return;
+			setExplorerContextDir(posixDirname(p));
+			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				setWorkspaceOpenSignal((s) => ({ path: p, rev: (s?.rev ?? 0) + 1 }));
+			} else {
+				setSelectedPath(p);
+				if (technical) {
+					setPanelDock((prev) => applyAddFileTab(prev, p));
+				}
+			}
+		},
+		[technical, workspaceGrid.cols, workspaceGrid.rows, setPanelDock],
+	);
 
 	const workspaceEmbeddedChat = useCallback(
 		() => (
@@ -2618,6 +2667,7 @@ description:
 				agentTeams={agentsApi.data?.teams ?? {}}
 				onOpenAgentTeamInPane={openTeamPulseInAgentDock}
 				openTeamPulseSignal={teamPulseDockSignal}
+				onEditTeam={openAgentSetupFromMenu}
 				chatAgentName={session.chatAgentName}
 				dispatchTurnAgent={session.dispatchTurnAgent}
 				onChatAgentChange={session.setChatAgent}
@@ -2629,6 +2679,8 @@ description:
 				chatPulseMeters={session.chatPulseMeters}
 				contextTitle={session.tokenMeter.contextTitle}
 				embeddedInWorkspace
+				onOpenPlanFileForReview={openPlanFileForReview}
+				planHandoffWorkspaceKey={planHandoffWorkspaceKey}
 			/>
 		),
 		[
@@ -2653,6 +2705,7 @@ description:
 			agentsApi.data?.teams,
 			openTeamPulseInAgentDock,
 			teamPulseDockSignal,
+			openAgentSetupFromMenu,
 			session.chatAgentName,
 			session.dispatchTurnAgent,
 			session.setChatAgent,
@@ -2663,6 +2716,8 @@ description:
 			session.forceChatQueueItem,
 			session.chatPulseMeters,
 			session.tokenMeter.contextTitle,
+			openPlanFileForReview,
+			planHandoffWorkspaceKey,
 		],
 	);
 
@@ -3144,30 +3199,35 @@ description:
 		[technical, workspaceGrid.cols, workspaceGrid.rows],
 	);
 
-	/** Keep a tab row entry when code paths set `selectedPath` without going through the explorer. */
+	/** Keep a tab row entry when code paths set `selectedPath` without going through the explorer.
+	 * Technical-mode only — Claw and Simple drive `selectedPath` directly without a panel dock. */
 	useEffect(() => {
 		if (isWsMulti) return;
+		if (uiMode !== "technical") return;
 		if (!selectedPath) return;
 		setPanelDock((prev) => {
 			const next = applyEnsureFileTab(prev, selectedPath);
 			return next === prev ? prev : next;
 		});
-	}, [selectedPath, isWsMulti]);
+	}, [selectedPath, isWsMulti, uiMode]);
 
-	/** Active file tab drives the editor buffer; tool tabs leave `selectedPath` as last file (if any). */
+	/** Active file tab drives the editor buffer; tool tabs leave `selectedPath` as last file (if any).
+	 * Technical-mode only — in Claw/Simple the panel dock must not override the selected file. */
 	useEffect(() => {
 		if (isWsMulti) return;
+		if (uiMode !== "technical") return;
 		const a = panelDock.tabs[panelDock.activeIndex];
 		if (a?.type !== "file") return;
 		setSelectedPath((p) => (p === a.path ? p : a.path));
 		setExplorerContextDir(posixDirname(a.path));
-	}, [panelDock.activeIndex, panelDock.tabs, isWsMulti]);
+	}, [panelDock.activeIndex, panelDock.tabs, isWsMulti, uiMode]);
 
 	useEffect(() => {
 		if (isWsMulti) return;
+		if (uiMode !== "technical") return;
 		const hasFile = panelDock.tabs.some((t) => t.type === "file");
 		if (!hasFile) setSelectedPath(null);
-	}, [panelDock.tabs, isWsMulti]);
+	}, [panelDock.tabs, isWsMulti, uiMode]);
 
 	const dockForZedStrip = isWsMulti ? (techWsSnapshot?.panelDock ?? panelDock) : panelDock;
 
@@ -3228,6 +3288,27 @@ description:
 				detail: "Workspace, env, Ollama/OpenRouter, Pi CLI, terminal — GET /api/diagnostics",
 				keywords: ["doctor", "diagnostics", "health", "wop", "env", "ollama"],
 				run: openHostDoctor,
+			},
+			{
+				id: "how-to-use",
+				label: "Help: How to use Way of Pi",
+				detail: "Getting started modal + doc links",
+				keywords: ["help", "start", "guide", "tutorial", "onboarding"],
+				run: () => setHowToUseModalOpen(true),
+			},
+			{ id: "layout-simple", label: "Layout: Simple UI", keywords: ["mode", "shell"], run: () => setUiMode("simple") },
+			{
+				id: "layout-technical",
+				label: "Layout: Technical UI",
+				keywords: ["mode", "shell", "ide"],
+				run: () => setUiMode("technical"),
+			},
+			{
+				id: "layout-claw",
+				label: "Layout: Claw UI",
+				detail: "Roadmap autonomous-agent shell — docs/WOP_CLAW_MODE_PLAN.md, docs/WOP_CLAW_UI_PLAN.md",
+				keywords: ["mode", "shell", "claw", "automation"],
+				run: () => setUiMode("claw"),
 			},
 			{
 				id: "leftsidebar",
@@ -3330,6 +3411,7 @@ description:
 								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
 								return;
 							}
+							openPlanFileForReview(p);
 							injectIntoChatComposer(buildReviewPlanPrompt(p));
 						})
 						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
@@ -3351,6 +3433,7 @@ description:
 								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
 								return;
 							}
+							openPlanFileForReview(p);
 							injectIntoChatComposer(buildReviewPlanPrompt(p));
 						})
 						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
@@ -3433,6 +3516,9 @@ description:
 		handleNewPlanFile,
 		openHostDoctor,
 		session.setChatAgent,
+		setUiMode,
+		setHowToUseModalOpen,
+		openPlanFileForReview,
 	]);
 
 	const simpleCommandItems: CommandItem[] = useMemo(() => {
@@ -3451,12 +3537,25 @@ description:
 				keywords: ["doctor", "diagnostics", "health", "env", "ollama"],
 				run: openHostDoctor,
 			},
+			{
+				id: "s-how-to-use",
+				label: "Help: How to use Way of Pi",
+				detail: "Getting started modal + doc links",
+				keywords: ["help", "start", "guide", "tutorial"],
+				run: () => setHowToUseModalOpen(true),
+			},
 			{ id: "s-chat", label: "Simple: Chat", run: () => setSimpleTab("chat") },
 			{ id: "s-team", label: "Simple: My Team", run: () => setSimpleTab("team") },
 			{ id: "s-models", label: "Simple: AI Brains", run: () => setSimpleTab("models") },
 			{ id: "s-projects", label: "Simple: Projects", run: () => setSimpleTab("projects") },
 			{ id: "s-settings", label: "Simple: Settings", run: () => setSimpleTab("settings") },
 			{ id: "s-tech", label: "Layout: Technical UI", run: () => setUiMode("technical") },
+			{
+				id: "s-claw",
+				label: "Layout: Claw UI",
+				detail: "Roadmap shell — docs/WOP_CLAW_MODE_PLAN.md, docs/WOP_CLAW_UI_PLAN.md",
+				run: () => setUiMode("claw"),
+			},
 			{
 				id: "s-save",
 				label: "File: Save",
@@ -3515,6 +3614,7 @@ description:
 								injectIntoChatComposer("No `plans/PLAN-*.md` file found yet.");
 								return;
 							}
+							openPlanFileForReview(p);
 							injectIntoChatComposer(buildReviewPlanPrompt(p));
 						})
 						.catch(() => injectIntoChatComposer("Could not load `/api/plans`."));
@@ -3552,6 +3652,7 @@ description:
 		setSimpleTab,
 		setUiMode,
 		openHostDoctor,
+		setHowToUseModalOpen,
 	]);
 
 	const leftPanel =
@@ -3628,7 +3729,214 @@ description:
 			/>
 		);
 
-	if (!technical) {
+	// ── Claw shell ───────────────────────────────────────────────
+	if (uiMode === "claw") {
+		return (
+			<>
+				<input
+					ref={workspaceFileInputRef}
+					type="file"
+					accept=".code-workspace,.json,application/json"
+					className="hidden"
+					aria-hidden
+					onChange={onWorkspaceFileChange}
+				/>
+				<div className="flex h-screen w-full flex-col overflow-hidden font-sans selection:bg-[#9a3412]">
+					<MenuBar
+						modelLabel={modelLabel}
+						uiMode={uiMode}
+						onUiModeChange={setUiMode}
+						config={config}
+						onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+						onSave={saveAndRefresh}
+						canSave={!!selectedPath && dirty}
+						onRevertFile={() => void reload()}
+						canRevert={!!selectedPath && dirty}
+						onRefreshWorkspace={refresh}
+						onCopyWorkspacePath={copyWorkspacePath}
+						onSelectActivity={(a) => {
+							setUiMode("technical");
+							persistLeftSidebar(true);
+							setActivity(a);
+						}}
+						onFocusBottomTab={(t) => {
+							setUiMode("technical");
+							focusToolTab(t);
+						}}
+						fileMenu={fileMenu}
+						editMenu={editMenu}
+						selectionMenu={selectionMenu}
+						goMenu={goMenu}
+						runMenu={runMenu}
+						terminalMenu={terminalMenu}
+						helpMenu={helpMenu}
+						onOpenAgentSetup={openAgentSetupFromMenu}
+						onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
+						settingsMenu={settingsMenuHandlers}
+						onOpenTeamsYaml={openTeamsYamlFromMenu}
+						onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
+						onReloadAgents={agentsApi.reload}
+						onOpenPiModelConfig={openPiModelConfigInSimpleBrains}
+						chatSessionControls={{
+							mode: session.chatMode,
+							switchDisabled: session.streaming,
+							onSetMode: handleChatModeChange,
+						}}
+						onNewPlanFile={() => void handleNewPlanFile()}
+						newPlanFileDisabled={!workspaceOperational}
+						viewSimple={viewSimpleMenu ?? undefined}
+					/>
+					<ClawApp
+						uiMode={uiMode}
+						setUiMode={setUiMode}
+						root={root || null}
+						rootLabel={rootLabel}
+						nodes={nodes}
+						treeLoading={treeLoading}
+						treeError={treeError}
+						refreshTree={refresh}
+						modelLabel={modelLabel}
+						config={config}
+						effectiveModel={session.effectiveModel}
+						onSelectLlmModel={session.setLlmModel}
+						selectedPath={selectedPath}
+						setSelectedPath={setSelectedPath}
+						content={content}
+						setContent={setContent}
+						persistEncoding={persistEncoding}
+						fileMimeType={fileMimeType}
+						fileLoading={fileLoading}
+						fileError={fileError}
+						dirty={dirty}
+						save={save}
+						discardUnsavedChanges={discardUnsavedChanges}
+						line={line}
+						col={col}
+						onCursor={onCursor}
+					rows={session.rows}
+					logs={session.logs}
+					chatTabs={session.chatTabs}
+					activeChatTabId={session.activeChatTabId}
+					onSelectChatTab={session.selectChatTab}
+					onCloseChatTab={session.closeChatTab}
+					onRenameChatTab={session.renameChatTab}
+					onNewSession={session.startNewSession}
+					streaming={session.streaming}
+					chatStreamUiEnabled={simpleChatStreamUiEnabled}
+					onChatStreamUiEnabledChange={onSimpleChatStreamUiEnabledChange}
+					chatQueuePending={session.chatQueuePending}
+					chatQueueItems={session.chatQueueItems}
+					editChatQueueItem={session.editChatQueueItem}
+					deleteChatQueueItem={session.deleteChatQueueItem}
+					forceChatQueueItem={session.forceChatQueueItem}
+					connected={session.connected}
+					error={session.error}
+					sendChat={session.sendChat}
+					stop={session.stop}
+					clearError={session.clearError}
+					onReopenLlmFixModal={reopenLlmFixModal}
+					chatAgentName={session.chatAgentName}
+					dispatchTurnAgent={session.dispatchTurnAgent}
+					onChatAgentChange={session.setChatAgent}
+					chatMode={session.chatMode}
+					onChatModeChange={handleChatModeChange}
+					activeTab={clawTab}
+					onTabChange={setClawTab}
+						providerConfigInitialPath={simpleProviderPath}
+						providerConfigInitialNonce={simpleProviderNonce}
+						onConsumeProviderConfigFocus={consumeSimpleProviderFocus}
+						workspaceEditorRef={workspaceEditorRef}
+						onUndoRedoStackChange={bumpEditorMenu}
+						onSelectionPrefsChange={bumpSelectionPrefs}
+						onFindInFiles={openWorkspaceSearch}
+						onReplaceInFiles={openWorkspaceSearch}
+						teamsYamlWritePath={teamsYamlWritePath}
+						workspaceReady={workspaceOperational}
+						onOpenTeamsYaml={openTeamsYamlFromMenu}
+						onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
+						onNewPlanFile={() => void handleNewPlanFile()}
+						newPlanFileDisabled={!workspaceOperational}
+					onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
+					onOpenHostDoctor={openHostDoctor}
+					onHelp={() => {
+						setClawHelpDefaultSection(null);
+						setClawHelpOpen(true);
+					}}
+					contextPct={session.tokenMeter.contextPct}
+					contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
+					tokensDown={session.tokenMeter.tokensDown}
+					tokensUp={session.tokenMeter.tokensUp}
+					contextTitle={session.tokenMeter.contextTitle}
+					tokensTitle={session.tokenMeter.tokensTitle}
+					onMoveFileToDirectory={handleExplorerMoveFile}
+					allowWorkspaceRootDrop={folders.length === 1}
+					onGoToTelegramChannels={() => setClawTab("channels")}
+					onOpenClawHelpSection={(section) => {
+						setClawHelpDefaultSection(section);
+						setClawHelpOpen(true);
+					}}
+				/>
+			</div>
+				<CommandPalette
+					open={commandPaletteOpen}
+					onClose={() => setCommandPaletteOpen(false)}
+					items={simpleCommandItems}
+				/>
+				<LlmFixModal
+					open={showLlmFixModal}
+					onClose={dismissLlmFixModal}
+					onClearError={session.clearError}
+					errorMessage={session.error ?? ""}
+					appearanceDark={llmFixModalAppearanceDark}
+					uiMode={uiMode}
+					onOpenSimpleAiBrains={openLlmFixSimpleBrains}
+					onOpenProviderCatalog={openLlmFixProviderCatalog}
+				/>
+				<HostDoctorModal
+					open={hostDoctorOpen}
+					onClose={() => setHostDoctorOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					onWorkspaceFileSaved={() => void refresh()}
+				/>
+				<IndexingDocsModal
+					open={indexingDocsOpen}
+					onClose={() => setIndexingDocsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<AgentPermissionsModal
+					open={agentPermissionsOpen}
+					onClose={() => setAgentPermissionsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+			<MitLicenseModal
+				open={mitLicenseModalOpen}
+				onDismiss={() => setMitLicenseModalOpen(false)}
+				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+			/>
+			<HowToUseModal
+				open={howToUseModalOpen}
+				onDismiss={() => setHowToUseModalOpen(false)}
+				repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`}
+			/>
+			<ClawHelpModal
+				open={clawHelpOpen}
+				onDismiss={() => {
+					setClawHelpOpen(false);
+					setClawHelpDefaultSection(null);
+				}}
+				defaultSection={clawHelpDefaultSection}
+			/>
+			<NewPlanFileModal
+				open={newPlanFileModalOpen}
+				onDismiss={() => setNewPlanFileModalOpen(false)}
+				onCreate={(title, slug) => void handleNewPlanFileCreate(title, slug)}
+			/>
+		</>
+	);
+}
+
+	// ── Simple shell ───────────────────────────────────────────────
+	if (uiMode === "simple") {
 		return (
 			<>
 				<input
@@ -3707,6 +4015,7 @@ description:
 						fileError={fileError}
 						dirty={dirty}
 						save={save}
+						discardUnsavedChanges={discardUnsavedChanges}
 						line={line}
 						col={col}
 						onCursor={onCursor}
@@ -3731,30 +4040,38 @@ description:
 						onChatAgentChange={session.setChatAgent}
 						chatMode={session.chatMode}
 						onChatModeChange={handleChatModeChange}
-						activeTab={simpleTab}
-						onTabChange={setSimpleTab}
-						providerConfigInitialPath={simpleProviderPath}
-						providerConfigInitialNonce={simpleProviderNonce}
-						onConsumeProviderConfigFocus={consumeSimpleProviderFocus}
-						workspaceEditorRef={workspaceEditorRef}
-						onUndoRedoStackChange={bumpEditorMenu}
-						onSelectionPrefsChange={bumpSelectionPrefs}
-						onFindInFiles={openWorkspaceSearch}
-						onReplaceInFiles={openWorkspaceSearch}
-						teamsYamlWritePath={teamsYamlWritePath}
-						workspaceReady={workspaceOperational}
-						onOpenTeamsYaml={openTeamsYamlFromMenu}
-						onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
-						onNewPlanFile={() => void handleNewPlanFile()}
-						newPlanFileDisabled={!workspaceOperational}
-						onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
-						contextPct={session.tokenMeter.contextPct}
-						contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
-						tokensDown={session.tokenMeter.tokensDown}
-						tokensUp={session.tokenMeter.tokensUp}
-						contextTitle={session.tokenMeter.contextTitle}
-						tokensTitle={session.tokenMeter.tokensTitle}
-					/>
+					activeTab={simpleTab}
+					onTabChange={setSimpleTab}
+					providerConfigInitialPath={simpleProviderPath}
+					providerConfigInitialNonce={simpleProviderNonce}
+					onConsumeProviderConfigFocus={consumeSimpleProviderFocus}
+					workspaceEditorRef={workspaceEditorRef}
+					onUndoRedoStackChange={bumpEditorMenu}
+					onSelectionPrefsChange={bumpSelectionPrefs}
+					onFindInFiles={openWorkspaceSearch}
+					onReplaceInFiles={openWorkspaceSearch}
+					teamsYamlWritePath={teamsYamlWritePath}
+					workspaceReady={workspaceOperational}
+					onOpenTeamsYaml={openTeamsYamlFromMenu}
+					onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
+				onOpenFolder={handleOpenFolderPrompt}
+				onOpenRecentFolder={handleOpenRecentFolder}
+				recentFolders={recentFolders}
+				onHelp={() => setHowToUseModalOpen(true)}
+				onConfigRefresh={refreshServerConfig}
+				onNewPlanFile={() => void handleNewPlanFile()}
+					newPlanFileDisabled={!workspaceOperational}
+					onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
+					contextPct={session.tokenMeter.contextPct}
+					contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
+					tokensDown={session.tokenMeter.tokensDown}
+					tokensUp={session.tokenMeter.tokensUp}
+				contextTitle={session.tokenMeter.contextTitle}
+				tokensTitle={session.tokenMeter.tokensTitle}
+				planHandoffWorkspaceKey={planHandoffWorkspaceKey}
+				onMoveFileToDirectory={handleExplorerMoveFile}
+				allowWorkspaceRootDrop={folders.length === 1}
+			/>
 				</div>
 				<CommandPalette
 					open={commandPaletteOpen}
@@ -3811,6 +4128,11 @@ description:
 					onDismiss={() => setMitLicenseModalOpen(false)}
 					repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
 				/>
+				<HowToUseModal
+					open={howToUseModalOpen}
+					onDismiss={() => setHowToUseModalOpen(false)}
+					repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`}
+				/>
 			</>
 		);
 	}
@@ -3853,6 +4175,7 @@ description:
 			onWorkspaceGridColResize={onWorkspaceGridColResize}
 			onBindMultiCellSaveApi={onBindMultiCellSaveApi}
 			onMultiCellAnyDirtyChange={onMultiCellAnyDirtyChange}
+			breadcrumbWorkspaceLabel={rootLabel || null}
 		/>
 	) : (
 		<WorkspaceCellDropSurface
@@ -3910,6 +4233,7 @@ description:
 				workspaceGridPicker={workspaceGridToolbar}
 				agentTeamPane={agentTeamWorkspacePane}
 				workspaceEmbeddedChat={workspaceEmbeddedChat}
+				breadcrumbWorkspaceLabel={rootLabel || null}
 			/>
 		</WorkspaceCellDropSurface>
 	);
@@ -4043,6 +4367,11 @@ description:
 					void performCreateNewWorkspaceFile(path, ic);
 				}}
 			/>
+			<NewPlanFileModal
+				open={newPlanFileModalOpen}
+				onDismiss={() => setNewPlanFileModalOpen(false)}
+				onCreate={(title, slug) => void handleNewPlanFileCreate(title, slug)}
+			/>
 			<LaunchConfigAddModal
 				open={launchConfigAddOpen}
 				onDismiss={() => setLaunchConfigAddOpen(false)}
@@ -4056,6 +4385,11 @@ description:
 				open={mitLicenseModalOpen}
 				onDismiss={() => setMitLicenseModalOpen(false)}
 				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+			/>
+			<HowToUseModal
+				open={howToUseModalOpen}
+				onDismiss={() => setHowToUseModalOpen(false)}
+				repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`}
 			/>
 
 			<div
@@ -4129,6 +4463,7 @@ description:
 												agentTeams={agentsApi.data?.teams ?? {}}
 												onOpenAgentTeamInPane={openTeamPulseInAgentDock}
 												openTeamPulseSignal={teamPulseDockSignal}
+												onEditTeam={openAgentSetupFromMenu}
 												chatAgentName={session.chatAgentName}
 												dispatchTurnAgent={session.dispatchTurnAgent}
 												onChatAgentChange={session.setChatAgent}
@@ -4140,6 +4475,8 @@ description:
 												chatPulseMeters={session.chatPulseMeters}
 												contextTitle={session.tokenMeter.contextTitle}
 												dockPanelFrame
+												onOpenPlanFileForReview={openPlanFileForReview}
+												planHandoffWorkspaceKey={planHandoffWorkspaceKey}
 												technicalDock={{
 													region: "right",
 													sizePx: dockLayout.chatSizePx,
@@ -4199,6 +4536,7 @@ description:
 												agentTeams={agentsApi.data?.teams ?? {}}
 												onOpenAgentTeamInPane={openTeamPulseInAgentDock}
 												openTeamPulseSignal={teamPulseDockSignal}
+												onEditTeam={openAgentSetupFromMenu}
 												chatAgentName={session.chatAgentName}
 												dispatchTurnAgent={session.dispatchTurnAgent}
 												onChatAgentChange={session.setChatAgent}
@@ -4210,6 +4548,8 @@ description:
 												chatPulseMeters={session.chatPulseMeters}
 												contextTitle={session.tokenMeter.contextTitle}
 												dockPanelFrame
+												onOpenPlanFileForReview={openPlanFileForReview}
+												planHandoffWorkspaceKey={planHandoffWorkspaceKey}
 												technicalDock={{
 													region: "bottom",
 													sizePx: dockLayout.chatSizePx,

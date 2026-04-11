@@ -4,6 +4,8 @@ export type WorkspaceIndexOptions = {
 	indexNewFolders: boolean;
 	instantGrepIndex: boolean;
 	attachSummaryToChat: boolean;
+	/** 0 = disabled. Positive integer = auto-sync every N minutes. */
+	autoSyncIntervalMinutes: number;
 };
 
 export type WorkspaceIndexStateFile = {

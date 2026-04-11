@@ -1,6 +1,7 @@
 import {
 	Activity,
 	AlertCircle,
+	Bot,
 	Braces,
 	CheckCircle2,
 	GitBranch,
@@ -26,6 +27,7 @@ const TOOL_TAB_ORDER: BottomPanelTab[] = [
 	"problems",
 	"output",
 	"tool_log",
+	"agent_log",
 	"terminal",
 	"agent_team",
 	"agent_chat",
@@ -130,7 +132,7 @@ export function StatusBar({
 	chatMode?: ChatSessionMode;
 	chatAgentName?: string | null;
 }) {
-	const technical = uiMode === "technical";
+	const technical = uiMode !== "simple";
 	const simpleLight = !technical && simpleAppearanceDark === false;
 
 	const barClass = simpleLight
@@ -145,6 +147,8 @@ export function StatusBar({
 				return <Braces size={12} />;
 			case "tool_log":
 				return <ScrollText size={12} />;
+			case "agent_log":
+				return <Bot size={12} />;
 			case "terminal":
 				return <TerminalSquare size={12} />;
 			case "agent_team":
@@ -164,6 +168,8 @@ export function StatusBar({
 				return "Output";
 			case "tool_log":
 				return "Tool log";
+			case "agent_log":
+				return "Agent log";
 			case "terminal":
 				return "Terminal";
 			case "agent_team":

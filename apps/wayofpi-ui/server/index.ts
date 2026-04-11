@@ -18,7 +18,7 @@ import { imageMimeFromPath } from "./workspace-file-mime";
 import { listPlansCatalog } from "./plans-catalog";
 import { readPackageScripts } from "./package-scripts";
 import { readUiViewsCatalog, seedUiViewsCatalogIfMissing } from "./ui-views-catalog";
-import { gitStageAbsolutePath } from "./git";
+import { gitStageAbsolutePath, gitStageAllFromAbsolutePath } from "./git";
 import { buildWorkspaceTree } from "./tree";
 import {
 	addFolder,
@@ -43,6 +43,7 @@ import {
 	terminalShellHints,
 	type TerminalWsData,
 } from "./terminal-ws";
+import { getClawTelegramIntegrationStatus } from "./claw-telegram-status";
 import { collectDiagnostics, collectUpstreamSnapshot } from "./diagnostics";
 import { runWorkspaceProblemsAnalysis, type WorkspaceProblemsRunResult } from "./workspace-problems";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
@@ -77,6 +78,7 @@ import {
 import { evalChatSlashCommand, type ChatSlashMutation } from "./chat-slash-commands";
 import {
 	addWorkspaceIndexDoc,
+	applyAutoSync,
 	clearWorkspaceIndex,
 	getWorkspaceIndexChatBoostSync,
 	getWorkspaceIndexStatus,
@@ -552,6 +554,13 @@ async function runChatTurn(
 		);
 		let full = "";
 		let lastStreamUsage: StreamTokenUsage | null = null;
+		const sendReasoning = (delta: string) => {
+			try {
+				ws.send(JSON.stringify({ type: "assistant_reasoning_delta", content: delta }));
+			} catch {
+				/* closing */
+			}
+		};
 		try {
 			let result: StreamChatResult;
 			if (usePiChat) {
@@ -562,6 +571,7 @@ async function runChatTurn(
 						full += delta;
 						ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));
 					},
+					onReasoningDelta: sendReasoning,
 					onLog: sendLog,
 					signal: ac.signal,
 				});
@@ -581,9 +591,17 @@ async function runChatTurn(
 					},
 					{
 						signal: ac.signal,
+						onReasoningDelta: sendReasoning,
 						onAgentsCatalogChanged: () => {
 							try {
 								ws.send(JSON.stringify({ type: "agents_catalog_changed" }));
+							} catch {
+								/* closing */
+							}
+						},
+						onWorkspaceFileWritten: (relPath) => {
+							try {
+								ws.send(JSON.stringify({ type: "focus_workspace_file", path: relPath }));
 							} catch {
 								/* closing */
 							}
@@ -607,6 +625,7 @@ async function runChatTurn(
 					},
 					{
 						signal: ac.signal,
+						onReasoningDelta: sendReasoning,
 						onStreamUsage: (u) => {
 							lastStreamUsage = u;
 						},
@@ -811,6 +830,40 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		});
 	}
 
+	/** Toggle terminal on/off at runtime + persist to .env file so it survives restarts. */
+	if (p === "/api/terminal/set-enabled" && req.method === "POST") {
+		let body: { enabled?: unknown };
+		try {
+			body = (await req.json()) as { enabled?: unknown };
+		} catch {
+			return json({ ok: false, error: "Bad JSON body" }, 400);
+		}
+		const enable = body.enabled === true || body.enabled === 1 || body.enabled === "1";
+		// Apply immediately — terminalAllowed() re-reads process.env on each call
+		process.env.WOP_ALLOW_TERMINAL = enable ? "1" : "0";
+
+		// Persist to the repo-root .env file (create if missing)
+		let persisted = false;
+		try {
+			const { join: pathJoin } = await import("node:path");
+			const { readFileSync, writeFileSync } = await import("node:fs");
+			// server/ → wayofpi-ui/ → apps/ → repo root
+			const dotEnvPath = pathJoin(import.meta.dir, "..", "..", "..", ".env");
+			let src = "";
+			try { src = readFileSync(dotEnvPath, "utf8"); } catch { /* file may not exist yet */ }
+			const key = "WOP_ALLOW_TERMINAL";
+			const val = enable ? "1" : "0";
+			const re = new RegExp(`^${key}=.*$`, "m");
+			src = re.test(src) ? src.replace(re, `${key}=${val}`) : src + (src.endsWith("\n") || src === "" ? "" : "\n") + `${key}=${val}\n`;
+			writeFileSync(dotEnvPath, src, "utf8");
+			persisted = true;
+		} catch {
+			// persist failed — runtime change still works for this session
+		}
+
+		return json({ ok: true, enabled: enable, persisted });
+	}
+
 	if (p === "/api/native-dialog/pick" && req.method === "POST") {
 		if (!workspaceSwitchAllowed()) {
 			return json({ error: "Native pick requires workspace switch (WOP_ALLOW_WORKSPACE_SWITCH)", fallback: true }, 403);
@@ -910,16 +963,26 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			return json({ error: "Invalid JSON" }, 400);
 		}
 		try {
-			const partial: {
-				indexNewFolders?: boolean;
-				instantGrepIndex?: boolean;
-				attachSummaryToChat?: boolean;
-			} = {};
-			if (typeof body.indexNewFolders === "boolean") partial.indexNewFolders = body.indexNewFolders;
-			if (typeof body.instantGrepIndex === "boolean") partial.instantGrepIndex = body.instantGrepIndex;
-			if (typeof body.attachSummaryToChat === "boolean") partial.attachSummaryToChat = body.attachSummaryToChat;
-			const options = await patchWorkspaceIndexOptions(partial);
-			return json({ ok: true, options });
+		const partial: {
+			indexNewFolders?: boolean;
+			instantGrepIndex?: boolean;
+			attachSummaryToChat?: boolean;
+			autoSyncIntervalMinutes?: number;
+		} = {};
+		if (typeof body.indexNewFolders === "boolean") partial.indexNewFolders = body.indexNewFolders;
+		if (typeof body.instantGrepIndex === "boolean") partial.instantGrepIndex = body.instantGrepIndex;
+		if (typeof body.attachSummaryToChat === "boolean") partial.attachSummaryToChat = body.attachSummaryToChat;
+		if (typeof body.autoSyncIntervalMinutes === "number") partial.autoSyncIntervalMinutes = body.autoSyncIntervalMinutes;
+		const options = await patchWorkspaceIndexOptions(partial);
+		// Re-arm or cancel the background timer whenever options change.
+		void applyAutoSync((result) => {
+			broadcastToolLog(
+				"INFO",
+				"index",
+				`auto-sync: files=${result.state.fileCount} fingerprint=${result.state.merkleRoot}`,
+			);
+		});
+		return json({ ok: true, options });
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ ok: false, error: message }, 500);
@@ -1117,6 +1180,15 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		}
 	}
 
+	if (p === "/api/claw/telegram/status" && req.method === "GET") {
+		try {
+			return json(getClawTelegramIntegrationStatus());
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ version: 1, error: message }, 500);
+		}
+	}
+
 	if (p === "/api/github/connect" && req.method === "POST") {
 		let body: Record<string, unknown>;
 		try {
@@ -1296,15 +1368,24 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	}
 
 	if (p === "/api/git/stage" && req.method === "POST") {
-		let body: { path?: string };
+		let body: { path?: string; all?: boolean };
 		try {
-			body = (await req.json()) as { path?: string };
+			body = (await req.json()) as { path?: string; all?: boolean };
 		} catch {
 			return json({ ok: false as const, error: "Invalid JSON" });
 		}
 		const rel = String(body.path ?? "").trim();
 		const abs = safeResolveUnderWorkspace(rel);
 		if (!abs) return json({ ok: false as const, error: "Invalid path" });
+		if (body.all === true) {
+			const result = await gitStageAllFromAbsolutePath(abs);
+			if (!result.ok) {
+				broadcastToolLog("WARN", "git", `stage all failed (anchor ${rel}): ${result.error}`);
+				return json(result);
+			}
+			broadcastToolLog("INFO", "git", `staged all changes (repo from ${rel})`);
+			return json(result);
+		}
 		const result = await gitStageAbsolutePath(abs);
 		if (!result.ok) {
 			broadcastToolLog("WARN", "git", `stage failed ${rel}: ${result.error}`);
@@ -1876,3 +1957,12 @@ const _bootPiDrives = shouldUsePiJsonChat();
 console.log(
 	`Way of Pi server http://127.0.0.1:${server.port} workspace=${getWorkspaceRoot()} chatEngine=${_bootChatEngine} piDrivesChat=${_bootPiDrives} manifest=/api/manifest`,
 );
+
+// Start the workspace-index auto-sync timer based on saved options.
+void applyAutoSync((result) => {
+	broadcastToolLog(
+		"INFO",
+		"index",
+		`auto-sync: files=${result.state.fileCount} fingerprint=${result.state.merkleRoot}`,
+	);
+});

@@ -55,6 +55,16 @@ function extractTextDelta(line: Record<string, unknown>): string {
 	return "";
 }
 
+/** Pi JSON `message_update` — same shape as agent-team / TUI thinking stream. */
+function extractThinkingDelta(line: Record<string, unknown>): string {
+	if (line.type !== "message_update") return "";
+	const ev = line.assistantMessageEvent;
+	if (!ev || typeof ev !== "object") return "";
+	const e = ev as Record<string, unknown>;
+	if (e.type === "thinking_delta" && typeof e.delta === "string") return e.delta;
+	return "";
+}
+
 function tryUsageFromLine(line: Record<string, unknown>): StreamTokenUsage | null {
 	const msg = line.message;
 	if (!msg || typeof msg !== "object") return null;
@@ -71,6 +81,8 @@ export async function streamPiJsonChatTurn(opts: {
 	prompt: string;
 	signal?: AbortSignal;
 	onDelta: (s: string) => void;
+	/** Model thinking / reasoning chunks (Pi `thinking_delta` in JSON mode). */
+	onReasoningDelta?: (s: string) => void;
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
 }): Promise<PiJsonChatResult> {
 	if (opts.signal?.aborted) {
@@ -153,6 +165,8 @@ export async function streamPiJsonChatTurn(opts: {
 				fullText += delta;
 				opts.onDelta(delta);
 			}
+			const think = extractThinkingDelta(parsed);
+			if (think) opts.onReasoningDelta?.(think);
 			if (t === "tool_execution_start") {
 				const name = String(parsed.toolName ?? "tool");
 				const args = parsed.args != null ? JSON.stringify(parsed.args).slice(0, 200) : "";

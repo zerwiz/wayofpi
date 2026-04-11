@@ -66,6 +66,7 @@ export function SimpleApp({
 	fileError,
 	dirty,
 	save,
+	discardUnsavedChanges,
 	line,
 	col,
 	onCursor,
@@ -104,6 +105,11 @@ export function SimpleApp({
 	workspaceReady,
 	onOpenTeamsYaml,
 	onCreateAgentDefinition,
+	onOpenFolder,
+	onOpenRecentFolder,
+	recentFolders,
+	onHelp,
+	onConfigRefresh,
 	onNewPlanFile,
 	newPlanFileDisabled,
 	onOpenIndexingDocs,
@@ -113,6 +119,9 @@ export function SimpleApp({
 	tokensUp,
 	contextTitle,
 	tokensTitle,
+	planHandoffWorkspaceKey = "",
+	onMoveFileToDirectory,
+	allowWorkspaceRootDrop = false,
 }: {
 	uiMode: UiMode;
 	setUiMode: (m: UiMode) => void;
@@ -137,6 +146,7 @@ export function SimpleApp({
 	fileError: string | null;
 	dirty: boolean;
 	save: () => Promise<boolean>;
+	discardUnsavedChanges: () => void;
 	line: number;
 	col: number;
 	onCursor: (l: number, c: number) => void;
@@ -176,6 +186,11 @@ export function SimpleApp({
 	workspaceReady: boolean;
 	onOpenTeamsYaml?: () => void;
 	onCreateAgentDefinition?: () => void;
+	onOpenFolder?: () => void;
+	onOpenRecentFolder?: (path: string) => void;
+	recentFolders?: string[];
+	onHelp?: () => void;
+	onConfigRefresh?: () => void | Promise<void>;
 	onNewPlanFile: () => void;
 	newPlanFileDisabled: boolean;
 	onOpenIndexingDocs?: () => void;
@@ -186,6 +201,9 @@ export function SimpleApp({
 	tokensUp: string;
 	contextTitle: string;
 	tokensTitle: string;
+	planHandoffWorkspaceKey?: string;
+	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
+	allowWorkspaceRootDrop?: boolean;
 }) {
 	const [leftOpen, setLeftOpen] = useState(true);
 	const [rightOpen, setRightOpen] = useState(true);
@@ -245,6 +263,14 @@ export function SimpleApp({
 		? "hidden md:block"
 		: "hidden md:block !bg-[#ececec] hover:!bg-[#007acc]/35 active:!bg-[#007acc]/55";
 
+	const openPlanFileForReview = useCallback(
+		(rel: string) => {
+			setSelectedPath(rel);
+			onTabChange("chat");
+		},
+		[setSelectedPath, onTabChange],
+	);
+
 	const chatViewEl = (
 		<SimpleChatView
 			rows={rows}
@@ -274,6 +300,8 @@ export function SimpleApp({
 			onChatModeChange={onChatModeChange}
 			contextFillPct={contextFillPct}
 			contextTitle={contextTitle}
+			onOpenPlanFileForReview={openPlanFileForReview}
+			planHandoffWorkspaceKey={planHandoffWorkspaceKey}
 		/>
 	);
 
@@ -287,7 +315,7 @@ export function SimpleApp({
 		>
 			<div className="flex min-h-0 flex-1 overflow-hidden">
 				{leftOpen ? (
-					<SimpleNavRail activeTab={activeTab} onTab={onTabChange} appearanceDark={appearanceDark} />
+					<SimpleNavRail activeTab={activeTab} onTab={onTabChange} onHelp={onHelp} appearanceDark={appearanceDark} />
 				) : null}
 
 				<div className={`flex min-w-0 flex-1 flex-col ${mainCol}`}>
@@ -331,6 +359,7 @@ export function SimpleApp({
 													loading={fileLoading}
 													error={fileError}
 													dirty={dirty}
+													onDiscardUnsaved={discardUnsavedChanges}
 													onSave={async () => {
 														await save();
 														await refreshTree();
@@ -376,6 +405,7 @@ export function SimpleApp({
 												loading={fileLoading}
 												error={fileError}
 												dirty={dirty}
+												onDiscardUnsaved={discardUnsavedChanges}
 												onSave={async () => {
 													await save();
 													await refreshTree();
@@ -433,12 +463,15 @@ export function SimpleApp({
 								/>
 							) : null}
 							{activeTab === "projects" ? (
-								<SimpleProjectsView
-									rootLabel={rootLabel}
-									rootPath={workspacePath}
-									onRefresh={() => void refreshTree()}
-									appearanceDark={appearanceDark}
-								/>
+						<SimpleProjectsView
+								rootLabel={rootLabel}
+								rootPath={workspacePath}
+								onRefresh={() => void refreshTree()}
+								onOpenFolder={onOpenFolder}
+								onOpenRecentFolder={onOpenRecentFolder}
+								recentFolders={recentFolders}
+								appearanceDark={appearanceDark}
+							/>
 							) : null}
 							{activeTab === "settings" ? (
 								<SimpleSettingsView
@@ -449,6 +482,7 @@ export function SimpleApp({
 									onSwitchToTechnical={() => setUiMode("technical")}
 									onOpenIndexingDocs={onOpenIndexingDocs}
 									serverConfig={config}
+									onConfigRefresh={onConfigRefresh}
 								/>
 							) : null}
 						</div>
@@ -469,6 +503,8 @@ export function SimpleApp({
 										activeTab === "chat" ? toggleChatWorkspaceLayout : undefined
 									}
 									onExplorerGitMutated={() => void refreshTree()}
+									onMoveFileToDirectory={onMoveFileToDirectory}
+									allowWorkspaceRootDrop={allowWorkspaceRootDrop}
 								/>
 							</div>
 						) : null}

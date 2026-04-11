@@ -94,7 +94,12 @@ export function CommandPalette({
 						placeholder="Type a command or search…"
 						className="min-w-0 flex-1 bg-transparent py-1 text-[14px] text-[#cccccc] outline-none placeholder:text-[#858585]"
 					/>
-					<span className="shrink-0 font-mono text-[10px] text-[#858585]">Esc</span>
+					<span
+					className="shrink-0 cursor-pointer font-mono text-[10px] text-[#858585] hover:text-[#cccccc]"
+					onClick={onClose}
+				>
+					Esc
+				</span>
 				</div>
 				<ul className="max-h-[min(360px,50vh)] overflow-y-auto py-1">
 					{filtered.length === 0 ? (

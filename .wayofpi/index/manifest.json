@@ -1,0 +1,3930 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": ".claude/commands/prime.md",
+      "size": 635,
+      "mtimeMs": 1774560340221
+    },
+    {
+      "path": ".cursor/rules/pi-docs-core.mdc",
+      "size": 1850,
+      "mtimeMs": 1774560034704
+    },
+    {
+      "path": ".cursor/rules/pi-documentation-consistency.mdc",
+      "size": 4240,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".cursor/rules/pi-extensions-context.mdc",
+      "size": 1352,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".cursor/rules/pi-extensions.mdc",
+      "size": 2664,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".cursor/rules/pi-pi-e-playground-modes.mdc",
+      "size": 1536,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".cursor/rules/pi-projects-docs.mdc",
+      "size": 1768,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".cursor/rules/wop-ui-modular-docks.mdc",
+      "size": 10542,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".cursor/rules/wop-ui-pi-backend-parity.mdc",
+      "size": 8802,
+      "mtimeMs": 1775887309973
+    },
+    {
+      "path": ".cursor/rules/wop-ui-workspace-agents.mdc",
+      "size": 5210,
+      "mtimeMs": 1775876814781
+    },
+    {
+      "path": ".env.sample",
+      "size": 1403,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".gitignore",
+      "size": 881,
+      "mtimeMs": 1775887309973
+    },
+    {
+      "path": ".pi/agents/agent-models.example.json",
+      "size": 154,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/agents/bowser.md",
+      "size": 699,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/builder.md",
+      "size": 495,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/code-documenter.md",
+      "size": 2494,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/documenter.md",
+      "size": 2319,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-api-designer.md",
+      "size": 1964,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-backend-developer.md",
+      "size": 1842,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-code-mapper.md",
+      "size": 1397,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-electron-pro.md",
+      "size": 1716,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-frontend-developer.md",
+      "size": 1596,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-fullstack-developer.md",
+      "size": 1537,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-graphql-architect.md",
+      "size": 2036,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-microservices-architect.md",
+      "size": 1808,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-mobile-developer.md",
+      "size": 1456,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-ui-designer.md",
+      "size": 1437,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-ui-fixer.md",
+      "size": 1247,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/01-core-development/core-websocket-engineer.md",
+      "size": 1519,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-angular-architect.md",
+      "size": 2349,
+      "mtimeMs": 1774560034705
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-cpp-pro.md",
+      "size": 2310,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-csharp-developer.md",
+      "size": 2264,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-django-developer.md",
+      "size": 2298,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-dotnet-core-expert.md",
+      "size": 2207,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-dotnet-framework-4-8-expert.md",
+      "size": 2268,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-elixir-expert.md",
+      "size": 2204,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-erlang-expert.md",
+      "size": 2956,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-flutter-expert.md",
+      "size": 2245,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-golang-pro.md",
+      "size": 2174,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-java-architect.md",
+      "size": 2216,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-javascript-pro.md",
+      "size": 2190,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-kotlin-specialist.md",
+      "size": 2226,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-laravel-specialist.md",
+      "size": 2211,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-nextjs-developer.md",
+      "size": 2251,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-php-pro.md",
+      "size": 2204,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-powershell-5-1-expert.md",
+      "size": 2266,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-powershell-7-expert.md",
+      "size": 2252,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-python-pro.md",
+      "size": 2209,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-rails-expert.md",
+      "size": 2217,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-react-specialist.md",
+      "size": 2224,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-rust-engineer.md",
+      "size": 2218,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-spring-boot-engineer.md",
+      "size": 2212,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-sql-pro.md",
+      "size": 2113,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-swift-expert.md",
+      "size": 2120,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-typescript-pro.md",
+      "size": 2132,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/02-language-specialists/lang-vue-expert.md",
+      "size": 2188,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-azure-infra-engineer.md",
+      "size": 2519,
+      "mtimeMs": 1774560034706
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-cloud-architect.md",
+      "size": 2405,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-database-administrator.md",
+      "size": 2417,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-deployment-engineer.md",
+      "size": 2405,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-devops-engineer.md",
+      "size": 2370,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-devops-incident-responder.md",
+      "size": 2401,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-docker-expert.md",
+      "size": 2393,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-incident-responder.md",
+      "size": 2343,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-kubernetes-specialist.md",
+      "size": 2355,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-network-engineer.md",
+      "size": 2423,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-platform-engineer.md",
+      "size": 2296,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-security-engineer.md",
+      "size": 2420,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-sre-engineer.md",
+      "size": 2369,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-terraform-engineer.md",
+      "size": 2294,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-terragrunt-expert.md",
+      "size": 2318,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/03-infrastructure/infra-windows-infra-admin.md",
+      "size": 2399,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-accessibility-tester.md",
+      "size": 2309,
+      "mtimeMs": 1774560034707
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-ad-security-reviewer.md",
+      "size": 2402,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-architect-reviewer.md",
+      "size": 2236,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-browser-debugger.md",
+      "size": 2278,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-chaos-engineer.md",
+      "size": 2266,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-code-reviewer.md",
+      "size": 2190,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-compliance-auditor.md",
+      "size": 2309,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-debugger.md",
+      "size": 2233,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-error-detective.md",
+      "size": 2182,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-penetration-tester.md",
+      "size": 2351,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-performance-engineer.md",
+      "size": 2265,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-powershell-security-hardening.md",
+      "size": 2354,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-qa-expert.md",
+      "size": 2237,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-reviewer.md",
+      "size": 2114,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-security-auditor.md",
+      "size": 2216,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/04-quality-security/quality-test-automator.md",
+      "size": 2225,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-ai-engineer.md",
+      "size": 2359,
+      "mtimeMs": 1774560034708
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-data-analyst.md",
+      "size": 2149,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-data-engineer.md",
+      "size": 2140,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-data-scientist.md",
+      "size": 2094,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-database-optimizer.md",
+      "size": 2026,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-llm-architect.md",
+      "size": 2095,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-machine-learning-engineer.md",
+      "size": 2142,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-ml-engineer.md",
+      "size": 2147,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-mlops-engineer.md",
+      "size": 2159,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-nlp-engineer.md",
+      "size": 2195,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-postgres-pro.md",
+      "size": 2155,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/05-data-ai/data-prompt-engineer.md",
+      "size": 2075,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-build-engineer.md",
+      "size": 2122,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-cli-developer.md",
+      "size": 2135,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-dependency-manager.md",
+      "size": 2116,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-documentation-engineer.md",
+      "size": 2137,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-dx-optimizer.md",
+      "size": 2150,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-git-workflow-manager.md",
+      "size": 2087,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-legacy-modernizer.md",
+      "size": 2100,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-mcp-developer.md",
+      "size": 2083,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-powershell-module-architect.md",
+      "size": 2126,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-powershell-ui-architect.md",
+      "size": 2185,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-refactoring-specialist.md",
+      "size": 2090,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-slack-expert.md",
+      "size": 2098,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/06-developer-experience/dx-tooling-engineer.md",
+      "size": 2121,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-api-documenter.md",
+      "size": 2154,
+      "mtimeMs": 1774560034709
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-blockchain-developer.md",
+      "size": 2250,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-embedded-systems.md",
+      "size": 2196,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-fintech-engineer.md",
+      "size": 2207,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-game-developer.md",
+      "size": 2197,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-iot-engineer.md",
+      "size": 2207,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-m365-admin.md",
+      "size": 2136,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-mobile-app-developer.md",
+      "size": 2165,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-payment-integration.md",
+      "size": 2207,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-quant-analyst.md",
+      "size": 2090,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-risk-manager.md",
+      "size": 2112,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/07-specialized-domains/domain-seo-specialist.md",
+      "size": 2237,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-business-analyst.md",
+      "size": 2088,
+      "mtimeMs": 1774560034710
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-content-marketer.md",
+      "size": 2055,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-customer-success-manager.md",
+      "size": 2171,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-legal-advisor.md",
+      "size": 2110,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-product-manager.md",
+      "size": 2028,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-project-manager.md",
+      "size": 1941,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-sales-engineer.md",
+      "size": 2123,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-scrum-master.md",
+      "size": 1976,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-technical-writer.md",
+      "size": 2005,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-ux-researcher.md",
+      "size": 1945,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/08-business-product/biz-wordpress-master.md",
+      "size": 2059,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-agent-installer.md",
+      "size": 2037,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-agent-organizer.md",
+      "size": 2022,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-context-manager.md",
+      "size": 2007,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-error-coordinator.md",
+      "size": 1913,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-it-ops-orchestrator.md",
+      "size": 2018,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-knowledge-synthesizer.md",
+      "size": 1957,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-multi-agent-coordinator.md",
+      "size": 2036,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-performance-monitor.md",
+      "size": 2020,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-task-distributor.md",
+      "size": 1989,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/09-meta-orchestration/meta-workflow-orchestrator.md",
+      "size": 2087,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-competitive-analyst.md",
+      "size": 1964,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-data-researcher.md",
+      "size": 1916,
+      "mtimeMs": 1774560034711
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-docs-researcher.md",
+      "size": 1894,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-market-researcher.md",
+      "size": 1962,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-research-analyst.md",
+      "size": 1859,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-search-specialist.md",
+      "size": 1844,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/domain-specialists/10-research-analysis/research-trend-analyst.md",
+      "size": 1887,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/hermes.md",
+      "size": 3201,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/indexer.md",
+      "size": 3778,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/pi-pi/agent-expert.md",
+      "size": 3972,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/cli-expert.md",
+      "size": 2294,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/config-expert.md",
+      "size": 3219,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/ext-expert.md",
+      "size": 2360,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/keybinding-expert.md",
+      "size": 8553,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/pi-orchestrator.md",
+      "size": 2617,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/prompt-expert.md",
+      "size": 2732,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/skill-expert.md",
+      "size": 2239,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/theme-expert.md",
+      "size": 2487,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/pi-pi/tui-expert.md",
+      "size": 4092,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/plan-reviewer.md",
+      "size": 1289,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/planner.md",
+      "size": 4357,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/playground-portal.md",
+      "size": 3227,
+      "mtimeMs": 1774563314304
+    },
+    {
+      "path": ".pi/agents/project-scanner.md",
+      "size": 4053,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".pi/agents/ralph.md",
+      "size": 4216,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": ".pi/agents/red-team.md",
+      "size": 332,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/agents/reviewer.md",
+      "size": 968,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/agents/scout.md",
+      "size": 421,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/agents/teams.yaml",
+      "size": 1556,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/agents/web-searcher.md",
+      "size": 2015,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/damage-control-rules.yaml",
+      "size": 8707,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/extensions/agent-forge.ts",
+      "size": 59,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".pi/extensions/chronicle.ts",
+      "size": 57,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".pi/extensions/context-local-hints.ts",
+      "size": 159,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/extensions/dynamic-loader.ts",
+      "size": 62,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".pi/extensions/extension-picker.ts",
+      "size": 223,
+      "mtimeMs": 1774468993875
+    },
+    {
+      "path": ".pi/extensions/github-management.ts",
+      "size": 66,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/extensions/honcho-mirror.ts",
+      "size": 61,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/extensions/minimal.ts",
+      "size": 135,
+      "mtimeMs": 1774468993875
+    },
+    {
+      "path": ".pi/extensions/pi-doctor.ts",
+      "size": 57,
+      "mtimeMs": 1774563314304
+    },
+    {
+      "path": ".pi/extensions/ralph.ts",
+      "size": 53,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".pi/extensions/session-memory.ts",
+      "size": 149,
+      "mtimeMs": 1774468993875
+    },
+    {
+      "path": ".pi/extensions/session-saver.ts",
+      "size": 62,
+      "mtimeMs": 1774474735102
+    },
+    {
+      "path": ".pi/extensions/theme-cycler.ts",
+      "size": 164,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/extensions/web-tools.ts",
+      "size": 57,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/extensions/workspace-boundary.ts",
+      "size": 66,
+      "mtimeMs": 1774563314304
+    },
+    {
+      "path": ".pi/settings.json",
+      "size": 297,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": ".pi/settings.playground.json",
+      "size": 1673,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/skills/bowser/SKILL.md",
+      "size": 4603,
+      "mtimeMs": 1774468785166
+    },
+    {
+      "path": ".pi/skills/find-skills/SKILL.md",
+      "size": 7131,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/skills/github/SKILL.md",
+      "size": 6409,
+      "mtimeMs": 1775866362946
+    },
+    {
+      "path": ".pi/skills/indexer/SKILL.md",
+      "size": 873,
+      "mtimeMs": 1774560034712
+    },
+    {
+      "path": ".pi/skills/ralph/SKILL.md",
+      "size": 3546,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": ".pi/themes/catppuccin-mocha.json",
+      "size": 2407,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/cyberpunk.json",
+      "size": 2275,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/dracula.json",
+      "size": 2258,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/everforest.json",
+      "size": 2285,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/gruvbox.json",
+      "size": 2233,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/midnight-ocean.json",
+      "size": 2175,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/nord.json",
+      "size": 2357,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/ocean-breeze.json",
+      "size": 2329,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/rose-pine.json",
+      "size": 2272,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/synthwave.json",
+      "size": 2285,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".pi/themes/tokyo-night.json",
+      "size": 2321,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": ".playground-from",
+      "size": 17,
+      "mtimeMs": 1775866362947
+    },
+    {
+      "path": ".vscode/launch.json",
+      "size": 236,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": "agent/AGENTS.md",
+      "size": 4767,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": "agent/git/.gitignore",
+      "size": 14,
+      "mtimeMs": 1774360849082
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.github/workflows/skill-apply-optimize.yml",
+      "size": 467,
+      "mtimeMs": 1774360858202
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.github/workflows/skill-review.yml",
+      "size": 415,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.github/workflows/weather-native-bridge.yml",
+      "size": 2337,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.gitignore",
+      "size": 64,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.npmignore",
+      "size": 141,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.ralph/import-cc-codex.md",
+      "size": 1496,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.ralph/import-cc-codex.state.json",
+      "size": 657,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.ralph/mario-not-impl.md",
+      "size": 3321,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.ralph/mario-not-impl.state.json",
+      "size": 665,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.ralph/mario-not-spec.md",
+      "size": 6029,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/.ralph/mario-not-spec.state.json",
+      "size": 665,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts",
+      "size": 4138,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/CHANGELOG.md",
+      "size": 307,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/package.json",
+      "size": 622,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/README.md",
+      "size": 2217,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/setup.sh",
+      "size": 2227,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/templates/CLAUDE.md",
+      "size": 129,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/templates/CODEX.md",
+      "size": 4039,
+      "mtimeMs": 1774360858204
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/agent-guidance/templates/GEMINI.md",
+      "size": 126,
+      "mtimeMs": 1774360858204
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/CHANGELOG.md",
+      "size": 264,
+      "mtimeMs": 1774360858204
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858204
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
+      "size": 2869,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js",
+      "size": 1471,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js",
+      "size": 2964,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js",
+      "size": 652,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js",
+      "size": 1777,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js",
+      "size": 875,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js",
+      "size": 1916,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js",
+      "size": 1835,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js",
+      "size": 1006,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js",
+      "size": 4084,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js",
+      "size": 2411,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js",
+      "size": 724,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js",
+      "size": 10972,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js",
+      "size": 2706,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts",
+      "size": 10311,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js",
+      "size": 7561,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/README.md",
+      "size": 500,
+      "mtimeMs": 1774360858216
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js",
+      "size": 9069,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/spec.md",
+      "size": 28451,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js",
+      "size": 6544,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/e2e.test.js",
+      "size": 18428,
+      "mtimeMs": 1774360858218
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/engine.test.js",
+      "size": 19089,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story0-frame.txt",
+      "size": 68,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story1-camera.txt",
+      "size": 68,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story1-glyphs.txt",
+      "size": 52,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story10-item.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story11-hazards.txt",
+      "size": 26,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story12-used-block.txt",
+      "size": 14,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story13-pipes.txt",
+      "size": 18,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story14-goal.txt",
+      "size": 14,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story15-hud-narrow.txt",
+      "size": 23,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story16-unknown-tile.txt",
+      "size": 10,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story17-mix.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story18-hud-score.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story19-cue.txt",
+      "size": 18,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story2-enemy.txt",
+      "size": 36,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story20-camera-offset.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story21-hud-zero.txt",
+      "size": 49,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story22-big-viewport.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story23-camera-negative.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story24-camera-width.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story25-camera-positive.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story26-hud-lives.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story27-hud-coins.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story28-item-viewport.txt",
+      "size": 18,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story29-enemy-viewport.txt",
+      "size": 18,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story3-hud.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story30-hud-score.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story31-particles-viewport.txt",
+      "size": 18,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story32-paused-frame.txt",
+      "size": 19,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story4-big.txt",
+      "size": 20,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story5-resume-hud.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story6-particles.txt",
+      "size": 24,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story6-paused.txt",
+      "size": 68,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story7-powerup.txt",
+      "size": 68,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story8-hud-time.txt",
+      "size": 50,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/fixtures/story9-hud-level.txt",
+      "size": 51,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js",
+      "size": 2153,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tsconfig.json",
+      "size": 291,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
+      "size": 5964,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/package.json",
+      "size": 733,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
+      "size": 12443,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts",
+      "size": 15551,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/README.md",
+      "size": 2172,
+      "mtimeMs": 1774360858204
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts",
+      "size": 32649,
+      "mtimeMs": 1774360858219
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
+      "size": 17852,
+      "mtimeMs": 1774360858220
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/CHANGELOG.md",
+      "size": 348,
+      "mtimeMs": 1774360858220
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
+      "size": 4347,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/package.json",
+      "size": 694,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/README.md",
+      "size": 1808,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
+      "size": 3736,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
+      "size": 36,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
+      "size": 1967,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
+      "size": 5489,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
+      "size": 4376,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/CHANGELOG.md",
+      "size": 235,
+      "mtimeMs": 1774360858221
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/package.json",
+      "size": 627,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/README.md",
+      "size": 462,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/.npmignore",
+      "size": 11,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/CHANGELOG.md",
+      "size": 688,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/package.json",
+      "size": 597,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/README.md",
+      "size": 166,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/scripts/validate_skill.py",
+      "size": 6501,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/skill-creator/SKILL.md",
+      "size": 4926,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/extending-pi/SKILL.md",
+      "size": 3302,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts",
+      "size": 28669,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/CHANGELOG.md",
+      "size": 3537,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts",
+      "size": 282,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts",
+      "size": 598,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/DESIGN.md",
+      "size": 18338,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts",
+      "size": 6798,
+      "mtimeMs": 1774360858243
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts",
+      "size": 8093,
+      "mtimeMs": 1774360858243
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts",
+      "size": 3614,
+      "mtimeMs": 1774360858243
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts",
+      "size": 5299,
+      "mtimeMs": 1774555422961
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts",
+      "size": 143,
+      "mtimeMs": 1774360858244
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/package.json",
+      "size": 924,
+      "mtimeMs": 1774360858244
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/README.md",
+      "size": 3247,
+      "mtimeMs": 1774555441926
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/TODO.md",
+      "size": 4502,
+      "mtimeMs": 1774360858222
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts",
+      "size": 587,
+      "mtimeMs": 1774360858244
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts",
+      "size": 876,
+      "mtimeMs": 1774555627525
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts",
+      "size": 13337,
+      "mtimeMs": 1774360858244
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/import-cc-codex/.long-task-harness/features.json",
+      "size": 4227,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/import-cc-codex/.long-task-harness/init.sh",
+      "size": 352,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/import-cc-codex/.long-task-harness/long-task-progress.md",
+      "size": 4601,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/import-cc-codex/research/import-chats-from-other-agents.md",
+      "size": 9780,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/import-cc-codex/spec.md",
+      "size": 4005,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/package-lock.json",
+      "size": 215,
+      "mtimeMs": 1774360858654
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/package.json",
+      "size": 710,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/CHANGELOG.md",
+      "size": 642,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts",
+      "size": 27462,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/package.json",
+      "size": 706,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/README.md",
+      "size": 3436,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/SKILL.md",
+      "size": 2324,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/raw-paste/CHANGELOG.md",
+      "size": 222,
+      "mtimeMs": 1774360858245
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts",
+      "size": 2747,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/raw-paste/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/raw-paste/package.json",
+      "size": 643,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/raw-paste/README.md",
+      "size": 1391,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/README.md",
+      "size": 2949,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/RELEASING.md",
+      "size": 879,
+      "mtimeMs": 1774360858203
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/tab-status/CHANGELOG.md",
+      "size": 219,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/tab-status/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/tab-status/package.json",
+      "size": 670,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/tab-status/README.md",
+      "size": 1336,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts",
+      "size": 4488,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/usage-extension/CHANGELOG.md",
+      "size": 635,
+      "mtimeMs": 1774360858246
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts",
+      "size": 18966,
+      "mtimeMs": 1774360858247
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/usage-extension/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858247
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/usage-extension/package.json",
+      "size": 674,
+      "mtimeMs": 1774360858247
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/usage-extension/README.md",
+      "size": 2784,
+      "mtimeMs": 1774360858247
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/.npmignore",
+      "size": 262,
+      "mtimeMs": 1774360858248
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/CHANGELOG.md",
+      "size": 1146,
+      "mtimeMs": 1774360858249
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/index.ts",
+      "size": 31859,
+      "mtimeMs": 1774360858268
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/LICENSE",
+      "size": 1071,
+      "mtimeMs": 1774360858249
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/.gitignore",
+      "size": 68,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/build.rs",
+      "size": 36,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/Cargo.toml",
+      "size": 239,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/index.d.ts",
+      "size": 520,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/index.js",
+      "size": 9812,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/darwin-arm64/package.json",
+      "size": 654,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/darwin-arm64/README.md",
+      "size": 124,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/darwin-x64/package.json",
+      "size": 646,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/darwin-x64/README.md",
+      "size": 121,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/linux-x64-gnu/package.json",
+      "size": 683,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/linux-x64-gnu/README.md",
+      "size": 129,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/win32-x64-msvc/package.json",
+      "size": 657,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/npm/win32-x64-msvc/README.md",
+      "size": 128,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/package.json",
+      "size": 1258,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/src/lib.rs",
+      "size": 7641,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/package.json",
+      "size": 2002,
+      "mtimeMs": 1774360858270
+    },
+    {
+      "path": "agent/git/github.com/tmustier/pi-extensions/weather/README.md",
+      "size": 3970,
+      "mtimeMs": 1774360858249
+    },
+    {
+      "path": "agent/models.json",
+      "size": 1392,
+      "mtimeMs": 1775866362947
+    },
+    {
+      "path": "agent/settings.json",
+      "size": 285,
+      "mtimeMs": 1775866362947
+    },
+    {
+      "path": "agents/default.md",
+      "size": 775,
+      "mtimeMs": 1774560034713
+    },
+    {
+      "path": "apps/wayofpi-ui/.env.sample",
+      "size": 2717,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": "apps/wayofpi-ui/.gitignore",
+      "size": 36,
+      "mtimeMs": 1775866362947
+    },
+    {
+      "path": "apps/wayofpi-ui/electron/electron-main.mjs",
+      "size": 9037,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": "apps/wayofpi-ui/electron/preload.mjs",
+      "size": 1357,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": "apps/wayofpi-ui/electron/wait-prod.mjs",
+      "size": 848,
+      "mtimeMs": 1775866362948
+    },
+    {
+      "path": "apps/wayofpi-ui/index.html",
+      "size": 476,
+      "mtimeMs": 1775871543530
+    },
+    {
+      "path": "apps/wayofpi-ui/package-lock.json",
+      "size": 199889,
+      "mtimeMs": 1775866362948
+    },
+    {
+      "path": "apps/wayofpi-ui/package.json",
+      "size": 1870,
+      "mtimeMs": 1775887309975
+    },
+    {
+      "path": "apps/wayofpi-ui/postcss.config.js",
+      "size": 75,
+      "mtimeMs": 1775866362948
+    },
+    {
+      "path": "apps/wayofpi-ui/public/wayofpi-icon.svg",
+      "size": 1228,
+      "mtimeMs": 1775876814783
+    },
+    {
+      "path": "apps/wayofpi-ui/README.md",
+      "size": 15877,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/server/agents.ts",
+      "size": 6168,
+      "mtimeMs": 1775866362948
+    },
+    {
+      "path": "apps/wayofpi-ui/server/chat-orchestrator-tools.ts",
+      "size": 15858,
+      "mtimeMs": 1775930689524
+    },
+    {
+      "path": "apps/wayofpi-ui/server/chat-slash-commands.ts",
+      "size": 9463,
+      "mtimeMs": 1775887309975
+    },
+    {
+      "path": "apps/wayofpi-ui/server/chat-usage.ts",
+      "size": 3956,
+      "mtimeMs": 1775876814783
+    },
+    {
+      "path": "apps/wayofpi-ui/server/chat.ts",
+      "size": 8992,
+      "mtimeMs": 1775876814783
+    },
+    {
+      "path": "apps/wayofpi-ui/server/diagnostics.ts",
+      "size": 15653,
+      "mtimeMs": 1775887309975
+    },
+    {
+      "path": "apps/wayofpi-ui/server/git.ts",
+      "size": 6865,
+      "mtimeMs": 1775887309975
+    },
+    {
+      "path": "apps/wayofpi-ui/server/github-connection.ts",
+      "size": 4066,
+      "mtimeMs": 1775887309975
+    },
+    {
+      "path": "apps/wayofpi-ui/server/index.ts",
+      "size": 63807,
+      "mtimeMs": 1775933726667
+    },
+    {
+      "path": "apps/wayofpi-ui/server/llm-models.ts",
+      "size": 2014,
+      "mtimeMs": 1775887309976
+    },
+    {
+      "path": "apps/wayofpi-ui/server/native-file-dialog.ts",
+      "size": 4806,
+      "mtimeMs": 1775866362949
+    },
+    {
+      "path": "apps/wayofpi-ui/server/orchestrator-dispatch-intent.ts",
+      "size": 5017,
+      "mtimeMs": 1775887309976
+    },
+    {
+      "path": "apps/wayofpi-ui/server/orchestrator-git-tools.ts",
+      "size": 8959,
+      "mtimeMs": 1775887309976
+    },
+    {
+      "path": "apps/wayofpi-ui/server/orchestrator-tools-exec.ts",
+      "size": 19148,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/server/package-scripts.ts",
+      "size": 584,
+      "mtimeMs": 1775866362949
+    },
+    {
+      "path": "apps/wayofpi-ui/server/paths.ts",
+      "size": 1106,
+      "mtimeMs": 1775866362949
+    },
+    {
+      "path": "apps/wayofpi-ui/server/pi-agent-runtime.ts",
+      "size": 4944,
+      "mtimeMs": 1775887309976
+    },
+    {
+      "path": "apps/wayofpi-ui/server/pi-binary.ts",
+      "size": 332,
+      "mtimeMs": 1775876814784
+    },
+    {
+      "path": "apps/wayofpi-ui/server/pi-json-mode-chat.ts",
+      "size": 6203,
+      "mtimeMs": 1775876814784
+    },
+    {
+      "path": "apps/wayofpi-ui/server/pi-ollama-env.ts",
+      "size": 3104,
+      "mtimeMs": 1775887309976
+    },
+    {
+      "path": "apps/wayofpi-ui/server/plans-catalog.ts",
+      "size": 2282,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/server/session-prompts.ts",
+      "size": 15515,
+      "mtimeMs": 1775887445427
+    },
+    {
+      "path": "apps/wayofpi-ui/server/teams-yaml-mutate.ts",
+      "size": 6806,
+      "mtimeMs": 1775887309976
+    },
+    {
+      "path": "apps/wayofpi-ui/server/terminal-ws.ts",
+      "size": 8182,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/server/tool-log-broadcast.ts",
+      "size": 1002,
+      "mtimeMs": 1775876814784
+    },
+    {
+      "path": "apps/wayofpi-ui/server/tree.ts",
+      "size": 3824,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/server/ui-views-catalog.ts",
+      "size": 5977,
+      "mtimeMs": 1775866362949
+    },
+    {
+      "path": "apps/wayofpi-ui/server/web-manifest.ts",
+      "size": 2834,
+      "mtimeMs": 1775871543532
+    },
+    {
+      "path": "apps/wayofpi-ui/server/wop-session-jsonl.ts",
+      "size": 5075,
+      "mtimeMs": 1775876814784
+    },
+    {
+      "path": "apps/wayofpi-ui/server/workspace-file-mime.ts",
+      "size": 429,
+      "mtimeMs": 1775866362949
+    },
+    {
+      "path": "apps/wayofpi-ui/server/workspace-index.ts",
+      "size": 14706,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/server/workspace-problems.ts",
+      "size": 7109,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/server/workspace-state.ts",
+      "size": 8708,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/shared/code-workspace-file.ts",
+      "size": 2290,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/shared/session-log-metadata.ts",
+      "size": 3025,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/src/api/client.ts",
+      "size": 1075,
+      "mtimeMs": 1775866362949
+    },
+    {
+      "path": "apps/wayofpi-ui/src/api/nativeDialog.ts",
+      "size": 1252,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/api/workspace.ts",
+      "size": 727,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/App.tsx",
+      "size": 151959,
+      "mtimeMs": 1775933703318
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ActivityBar.tsx",
+      "size": 1626,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/AgentPermissionsModal.tsx",
+      "size": 5637,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/AgentTeamPulseGrid.tsx",
+      "size": 9991,
+      "mtimeMs": 1775887309977
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ChatPanel.tsx",
+      "size": 44868,
+      "mtimeMs": 1775932138653
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ChatQueueModal.tsx",
+      "size": 6101,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawApp.tsx",
+      "size": 13632,
+      "mtimeMs": 1775933232716
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawChannelsView.tsx",
+      "size": 13256,
+      "mtimeMs": 1775932570465
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawChatView.tsx",
+      "size": 11989,
+      "mtimeMs": 1775933258862
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawHelpModal.tsx",
+      "size": 22327,
+      "mtimeMs": 1775933483361
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawMissionView.tsx",
+      "size": 14792,
+      "mtimeMs": 1775933055725
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawNavRail.tsx",
+      "size": 3283,
+      "mtimeMs": 1775933055566
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawSchedulesView.tsx",
+      "size": 19293,
+      "mtimeMs": 1775932677277
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawSessionStrip.tsx",
+      "size": 3471,
+      "mtimeMs": 1775931818237
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/claw/ClawWorkspaceCard.tsx",
+      "size": 6269,
+      "mtimeMs": 1775933050981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/CommandPalette.tsx",
+      "size": 3564,
+      "mtimeMs": 1775933203484
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ContextUsageRing.tsx",
+      "size": 2068,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/DockRegionTitleBar.tsx",
+      "size": 1281,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/DockSplitHandle.tsx",
+      "size": 2728,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/dockToolAddMenu.tsx",
+      "size": 11873,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/EditorFindBar.tsx",
+      "size": 2361,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/EmbeddedTerminal.tsx",
+      "size": 5151,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ExplorerSidebar.tsx",
+      "size": 7847,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/FileChangeReview.tsx",
+      "size": 8453,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/FileMenuContent.tsx",
+      "size": 10413,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/FileTree.tsx",
+      "size": 11389,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/GitExplorerStatusBadge.tsx",
+      "size": 6244,
+      "mtimeMs": 1775931115164
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/GithubManageSettingsCard.tsx",
+      "size": 9418,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/HostDoctorModal.tsx",
+      "size": 23064,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/HostDoctorWorkspaceFileEditor.tsx",
+      "size": 4737,
+      "mtimeMs": 1775887309978
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/HowToUseModal.tsx",
+      "size": 35704,
+      "mtimeMs": 1775933081609
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/IndexingDocsModal.tsx",
+      "size": 12654,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/InstallDebuggersModal.tsx",
+      "size": 6376,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/LaunchConfigAddModal.tsx",
+      "size": 2253,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/LlmFixModal.tsx",
+      "size": 5384,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/MarkdownPreviewPane.tsx",
+      "size": 4290,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/MenuBar.tsx",
+      "size": 120951,
+      "mtimeMs": 1775930689524
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/MermaidPreviewPane.tsx",
+      "size": 2073,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/MitLicenseModal.tsx",
+      "size": 2511,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/NewPlanFileModal.tsx",
+      "size": 3712,
+      "mtimeMs": 1775932287666
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/NewWorkspaceFileModal.tsx",
+      "size": 3351,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/PanelDockBand.tsx",
+      "size": 9091,
+      "mtimeMs": 1775876814785
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ProblemsPanelBody.tsx",
+      "size": 11453,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ProviderConfigEditor.tsx",
+      "size": 7468,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleApp.tsx",
+      "size": 16826,
+      "mtimeMs": 1775933070106
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleChatView.tsx",
+      "size": 32294,
+      "mtimeMs": 1775931751154
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleFilePanel.tsx",
+      "size": 12164,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleFileTree.tsx",
+      "size": 5704,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleModelsView.tsx",
+      "size": 24597,
+      "mtimeMs": 1775932509665
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleNavRail.tsx",
+      "size": 3442,
+      "mtimeMs": 1775933039307
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimplePlanWorkspacePane.tsx",
+      "size": 3398,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleProjectsView.tsx",
+      "size": 5718,
+      "mtimeMs": 1775932651373
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleRightPanel.tsx",
+      "size": 6380,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleRunScriptsModal.tsx",
+      "size": 4717,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleSecondaryToolbar.tsx",
+      "size": 1774,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleSettingsView.tsx",
+      "size": 5901,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/simple/SimpleTeamView.tsx",
+      "size": 21426,
+      "mtimeMs": 1775932443523
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/StatusBar.tsx",
+      "size": 15824,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/StripFilePreview.tsx",
+      "size": 1530,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/TeamsGuiEditorModal.tsx",
+      "size": 20332,
+      "mtimeMs": 1775931724719
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/TechnicalEditorColumn.tsx",
+      "size": 3571,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/TechnicalPrimarySidebar.tsx",
+      "size": 678,
+      "mtimeMs": 1775866362950
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/TechnicalSidePanels.tsx",
+      "size": 41511,
+      "mtimeMs": 1775887309979
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/TechnicalWorkspaceGrid.tsx",
+      "size": 21611,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/TerminalSettingsSection.tsx",
+      "size": 5839,
+      "mtimeMs": 1775933742088
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/ToolPanelBody.tsx",
+      "size": 4706,
+      "mtimeMs": 1775887309980
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/UiModeToggle.tsx",
+      "size": 1394,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspaceAgentTeamPane.tsx",
+      "size": 7931,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspaceCellDropSurface.tsx",
+      "size": 3061,
+      "mtimeMs": 1775866362951
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspaceDropOverlay.tsx",
+      "size": 954,
+      "mtimeMs": 1775866362951
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspaceGridLayoutPicker.tsx",
+      "size": 3271,
+      "mtimeMs": 1775866362951
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspacePane.tsx",
+      "size": 38974,
+      "mtimeMs": 1775930827216
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspaceSvgPreview.tsx",
+      "size": 600,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/components/WorkspaceTextBuffer.tsx",
+      "size": 31525,
+      "mtimeMs": 1775876814786
+    },
+    {
+      "path": "apps/wayofpi-ui/src/constants/mitLicenseText.ts",
+      "size": 1196,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/constants/piModelConfigPaths.ts",
+      "size": 683,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/context/WorkspaceStaticAnalysisContext.tsx",
+      "size": 1418,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useAgents.ts",
+      "size": 886,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useClawSchedules.ts",
+      "size": 2611,
+      "mtimeMs": 1775932433974
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useClawWorkspace.ts",
+      "size": 5408,
+      "mtimeMs": 1775931518346
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useDebouncedUndoRedo.ts",
+      "size": 2329,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useFileEditor.ts",
+      "size": 4778,
+      "mtimeMs": 1775887309981
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useGithubConnection.ts",
+      "size": 1225,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useLlmModels.ts",
+      "size": 1137,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/usePackageScripts.ts",
+      "size": 724,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/usePlanHandoffSelection.ts",
+      "size": 2795,
+      "mtimeMs": 1775931238100
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useRunMenuDebugState.ts",
+      "size": 955,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useServerConfig.ts",
+      "size": 3103,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useSimpleChatWorkspaceLayout.ts",
+      "size": 1770,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useSimplePreferences.ts",
+      "size": 3411,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useTerminalUiPreferences.ts",
+      "size": 1414,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useUiMode.ts",
+      "size": 1109,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useUiViewsCatalog.ts",
+      "size": 1009,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useWayOfPiSession.ts",
+      "size": 29378,
+      "mtimeMs": 1775930689522
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useWebManifest.ts",
+      "size": 1181,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useWorkspaceStaticAnalysis.ts",
+      "size": 2988,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/hooks/useWorkspaceTree.ts",
+      "size": 2582,
+      "mtimeMs": 1775930854357
+    },
+    {
+      "path": "apps/wayofpi-ui/src/index.css",
+      "size": 3396,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/lib/chatAttachment.ts",
+      "size": 466,
+      "mtimeMs": 1775866362952
+    },
+    {
+      "path": "apps/wayofpi-ui/src/lib/flattenFilePaths.ts",
+      "size": 375,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/lib/parseMessageSegments.ts",
+      "size": 1596,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/main.tsx",
+      "size": 285,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/fileMenu.ts",
+      "size": 1095,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/hostDoctor.ts",
+      "size": 1177,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/technicalShell.ts",
+      "size": 2218,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/tree.ts",
+      "size": 691,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/uiViewsCatalog.ts",
+      "size": 671,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/workspaceEditor.ts",
+      "size": 7843,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/workspaceFile.ts",
+      "size": 514,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/workspaceIndex.ts",
+      "size": 761,
+      "mtimeMs": 1775887309982
+    },
+    {
+      "path": "apps/wayofpi-ui/src/types/workspaceProblems.ts",
+      "size": 432,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/agentPermissionsStorage.ts",
+      "size": 3076,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/chatComposerInjectBus.ts",
+      "size": 388,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/chatErrorModelHint.ts",
+      "size": 1067,
+      "mtimeMs": 1775876814787
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/chatQueueTranscript.ts",
+      "size": 3548,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/chatSlashAutocomplete.ts",
+      "size": 2519,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/chromePreferences.ts",
+      "size": 1739,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/clawWorkspaceTemplates.ts",
+      "size": 7512,
+      "mtimeMs": 1775931490365
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/codeWorkspaceFile.ts",
+      "size": 159,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/dataTransferTypes.ts",
+      "size": 324,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/dockChrome.ts",
+      "size": 875,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/editorPreferences.ts",
+      "size": 397,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/editorSelection.ts",
+      "size": 5994,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/editorSyntaxHighlight.ts",
+      "size": 3713,
+      "mtimeMs": 1775876814787
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/editorTextComments.ts",
+      "size": 2967,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/fileDiffHunks.ts",
+      "size": 3715,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/flattenTree.ts",
+      "size": 1331,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/gitStatusUi.ts",
+      "size": 2652,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/launchJsonMutate.ts",
+      "size": 2874,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/panelDockLayout.ts",
+      "size": 18263,
+      "mtimeMs": 1775876814787
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/piSettingsJson.ts",
+      "size": 1030,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/planHandoffPersistence.ts",
+      "size": 1143,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/planModeArtifacts.ts",
+      "size": 1106,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/planModeComposerTemplates.ts",
+      "size": 774,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/planModeHeuristics.ts",
+      "size": 785,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/planModeWorkspace.ts",
+      "size": 676,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/posixPath.ts",
+      "size": 921,
+      "mtimeMs": 1775876814787
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/simpleWorkspaceLayoutStorage.ts",
+      "size": 3036,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/sortTreeNodes.ts",
+      "size": 502,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/teamsYaml.ts",
+      "size": 1280,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts",
+      "size": 5581,
+      "mtimeMs": 1775866362953
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/terminalInputBridge.ts",
+      "size": 511,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/terminalRunCommands.ts",
+      "size": 1515,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/terminalUiPreferences.ts",
+      "size": 1677,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/tokenMeterFormat.ts",
+      "size": 602,
+      "mtimeMs": 1775876814787
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceAgentDisplay.ts",
+      "size": 961,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceChatAgentPicker.ts",
+      "size": 1081,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceDiskPath.ts",
+      "size": 1831,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceDropZones.ts",
+      "size": 1276,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceEditorChrome.ts",
+      "size": 493,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceFilePreview.ts",
+      "size": 1703,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceGridStorage.ts",
+      "size": 12345,
+      "mtimeMs": 1775876814787
+    },
+    {
+      "path": "apps/wayofpi-ui/src/utils/workspaceRecent.ts",
+      "size": 713,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "apps/wayofpi-ui/src/vite-env.d.ts",
+      "size": 1082,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/tailwind.config.js",
+      "size": 164,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "apps/wayofpi-ui/tsconfig.app.json",
+      "size": 632,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "apps/wayofpi-ui/tsconfig.json",
+      "size": 107,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "apps/wayofpi-ui/tsconfig.node.json",
+      "size": 287,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "apps/wayofpi-ui/vite.config.ts",
+      "size": 4971,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "bun.lock",
+      "size": 375,
+      "mtimeMs": 1774560340222
+    },
+    {
+      "path": "CHANGELOG.md",
+      "size": 51766,
+      "mtimeMs": 1775932716789
+    },
+    {
+      "path": "CLAUDE.md",
+      "size": 2448,
+      "mtimeMs": 1775871543530
+    },
+    {
+      "path": "COMPARISON.md",
+      "size": 39728,
+      "mtimeMs": 1775866362947
+    },
+    {
+      "path": "docs/AGENT_MEMORY.md",
+      "size": 8940,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "docs/AGENT_TEAMS.md",
+      "size": 15379,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "docs/AGENTS.md",
+      "size": 12437,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "docs/CLAUDE_CODE_VS_PI_GAPS.md",
+      "size": 12050,
+      "mtimeMs": 1775866362954
+    },
+    {
+      "path": "docs/commands/REFERENCE.md",
+      "size": 16526,
+      "mtimeMs": 1775866362957
+    },
+    {
+      "path": "docs/CONCEPTS.md",
+      "size": 4710,
+      "mtimeMs": 1774474735105
+    },
+    {
+      "path": "docs/EVALUATION_AGENT_TEAM_SESSION_2026-03-25.md",
+      "size": 4838,
+      "mtimeMs": 1774560034714
+    },
+    {
+      "path": "docs/EXTENSIONS.md",
+      "size": 12558,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/Hermes_Honcho_connection.md",
+      "size": 2331,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HERMES_INTEGRATION.md",
+      "size": 6611,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HONCHO_CAPABILITIES.md",
+      "size": 8365,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HONCHO_INTEGRATION.md",
+      "size": 15698,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HONCHO_LOCAL_AI.md",
+      "size": 7638,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HONCHO_OPERATIONS.md",
+      "size": 5015,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HOW_TO_USE_AGENTS.md",
+      "size": 9320,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HOW_TO_USE_EXTENSIONS.md",
+      "size": 7678,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/HOW_TO_USE_SKILLS.md",
+      "size": 6645,
+      "mtimeMs": 1774560034714
+    },
+    {
+      "path": "docs/HOW_TO_USE_TOOLS.md",
+      "size": 6981,
+      "mtimeMs": 1774560034714
+    },
+    {
+      "path": "docs/IDE_EXPLORER_PARITY.md",
+      "size": 6347,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/PI_LOCAL_AI.md",
+      "size": 6667,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/PLAN_AGENT_MODEL_ROUTING.md",
+      "size": 9712,
+      "mtimeMs": 1774560034714
+    },
+    {
+      "path": "docs/PLAN_AWESOME_CODEX_SUBAGENTS.md",
+      "size": 15189,
+      "mtimeMs": 1774560034714
+    },
+    {
+      "path": "docs/PLAYGROUND.md",
+      "size": 7631,
+      "mtimeMs": 1775866362955
+    },
+    {
+      "path": "docs/README.md",
+      "size": 12156,
+      "mtimeMs": 1775931723419
+    },
+    {
+      "path": "docs/REPO_INDEX.md",
+      "size": 11046,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "docs/sessions.md",
+      "size": 8181,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "docs/SKILLS.md",
+      "size": 9060,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "docs/SUPERPOWERS_BUILD_MAP.md",
+      "size": 7098,
+      "mtimeMs": 1774474735105
+    },
+    {
+      "path": "docs/SUPERPOWERS_TODO.md",
+      "size": 5349,
+      "mtimeMs": 1774474735105
+    },
+    {
+      "path": "docs/SYSTEM.md",
+      "size": 6864,
+      "mtimeMs": 1774560340222
+    },
+    {
+      "path": "docs/TOOLS.md",
+      "size": 6687,
+      "mtimeMs": 1775887309984
+    },
+    {
+      "path": "docs/TUI.md",
+      "size": 3884,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WAY_OF_PI_INTRODUCTION.md",
+      "size": 4095,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "docs/WOP_BUILD_PLAN_MODE.md",
+      "size": 12023,
+      "mtimeMs": 1775887309985
+    },
+    {
+      "path": "docs/WOP_CLAW_MODE_PLAN.md",
+      "size": 12972,
+      "mtimeMs": 1775932722306
+    },
+    {
+      "path": "docs/WOP_CLAW_UI_PLAN.md",
+      "size": 13436,
+      "mtimeMs": 1775932201855
+    },
+    {
+      "path": "docs/WOP_COMBINED_BUILD_TODO.md",
+      "size": 20405,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md",
+      "size": 8880,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_GENERATED_FILES_AND_LINE_PARITY.md",
+      "size": 4197,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_MENU_BAR_BACKLOG.md",
+      "size": 9251,
+      "mtimeMs": 1775930689522
+    },
+    {
+      "path": "docs/WOP_MODULAR_DOCKS_PLAN.md",
+      "size": 16557,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md",
+      "size": 13602,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_MULTI_AGENT_WEBSOCKET.md",
+      "size": 2174,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_NAMESPACE.md",
+      "size": 5803,
+      "mtimeMs": 1775887309985
+    },
+    {
+      "path": "docs/WOP_OPEN_TODOS.md",
+      "size": 10007,
+      "mtimeMs": 1775876814788
+    },
+    {
+      "path": "docs/WOP_ORCHESTRATION_EXTENSIONS_PANEL.md",
+      "size": 12284,
+      "mtimeMs": 1775887309985
+    },
+    {
+      "path": "docs/WOP_PI_BACKEND_WIRING_PLAN.md",
+      "size": 21073,
+      "mtimeMs": 1775876814788
+    },
+    {
+      "path": "docs/WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md",
+      "size": 10232,
+      "mtimeMs": 1775887309985
+    },
+    {
+      "path": "docs/WOP_PLANNING.md",
+      "size": 5014,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "docs/WOP_PRODUCT_CAPABILITIES.md",
+      "size": 13824,
+      "mtimeMs": 1775926373966
+    },
+    {
+      "path": "docs/WOP_PRODUCT_OVERVIEW.md",
+      "size": 4397,
+      "mtimeMs": 1775922513348
+    },
+    {
+      "path": "docs/WOP_SAFE_CUSTOMIZATION.md",
+      "size": 2327,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_SIMPLE_UI_VIEWS.md",
+      "size": 2318,
+      "mtimeMs": 1775866362956
+    },
+    {
+      "path": "docs/WOP_STANDALONE_SYSTEM_PLAN.md",
+      "size": 15146,
+      "mtimeMs": 1775876814788
+    },
+    {
+      "path": "docs/WOP_TECHNICAL_UI.md",
+      "size": 29211,
+      "mtimeMs": 1775930689535
+    },
+    {
+      "path": "docs/WOP_TELEGRAM_PLAN.md",
+      "size": 6517,
+      "mtimeMs": 1775931447459
+    },
+    {
+      "path": "docs/WOP_UI_MANIFEST.md",
+      "size": 3036,
+      "mtimeMs": 1775871543534
+    },
+    {
+      "path": "docs/WOP_UPSTREAM_SYNC.md",
+      "size": 1499,
+      "mtimeMs": 1775866362957
+    },
+    {
+      "path": "docs/WOP_WORKSPACE_AGENTS_UI_PLAN.md",
+      "size": 7426,
+      "mtimeMs": 1775871543534
+    },
+    {
+      "path": "done/TEST-ALL-TOOLS.txt",
+      "size": 2497,
+      "mtimeMs": 1774560034715
+    },
+    {
+      "path": "extensions/agent-chain.ts",
+      "size": 24313,
+      "mtimeMs": 1775866362957
+    },
+    {
+      "path": "extensions/agent-dir-scan.ts",
+      "size": 725,
+      "mtimeMs": 1774560034715
+    },
+    {
+      "path": "extensions/agent-forge.ts",
+      "size": 5304,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/agent-team-build-orchestra.ts",
+      "size": 846,
+      "mtimeMs": 1775866362957
+    },
+    {
+      "path": "extensions/agent-team.ts",
+      "size": 61657,
+      "mtimeMs": 1775887309986
+    },
+    {
+      "path": "extensions/chatLabels.ts",
+      "size": 361,
+      "mtimeMs": 1774560034715
+    },
+    {
+      "path": "extensions/chronicle.ts",
+      "size": 6672,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/context-local-hints.ts",
+      "size": 7009,
+      "mtimeMs": 1775866362957
+    },
+    {
+      "path": "extensions/cross-agent.ts",
+      "size": 10522,
+      "mtimeMs": 1775866362957
+    },
+    {
+      "path": "extensions/damage-control.ts",
+      "size": 8386,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/dynamic-loader.ts",
+      "size": 2291,
+      "mtimeMs": 1774563314306
+    },
+    {
+      "path": "extensions/extension-picker.ts",
+      "size": 10687,
+      "mtimeMs": 1774469253910
+    },
+    {
+      "path": "extensions/footer-context-stats.ts",
+      "size": 1651,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/forge-registry.json",
+      "size": 34,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/github-management.ts",
+      "size": 18290,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/github-management/package.json",
+      "size": 487,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/honcho-mirror.ts",
+      "size": 6708,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/minimal.ts",
+      "size": 1343,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/pi-doctor.ts",
+      "size": 6816,
+      "mtimeMs": 1774563314306
+    },
+    {
+      "path": "extensions/pi-pi.ts",
+      "size": 21696,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/pure-focus.ts",
+      "size": 678,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/purpose-gate.ts",
+      "size": 2387,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/ralph.ts",
+      "size": 3969,
+      "mtimeMs": 1775887309986
+    },
+    {
+      "path": "extensions/session-memory.ts",
+      "size": 9847,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/session-replay.ts",
+      "size": 8405,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/sessions/batch-runner.ts",
+      "size": 622,
+      "mtimeMs": 1774219096104
+    },
+    {
+      "path": "extensions/sessions/config.json",
+      "size": 969,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/sessions/index.ts",
+      "size": 6551,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/sessions/README.md",
+      "size": 2031,
+      "mtimeMs": 1774474735106
+    },
+    {
+      "path": "extensions/sessions/theme-lib/themeMap.ts",
+      "size": 2445,
+      "mtimeMs": 1774177629673
+    },
+    {
+      "path": "extensions/subagent-widget.ts",
+      "size": 15222,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/system-select.ts",
+      "size": 8552,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/theme-cycler.ts",
+      "size": 4725,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/themeMap.ts",
+      "size": 6456,
+      "mtimeMs": 1774560034716
+    },
+    {
+      "path": "extensions/tilldone.ts",
+      "size": 28046,
+      "mtimeMs": 1774560034716
+    },
+    {
+      "path": "extensions/tool-counter-widget.ts",
+      "size": 1953,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/tool-counter.ts",
+      "size": 3640,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "extensions/web-tools.ts",
+      "size": 17917,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "extensions/workspace-boundary.ts",
+      "size": 2620,
+      "mtimeMs": 1774563314306
+    },
+    {
+      "path": "images/pi-logo.svg",
+      "size": 473,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "install-global",
+      "size": 216,
+      "mtimeMs": 1774560034716
+    },
+    {
+      "path": "justfile",
+      "size": 17641,
+      "mtimeMs": 1775868492132
+    },
+    {
+      "path": "LICENSE",
+      "size": 1063,
+      "mtimeMs": 1775887309974
+    },
+    {
+      "path": "linux/install-wayofpi-menuitem.sh",
+      "size": 1454,
+      "mtimeMs": 1775871543536
+    },
+    {
+      "path": "linux/README.md",
+      "size": 1055,
+      "mtimeMs": 1775871543535
+    },
+    {
+      "path": "linux/wayofpi-launch.sh",
+      "size": 1249,
+      "mtimeMs": 1775887309986
+    },
+    {
+      "path": "linux/wayofpi.desktop.in",
+      "size": 291,
+      "mtimeMs": 1775871543536
+    },
+    {
+      "path": "package-lock.json",
+      "size": 674,
+      "mtimeMs": 1774560340222
+    },
+    {
+      "path": "package.json",
+      "size": 275,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "PI_VS_OPEN_CODE.md",
+      "size": 30579,
+      "mtimeMs": 1774560340221
+    },
+    {
+      "path": "pi.config.json",
+      "size": 10779,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "pienv",
+      "size": 1568,
+      "mtimeMs": 1774149780809
+    },
+    {
+      "path": "plans/PLAN-20260326-gh-management-tool.md",
+      "size": 28696,
+      "mtimeMs": 1775872030594
+    },
+    {
+      "path": "projects/_template/00-OVERVIEW.md",
+      "size": 75,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "projects/_template/01-CONTEXT.md",
+      "size": 276,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "projects/_template/02-DECISIONS.md",
+      "size": 136,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "projects/_template/03-NOTES.md",
+      "size": 42,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "projects/_template/04-TASKS.md",
+      "size": 59,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "projects/_template/README.md",
+      "size": 494,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "projects/8gent-code/00-OVERVIEW.md",
+      "size": 3783,
+      "mtimeMs": 1775866362958
+    },
+    {
+      "path": "projects/8gent-code/01-CONTEXT.md",
+      "size": 2716,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "projects/8gent-code/02-DECISIONS.md",
+      "size": 1496,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "projects/8gent-code/03-NOTES.md",
+      "size": 1342,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "projects/8gent-code/04-TASKS.md",
+      "size": 1181,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "projects/8gent-code/README.md",
+      "size": 4707,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "projects/pi-playground/00-OVERVIEW.md",
+      "size": 1963,
+      "mtimeMs": 1774560034716
+    },
+    {
+      "path": "projects/pi-playground/01-CONTEXT.md",
+      "size": 4295,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "projects/pi-playground/02-DECISIONS.md",
+      "size": 1431,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "projects/pi-playground/03-NOTES.md",
+      "size": 3426,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "projects/pi-playground/04-TASKS.md",
+      "size": 1286,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "projects/pi-playground/README.md",
+      "size": 1984,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "projects/README.md",
+      "size": 4206,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "prompts/code-review.md",
+      "size": 2053,
+      "mtimeMs": 1774165074088
+    },
+    {
+      "path": "README.md",
+      "size": 43879,
+      "mtimeMs": 1775925030880
+    },
+    {
+      "path": "RESERVED_KEYS.md",
+      "size": 2413,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "scripts/disable-playground-in-project",
+      "size": 1586,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/enable-playground-in-project",
+      "size": 2287,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/ghm-install.js",
+      "size": 900,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/github-management-cli.js",
+      "size": 1362,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/import-domain-specialists.cjs",
+      "size": 5775,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "scripts/init-project-local-pi-env.sh",
+      "size": 3444,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/install-ppi-global.sh",
+      "size": 4015,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/link-playground-agent-trees.sh",
+      "size": 1019,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/normalize-pi-config-model-order.py",
+      "size": 1304,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/pi-e",
+      "size": 205,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "scripts/pi-e-clear-settings-extensions.py",
+      "size": 405,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/pi-e-expand-selection.py",
+      "size": 1301,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/pi-launch-from-project.sh",
+      "size": 3878,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/pi-models-scoped-priority.ts",
+      "size": 2009,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/pi-standard",
+      "size": 1133,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/pi-with-env",
+      "size": 695,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "scripts/pi-with-project-tools",
+      "size": 1226,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "scripts/ppi",
+      "size": 4020,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/quick-start.sh",
+      "size": 3381,
+      "mtimeMs": 1775871543536
+    },
+    {
+      "path": "scripts/README.md",
+      "size": 9435,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/render-playground-project-settings.py",
+      "size": 5887,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/render-project-wired-playground-settings.py",
+      "size": 3178,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/sanitize-linked-playground-settings.py",
+      "size": 1629,
+      "mtimeMs": 1774563314307
+    },
+    {
+      "path": "scripts/setup-github-cli.sh",
+      "size": 713,
+      "mtimeMs": 1774560034717
+    },
+    {
+      "path": "scripts/wop-pi-upstream.ts",
+      "size": 11149,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "scripts/wop-upstream/config.json",
+      "size": 810,
+      "mtimeMs": 1775866362960
+    },
+    {
+      "path": "scripts/wop-upstream/README.md",
+      "size": 2263,
+      "mtimeMs": 1775866362959
+    },
+    {
+      "path": "settings.json",
+      "size": 1673,
+      "mtimeMs": 1775866362960
+    },
+    {
+      "path": "settings.playground.json",
+      "size": 1673,
+      "mtimeMs": 1775866362960
+    },
+    {
+      "path": "specs/agent-forge.md",
+      "size": 3460,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "specs/agent-workflow.md",
+      "size": 3874,
+      "mtimeMs": 1774474735107
+    },
+    {
+      "path": "specs/damage-control.md",
+      "size": 3289,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "specs/fd-intro.md",
+      "size": 2008,
+      "mtimeMs": 1774156166603
+    },
+    {
+      "path": "specs/github-management.md",
+      "size": 1511,
+      "mtimeMs": 1775866362960
+    },
+    {
+      "path": "specs/pi-pi.md",
+      "size": 6545,
+      "mtimeMs": 1773245347000
+    },
+    {
+      "path": "start-full-system.sh",
+      "size": 502,
+      "mtimeMs": 1775871543536
+    },
+    {
+      "path": "start-wayofpi-electron.sh",
+      "size": 478,
+      "mtimeMs": 1775871543536
+    },
+    {
+      "path": "start-wayofpi-ui.sh",
+      "size": 3223,
+      "mtimeMs": 1775887309986
+    },
+    {
+      "path": "theme-lib/themeMap.ts",
+      "size": 6219,
+      "mtimeMs": 1774149182251
+    },
+    {
+      "path": "THEME.md",
+      "size": 1457,
+      "mtimeMs": 1774560340222
+    },
+    {
+      "path": "tilldone-checklist.md",
+      "size": 735,
+      "mtimeMs": 1775866362960
+    },
+    {
+      "path": "TOOLS.md",
+      "size": 1389,
+      "mtimeMs": 1774474735104
+    },
+    {
+      "path": "Way of pi.code-workspace",
+      "size": 60,
+      "mtimeMs": 1775866362947
+    },
+    {
+      "path": "wop.upstream.lock.json",
+      "size": 346,
+      "mtimeMs": 1775866362960
+    }
+  ]
+}

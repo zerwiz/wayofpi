@@ -1,4 +1,4 @@
-import { Brain, Cpu, Folder, MessageCircle, Settings, Users } from "lucide-react";
+import { Brain, Cpu, Folder, HelpCircle, MessageCircle, Settings, Users } from "lucide-react";
 
 export type SimpleTabId = "chat" | "team" | "models" | "projects" | "settings";
 
@@ -14,10 +14,12 @@ export type SimpleTabId = "chat" | "team" | "models" | "projects" | "settings";
 export function SimpleNavRail({
 	activeTab,
 	onTab,
+	onHelp,
 	appearanceDark,
 }: {
 	activeTab: SimpleTabId;
 	onTab: (id: SimpleTabId) => void;
+	onHelp?: () => void;
 	appearanceDark: boolean;
 }) {
 	const NavItem = ({
@@ -77,9 +79,24 @@ export function SimpleNavRail({
 			<NavItem icon={Brain} label="AI Brains" id="models" />
 			<NavItem icon={Folder} label="Projects" id="projects" />
 
-			<div className="mt-auto">
-				<NavItem icon={Settings} label="Settings" id="settings" />
-			</div>
-		</nav>
+		<div className="mt-auto flex flex-col items-center gap-2">
+			{onHelp ? (
+				<button
+					type="button"
+					onClick={onHelp}
+					title="Help & how to use"
+					className={`flex w-16 flex-col items-center justify-center rounded-2xl py-3 transition-colors ${
+						appearanceDark
+							? "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+							: "text-[#616161] hover:bg-[#e5e5e5] hover:text-[#333333]"
+					}`}
+				>
+					<HelpCircle size={24} className={appearanceDark ? "text-[#858585]" : "text-[#858585]"} />
+					<span className="mt-1.5 text-[11px] font-semibold tracking-tight">Help</span>
+				</button>
+			) : null}
+			<NavItem icon={Settings} label="Settings" id="settings" />
+		</div>
+	</nav>
 	);
 }

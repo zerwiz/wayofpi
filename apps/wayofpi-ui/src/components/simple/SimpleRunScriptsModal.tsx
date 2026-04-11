@@ -77,11 +77,12 @@ export function SimpleRunScriptsModal({
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<div
-				className={`flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border shadow-2xl ${panel}`}
-				role="dialog"
-				aria-labelledby="run-scripts-title"
-			>
+		<div
+			className={`flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border shadow-2xl ${panel}`}
+			role="dialog"
+			aria-labelledby="run-scripts-title"
+			onMouseDown={(e) => e.stopPropagation()}
+		>
 				<div className={`flex items-center justify-between border-b px-4 py-3 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}>
 					<h2 id="run-scripts-title" className="text-lg font-bold">
 						Run package script

@@ -236,7 +236,7 @@ export function MenuBar({
 				<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
 					<TerminalSquare size={14} className="text-[#007acc]" />
 					WAY OF PI
-					{uiMode === "technical" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
+					{uiMode !== "simple" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
 						<button
 							type="button"
 							title={
@@ -2647,6 +2647,19 @@ export function MenuBar({
 												<button
 													type="button"
 													className={menuBtnClass()}
+													title="Short guide: workspace, layouts, chat, command palette — plus links to docs on GitHub."
+													onClick={() => {
+														helpMenu.onHowToUse();
+														closeMenus();
+													}}
+												>
+													How to use Way of Pi…
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
 													title="Opens GET /api/diagnostics in a new tab — workspace roots, WOP_* env, Ollama reachability, Pi binary probe."
 													onClick={() => {
 														helpMenu.onOpenHostDoctor();
@@ -3065,6 +3078,27 @@ export function MenuBar({
 										>
 											Use Technical layout
 											{uiMode === "technical" ? (
+												<span className="float-right text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											disabled={uiMode === "claw"}
+											className={menuBtnClass(uiMode === "claw")}
+											title={
+												uiMode === "claw"
+													? "Already using Claw layout."
+													: "Claw mode: same IDE chrome with Claw roadmap banner — docs/WOP_CLAW_MODE_PLAN.md, docs/WOP_CLAW_UI_PLAN.md"
+											}
+											onClick={() => {
+												onUiModeChange("claw");
+												closeMenus();
+											}}
+										>
+											Use Claw layout
+											{uiMode === "claw" ? (
 												<span className="float-right text-[#89d185]">✓</span>
 											) : null}
 										</button>
@@ -3498,8 +3532,9 @@ export function MenuBar({
 							Way of Pi
 						</h2>
 						<p className="mt-2 text-[13px] leading-relaxed text-[#cccccc]">
-							Technical web shell for the Pi extension playground. Chat and workspace tools run against your configured
-							workspace; upstream Pi is{" "}
+							Technical web shell for the Pi extension playground. Chat and workspace tools use the{" "}
+							<strong className="font-semibold text-[#e0e0e0]">folder you open</strong> as the workspace. Upstream Pi
+							is{" "}
 							<a
 								href="https://github.com/mariozechner/pi-coding-agent"
 								className="text-[#3794ff] underline"
@@ -3509,6 +3544,36 @@ export function MenuBar({
 								Pi Coding Agent
 							</a>
 							.
+						</p>
+						<p className="mt-3 text-[13px] leading-relaxed text-[#cccccc]">
+							<strong className="font-semibold text-[#e0e0e0]">In simple terms, you can:</strong>
+						</p>
+						<ul className="mt-1.5 list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-[#cccccc]">
+							<li>
+								<strong className="font-semibold text-[#e0e0e0]">Code and systems</strong> — get step-by-step help
+								building apps, scripts, homework projects, or fixing bugs while the AI can read the same files you see
+								in the tree (when tools or Pi-backed chat are enabled).
+							</li>
+							<li>
+								<strong className="font-semibold text-[#e0e0e0]">Documents and plans</strong> — keep READMEs, plans
+								(like <span className="font-mono text-[12px] text-[#9cdcfe]">plans/</span>), and internal write-ups
+								next to the code so your team&apos;s story stays in one place.
+							</li>
+							<li>
+								<strong className="font-semibold text-[#e0e0e0]">Learn and explore</strong> — ask how things work,
+								trace errors, or sketch a design; optional terminal and Git helpers when your operator turns them on.
+							</li>
+							<li>
+								<strong className="font-semibold text-[#e0e0e0]">Company or club playbooks</strong> — check this repo
+								into git and share the same extensions, agents, and docs so everyone follows the same playbook (still
+								your own API keys and machines).
+							</li>
+						</ul>
+						<p className="mt-3 text-[12px] leading-relaxed text-[#9d9d9d]">
+							Heavy automation (editing files, running commands) depends on your Settings, orchestrator toggles, and
+							whether chat runs through the Pi CLI — see <strong className="font-semibold text-[#b0b0b0]">Help → Host doctor</strong>{" "}
+							and the <span className="font-mono text-[11px]">docs/</span> folder in the Way of Pi checkout (for example{" "}
+							<span className="font-mono text-[11px]">WOP_PRODUCT_CAPABILITIES.md</span>).
 						</p>
 						<p className="mt-3 text-[13px] leading-relaxed text-[#cccccc]">
 							Made by zerwiz.{" "}

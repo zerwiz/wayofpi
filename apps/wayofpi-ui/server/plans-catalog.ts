@@ -20,12 +20,25 @@ export function countPlanTodosInMarkdown(md: string): { openTodos: number; doneT
 	return { openTodos, doneTodos };
 }
 
-export type PlansCatalogFile = { path: string; mtimeMs: number };
-
-export type PlansCatalogLatest = PlansCatalogFile & {
+export type PlansCatalogFile = {
+	path: string;
+	mtimeMs: number;
 	openTodos: number;
 	doneTodos: number;
 };
+
+/** Newest `plans/PLAN-*.md` by `mtimeMs` — same shape as the first entry in `files`. */
+export type PlansCatalogLatest = PlansCatalogFile;
+
+async function readPlanTodoCounts(absPath: string): Promise<{ openTodos: number; doneTodos: number }> {
+	try {
+		const buf = await readFile(absPath, "utf8");
+		const slice = buf.length > MAX_PLAN_READ ? buf.slice(0, MAX_PLAN_READ) : buf;
+		return countPlanTodosInMarkdown(slice);
+	} catch {
+		return { openTodos: 0, doneTodos: 0 };
+	}
+}
 
 export async function listPlansCatalog(): Promise<{
 	files: PlansCatalogFile[];
@@ -37,31 +50,24 @@ export async function listPlansCatalog(): Promise<{
 		return { files: [], latest: null };
 	}
 	const names = await readdir(dir);
-	const files: PlansCatalogFile[] = [];
-	for (const name of names) {
-		if (!PLAN_FILENAME_RE.test(name)) continue;
-		const rel = `plans/${name}`;
-		const abs = join(root, rel);
-		try {
-			const st = await stat(abs);
-			if (!st.isFile()) continue;
-			files.push({ path: rel.replace(/\\/g, "/"), mtimeMs: st.mtimeMs });
-		} catch {
-			/* skip */
-		}
-	}
+	const candidates = names.filter((name) => PLAN_FILENAME_RE.test(name));
+	const entries = await Promise.all(
+		candidates.map(async (name) => {
+			const rel = `plans/${name}`;
+			const norm = rel.replace(/\\/g, "/");
+			const abs = join(root, rel);
+			try {
+				const st = await stat(abs);
+				if (!st.isFile()) return null;
+				const { openTodos, doneTodos } = await readPlanTodoCounts(abs);
+				return { path: norm, mtimeMs: st.mtimeMs, openTodos, doneTodos } satisfies PlansCatalogFile;
+			} catch {
+				return null;
+			}
+		}),
+	);
+	const files = entries.filter((e): e is PlansCatalogFile => e != null);
 	files.sort((a, b) => b.mtimeMs - a.mtimeMs);
-	let latest: PlansCatalogLatest | null = null;
-	if (files.length > 0) {
-		const top = files[0]!;
-		try {
-			const buf = await readFile(join(root, top.path), "utf8");
-			const slice = buf.length > MAX_PLAN_READ ? buf.slice(0, MAX_PLAN_READ) : buf;
-			const { openTodos, doneTodos } = countPlanTodosInMarkdown(slice);
-			latest = { ...top, openTodos, doneTodos };
-		} catch {
-			latest = { ...top, openTodos: 0, doneTodos: 0 };
-		}
-	}
+	const latest = files.length > 0 ? files[0]! : null;
 	return { files, latest };
 }

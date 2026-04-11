@@ -65,9 +65,10 @@ interface PanelDockLayout {
 | Surface | Location | Notes |
 |---------|----------|--------|
 | **Technical UI** | `src/App.tsx` when `useUiMode().mode === "technical"` | **Dock layout**: activity bar + primary left sidebar, **main column** = **`TechnicalWorkspaceGrid`** (if cols×rows > 1) or one **`WorkspacePane`** + optional **`ChatPanel`**, status bar. |
+| **Claw UI** | `src/App.tsx` when `useUiMode().mode === "claw"` | Same **IDE shell** as Technical (`uiMode !== "simple"`); **banner** + roadmap in **`docs/WOP_CLAW_MODE_PLAN.md`**; interface plan **`docs/WOP_CLAW_UI_PLAN.md`**. |
 | **Simple UI** | `src/components/simple/SimpleApp.tsx` | Chat-forward layout; shares hooks and tree/file/session state with `App`. **`App.tsx`** owns **`simpleTab`** and **`CommandPalette`** for Simple mode. Not detailed further here. |
 
-Both modes share **`useWorkspaceTree`**, **`useFileEditor`**, **`useWayOfPiSession`**, and **`useServerConfig`** instantiated in `App.tsx`.
+**Simple** vs **IDE shell** (**Technical** and **Claw**) share **`useWorkspaceTree`**, **`useFileEditor`**, **`useWayOfPiSession`**, and **`useServerConfig`** instantiated in `App.tsx`.
 
 ## Splitter pointer parity (`DockSplitHandle`)
 
@@ -235,13 +236,13 @@ Supporting utilities:
 
 - **Ctrl/Cmd+K** — open command palette (both modes: Technical = full IDE commands; Simple = tabs + save/refresh + per-file **Open:** entries).
 - **Ctrl/Cmd+S** — save current file and refresh tree (both modes).
-- **Ctrl/Cmd+B** — toggle **primary sidebar** (**technical** mode only).
+- **Ctrl/Cmd+B** — toggle **primary sidebar** (**Technical** and **Claw** modes; not **Simple**).
 
 ## Data hooks
 
 | Hook | File | Data source | Notes |
 |------|------|-------------|--------|
-| **useUiMode** | `hooks/useUiMode.ts` | `localStorage` key `wayofpi.uiMode` | `simple` \| `technical`. |
+| **useUiMode** | `hooks/useUiMode.ts` | `localStorage` key `wayofpi.uiMode` | `simple` \| `technical` \| `claw`. |
 | **useWorkspaceTree** | `hooks/useWorkspaceTree.ts` | `GET /api/tree` | `root`, `nodes` (`TreeNode[]`), `refresh()`. |
 | **useFileEditor** | `hooks/useFileEditor.ts` | `GET/PUT /api/file` | Loads/saves text; 2 MiB cap enforced server-side. |
 | **useServerConfig** | `hooks/useServerConfig.ts` | `GET /api/config` | Provider/model labels for UI. |

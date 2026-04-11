@@ -18,6 +18,8 @@ export function SimpleRightPanel({
 	chatWorkspaceLayout,
 	onToggleChatWorkspaceLayout,
 	onExplorerGitMutated,
+	onMoveFileToDirectory,
+	allowWorkspaceRootDrop,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -32,6 +34,8 @@ export function SimpleRightPanel({
 	onToggleChatWorkspaceLayout?: () => void;
 	/** After Git stage from file tree — refresh workspace tree. */
 	onExplorerGitMutated?: () => void;
+	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
+	allowWorkspaceRootDrop?: boolean;
 }) {
 	const [happeningOpen, setHappeningOpen] = useState(true);
 	const timeline =
@@ -105,6 +109,8 @@ export function SimpleRightPanel({
 							onSelectFile={onSelectFile}
 							appearanceDark={appearanceDark}
 							onExplorerGitMutated={onExplorerGitMutated}
+							onMoveFileToDirectory={onMoveFileToDirectory}
+							allowWorkspaceRootDrop={allowWorkspaceRootDrop}
 						/>
 					)}
 				</div>

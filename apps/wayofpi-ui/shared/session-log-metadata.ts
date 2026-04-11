@@ -1,6 +1,9 @@
 /**
  * WebSocket **`log`** row routing (Output vs Tool log) + static tool-trace catalog.
  *
+ * **Agent log** (workspace tab) shows the **full** stream in order — union of Output-routed and Tool-log lines
+ * for debugging orchestration + tools (e.g. chat turn then `git_push`) without switching tabs.
+ *
  * **Pi-style names (interim Bun orchestrator):** Workspace listing is **`list_dir`**, not shell **`ls`**.
  * Headless **`pi --mode json`** emits **`source`** = each extension tool’s registered `name` (not enumerated here).
  *
@@ -59,6 +62,11 @@ export const ORCHESTRATOR_FUNCTION_TOOL_NAMES = [
 	"git_fetch",
 	"git_pull",
 	"git_push",
+	"git_branches",
+	"git_checkout",
+	"git_merge",
+	"git_add",
+	"git_commit",
 ] as const;
 
 /** `broadcastToolLog` sources from `server/teams-yaml-mutate.ts` (same strings as orchestrator team tools). */

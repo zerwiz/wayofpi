@@ -139,6 +139,8 @@ export type SettingsMenuHandlers = {
 /** Menu bar Help → … (documentation links; some items are inert in the browser). */
 export type HelpMenuHandlers = {
 	onShowAllCommands: () => void;
+	/** In-app getting started + links to repository docs. */
+	onHowToUse: () => void;
 	/** Open **Host doctor** (fetches **GET `/api/diagnostics`**: checks, env, Ollama/OpenRouter, Pi CLI, terminal). */
 	onOpenHostDoctor: () => void;
 	onEditorPlayground: () => void;

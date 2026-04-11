@@ -53,6 +53,7 @@ export function SimpleSettingsView({
 	onSwitchToTechnical,
 	onOpenIndexingDocs,
 	serverConfig,
+	onConfigRefresh,
 }: {
 	colorMode: SimpleColorMode;
 	onColorMode: (m: SimpleColorMode) => void;
@@ -63,6 +64,8 @@ export function SimpleSettingsView({
 	onOpenIndexingDocs?: () => void;
 	/** `/api/config` — terminal enable flag and shell hints. */
 	serverConfig: ServerConfig | null;
+	/** Called after toggling terminal so parent can refresh /api/config. */
+	onConfigRefresh?: () => void | Promise<void>;
 }) {
 	const appearanceDark = colorMode === "dark";
 	const pageBg = appearanceDark ? "" : "bg-[#f3f3f3]";
@@ -144,7 +147,7 @@ export function SimpleSettingsView({
 					) : null}
 
 					<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>
-						<TerminalSettingsSection config={serverConfig} appearanceDark={appearanceDark} />
+						<TerminalSettingsSection config={serverConfig} appearanceDark={appearanceDark} onConfigRefresh={onConfigRefresh} />
 					</div>
 
 					<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>

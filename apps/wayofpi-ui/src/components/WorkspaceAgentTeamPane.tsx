@@ -18,6 +18,7 @@ export function WorkspaceAgentTeamPane({
 	chatAgentName = null,
 	dispatchTurnAgent = null,
 	chatPulseMeters = null,
+	onEditTeam,
 }: {
 	agentTeams: Record<string, string[]>;
 	agents: AgentMeta[];
@@ -29,6 +30,8 @@ export function WorkspaceAgentTeamPane({
 	/** Phrase-dispatch specialist for this turn (picker unchanged). */
 	dispatchTurnAgent?: string | null;
 	chatPulseMeters?: ChatPulseMeters | null;
+	/** Simple **My Team** — same as Session Chat **Edit team**. */
+	onEditTeam?: () => void;
 }) {
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	const [pulseTeam, setPulseTeam] = useState<string | null>(null);
@@ -110,21 +113,38 @@ export function WorkspaceAgentTeamPane({
 	return (
 		<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e] font-mono text-[12px] text-[#858585]">
 			<div className="shrink-0 border-b border-[#3c3c3c] px-3 pb-2 pt-3">
-				{teamNames.length > 1 ? (
-					<label className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-[#cccccc]">
+				{pulseTeam ? (
+					<div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-[#cccccc]">
 						<span className="text-[#858585]">Team</span>
-						<select
-							value={pulseTeam ?? ""}
-							onChange={(e) => setPulseTeam(e.target.value || null)}
-							className="max-w-full rounded border border-[#3c3c3c] bg-[#252526] px-2 py-1 font-mono text-[11px] text-[#d4d4d4]"
-						>
-							{teamNames.map((n) => (
-								<option key={n} value={n}>
-									{n}
-								</option>
-							))}
-						</select>
-					</label>
+						{teamNames.length > 1 ? (
+							<select
+								value={pulseTeam}
+								onChange={(e) => setPulseTeam(e.target.value || null)}
+								className="max-w-full rounded border border-[#fb923c]/45 bg-[#252526] px-2 py-1 font-mono text-[11px] text-[#d4d4d4]"
+								aria-label="Workspace team roster"
+							>
+								{teamNames.map((n) => (
+									<option key={n} value={n}>
+										{n}
+									</option>
+								))}
+							</select>
+						) : (
+							<span className="rounded border border-[#fb923c]/45 bg-[#252526] px-2 py-1 font-mono text-[11px] text-[#d4d4d4]">
+								{pulseTeam}
+							</span>
+						)}
+						{onEditTeam ? (
+							<button
+								type="button"
+								onClick={onEditTeam}
+								title="Edit team members and create teams (My Team — writes teams.yaml)"
+								className="shrink-0 rounded border border-[#fb923c]/45 bg-[#252526] px-2 py-1 font-mono text-[11px] uppercase tracking-wide text-[#fdba74] hover:bg-[#ea580c]/15"
+							>
+								Edit team
+							</button>
+						) : null}
+					</div>
 				) : null}
 				{hasRoster ? (
 					<AgentTeamPulseGrid

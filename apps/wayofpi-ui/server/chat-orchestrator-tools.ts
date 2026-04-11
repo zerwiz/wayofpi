@@ -1,5 +1,5 @@
 import type { ChatAssistantToolCall, ChatMessage, ChatRuntimeModel, StreamChatResult } from "./chat";
-import { formatLlmHttpError, messagesToOpenAIFormat, ollamaErrorHint } from "./chat";
+import { formatLlmHttpError, messagesToOpenAIFormat, ollamaErrorHint, streamingReasoningPiece } from "./chat";
 import { parseStreamUsage, type StreamTokenUsage } from "./chat-usage";
 import { executeOrchestratorTool, orchestratorToolsForLlm } from "./orchestrator-tools-exec";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
@@ -36,9 +36,9 @@ function toolOutputNeedsUserExplanation(output: string): boolean {
 	if (!o) return false;
 	if (/\(no matches\)/i.test(o) && /^\[grep\b/im.test(o)) return false;
 	if (/^write: ok\b/i.test(o)) return false;
-	if (/^git_(fetch|pull|push): ok\b/i.test(o)) return false;
+	if (/^git_(fetch|pull|push|branches|checkout|merge|add|commit): ok\b/i.test(o)) return false;
 	const head = o.split("\n")[0] ?? "";
-	if (/^git_(fetch|pull|push): ok\b/i.test(head)) return false;
+	if (/^git_(fetch|pull|push|branches|checkout|merge|add|commit): ok\b/i.test(head)) return false;
 	if (/\(hint:/i.test(o)) return true;
 	if (/\bexit\s*=\s*[1-9]\d*\b/i.test(o)) return true;
 	if (/^Unknown tool\b/i.test(o)) return true;
@@ -49,7 +49,7 @@ function toolOutputNeedsUserExplanation(output: string): boolean {
 	if (/^bash: disabled\b/i.test(o)) return true;
 	if (/^git_\w+: exit\s/i.test(o)) return true;
 	if (/^git_status: no Git\b/i.test(o)) return true;
-	if (/^git_(fetch|pull|push):/i.test(head) && !/\bok\b/i.test(head)) return true;
+	if (/^git_(fetch|pull|push|branches|checkout|merge|add|commit):/i.test(head) && !/\bok\b/i.test(head)) return true;
 	if (/^team_/i.test(o) && /(cannot|error|invalid|not found|failed)/i.test(o)) return true;
 	return false;
 }
@@ -88,9 +88,10 @@ async function consumeOpenAiToolStream(
 	res: Response,
 	onDelta: (t: string) => void,
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void,
-	opts?: { signal?: AbortSignal },
+	opts?: { signal?: AbortSignal; onReasoningDelta?: (t: string) => void },
 ): Promise<StreamToolRound> {
 	const signal = opts?.signal;
+	const onReasoningDelta = opts?.onReasoningDelta;
 	const reader = res.body?.getReader();
 	if (!reader) throw new Error("No response body");
 	const dec = new TextDecoder();
@@ -142,6 +143,8 @@ async function consumeOpenAiToolStream(
 					text += d.content;
 					onDelta(d.content);
 				}
+				const rp = streamingReasoningPiece(d);
+				if (rp) onReasoningDelta?.(rp);
 				for (const tc of d?.tool_calls ?? []) {
 					const idx = typeof tc.index === "number" ? tc.index : 0;
 					let cell = acc.get(idx);
@@ -202,8 +205,12 @@ export async function runOrchestratorToolLoop(
 	options: {
 		signal?: AbortSignal;
 		onStreamUsage?: (u: StreamTokenUsage) => void;
+		/** Reasoning / “thinking” stream (OpenRouter-style `delta.reasoning`, etc.). */
+		onReasoningDelta?: (text: string) => void;
 		/** After `team_*` tools rewrite `teams.yaml`, notify the client to refetch `/api/agents`. */
 		onAgentsCatalogChanged?: () => void;
+		/** After a successful **`write`** (new or overwrite), tell the client to focus that path in the workspace editor. */
+		onWorkspaceFileWritten?: (relPath: string) => void;
 	},
 ): Promise<{ result: StreamChatResult; lastStreamUsage: StreamTokenUsage | null; finalAssistantText: string }> {
 	const signal = options.signal;
@@ -355,7 +362,10 @@ export async function runOrchestratorToolLoop(
 
 		let round: StreamToolRound;
 		try {
-			round = await consumeOpenAiToolStream(res, onDelta, onLog, { signal });
+			round = await consumeOpenAiToolStream(res, onDelta, onLog, {
+				signal,
+				onReasoningDelta: options.onReasoningDelta,
+			});
 		} catch (e) {
 			if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
 				return { result: { ok: false, aborted: true }, lastStreamUsage: mergedUsage, finalAssistantText };
@@ -378,6 +388,13 @@ export async function runOrchestratorToolLoop(
 				if (toolResult.agentsCatalogChanged) {
 					try {
 						options.onAgentsCatalogChanged?.();
+					} catch {
+						/* ignore */
+					}
+				}
+				if (toolResult.workspaceFileWritten) {
+					try {
+						options.onWorkspaceFileWritten?.(toolResult.workspaceFileWritten);
 					} catch {
 						/* ignore */
 					}

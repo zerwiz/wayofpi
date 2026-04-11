@@ -10,6 +10,40 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Added
 
+- **Claw UI — pluggable modules**: `registerClawUiModule` / `listClawUiModules` in `apps/wayofpi-ui/src/claw/clawUiModules.ts`; optional registrations in `apps/wayofpi-ui/src/claw/clawUserUiModules.ts` (imported from `App.tsx`). Extra nav icons appear after **Files**; each module renders in the main column with context (workspace root, theme, server config, tab/file helpers). Unknown tab ids fall back to **Mission**.
+
+- **`apps/wayofpi-ui` server** — Bun orchestrator **Git workflow tools** (same **`WOP_ORCHESTRATOR_GIT_TOOLS`** gate as existing Git tools): **`git_branches`**, **`git_checkout`** (create/switch branch), **`git_merge`**, **`git_add`**, **`git_commit`** — so the agent can branch, commit, push to GitHub, and merge into **`main`** without relying on **`bash`** alone. Session prompts note PAT scope for push.
+
+- **Claw UI — Help modal (`ClawHelpModal`)**: dedicated 7-section operator guide triggered from the `?` **Help** button at the bottom of the Claw nav rail. Sections: **Overview** (what Claw is, how it relates to Pi, three-mode comparison), **Navigation** (all 7 tabs with icon + description), **.claw/ Workspace** (all 7 template files, isolation rules, scaffold), **Schedules** (step-by-step creation, cron cheatsheet, Phase D note), **Channels** (Telegram 5-step setup, Phase E note, link to `WOP_TELEGRAM_PLAN.md`), **Files & Preview** (all preview modes, editing workflow), **Tips** (6 quick-tip cards: sessions, agent context, scaffold, schedule planning, mode switching, Pi engine indicator). Sidebar navigation with orange accent; separate from the generic `HowToUseModal`.
+
+- **Claw UI — New Plan button wired**: `NewPlanFileModal` is now rendered inside the Claw return block (previously only rendered in the Technical block, so the dialog never appeared in Claw). `handleNewPlanFileCreate` now detects `uiMode === "claw"` and switches to the **Files tab** with the new plan file open, instead of switching to Technical mode.
+
+- **Way of Pi Help Center — Claw description updated**: Layout Modes page now correctly describes Claw as a **mission-control shell** with its own nav rail, tabs (Mission / Chat / Team / Schedule / Channels / Files / Settings), `.claw/` workspace, and operator features. Removed the inaccurate "Identical to Technical for day-to-day use" copy.
+
+### Fixed
+
+- **Claw Mission View — layout overflow**: long text ("Set up .claw/ workspace (7 missing files)" button and roadmap notice with `docs/WOP_*.md` paths) was escaping the grid column and bleeding across the full screen width. Fixes: left and center grid columns now have `min-w-0`; outer scroll container adds `w-full overflow-x-hidden`; roadmap notice gets `w-full min-w-0 break-words`; setup button uses `flex-wrap` + `break-words`; file description labels drop `shrink-0`.
+
+- **Claw UI — Schedules tab (Phase D stub)**: new `ClawSchedulesView` component + `useClawSchedules` hook. Operators can define named cron-triggered Pi turns (stored in `wayofpi.claw.schedules` localStorage). Cards show name, cron + human-readable label, agent, prompt preview, enabled/disabled badge, and last-run. Inline create/edit form with preset frequency selector, agent, prompt textarea, and enabled toggle. Phase D notice explains execution is not yet wired.
+
+- **Claw UI — Channels tab (Phase E stub)**: new `ClawChannelsView` component with Telegram, Webhook, and Email channel cards. Telegram card includes full step-by-step setup guide (`@BotFather` → token → `.claw/TOOLS.md` → `pi-telegram` extension → `/reload`), "Open TOOLS.md" button, and link to `WOP_TELEGRAM_PLAN.md`. Webhook card has a disabled "Generate webhook URL" button labeled Phase E. Email card is labeled planned later.
+
+- **Claw UI — nav rail expanded**: `ClawNavRail` adds **Schedule** (`CalendarDays`) and **Channels** (`Radio`) tabs between Team and Files. `ClawTabId` type updated to include `"schedule" | "channels"`.
+
+- **Claw UI — Mission quick actions**: two new `QuickBtn` entries (Schedules, Channels) in the Quick Actions card; StatusRow updated to "UI ready · execution Phase D–F".
+
+- **`docs/WOP_CLAW_MODE_PLAN.md`** — **Workspace isolation** section: `.claw/` as Claw's private workspace, Pi tool access policy (full reach, operationally scoped writes), UI-level isolation rules (session tabs, layout keys, default file panel), `WOP_CLAW_HOME` future isolation path; updated principle #4 and "What ships today" table. **`docs/WOP_CLAW_UI_PLAN.md`** — new **§7 Mode isolation** (owns/can-reach table, visual separation rules); non-goals updated with `.claw/` mixing rule; sections renumbered.
+
+- **`apps/wayofpi-ui`** — **Help → How to use Way of Pi…** opens **`HowToUseModal`** (workspace, layouts, chat, palette, doc links). Command palette: **Help: How to use Way of Pi** (Simple + Technical lists). Types: **`HelpMenuHandlers.onHowToUse`**.
+
+- **`docs/WOP_CLAW_MODE_PLAN.md`** — **Claw UI mode** roadmap (Pi-backed autonomy, orchestration, schedules, channels); linked from **`docs/WOP_PLANNING.md`**, **`docs/README.md`**. **`apps/wayofpi-ui`** — third layout mode **`claw`** (IDE shell + banner), **`UiModeToggle`**, Settings layout command, command palette entries.
+
+- **`docs/WOP_CLAW_UI_PLAN.md`** — **Claw UI** planning doc: ecosystem interface scan (OpenClaw TUI, ClawPort, Mission Control, dashboard UX lessons), IDE-style approvals, recommended Way of Pi dock preset + status strip, UI-only vs Pi-blocked phases; cross-links **`docs/WOP_CLAW_MODE_PLAN.md`**, hub indexes, **`docs/WOP_PRODUCT_CAPABILITIES.md`**. **`apps/wayofpi-ui`** — Claw **banner**, command palette rows, and **View** tooltips mention **`docs/WOP_CLAW_UI_PLAN.md`** alongside **`WOP_CLAW_MODE_PLAN.md`**.
+
+- **`docs/WOP_PRODUCT_OVERVIEW.md`** — **product overview** (narrative onboarding: pitch, journeys, mermaid component map); cross-linked from **`docs/WOP_PRODUCT_CAPABILITIES.md`**, **`docs/README.md`**, **`docs/WOP_PLANNING.md`**, root **`README.md`**.
+
+- **`docs/WOP_PRODUCT_CAPABILITIES.md`** — stakeholder **capability** summary (tables, shipped vs partial vs planned, boundaries); **§1** adds **“The simplest version”** story explainer (console metaphor, extensions/teams, Claw, docs, audiences); indexed from **`docs/README.md`** and **`docs/WOP_PLANNING.md`**.
+
 - **`docs/WOP_ORCHESTRATION_EXTENSIONS_PANEL.md`** — guide for **Extensions → Orchestration** (Plan/Build, **`GET`/`POST /api/config`**, runtime toggles, 404 troubleshooting) and **Pi extensions**; linked from **`apps/wayofpi-ui`** panel, **`docs/README.md`**, **`docs/WOP_TECHNICAL_UI.md`**, **`docs/REPO_INDEX.md`**, **`apps/wayofpi-ui/README.md`**.
 
 - **`apps/wayofpi-ui` server** — Bun orchestrator **Git / GitHub tools**: **`git_status`**, **`git_remote`**, **`git_fetch`**, **`git_pull`**, **`git_push`** (optional PAT from Settings → GitHub, **`orchestrator-git-tools.ts`**). Env **`WOP_ORCHESTRATOR_GIT_TOOLS`** (default on with **`WOP_ORCHESTRATOR_TOOLS`**). Session prompt explains worktree vs “No Git repository detected”.
@@ -43,6 +77,14 @@ Earlier work is not backfilled; entries start from when this file was added.
 - **`apps/wayofpi-ui`** — **`StripFilePreview`** uses **`apiGet`** (same as **`useFileEditor`**) and **`AbortController`** so fast tab switches do not apply stale **`/api/file`** responses.
 
 ### Changed
+
+- **`apps/wayofpi-ui` server** — Orchestrator system prompts (**`session-prompts.ts`**) now constrain **“what is Way of Pi”** / product overviews: **≤5 bullets**, **no emoji** unless the user used emoji, **no wide tables** unless asked, and explicit separation of **shell + Bun server**, **interim orchestrator tools**, and **Pi** / **headless Pi** so replies do not blur runtimes.
+
+- **`apps/wayofpi-ui`** — **Help → About Way of Pi** expands plain-language bullets (code, docs/plans, learning, shared team playbooks) and notes that file/command automation depends on settings and Pi-backed chat.
+
+- **`docs/WOP_PRODUCT_CAPABILITIES.md`** — simple-language intro: accurate **workspace tools** explanation (no informal “Claw” metaphor), **what people use it for** table, link to gaps.
+
+- **`docs/WAY_OF_PI_INTRODUCTION.md`** — same **workspace tools** wording instead of “Claw.”
 
 - **`apps/wayofpi-ui`** — **`GET /api/health`** and **`GET /api/config`** expose **`capabilities.configRuntimePost`** (with **`workspaceProblems`**) so Vite/Electron treat an old Bun on the port as **stale**; **Extensions** activity shows a **help dock** (restart steps, **`curl`** smoke, **Re-check server**, tool log link, Pi **`PATH` / `WOP_PI_BINARY`**). **`useServerConfig`** normalizes **`capabilities`**.
 

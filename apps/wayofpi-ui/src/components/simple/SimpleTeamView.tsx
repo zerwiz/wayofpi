@@ -5,6 +5,7 @@ import type { AgentMeta } from "../../hooks/useAgents";
 import { workspaceAgentDisplayName } from "../../utils/workspaceAgentDisplay";
 import type { FileGetResponse } from "../../types/workspaceFile";
 import { parseTeamsYaml, serializeTeamsYaml } from "../../utils/teamsYaml";
+import { TeamsGuiEditorModal } from "../TeamsGuiEditorModal";
 
 const TEAM_ID_RE = /^[a-zA-Z0-9_-]+$/;
 
@@ -368,6 +369,7 @@ export function SimpleTeamView({
 }) {
 	const [hireOpen, setHireOpen] = useState(false);
 	const [teamModal, setTeamModal] = useState<null | { mode: "new" | "edit"; team?: string }>(null);
+	const [teamsGuiOpen, setTeamsGuiOpen] = useState(false);
 	const byName = new Map(agents.map((a) => [a.name, a]));
 	const heading = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
 	const sub = appearanceDark ? "text-[#858585]" : "text-[#616161]";
@@ -404,17 +406,16 @@ export function SimpleTeamView({
 							<Plus size={16} />
 							New team
 						</button>
-						{onOpenTeamsYaml ? (
-							<button
-								type="button"
-								onClick={onOpenTeamsYaml}
-								disabled={!workspaceReady}
-								className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 ${appearanceDark ? "border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]" : "border-[#d4d4d4] text-[#333333] hover:bg-[#e5e5e5]"}`}
-							>
-								<Pencil size={16} />
-								Edit YAML
-							</button>
-						) : null}
+						<button
+							type="button"
+							onClick={() => setTeamsGuiOpen(true)}
+							disabled={!workspaceReady}
+							title={!workspaceReady ? "Open a workspace folder first" : "Edit teams with a visual editor"}
+							className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 ${appearanceDark ? "border-[#3c3c3c] text-[#cccccc] hover:bg-[#3c3c3c]" : "border-[#d4d4d4] text-[#333333] hover:bg-[#e5e5e5]"}`}
+						>
+							<Pencil size={16} />
+							Edit Teams
+						</button>
 						<button
 							type="button"
 							onClick={onReload}
@@ -561,17 +562,27 @@ export function SimpleTeamView({
 				onAfterSave={() => void onReload()}
 			/>
 
-			<AddAgentHintModal
-				open={hireOpen}
-				onClose={() => setHireOpen(false)}
-				onReload={() => {
-					void onReload();
-					setHireOpen(false);
-				}}
-				onCreateAgentFile={onCreateAgentDefinition}
-				onOpenTeamsYaml={onOpenTeamsYaml}
-				appearanceDark={appearanceDark}
-			/>
-		</div>
+		<AddAgentHintModal
+			open={hireOpen}
+			onClose={() => setHireOpen(false)}
+			onReload={() => {
+				void onReload();
+				setHireOpen(false);
+			}}
+			onCreateAgentFile={onCreateAgentDefinition}
+			onOpenTeamsYaml={onOpenTeamsYaml}
+			appearanceDark={appearanceDark}
+		/>
+
+		<TeamsGuiEditorModal
+			open={teamsGuiOpen}
+			onClose={() => setTeamsGuiOpen(false)}
+			agents={agents}
+			teamsYamlWritePath={teamsYamlWritePath}
+			workspaceReady={workspaceReady}
+			appearanceDark={appearanceDark}
+			onAfterSave={() => void onReload()}
+		/>
+	</div>
 	);
 }

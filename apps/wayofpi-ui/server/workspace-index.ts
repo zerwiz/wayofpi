@@ -46,12 +46,15 @@ export type WorkspaceIndexOptions = {
 	instantGrepIndex: boolean;
 	/** When true, prepend a short index summary to the chat system lead (bounded tokens). */
 	attachSummaryToChat: boolean;
+	/** 0 = disabled. Positive integer = auto-sync every N minutes in the background. */
+	autoSyncIntervalMinutes: number;
 };
 
 export const DEFAULT_WORKSPACE_INDEX_OPTIONS: WorkspaceIndexOptions = {
 	indexNewFolders: true,
 	instantGrepIndex: true,
 	attachSummaryToChat: false,
+	autoSyncIntervalMinutes: 0,
 };
 
 export type WorkspaceIndexFileEntry = {
@@ -271,6 +274,10 @@ export async function patchWorkspaceIndexOptions(
 		indexNewFolders: partial.indexNewFolders ?? cur.indexNewFolders,
 		instantGrepIndex: partial.instantGrepIndex ?? cur.instantGrepIndex,
 		attachSummaryToChat: partial.attachSummaryToChat ?? cur.attachSummaryToChat,
+		autoSyncIntervalMinutes:
+			typeof partial.autoSyncIntervalMinutes === "number"
+				? Math.max(0, Math.floor(partial.autoSyncIntervalMinutes))
+				: cur.autoSyncIntervalMinutes,
 	};
 	await mkdir(indexDirAbs(), { recursive: true });
 	await writeFile(optionsJsonPath(), JSON.stringify(next, null, 2), "utf8");
@@ -479,6 +486,45 @@ export async function getWorkspaceIndexStatus(): Promise<WorkspaceIndexStatusPay
 		about,
 	};
 }
+
+// ---------------------------------------------------------------------------
+// Auto-sync scheduler
+// ---------------------------------------------------------------------------
+
+type OnAutoSyncCallback = (result: WorkspaceIndexSyncResult) => void;
+
+let _autoSyncTimer: ReturnType<typeof setInterval> | null = null;
+
+function stopAutoSync(): void {
+	if (_autoSyncTimer !== null) {
+		clearInterval(_autoSyncTimer);
+		_autoSyncTimer = null;
+	}
+}
+
+function startAutoSync(intervalMinutes: number, onSync?: OnAutoSyncCallback): void {
+	stopAutoSync();
+	if (intervalMinutes <= 0) return;
+	const ms = intervalMinutes * 60 * 1000;
+	_autoSyncTimer = setInterval(() => {
+		syncWorkspaceIndex()
+			.then((result) => {
+				onSync?.(result);
+			})
+			.catch((err: unknown) => {
+				console.error("[workspace-index] auto-sync failed:", err instanceof Error ? err.message : String(err));
+			});
+	}, ms);
+}
+
+/** Read saved options and (re)start or stop the auto-sync timer accordingly.
+ *  Call this once at server startup, and again after each options patch. */
+export async function applyAutoSync(onSync?: OnAutoSyncCallback): Promise<void> {
+	const opts = await readWorkspaceIndexOptions();
+	startAutoSync(opts.autoSyncIntervalMinutes, onSync);
+}
+
+// ---------------------------------------------------------------------------
 
 /** Sync read for chat lead assembly (must stay small). */
 export function getWorkspaceIndexChatBoostSync(): string | null {

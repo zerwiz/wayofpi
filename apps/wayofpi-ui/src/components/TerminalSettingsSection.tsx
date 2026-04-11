@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { apiPostJson } from "../api/client";
 import type { ServerConfig } from "../hooks/useServerConfig";
 import { useTerminalUiPreferences } from "../hooks/useTerminalUiPreferences";
 import { TERMINAL_UI_DEFAULT_FONT } from "../utils/terminalUiPreferences";
@@ -7,14 +9,19 @@ export function TerminalSettingsSection({
 	config,
 	appearanceDark,
 	compact,
+	onConfigRefresh,
 }: {
 	config: ServerConfig | null;
 	/** Simple UI light vs dark chrome. */
 	appearanceDark?: boolean;
 	/** Technical settings sidebar: tighter typography. */
 	compact?: boolean;
+	/** Called after toggling terminal so the parent can refresh /api/config. */
+	onConfigRefresh?: () => void | Promise<void>;
 }) {
 	const { prefs, setPrefs, reset } = useTerminalUiPreferences();
+	const [toggling, setToggling] = useState(false);
+	const [toggleMsg, setToggleMsg] = useState<{ text: string; ok: boolean } | null>(null);
 	const dark = appearanceDark !== false;
 	const label = compact
 		? "mb-1.5 text-[10px] font-bold uppercase text-[#858585]"
@@ -80,12 +87,61 @@ export function TerminalSettingsSection({
 				) : (
 					<p className={muted}>Loading server config…</p>
 				)}
-				<p className={`mt-3 ${compact ? "text-[10px]" : "text-[12px]"} leading-snug ${muted}`}>
-					Set <code className={code}>WOP_ALLOW_TERMINAL=1</code> to allow the PTY (trusted hosts only). Optional:{" "}
-					<code className={code}>WOP_SHELL</code> = path to <code className={code}>bash</code>,{" "}
-					<code className={code}>zsh</code>, etc. In production, unset defaults to off unless you opt in.
+			{/* Toggle button — works for everyone, no file editing needed */}
+			<div className={`mt-3 rounded-lg border p-3 ${dark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-[#f8f8f8]"}`}>
+				<p className={`mb-2 text-[12px] font-semibold ${dark ? "text-[#d4d4d4]" : "text-[#333]"}`}>
+					{enabled ? "Terminal is ON" : "Terminal is OFF"}
 				</p>
+				<p className={`mb-3 ${compact ? "text-[10px]" : "text-[12px]"} leading-snug ${muted}`}>
+					{enabled
+						? "The integrated terminal is active. Anyone who can reach this server can run shell commands in your workspace — only use on trusted networks."
+						: "Enable the integrated terminal to get a real shell inside your workspace. Only enable this if you trust the network you're on."}
+				</p>
+				<button
+					type="button"
+					disabled={toggling || !config}
+					onClick={() => {
+						setToggling(true);
+						setToggleMsg(null);
+						void (async () => {
+							try {
+								const r = await apiPostJson<{ ok: boolean; enabled: boolean; persisted: boolean }>(
+									"/api/terminal/set-enabled",
+									{ enabled: !enabled },
+								);
+								if (r.ok) {
+									setToggleMsg({
+										text: r.enabled
+											? `Terminal enabled${r.persisted ? " and saved to .env" : " (this session only — .env write failed)"}.`
+											: `Terminal disabled${r.persisted ? " and saved to .env" : " (this session only — .env write failed)"}.`,
+										ok: true,
+									});
+									await onConfigRefresh?.();
+								} else {
+									setToggleMsg({ text: "Toggle failed — see server logs.", ok: false });
+								}
+							} catch (e) {
+								setToggleMsg({ text: e instanceof Error ? e.message : String(e), ok: false });
+							} finally {
+								setToggling(false);
+							}
+						})();
+					}}
+					className={`rounded-lg px-4 py-2 text-sm font-bold text-white transition-colors disabled:opacity-50 ${
+						enabled
+							? "bg-red-600 hover:bg-red-700"
+							: "bg-emerald-600 hover:bg-emerald-700"
+					}`}
+				>
+					{toggling ? "Applying…" : enabled ? "Disable terminal" : "Enable terminal"}
+				</button>
+				{toggleMsg ? (
+					<p className={`mt-2 text-[12px] ${toggleMsg.ok ? "text-emerald-400" : "text-red-400"}`}>
+						{toggleMsg.text}
+					</p>
+				) : null}
 			</div>
+		</div>
 
 			<div className={label}>Terminal appearance (this browser)</div>
 			<div className={box}>

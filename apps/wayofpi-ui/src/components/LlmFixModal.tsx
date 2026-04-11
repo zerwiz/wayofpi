@@ -126,7 +126,7 @@ export function LlmFixModal({
 							</>
 						)}
 					</div>
-					{uiMode === "technical" ? (
+					{uiMode !== "simple" ? (
 						<p className={`mt-3 text-xs ${muted}`}>
 							Status bar (bottom): model menu lists the active id; workspace provider files match Pi{" "}
 							<span className="font-mono text-[10px]">/models</span>.

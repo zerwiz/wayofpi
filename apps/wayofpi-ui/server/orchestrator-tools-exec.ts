@@ -12,7 +12,12 @@ import { MAX_FILE_BYTES, shouldSkipDir } from "./paths";
 import {
 	ORCHESTRATOR_GIT_TOOLS_OPENAI,
 	orchestratorGitWorkspaceToolsEnabled,
+	orchestratorToolGitAdd,
+	orchestratorToolGitBranches,
+	orchestratorToolGitCheckout,
+	orchestratorToolGitCommit,
 	orchestratorToolGitFetch,
+	orchestratorToolGitMerge,
 	orchestratorToolGitPull,
 	orchestratorToolGitPush,
 	orchestratorToolGitRemote,
@@ -26,7 +31,12 @@ import {
 } from "./teams-yaml-mutate";
 import { getPrimaryWorkspacePath, resolveUnderWorkspace } from "./workspace-state";
 
-export type OrchestratorToolResult = { output: string; agentsCatalogChanged?: boolean };
+export type OrchestratorToolResult = {
+	output: string;
+	agentsCatalogChanged?: boolean;
+	/** Workspace-relative path after a successful **`write`** (new file or overwrite) — UI may focus the editor. */
+	workspaceFileWritten?: string;
+};
 
 let orchestratorToolsRuntimeOverride: boolean | undefined;
 let orchestratorBashRuntimeOverride: boolean | undefined;
@@ -120,23 +130,29 @@ async function toolListDir(rel: string): Promise<string> {
 	}
 }
 
-async function toolWrite(rel: string, content: string): Promise<string> {
-	const abs = resolveUnderWorkspace(rel.replace(/^[/\\]+/, ""));
-	if (!abs) return "write: path is not inside the workspace or is unsafe.";
+async function toolWrite(rel: string, content: string): Promise<{ output: string; writtenRel?: string }> {
+	const relNorm = rel.replace(/^[/\\]+/, "");
+	const abs = resolveUnderWorkspace(relNorm);
+	if (!abs) return { output: "write: path is not inside the workspace or is unsafe." };
 	const bytes = new TextEncoder().encode(content).byteLength;
 	if (bytes > MAX_WRITE_UTF8_BYTES) {
-		return `write: content too large (${bytes} bytes UTF-8; max ${MAX_WRITE_UTF8_BYTES}).`;
+		return {
+			output: `write: content too large (${bytes} bytes UTF-8; max ${MAX_WRITE_UTF8_BYTES}).`,
+		};
 	}
 	try {
 		const st = await stat(abs).catch(() => null);
-		if (st?.isDirectory()) return `write: path is a directory: ${rel}`;
+		if (st?.isDirectory()) return { output: `write: path is a directory: ${rel}` };
 		await mkdir(dirname(abs), { recursive: true });
 		await writeFile(abs, content, "utf8");
 		logTool("write", `${rel} (${bytes} bytes)`);
-		return `write: ok — ${bytes} bytes written to ${rel}`;
+		return {
+			output: `write: ok — ${bytes} bytes written to ${rel}`,
+			writtenRel: relNorm,
+		};
 	} catch (e) {
 		const m = e instanceof Error ? e.message : String(e);
-		return `write: ${m}`;
+		return { output: `write: ${m}` };
 	}
 }
 
@@ -312,7 +328,8 @@ export async function executeOrchestratorTool(name: string, argsJson: string): P
 		case "write": {
 			const path = String(args.path ?? "");
 			const content = typeof args.content === "string" ? args.content : "";
-			return { output: await toolWrite(path, content) };
+			const w = await toolWrite(path, content);
+			return { output: w.output, ...(w.writtenRel ? { workspaceFileWritten: w.writtenRel } : {}) };
 		}
 		case "bash": {
 			const command = String(args.command ?? "");
@@ -370,6 +387,36 @@ export async function executeOrchestratorTool(name: string, argsJson: string): P
 				`${remote ?? "origin"}${branch ? ` ${branch}` : ""}${forceWithLease ? " --force-with-lease" : ""}`,
 			);
 			return { output: await orchestratorToolGitPush({ remote, branch, forceWithLease }) };
+		}
+		case "git_branches": {
+			logTool("git_branches", "");
+			return { output: await orchestratorToolGitBranches() };
+		}
+		case "git_checkout": {
+			const branch = String(args.branch ?? "");
+			const createNew = args.createNew === true;
+			const startPoint = args.startPoint != null ? String(args.startPoint) : undefined;
+			logTool("git_checkout", `${createNew ? "-b " : ""}${branch}${startPoint ? ` ← ${startPoint}` : ""}`);
+			return { output: await orchestratorToolGitCheckout({ branch, createNew, startPoint }) };
+		}
+		case "git_merge": {
+			const ref = String(args.ref ?? "");
+			const noFf = args.noFf === true;
+			const commitMessage = args.commitMessage != null ? String(args.commitMessage) : undefined;
+			logTool("git_merge", `${ref}${noFf ? " --no-ff" : ""}`);
+			return { output: await orchestratorToolGitMerge({ ref, noFf, commitMessage }) };
+		}
+		case "git_add": {
+			const all = args.all === true;
+			const paths = Array.isArray(args.paths) ? args.paths.map((p: unknown) => String(p)) : undefined;
+			logTool("git_add", all ? "all" : (paths?.join(", ") ?? ""));
+			return { output: await orchestratorToolGitAdd({ paths, all }) };
+		}
+		case "git_commit": {
+			const message = String(args.message ?? "");
+			const allowEmpty = args.allowEmpty === true;
+			logTool("git_commit", message.slice(0, 80) + (message.length > 80 ? "…" : ""));
+			return { output: await orchestratorToolGitCommit({ message, allowEmpty }) };
 		}
 		default:
 			return {

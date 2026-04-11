@@ -6,6 +6,7 @@ export type BottomPanelTab =
 	| "problems"
 	| "output"
 	| "tool_log"
+	| "agent_log"
 	| "terminal"
 	| "agent_team"
 	| "agent_chat";

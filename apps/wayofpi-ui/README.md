@@ -27,14 +27,15 @@ For **full Pi tools** (built-ins **and** extension tools like **`dispatch_agent`
 
 **Gaps and stubs:** **[docs/WOP_OPEN_TODOS.md](../../docs/WOP_OPEN_TODOS.md)** (Technical/Simple UI, server, production).
 
-## Simple vs Technical UI
+## UI modes: Simple, Technical, Claw
 
-The top bar includes **Simple** | **Technical**:
+The top bar includes **Simple** | **Technical** | **Claw**:
 
-- **Simple** (default) — Chat-forward layout: wider chat column, friendly labels (“You”, “Orchestrator” or the chosen workspace agent, “Team helpers”), shorter menu strip, status bar shows connection and workspace only. The file explorer and bottom panel are hidden; switch to **Technical** to browse files or see the tool log.
+- **Simple** (default) — Chat-forward layout: wider chat column, friendly labels (“You”, “Orchestrator” or the chosen workspace agent, “Team helpers”), shorter menu strip, status bar shows connection and workspace only. The file explorer and bottom panel are hidden; switch to **Technical** or **Claw** when you need files, schedules, or the tool log.
 - **Technical** — IDE-style shell: activity bar, workspace tree, **Tool Log** / Problems / Output panel, full status bar (line/column, encoding, token placeholders). **View → Editor Layout → Workspace grid** can split the main editor into up to **3×4** panes (columns × rows) (each pane has its own tab stack and file buffer). **Drag the orange-accent splitters** between panes to resize row/column shares; sizes persist with **`wayofpi.technical.workspaceGrid.v1`** in `localStorage` (`rowWeights` / `colWeights` when you resize). **Drag files, tabs, or the pane grip** onto **edge snap zones** to **auto-expand** a **1×1** (or the outer edge of an **N×1** / **1×N** strip) into a split; **cross-cell** **tabs** can be dropped on another pane’s **tab bar** for insert order. Details: **[docs/WOP_TECHNICAL_UI.md](../../docs/WOP_TECHNICAL_UI.md)**.
+- **Claw** — Third shell: dedicated **nav rail** with **Mission**, **Chat**, **Team**, **Schedule**, **Channels**, **Files**, and **Settings** (plus optional registered **Claw UI modules**). Operator-focused roadmap and parity rules: **[docs/WOP_CLAW_MODE_PLAN.md](../../docs/WOP_CLAW_MODE_PLAN.md)**, **[docs/WOP_CLAW_UI_PLAN.md](../../docs/WOP_CLAW_UI_PLAN.md)**. Uses the same **`/api/*`**, **`/ws`**, and Pi/Bun chat configuration as Simple and Technical.
 
-The choice is stored in **`localStorage`** as **`wayofpi.uiMode`** (`simple` | `technical`). See **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](../../docs/WOP_STANDALONE_SYSTEM_PLAN.md)**.
+The choice is stored in **`localStorage`** as **`wayofpi.uiMode`** (`simple`, `technical`, `claw`). See **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](../../docs/WOP_STANDALONE_SYSTEM_PLAN.md)**.
 
 **Technical layout (components, state, API boundaries):** **[docs/WOP_TECHNICAL_UI.md](../../docs/WOP_TECHNICAL_UI.md)**.
 
@@ -72,6 +73,8 @@ npm run dev
 On **Linux** and **Windows**, the shell calls **`Menu.setApplicationMenu(null)` before `app` is ready** (Electron otherwise installs its default **File / Edit / View …** bar at ready — see [electron#35512](https://github.com/electron/electron/issues/35512)), then strips the window menu again on create. Your menus live only in the in-app bar (`MenuBar.tsx`). **macOS** still gets a minimal system menu (**Way of Pi** → About, Hide, Quit) above the window.
 
 In the Electron build, **`electron/preload.mjs`** exposes **`window.wopShell`** so **View → Reload window** / **Reload (ignore cache)** and **Help → Toggle Developer Tools** replace the old Chromium **View** menu behavior (browser dev still uses **F12** / normal reload).
+
+**Help → How to use Way of Pi…** opens an in-app guide (**`src/components/HowToUseModal.tsx`**) with workspace/layout/chat tips and links to GitHub-rendered docs; the command palette includes **Help: How to use Way of Pi**.
 
 Environment:
 

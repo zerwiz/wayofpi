@@ -1,15 +1,69 @@
-# Pi extension playground
+# Way of Pi — Pi extension playground
 
 **Source repository:** [github.com/zerwiz/wayofpi](https://github.com/zerwiz/wayofpi)
 
-This repo is a **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** workspace: extensions, skills, agents, and docs for customizing the **UI**, **agent orchestration**, **safety auditing**, and **cross-agent** integrations.
+## Introduction
 
-**This repository also includes:** **[apps/wayofpi-ui/](apps/wayofpi-ui/)** (Way of Pi technical web shell — see **`apps/wayofpi-ui/README.md`**), **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** and **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** (Way of Pi product plan), a **[documentation set](docs/README.md)** (memory, extensions, skills, tools, agents, Hermes/Honcho, repo index), **`projects/`** for per-codebase notes under Pi, **project-scanner** and **ralph** agents/skills/extensions for onboarding and HTML ticket queues, **`/skill:github`** for branches + **git worktrees** (parallel agents in one repo), and **Cursor rules** under **`.cursor/rules/`** for consistent agent behavior.
+### Start here (plain English)
+
+Picture a **really good tutor for computer projects**. That tutor is **Pi** — short for **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)**, software that can read your files, suggest edits, and answer questions. A lot of people talk to Pi inside a **terminal**: green or white text on a black screen, like a chat in a movie from the 1980s.
+
+**Way of Pi** is the **friendly wrapper** around the same idea. Instead of only typing in a tiny box, you get a **normal app**: a **chat** on one side, a **list of folders and files** on the other, and a **place to type code** — a bit like Google Docs, but for a whole programming folder you **chose to open**. The app is careful to work **inside that folder** (your **workspace**), not everywhere on your computer, so you stay in control.
+
+The **same project** is also a **playground** for people who like to **tune** how Pi works. You can add **extensions** (small programs that teach Pi new tricks), **skills** (checklist-style recipes you run on purpose, often with **`/skill:name`**), and **agents** (different “job hats” — planner, builder, safety checker, and more). A team can put those files in **git** so everyone gets the **same playbook**.
+
+### Two pieces that work together
+
+Think of a **game console**: the **TV** is not the same thing as the **computer inside the box**, but you need both.
+
+| Piece | Easy name | What it does |
+| ----- | --------- | ------------- |
+| **Pi** | the **engine** | Does the thinking: reads your question, looks at files when allowed, and can run **tools** (read, edit, commands) **when your setup turns that on**. |
+| **Way of Pi** | the **shell** | What you **click and see**: tabs, panes, the file tree, the editor, and buttons. It also runs a small **server** that safely serves **your opened folder** to the UI. |
+
+When people say **“headless Pi”**, they mean Pi running **without** the old full-screen terminal UI — still the real Pi program, driven by the Way of Pi app.
+
+### Words you might see once
+
+- **Workspace** — The **one project folder** you opened. Not “any file on the disk,” and not “whatever random tab is open.”
+- **Extension** — A **TypeScript** file that **hooks into Pi** to add tools, commands, or UI behavior.
+- **Skill** — A **written recipe** (often under **`.pi/skills/`**) you trigger with something like **`/skill:name`**.
+- **Agent** — A **saved personality** (markdown under **`.pi/agents/`**) with a name, a short job description, and rules for which tools it may use.
+- **Electron** — A way to run the app as a **desktop window** on your laptop (recommended here), instead of only inside a browser tab.
+
+### What you can do with it
+
+- **Work with your real project open** — You pick a folder; chat and file actions stay **tied to that folder** (through the server and Pi settings), instead of copying code into a random website that never saw your files.
+- **Teach Pi new habits** — Turn on **extensions**, **skills**, **agents**, and **teams** from **`.pi/`** and **`extensions/`**. Put the repo in **git** so teammates share the same agents and docs — see **[docs/CONCEPTS.md](docs/CONCEPTS.md)** and **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)**.
+- **Chain specialists** — One flow can **hand work off**: plan, then build, then review; or use helpers like **project-scanner**, **Ralph** tickets, **`/skill:github`**, and **git worktrees** — see **[docs/AGENTS.md](docs/AGENTS.md)** and **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)**.
+- **Choose how busy the screen is** — **Simple** keeps the layout calm. **Technical** adds IDE-style panels and an optional big grid. **Claw** is for an operator-style layout (missions, schedules, channels, and similar tabs). Browser or **Electron** — see **[docs/WOP_PRODUCT_OVERVIEW.md](docs/WOP_PRODUCT_OVERVIEW.md)**. For **what already works vs what is still being wired** (including running chat through the real **`pi`** CLI with **`WOP_CHAT_ENGINE`**), see **[docs/WOP_PRODUCT_CAPABILITIES.md](docs/WOP_PRODUCT_CAPABILITIES.md)**.
+
+### A little more detail (same repo, technical view)
+
+**Way of Pi** is this repository: a **desktop or browser shell** for working in a real **project folder** with **Pi** — chat, file tree, editor, and (depending on mode) terminals, docks, and tool visibility — plus the same tree as a **Pi extension playground** (TypeScript **extensions**, **`/skill:…`**, **`.pi/agents/`**, **teams**, and docs) so you can customize **UI**, **orchestration**, **safety / review flows**, and **cross-agent** behavior.
+
+### What this repository contains
+
+**[apps/wayofpi-ui/](apps/wayofpi-ui/)** (the Way of Pi web shell you run in a browser or Electron), **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** (roadmap hub), a **[full doc index](docs/README.md)**, **`projects/`** for per-codebase notes, **project-scanner** / **ralph** flows, **`/skill:github`** + git worktrees, and **Cursor rules** under **`.cursor/rules/`**.
+
+---
+
+## What lives here (system map)
+
+Treat the repo as **two cooperating products** in one tree:
+
+| Layer | What it is | Where | Read next |
+| ----- | ---------- | ----- | --------- |
+| **Pi extension playground** | Customize **[Pi Coding Agent](https://github.com/mariozechner/pi-coding-agent)** with TypeScript **extensions**, **`.pi/settings.json`**, **skills**, **`.pi/agents/`**, **`teams.yaml`**, **`just` / `ppi`** recipes | **`extensions/`**, **`.pi/`**, **`agent/`** | **[docs/README.md](docs/README.md)** (master list), **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** (folder map), **[docs/CONCEPTS.md](docs/CONCEPTS.md)** (skills vs agents vs extensions vs tools) |
+| **Way of Pi (web shell)** | **Electron** (recommended) or **browser** UI: workspace tree, editor, chat, optional terminal; **`WOP_*`** env for isolation and Pi binary | **`apps/wayofpi-ui/`** | **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** (boot, ports, APIs), **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** (layout, docks, grid) |
+| **Product truth** | What is **shipped**, **interim**, or **planned**; how the shell **must** converge on **headless Pi** for real tools (no duplicate “mini Pi” in Bun) | **`docs/WOP_*.md`** | **[docs/WOP_PRODUCT_CAPABILITIES.md](docs/WOP_PRODUCT_CAPABILITIES.md)** (status matrix), **[docs/WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)** (API map, parity lock) |
+
+**Planning hub** (all Way of Pi roadmaps linked in one place): **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)**. **Living gaps / stubs:** **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)**. **Env and naming** (`WOP_*`, workspace vs install path): **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**.
 
 <p align="center">
-  <img src="./images/pi-logo.svg" alt="Pi Coding Agent extension playground" width="520">
+  <img src="./images/pi-logo.svg" alt="Way of Pi — Pi extension playground" width="520">
   <br>
-  <strong>Pi extension playground</strong>
+  <strong>Way of Pi — Pi extension playground</strong>
 </p>
 
 ---
@@ -101,9 +155,9 @@ Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openr
 
 Scripts prepend **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. They source repo **`.env`** when present and set **`WOP_WORKSPACE`** to the playground root unless already exported. Full setup, API table, production Electron, terminal env: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
 
-### Recent Way of Pi updates (see [CHANGELOG.md](CHANGELOG.md) § Unreleased)
+### Recent Way of Pi updates (see [CHANGELOG.md](CHANGELOG.md) — Unreleased)
 
-- **Simple vs Technical UI** — Top-bar toggle; **`wayofpi.uiMode`** in **`localStorage`** (**Simple** default: chat-first; **Technical**: activity bar, explorer, tool log, dense status). Build vs plan handoff: **[docs/WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)**.
+- **Three UI modes** — Top bar: **Simple** | **Technical** | **Claw**. Persisted as **`wayofpi.uiMode`** in **`localStorage`** (`simple`, `technical`, `claw`). **Simple** (default): chat-first layout, friendly “You / agent” labels, lighter chrome; use **Technical** when you need the file tree, bottom panel, or tool log. **Technical**: full IDE shell (activity bar, explorer, **Tool Log** / Problems / Output, dense status bar) plus **View → Editor Layout → Workspace grid** (see next bullet). **Claw**: operator-oriented shell with its own **nav rail** and tabs (**Mission**, **Chat**, **Team**, **Schedule**, **Channels**, **Files**, **Settings**), optional **`.claw/`** workspace docs, and **Claw Help**; same Bun/Pi workspace and chat engine as the other modes (see **[docs/WOP_CLAW_MODE_PLAN.md](docs/WOP_CLAW_MODE_PLAN.md)** and **[docs/WOP_CLAW_UI_PLAN.md](docs/WOP_CLAW_UI_PLAN.md)**). Plan vs build: **[docs/WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)**.
 - **Technical workspace grid** — **`TechnicalWorkspaceGrid`**: up to **3×4** **`WorkspacePane`** cells (columns × rows), each with its own **`PanelDockLayout`** and file buffer; **View → Editor Layout** presets; persistence **`wayofpi.technical.workspaceGrid.v1`**. Explorer open targets the **focused** cell. **Draggable splitters** between panes resize row/column shares (**`rowWeights`** / **`colWeights`** in the same `localStorage` key). Dropping files, tabs, or pane grips on an **edge snap zone** when the grid is still **1×1** (or on the outer edge of an **N×1** / **1×N** strip) **grows the grid** so the implied neighbor cell exists; **cross-cell** tab drops can target another pane’s **tab bar** for insert-before order. Shell map: **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)**.
 - **Modular docks** — Single **Dock** tab strip under the editor stack (legacy upper horizontal tool dock merged into **bottom**); shared **Zed-style** tab chrome, **in-pane** tab drag-and-drop, splitter handles that **follow the pointer**. Roadmap: **[docs/WOP_MODULAR_DOCKS_PLAN.md](docs/WOP_MODULAR_DOCKS_PLAN.md)**.
 - **Editor and files** — Markdown **Source / Preview** toolbar; **`GET /api/file`** returns **base64** for images and other binary types; preview strip uses **`apiGet`** + **`AbortController`** so fast tab switches do not show stale reads.
@@ -115,30 +169,50 @@ Scripts prepend **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)*
 
 ---
 
-## Documentation
+## Documentation (how to read this repo)
 
-Full index: **[docs/README.md](docs/README.md)**. Highlights:
+**Canonical index:** every markdown guide under **`docs/`** is listed with a one-line summary in **[docs/README.md](docs/README.md)**. Use that file when you are not sure which **`WOP_*`** or **how-to** doc applies.
+
+### Start here (pick your goal)
+
+| Goal | Read first |
+| ---- | ---------- |
+| **Plain-language “what is Way of Pi?”** (non-technical intro) | **[docs/WAY_OF_PI_INTRODUCTION.md](docs/WAY_OF_PI_INTRODUCTION.md)** |
+| **Product story** — who it is for, journeys, how playground + shell fit | **[docs/WOP_PRODUCT_OVERVIEW.md](docs/WOP_PRODUCT_OVERVIEW.md)** |
+| **Capabilities** — shipped vs partial vs planned; boundaries and links | **[docs/WOP_PRODUCT_CAPABILITIES.md](docs/WOP_PRODUCT_CAPABILITIES.md)** |
+| **All roadmaps and WOP plans in one hub** | **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** |
+| **Run the app** (Electron, browser, env, `/api`, WebSocket) | **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** |
+| **Repo layout** (folders, `.pi/`, gitignore, `projects/_template`) | **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** |
+| **Pi concepts** (extensions, skills, agents, tools, memory) | **[docs/CONCEPTS.md](docs/CONCEPTS.md)**, then topic guides below |
+
+### Way of Pi — product and engineering docs
+
+| Doc | Use it for |
+| --- | ---------- |
+| **[WOP_PRODUCT_OVERVIEW.md](docs/WOP_PRODUCT_OVERVIEW.md)** | Narrative onboarding and doc map |
+| **[WOP_PRODUCT_CAPABILITIES.md](docs/WOP_PRODUCT_CAPABILITIES.md)** | **Single source** for “what works today” vs interim Bun chat vs Pi-backed path |
+| **[WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** | Long-form product plan: isolation, MVP, production checklist |
+| **[WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)** | HTTP/WebSocket inventory; **critical parity rule** (Pi owns agent behavior); phased wiring |
+| **[WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)** | **`WOP_*`** env; workspace root vs Way of Pi install vs editor-only state |
+| **[WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** | Shell: Simple / Technical / Claw, grid, docks, persistence keys |
+| **[WOP_CLAW_MODE_PLAN.md](docs/WOP_CLAW_MODE_PLAN.md)**, **[WOP_CLAW_UI_PLAN.md](docs/WOP_CLAW_UI_PLAN.md)** | Claw operator mode: roadmap and UI research |
+| **[WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)** | Plan vs build chat workflows and **`plans/`** handoffs |
+| **[WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)** | Backlog and known stubs |
+| **[WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)** | **`just wop-upstream-check`**, **`just wop-upstream-sync`** vs upstream Pi |
+
+### Pi playground — reference and how-to
 
 | Topic | Doc |
 | ----- | --- |
-| **Playground vs other repos** (opt-in toolbox) | **[docs/PLAYGROUND.md](docs/PLAYGROUND.md)** |
-| **TUI** (thinking toggle, tools expand, keyboard shortcuts) | **[docs/TUI.md](docs/TUI.md)** |
-| **Repo map** (folders, gitignored paths, `projects/_template`) | **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** |
+| **Playground vs other repos** (`pi-e`, opt-in toolbox) | **[docs/PLAYGROUND.md](docs/PLAYGROUND.md)** |
+| **TUI** (shortcuts, thinking toggle, tools expand) | **[docs/TUI.md](docs/TUI.md)** |
 | **How to use** agents / extensions / skills / tools | **[docs/HOW_TO_USE_AGENTS.md](docs/HOW_TO_USE_AGENTS.md)**, **[docs/HOW_TO_USE_EXTENSIONS.md](docs/HOW_TO_USE_EXTENSIONS.md)**, **[docs/HOW_TO_USE_SKILLS.md](docs/HOW_TO_USE_SKILLS.md)**, **[docs/HOW_TO_USE_TOOLS.md](docs/HOW_TO_USE_TOOLS.md)** |
-| **Skills** (discovery, `/skill:name`, authoring) | **[docs/SKILLS.md](docs/SKILLS.md)** |
-| **Tools** (built-ins + `registerTool` + agent allowlists) | **[docs/TOOLS.md](docs/TOOLS.md)** |
-| **Skills vs agents vs extensions vs tools** | **[docs/CONCEPTS.md](docs/CONCEPTS.md)** |
-| **Agents** + **agent-team** | **[docs/AGENTS.md](docs/AGENTS.md)**, **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)** |
+| **Deep reference** | **[docs/SKILLS.md](docs/SKILLS.md)**, **[docs/TOOLS.md](docs/TOOLS.md)**, **[docs/AGENTS.md](docs/AGENTS.md)**, **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)**, **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** |
 | **Memory** (JSONL, session-memory, saver, `/remember`) | **[docs/AGENT_MEMORY.md](docs/AGENT_MEMORY.md)**, **[docs/SYSTEM.md](docs/SYSTEM.md)** |
-| **Extensions** (shims, checklist) | **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)** |
-| **Hermes** / **Honcho** / **Pi** (local AI) | **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**, **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)**, **[docs/HONCHO_CAPABILITIES.md](docs/HONCHO_CAPABILITIES.md)**, **[docs/HONCHO_OPERATIONS.md](docs/HONCHO_OPERATIONS.md)**, **[docs/Hermes_Honcho_connection.md](docs/Hermes_Honcho_connection.md)**, **[docs/PI_LOCAL_AI.md](docs/PI_LOCAL_AI.md)**, **[docs/HONCHO_LOCAL_AI.md](docs/HONCHO_LOCAL_AI.md)** |
-| **Per-project markdown** | **[projects/README.md](projects/README.md)** |
+| **Hermes / Honcho / local AI stack** | **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**, **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)**, **[docs/HONCHO_CAPABILITIES.md](docs/HONCHO_CAPABILITIES.md)**, **[docs/HONCHO_OPERATIONS.md](docs/HONCHO_OPERATIONS.md)**, **[docs/Hermes_Honcho_connection.md](docs/Hermes_Honcho_connection.md)**, **[docs/PI_LOCAL_AI.md](docs/PI_LOCAL_AI.md)**, **[docs/HONCHO_LOCAL_AI.md](docs/HONCHO_LOCAL_AI.md)** |
+| **Per-project notes** | **[projects/README.md](projects/README.md)** |
 | **Changes** | **[CHANGELOG.md](CHANGELOG.md)** |
-| **Porting Codex subagents** | **[docs/PLAN_AWESOME_CODEX_SUBAGENTS.md](docs/PLAN_AWESOME_CODEX_SUBAGENTS.md)** (from [awesome-codex-subagents](https://github.com/zerwiz/awesome-codex-subagents)) |
-| **Agent / model routing** | **[docs/PLAN_AGENT_MODEL_ROUTING.md](docs/PLAN_AGENT_MODEL_ROUTING.md)** |
-| **Way of Pi** (web UI plan + `WOP_*`) | **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)**, **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)**, **[docs/WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** (shell), **[docs/WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)** (API map) — dev: **`./start-wayofpi-electron.sh`** / **`just wayofpi-electron`** (desktop, **recommended**) or **`./start-wayofpi-ui.sh`** (browser), **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** |
-| **Upstream Pi** (GitHub/npm check + mirror) | **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)** — **`just wop-upstream-check`**, **`just wop-upstream-sync`** |
-| **Way of Pi backlog** | **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)** |
+| **Other plans** | **[docs/PLAN_AWESOME_CODEX_SUBAGENTS.md](docs/PLAN_AWESOME_CODEX_SUBAGENTS.md)**, **[docs/PLAN_AGENT_MODEL_ROUTING.md](docs/PLAN_AGENT_MODEL_ROUTING.md)** |
 
 ---
 

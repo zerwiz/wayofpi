@@ -166,11 +166,18 @@ export function IndexingDocsModal({
 	return (
 		<div
 			className={`fixed inset-0 z-[200] flex items-center justify-center p-4 ${overlay}`}
-			role="dialog"
-			aria-modal
-			aria-labelledby="wop-indexing-title"
+			role="presentation"
+			onMouseDown={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
 		>
-			<div className={`max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-xl border shadow-2xl ${panel}`}>
+			<div
+				className={`max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-xl border shadow-2xl ${panel}`}
+				role="dialog"
+				aria-modal
+				aria-labelledby="wop-indexing-title"
+				onMouseDown={(e) => e.stopPropagation()}
+			>
 				<div className="flex items-center justify-between border-b border-[#3c3c3c] px-5 py-3">
 					<div className="flex items-center gap-2">
 						<BookOpen className="text-[#fb923c]" size={22} />
@@ -278,24 +285,63 @@ export function IndexingDocsModal({
 								appearanceDark={appearanceDark}
 							/>
 						</div>
-						<div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3 ${card}`}>
-							<div>
-								<div className="font-medium">Include index summary in chat</div>
-								<p className={`text-xs ${sub}`}>
-									After Sync, prepends a short file list to the session system prompt (bounded). Turn off to
-									save context tokens.
-								</p>
-							</div>
+					<div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3 ${card}`}>
+						<div>
+							<div className="font-medium">Include index summary in chat</div>
+							<p className={`text-xs ${sub}`}>
+								After Sync, prepends a short file list to the session system prompt (bounded). Turn off to
+								save context tokens.
+							</p>
+						</div>
+						<Toggle
+							on={status?.options.attachSummaryToChat ?? false}
+							disabled={busy || !status}
+							onToggle={() =>
+								void patchOpts({ attachSummaryToChat: !status?.options.attachSummaryToChat })
+							}
+							appearanceDark={appearanceDark}
+						/>
+					</div>
+					<div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3 ${card}`}>
+						<div className="flex-1 min-w-0">
+							<div className="font-medium">Auto-sync index</div>
+							<p className={`text-xs ${sub}`}>
+								Automatically re-syncs the index in the background on a schedule — no manual button needed.
+								The server timer restarts whenever you change this setting.
+							</p>
+						</div>
+						<div className="flex items-center gap-3 shrink-0">
+							{(status?.options.autoSyncIntervalMinutes ?? 0) > 0 && (
+								<select
+									disabled={busy || !status}
+									value={status?.options.autoSyncIntervalMinutes ?? 15}
+									onChange={(e) =>
+										void patchOpts({ autoSyncIntervalMinutes: Number(e.target.value) })
+									}
+									className={`rounded border px-2 py-1 text-xs disabled:opacity-40 ${
+										appearanceDark
+											? "border-[#454545] bg-[#1e1e1e] text-[#cccccc]"
+											: "border-[#d4d4d4] bg-white text-[#111]"
+									}`}
+								>
+									<option value={5}>Every 5 min</option>
+									<option value={15}>Every 15 min</option>
+									<option value={30}>Every 30 min</option>
+									<option value={60}>Every 60 min</option>
+								</select>
+							)}
 							<Toggle
-								on={status?.options.attachSummaryToChat ?? false}
+								on={(status?.options.autoSyncIntervalMinutes ?? 0) > 0}
 								disabled={busy || !status}
-								onToggle={() =>
-									void patchOpts({ attachSummaryToChat: !status?.options.attachSummaryToChat })
-								}
+								onToggle={() => {
+									const cur = status?.options.autoSyncIntervalMinutes ?? 0;
+									void patchOpts({ autoSyncIntervalMinutes: cur > 0 ? 0 : 15 });
+								}}
 								appearanceDark={appearanceDark}
 							/>
 						</div>
 					</div>
+				</div>
 
 					<p className={`mb-4 text-xs ${sub}`}>
 						Ignore files: add <code className="text-[11px]">.cursorignore</code> at the workspace root (same line

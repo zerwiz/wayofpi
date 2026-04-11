@@ -1,4 +1,4 @@
-import { AlertCircle, Braces, FileCode2, MessageSquare, ScrollText, TerminalSquare, Users, X } from "lucide-react";
+import { AlertCircle, Bot, Braces, FileCode2, MessageSquare, ScrollText, TerminalSquare, Users, X } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import type { LogRow } from "../hooks/useWayOfPiSession";
 import type { BottomPanelTab } from "../types/technicalShell";
@@ -21,6 +21,7 @@ const TAB_LABELS: Record<ToolTabId, string> = {
 	problems: "Problems",
 	output: "Output",
 	tool_log: "Tool Log",
+	agent_log: "Agent Log",
 	terminal: "Terminal",
 	agent_team: "Team pulse",
 	agent_chat: "Agent chat",
@@ -48,6 +49,8 @@ function PanelTabIcon({ entry, active }: { entry: PanelTab; active: boolean }) {
 			return <Braces size={14} className={iconClass} aria-hidden />;
 		case "tool_log":
 			return <ScrollText size={14} className={iconClass} aria-hidden />;
+		case "agent_log":
+			return <Bot size={14} className={iconClass} aria-hidden />;
 		case "terminal":
 			return <TerminalSquare size={14} className={iconClass} aria-hidden />;
 		case "agent_team":

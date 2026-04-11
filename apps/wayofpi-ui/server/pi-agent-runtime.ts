@@ -78,6 +78,8 @@ export type RunPiChatTurnOpts = {
 	cwd: string;
 	messages: ChatMessage[];
 	onDelta: (s: string) => void;
+	/** Forward Pi `thinking_delta` to the client as `assistant_reasoning_delta`. */
+	onReasoningDelta?: (s: string) => void;
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
 	signal?: AbortSignal;
 };
@@ -120,6 +122,7 @@ export async function runPiChatTurn(
 		prompt,
 		signal: opts.signal,
 		onDelta: opts.onDelta,
+		onReasoningDelta: opts.onReasoningDelta,
 		onLog: opts.onLog,
 	});
 	if (r.ok) {

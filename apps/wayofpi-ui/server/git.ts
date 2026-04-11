@@ -1,4 +1,4 @@
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, realpathSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 function syncRealpath(abs: string): string {
@@ -194,6 +194,48 @@ export async function gitStageAbsolutePath(absPath: string): Promise<GitStageRes
 	const code = await addProc.exited;
 	if (code !== 0) {
 		return { ok: false, error: addErr.trim() || `git add exited with code ${code}` };
+	}
+	return { ok: true };
+}
+
+/**
+ * Stage every change in the worktree (`git add -A`) for the repository that contains `absPath`.
+ * `absPath` may be a file, directory, or a path whose leaf was deleted (ancestor dir is used).
+ */
+export async function gitStageAllFromAbsolutePath(absPath: string): Promise<GitStageResult> {
+	let startDir = absPath;
+	if (!existsSync(absPath)) {
+		let d = dirname(absPath);
+		while (!existsSync(d) && d !== dirname(d)) {
+			d = dirname(d);
+		}
+		if (!existsSync(d)) return { ok: false, error: "Path does not exist" };
+		startDir = d;
+	} else if (!statSync(absPath).isDirectory()) {
+		startDir = dirname(absPath);
+	}
+
+	const topProc = Bun.spawn(["git", "-C", startDir, "rev-parse", "--show-toplevel"], {
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const topOut = await new Response(topProc.stdout).text();
+	const topErr = await new Response(topProc.stderr).text();
+	if ((await topProc.exited) !== 0) {
+		const msg = topErr.trim() || topOut.trim();
+		if (/not a git repository/i.test(msg)) return { ok: false, error: "Not a git repository" };
+		return { ok: false, error: msg || "git rev-parse failed" };
+	}
+	const repoTop = syncRealpath(topOut.trim());
+
+	const addProc = Bun.spawn(["git", "-C", repoTop, "add", "-A"], {
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const addErr = await new Response(addProc.stderr).text();
+	const code = await addProc.exited;
+	if (code !== 0) {
+		return { ok: false, error: addErr.trim() || `git add -A exited with code ${code}` };
 	}
 	return { ok: true };
 }

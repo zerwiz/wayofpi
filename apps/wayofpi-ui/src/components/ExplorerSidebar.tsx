@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, FilePlus, FolderPlus, SidebarClose } from "lucide-react";
-import { useCallback, useState, type DragEvent, type MouseEvent } from "react";
+import { useCallback, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { FileTree } from "./FileTree";
 import type { TreeNode } from "../types/tree";
 import { isExplorerFilePathDrag, readDraggedExplorerFilePath } from "../utils/panelDockLayout";
@@ -56,10 +56,13 @@ export function ExplorerSidebar({
 	const [timelineOpen, setTimelineOpen] = useState(false);
 	const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
 	const [rootDropActive, setRootDropActive] = useState(false);
+	const explorerTreeHostRef = useRef<HTMLDivElement | null>(null);
 
 	const onRootDragOver = useCallback(
 		(e: DragEvent<HTMLDivElement>) => {
 			if (!allowDropToWorkspaceRoot || !onMoveFileToDirectory || !isExplorerFilePathDrag(e.dataTransfer)) return;
+			// Tree / FileTree handle drag feedback and empty-area root drops; avoid painting the whole pane.
+			if (explorerTreeHostRef.current?.contains(e.target as Node)) return;
 			e.preventDefault();
 			e.dataTransfer.dropEffect = "move";
 			setRootDropActive(true);
@@ -151,21 +154,24 @@ export function ExplorerSidebar({
 				) : error ? (
 					<div className="px-3 py-2 font-mono text-[12px] text-[#f14c4c]">{error}</div>
 				) : (
-					<FileTree
-						nodes={nodes}
-						selectedPath={selectedPath}
-						secondarySelectedPath={secondarySelectedPath}
-						openInMainEditorPaths={openInMainEditorPaths}
-						onSelectFile={onSelectFile}
-						onSelectDirectory={onSelectDirectory}
-						onMoveFileToDirectory={onMoveFileToDirectory}
-						onRenameNode={onRenameExplorerNode}
-						onDeleteNode={onDeleteExplorerNode}
-						onCopyPath={onCopyExplorerPath}
-						expandRevision={expandRevision}
-						pathsToExpand={pathsToExpand}
-						onExplorerGitMutated={onExplorerGitMutated}
-					/>
+					<div ref={explorerTreeHostRef} className="flex min-h-0 flex-1 flex-col">
+						<FileTree
+							nodes={nodes}
+							selectedPath={selectedPath}
+							secondarySelectedPath={secondarySelectedPath}
+							openInMainEditorPaths={openInMainEditorPaths}
+							onSelectFile={onSelectFile}
+							onSelectDirectory={onSelectDirectory}
+							onMoveFileToDirectory={onMoveFileToDirectory}
+							allowWorkspaceRootDrop={allowDropToWorkspaceRoot}
+							onRenameNode={onRenameExplorerNode}
+							onDeleteNode={onDeleteExplorerNode}
+							onCopyPath={onCopyExplorerPath}
+							expandRevision={expandRevision}
+							pathsToExpand={pathsToExpand}
+							onExplorerGitMutated={onExplorerGitMutated}
+						/>
+					</div>
 				)}
 			</div>
 			<div className="shrink-0 border-t border-[#3c3c3c] bg-[#2d2d2d]">

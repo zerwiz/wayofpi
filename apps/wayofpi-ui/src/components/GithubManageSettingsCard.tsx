@@ -20,18 +20,6 @@ function errorMessageFromUnknown(e: unknown): string {
 	return m;
 }
 
-async function openExternalHttps(url: string): Promise<void> {
-	try {
-		if (typeof window !== "undefined" && window.wopShell?.openExternalUrl) {
-			await window.wopShell.openExternalUrl(url);
-			return;
-		}
-	} catch {
-		/* fall through */
-	}
-	window.open(url, "_blank", "noopener,noreferrer");
-}
-
 function GithubConnectModal({
 	open,
 	onDismiss,
@@ -82,33 +70,93 @@ function GithubConnectModal({
 				aria-modal="true"
 				onMouseDown={(e) => e.stopPropagation()}
 			>
-				<div className="border-b border-[#3c3c3c] px-4 py-3">
-					<h2 id="github-connect-title" className="text-[15px] font-semibold text-white">
-						Connect GitHub
-					</h2>
-					<p className="mt-2 text-[12px] leading-relaxed text-[#858585]">
-						Create a{" "}
-						<button
-							type="button"
-							className="text-[#3794ff] underline"
-							onClick={() => void openExternalHttps(GITHUB_NEW_FINE_GRAINED_PAT)}
-						>
-							fine-grained
-						</button>{" "}
-						or{" "}
-						<button
-							type="button"
-							className="text-[#3794ff] underline"
-							onClick={() => void openExternalHttps(GITHUB_NEW_CLASSIC_PAT)}
-						>
-							classic
-						</button>{" "}
-						personal access token, then paste it here. The Way of Pi server verifies it with GitHub, then stores it only
-						under <span className="font-mono text-[#9cdcfe]">.wayofpi/github-credentials.json</span> in your workspace
-						(permissions 0600 where the OS supports it). Upcoming features can read this file from the server process;
-						nothing is sent to third parties except the GitHub API during verify and later explicit actions you trigger.
-					</p>
+			<div className="border-b border-[#3c3c3c] px-4 py-4">
+				<h2 id="github-connect-title" className="text-[15px] font-semibold text-white">
+					Connect GitHub
+				</h2>
+				<p className="mt-1 text-[12px] leading-relaxed text-[#858585]">
+					A <strong className="text-[#cccccc]">personal access token</strong> is like a special password that lets Way of Pi talk to GitHub on your behalf — without ever seeing your real password.
+				</p>
+
+				{/* Step-by-step guide */}
+				<div className="mt-3 space-y-2">
+					{[
+						{
+							n: "1",
+							title: "Go to GitHub token settings",
+							body: (
+								<span>
+									Click one of these links to open the GitHub token page:{" "}
+									<a
+										href={GITHUB_NEW_FINE_GRAINED_PAT}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-[#3794ff] underline"
+										onClick={(e) => {
+											if (typeof window !== "undefined" && window.wopShell?.openExternalUrl) {
+												e.preventDefault();
+												void window.wopShell.openExternalUrl(GITHUB_NEW_FINE_GRAINED_PAT);
+											}
+										}}
+									>
+										Fine-grained token
+									</a>{" "}
+									(recommended — more secure, limited scope){" "}
+									or{" "}
+									<a
+										href={GITHUB_NEW_CLASSIC_PAT}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-[#3794ff] underline"
+										onClick={(e) => {
+											if (typeof window !== "undefined" && window.wopShell?.openExternalUrl) {
+												e.preventDefault();
+												void window.wopShell.openExternalUrl(GITHUB_NEW_CLASSIC_PAT);
+											}
+										}}
+									>
+										Classic token
+									</a>.
+								</span>
+							),
+						},
+						{
+							n: "2",
+							title: "Name it and set expiry",
+							body: "Give it any name (e.g. \u201cway-of-pi\u201d). Pick an expiry date \u2014 90 days is a safe choice. For fine-grained tokens, set the resource owner to your account.",
+						},
+						{
+							n: "3",
+							title: "Choose permissions",
+							body: (
+								<span>
+									For <strong className="text-[#cccccc]">fine-grained</strong>: under <em>Repository permissions</em> pick <strong className="text-[#cccccc]">Contents → Read</strong> (and optionally Pull requests, Issues). For <strong className="text-[#cccccc]">classic</strong>: tick the <strong className="text-[#cccccc]">repo</strong> scope.
+								</span>
+							),
+						},
+						{
+							n: "4",
+							title: "Click \u201cGenerate token\u201d and copy it",
+							body: "GitHub shows the token once — copy it immediately. It starts with ghp_ (classic) or github_pat_ (fine-grained).",
+						},
+						{
+							n: "5",
+							title: "Paste it below and click Save",
+							body: "Paste the token in the box below. Way of Pi verifies it with GitHub, then saves it only on your machine under .wayofpi/github-credentials.json. Nothing is sent anywhere else.",
+						},
+					].map((s) => (
+						<div key={s.n} className="flex gap-2.5">
+							<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ea580c]/80 text-[10px] font-extrabold text-white">
+								{s.n}
+							</div>
+							<div className="pt-0.5">
+								<p className="text-[12px] font-semibold text-[#d4d4d4]">{s.title}</p>
+								<p className="mt-0.5 text-[11px] leading-relaxed text-[#858585]">{s.body}</p>
+							</div>
+						</div>
+					))}
 				</div>
+			</div>
 				<div className="px-4 py-3">
 					<label htmlFor="github-pat" className="mb-1 block text-[11px] font-bold uppercase text-[#858585]">
 						Token
@@ -244,15 +292,23 @@ export function GithubManageSettingsCard({
 							{disconnectBusy ? "…" : "Disconnect"}
 						</button>
 					) : null}
-					<button
-						type="button"
-						className={btnOutline}
-						title="Open GitHub account settings in your browser"
-						onClick={() => void openExternalHttps(GITHUB_ACCOUNT_SETTINGS)}
-					>
-						Open
-						<ExternalLink className="h-3.5 w-3.5 opacity-80" aria-hidden />
-					</button>
+				<a
+					href={GITHUB_ACCOUNT_SETTINGS}
+					target="_blank"
+					rel="noopener noreferrer"
+					className={btnOutline}
+					title="Open GitHub account settings in your browser"
+					onClick={(e) => {
+						// In Electron use the shell API so it opens in the system browser
+						if (typeof window !== "undefined" && window.wopShell?.openExternalUrl) {
+							e.preventDefault();
+							void window.wopShell.openExternalUrl(GITHUB_ACCOUNT_SETTINGS);
+						}
+					}}
+				>
+					Open
+					<ExternalLink className="h-3.5 w-3.5 opacity-80" aria-hidden />
+				</a>
 					<button
 						type="button"
 						className={ghBtn}

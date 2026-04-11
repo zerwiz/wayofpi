@@ -390,12 +390,13 @@ export function HostDoctorModal({
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<div
-				className={`flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border shadow-2xl ${panel}`}
-				role="dialog"
-				aria-labelledby="host-doctor-title"
-				aria-modal="true"
-			>
+		<div
+			className={`flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border shadow-2xl ${panel}`}
+			role="dialog"
+			aria-labelledby="host-doctor-title"
+			aria-modal="true"
+			onMouseDown={(e) => e.stopPropagation()}
+		>
 				<div className={`flex items-center justify-between border-b px-4 py-3 ${borderB}`}>
 					<div>
 						<h2 id="host-doctor-title" className="text-lg font-bold">

@@ -146,6 +146,8 @@ export interface ChatRow {
 	role: "user" | "assistant";
 	content: string;
 	timestamp: string;
+	/** Model reasoning / “thinking” stream when the provider sends it (e.g. OpenRouter). */
+	reasoning?: string;
 	/** Server queue slot while message waits behind an in-flight assistant turn. */
 	queueId?: string;
 }
@@ -160,6 +162,8 @@ export interface LogRow {
 export interface ChatSessionTab {
 	id: string;
 	label: string;
+	/** When true, the first user message must not overwrite `label` with an auto title. */
+	labelUserSet?: boolean;
 }
 
 const TAB_TITLE_MAX_CHARS = 44;
@@ -168,6 +172,14 @@ const TAB_TITLE_MAX_CHARS = 44;
 function tabTitleFromUserMessage(raw: string): string | null {
 	const single = raw.replace(/\s+/g, " ").trim();
 	if (!single) return null;
+	if (single.length <= TAB_TITLE_MAX_CHARS) return single;
+	return `${single.slice(0, TAB_TITLE_MAX_CHARS - 1)}…`;
+}
+
+/** Manual rename: same trimming/length rules; empty input becomes **New Chat**. */
+function manualTabLabel(raw: string): string {
+	const single = raw.replace(/\s+/g, " ").trim();
+	if (!single) return "New Chat";
 	if (single.length <= TAB_TITLE_MAX_CHARS) return single;
 	return `${single.slice(0, TAB_TITLE_MAX_CHARS - 1)}…`;
 }
@@ -183,6 +195,8 @@ export function useWayOfPiSession(
 	bufferAssistantDeltasRef?: MutableRefObject<boolean>,
 	/** Refreshes agent/team catalog when the server rewrites `teams.yaml` (orchestrator `team_*` tools). */
 	onAgentsCatalogInvalidate?: () => void,
+	/** Open/focus a workspace-relative path after orchestrator **`write`** (new file or overwrite). */
+	onFocusWorkspaceFile?: (path: string) => void,
 ) {
 	const initialTabIdRef = useRef<string | null>(null);
 	if (initialTabIdRef.current == null) {
@@ -223,11 +237,14 @@ export function useWayOfPiSession(
 	const [tokenMeter, setTokenMeter] = useState<TokenMeterState>(() => ({ ...TOKEN_METER_EMPTY }));
 	const onAgentsCatalogInvalidateRef = useRef(onAgentsCatalogInvalidate);
 	onAgentsCatalogInvalidateRef.current = onAgentsCatalogInvalidate;
+	const onFocusWorkspaceFileRef = useRef(onFocusWorkspaceFile);
+	onFocusWorkspaceFileRef.current = onFocusWorkspaceFile;
 	const [chatPulseMeters, setChatPulseMeters] = useState<ChatPulseMeters | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
 	const assistantIdRef = useRef<string | null>(null);
 	const bufferThisTurnRef = useRef(false);
 	const bufferedAssistantRef = useRef("");
+	const bufferedReasoningRef = useRef("");
 	const activeChatTabIdRef = useRef(activeChatTabId);
 	const rowsByTabRef = useRef(rowsByTab);
 	const chatTabsRef = useRef(chatTabs);
@@ -285,6 +302,8 @@ export function useWayOfPiSession(
 		};
 
 		const applyFirstUserTabTitle = (tabId: string, userContent: string) => {
+			const tabMeta = chatTabsRef.current.find((t) => t.id === tabId);
+			if (tabMeta?.labelUserSet) return;
 			const prior = rowsByTabRef.current[tabId] ?? [];
 			if (prior.some((r) => r.role === "user")) return;
 			const title = tabTitleFromUserMessage(userContent);
@@ -502,6 +521,18 @@ export function useWayOfPiSession(
 					onAgentsCatalogInvalidateRef.current?.();
 					return;
 				}
+				if (type === "focus_workspace_file") {
+					const raw = String(data.path ?? "").trim().replace(/^[/\\]+/, "");
+					if (raw) {
+						onFocusWorkspaceFileRef.current?.(raw);
+						try {
+							void onTreeRefresh?.();
+						} catch {
+							/* ignore */
+						}
+					}
+					return;
+				}
 				if (type === "dispatch_turn") {
 					const a = data.agent;
 					setDispatchTurnAgent(typeof a === "string" && a.trim() ? a.trim() : null);
@@ -511,6 +542,7 @@ export function useWayOfPiSession(
 					assistantIdRef.current = `a-${Date.now()}`;
 					bufferThisTurnRef.current = shouldBufferDeltas();
 					bufferedAssistantRef.current = "";
+					bufferedReasoningRef.current = "";
 					setStreaming(true);
 					setChatPulseMeters(null);
 					return;
@@ -564,6 +596,45 @@ export function useWayOfPiSession(
 					});
 					return;
 				}
+				if (type === "assistant_reasoning_delta") {
+					const piece = String(data.content ?? "");
+					if (!piece) return;
+					const aid = assistantIdRef.current;
+					if (!aid) return;
+					if (bufferThisTurnRef.current) {
+						bufferedReasoningRef.current += piece;
+						return;
+					}
+					const tabId = activeChatTabIdRef.current;
+					const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
+					setRowsByTab((prev) => {
+						const R = prev[tabId] ?? [];
+						const i = R.findIndex((r) => r.id === aid);
+						if (i === -1) {
+							return {
+								...prev,
+								[tabId]: [
+									...R,
+									{
+										id: aid,
+										role: "assistant" as const,
+										content: "",
+										reasoning: piece,
+										timestamp: ts,
+									},
+								],
+							};
+						}
+						const next = [...R];
+						const cur = next[i]!;
+						next[i] = {
+							...cur,
+							reasoning: (cur.reasoning ?? "") + piece,
+						};
+						return { ...prev, [tabId]: next };
+					});
+					return;
+				}
 				if (type === "session_reset") {
 					const tabId = activeChatTabIdRef.current;
 					setRowsByTab((prev) => ({ ...prev, [tabId]: [] }));
@@ -574,6 +645,7 @@ export function useWayOfPiSession(
 					assistantIdRef.current = null;
 					bufferThisTurnRef.current = false;
 					bufferedAssistantRef.current = "";
+					bufferedReasoningRef.current = "";
 					setTokenMeter({ ...TOKEN_METER_EMPTY });
 					setChatPulseMeters(null);
 					setDispatchTurnAgent(null);
@@ -612,10 +684,12 @@ export function useWayOfPiSession(
 				if (type === "done") {
 					if (bufferThisTurnRef.current) {
 						const buf = bufferedAssistantRef.current;
+						const rbuf = bufferedReasoningRef.current;
 						const aid = assistantIdRef.current;
 						bufferedAssistantRef.current = "";
+						bufferedReasoningRef.current = "";
 						bufferThisTurnRef.current = false;
-						if (buf && aid) {
+						if ((buf || rbuf) && aid) {
 							const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
 							const tabId = activeChatTabIdRef.current;
 							setRowsByTab((prev) => {
@@ -624,17 +698,32 @@ export function useWayOfPiSession(
 								if (i === -1) {
 									return {
 										...prev,
-										[tabId]: [...R, { id: aid, role: "assistant" as const, content: buf, timestamp: ts }],
+										[tabId]: [
+											...R,
+											{
+												id: aid,
+												role: "assistant" as const,
+												content: buf,
+												...(rbuf ? { reasoning: rbuf } : {}),
+												timestamp: ts,
+											},
+										],
 									};
 								}
 								const next = [...R];
-								next[i] = { ...next[i], content: next[i].content + buf };
+								const cur = next[i]!;
+								next[i] = {
+									...cur,
+									content: cur.content + buf,
+									...(rbuf ? { reasoning: (cur.reasoning ?? "") + rbuf } : {}),
+								};
 								return { ...prev, [tabId]: next };
 							});
 						}
 					} else {
 						bufferThisTurnRef.current = false;
 						bufferedAssistantRef.current = "";
+						bufferedReasoningRef.current = "";
 					}
 					setStreaming(false);
 					assistantIdRef.current = null;
@@ -645,6 +734,7 @@ export function useWayOfPiSession(
 				if (type === "error") {
 					bufferThisTurnRef.current = false;
 					bufferedAssistantRef.current = "";
+					bufferedReasoningRef.current = "";
 					setStreaming(false);
 					setDispatchTurnAgent(null);
 					setError(String(data.message ?? "Unknown error"));
@@ -831,11 +921,58 @@ export function useWayOfPiSession(
 		}
 	}, []);
 
+	const renameChatTab = useCallback((id: string, rawLabel: string) => {
+		const label = manualTabLabel(rawLabel);
+		setChatTabs((tabs) => {
+			const next = tabs.map((t) =>
+				t.id === id ? { ...t, label, labelUserSet: true } : t,
+			);
+			chatTabsRef.current = next;
+			return next;
+		});
+	}, []);
+
 	const closeChatTab = useCallback(
 		(id: string) => {
 			if (streaming && activeChatTabIdRef.current === id) return;
 			const tabs = chatTabsRef.current;
-			if (tabs.length <= 1) return;
+
+			/** Last tab cannot be removed; replace with a fresh session (same server contract as **New session**). */
+			if (tabs.length <= 1) {
+				const only = tabs[0];
+				if (!only || only.id !== id) return;
+				const newId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+				const nextTabs = [{ id: newId, label: "New Chat" }];
+				chatTabsRef.current = nextTabs;
+				setChatTabs(nextTabs);
+				activeChatTabIdRef.current = newId;
+				setActiveChatTabId(newId);
+				prevQueueSnapshotRef.current = [];
+				setChatQueueItems([]);
+				setRowsByTab({ [newId]: [] });
+				setTokenMeter({ ...TOKEN_METER_EMPTY });
+				setChatPulseMeters(null);
+				setDispatchTurnAgent(null);
+				setError(null);
+				setStreaming(false);
+				assistantIdRef.current = null;
+				bufferThisTurnRef.current = false;
+				bufferedAssistantRef.current = "";
+				bufferedReasoningRef.current = "";
+				const ws = wsRef.current;
+				if (ws && ws.readyState === WebSocket.OPEN) {
+					ws.send(JSON.stringify({ type: "new_session" }));
+					ws.send(
+						JSON.stringify({
+							type: "activate_session",
+							sessionKey: newId,
+							transcript: [],
+						}),
+					);
+				}
+				return;
+			}
+
 			const idx = tabs.findIndex((t) => t.id === id);
 			if (idx < 0) return;
 
@@ -885,6 +1022,7 @@ export function useWayOfPiSession(
 		activeChatTabId,
 		selectChatTab,
 		closeChatTab,
+		renameChatTab,
 		logs,
 		streaming,
 		chatQueuePending,

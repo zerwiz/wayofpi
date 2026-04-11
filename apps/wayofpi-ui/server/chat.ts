@@ -66,6 +66,29 @@ export interface ChatRuntimeModel {
 
 export type StreamChatResult = { ok: true } | { ok: false; error: string } | { ok: false; aborted: true };
 
+/** Extract incremental reasoning / “thinking” text from an OpenAI-style stream `choices[0].delta` (OpenRouter, o-series, etc.). */
+export function streamingReasoningPiece(delta: unknown): string {
+	if (!delta || typeof delta !== "object") return "";
+	const d = delta as Record<string, unknown>;
+	const r = d.reasoning;
+	if (typeof r === "string" && r.length > 0) return r;
+	const rc = d.reasoning_content;
+	if (typeof rc === "string" && rc.length > 0) return rc;
+	const details = d.reasoning_details;
+	if (!Array.isArray(details)) return "";
+	let out = "";
+	for (const item of details) {
+		if (!item || typeof item !== "object") continue;
+		const o = item as Record<string, unknown>;
+		const typ = String(o.type ?? "");
+		if (typ === "reasoning.text" || typ === "reasoning_text") {
+			const t = o.text;
+			if (typeof t === "string") out += t;
+		}
+	}
+	return out;
+}
+
 /** Serialize in-memory chat to OpenAI Chat Completions `messages` (supports tool turns). */
 export function messagesToOpenAIFormat(messages: ChatMessage[]): unknown[] {
 	const out: unknown[] = [];
@@ -105,7 +128,11 @@ export async function streamChatCompletion(
 	onDelta: (text: string) => void,
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void,
 	runtime?: ChatRuntimeModel,
-	options?: { signal?: AbortSignal; onStreamUsage?: (u: StreamTokenUsage) => void },
+	options?: {
+		signal?: AbortSignal;
+		onStreamUsage?: (u: StreamTokenUsage) => void;
+		onReasoningDelta?: (text: string) => void;
+	},
 ): Promise<StreamChatResult> {
 	const signal = options?.signal;
 	const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
@@ -147,7 +174,11 @@ export async function streamChatCompletion(
 			return { ok: false, error: formatLlmHttpError("OpenRouter", res.status, t) };
 		}
 		try {
-			await parseOpenAIStyleSse(res, onDelta, onLog, { signal, onStreamUsage: options?.onStreamUsage });
+			await parseOpenAIStyleSse(res, onDelta, onLog, {
+				signal,
+				onStreamUsage: options?.onStreamUsage,
+				onReasoningDelta: options?.onReasoningDelta,
+			});
 		} catch (e) {
 			if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
 				return { ok: false, aborted: true };
@@ -218,7 +249,11 @@ export async function streamChatCompletion(
 		return { ok: false, error: ollamaErrorHint(res.status, detail, model) };
 	}
 	try {
-		await parseOpenAIStyleSse(res, onDelta, onLog, { signal, onStreamUsage: options?.onStreamUsage });
+		await parseOpenAIStyleSse(res, onDelta, onLog, {
+			signal,
+			onStreamUsage: options?.onStreamUsage,
+			onReasoningDelta: options?.onReasoningDelta,
+		});
 	} catch (e) {
 		if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
 			return { ok: false, aborted: true };
@@ -232,10 +267,15 @@ async function parseOpenAIStyleSse(
 	res: Response,
 	onDelta: (t: string) => void,
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void,
-	opts?: { signal?: AbortSignal; onStreamUsage?: (u: StreamTokenUsage) => void },
+	opts?: {
+		signal?: AbortSignal;
+		onStreamUsage?: (u: StreamTokenUsage) => void;
+		onReasoningDelta?: (text: string) => void;
+	},
 ): Promise<void> {
 	const signal = opts?.signal;
 	const onStreamUsage = opts?.onStreamUsage;
+	const onReasoningDelta = opts?.onReasoningDelta;
 	const reader = res.body?.getReader();
 	if (!reader) throw new Error("No response body");
 	const dec = new TextDecoder();
@@ -263,8 +303,11 @@ async function parseOpenAIStyleSse(
 				const json = JSON.parse(data) as {
 					choices?: Array<{ delta?: { content?: string }; finish_reason?: string | null }>;
 				};
-				const piece = json.choices?.[0]?.delta?.content;
+				const delta = json.choices?.[0]?.delta;
+				const piece = delta?.content;
 				if (piece) onDelta(piece);
+				const think = streamingReasoningPiece(delta);
+				if (think) onReasoningDelta?.(think);
 				const u = parseStreamUsage(json);
 				if (u) onStreamUsage?.(u);
 			} catch {

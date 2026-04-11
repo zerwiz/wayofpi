@@ -1,5 +1,6 @@
-import { Brain, Cpu, FileCode2, Paperclip, Send, Square, Users, X } from "lucide-react";
+import { Brain, Cpu, FileCode2, Paperclip, Radio, Send, Square, Users, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { readShowModelThinking, writeShowModelThinking } from "../../utils/showModelThinkingPreference";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
 import { ChatQueueModal } from "../ChatQueueModal";
 import type { AgentMeta } from "../../hooks/useAgents";
@@ -17,12 +18,13 @@ import {
 	type SlashMenuState,
 } from "../../utils/chatSlashAutocomplete";
 import { ContextUsageRing } from "../ContextUsageRing";
-import { usePlanWorkspaceSummary } from "../../hooks/usePlanWorkspaceSummary";
+import { usePlanHandoffSelection } from "../../hooks/usePlanHandoffSelection";
 import { registerChatComposerInject } from "../../utils/chatComposerInjectBus";
 import { agentsForSessionPicker, rosterNamesMissingFromAgents } from "../../utils/workspaceChatAgentPicker";
-import { apiGet } from "../../api/client";
 import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../../utils/planModeComposerTemplates";
 import { shouldSuggestPlanModeForMessage } from "../../utils/planModeHeuristics";
+import { clawTelegramSetupChecklist } from "../../utils/clawTelegramSetupPrompt";
+import type { ClawHelpSectionId } from "../claw/ClawHelpModal";
 
 /** Simple shell — **wired**: chat rows, agent picker, WebSocket send/stop (Pi tools in browser per server notes). */
 export function SimpleChatView({
@@ -53,6 +55,14 @@ export function SimpleChatView({
 	onChatQueueEdit,
 	onChatQueueDelete,
 	onChatQueueForce,
+	/** After resolving latest `plans/PLAN-*.md`, open it beside chat (Plan → Review plan). */
+	onOpenPlanFileForReview,
+	/** Workspace root path (or `""`) — scopes the saved **Plan file** picker in localStorage. */
+	planHandoffWorkspaceKey = "",
+	sessionLeadFallbackLabel,
+	clawAgentAvailable = false,
+	onGoToTelegramChannels,
+	onOpenClawHelpSection,
 }: {
 	rows: ChatRow[];
 	streaming: boolean;
@@ -85,6 +95,15 @@ export function SimpleChatView({
 	onChatQueueEdit?: (id: string, text: string) => void;
 	onChatQueueDelete?: (id: string) => void;
 	onChatQueueForce?: (id: string) => void;
+	onOpenPlanFileForReview?: (workspaceRelativePath: string) => void;
+	planHandoffWorkspaceKey?: string;
+	/** Session-lead label when the workspace agent picker is empty (default **Orchestrator**; Claw passes **Claw**). */
+	sessionLeadFallbackLabel?: string;
+	/** When true with Claw chrome, the picker prefers the **claw** workspace agent (see `.pi/agents/claw.md`). */
+	clawAgentAvailable?: boolean;
+	onGoToTelegramChannels?: () => void;
+	/** Opens Claw Help on a section — wired from Claw shell only (e.g. Telegram deep-link). */
+	onOpenClawHelpSection?: (section: ClawHelpSectionId) => void;
 }) {
 	const [queueModalOpen, setQueueModalOpen] = useState(false);
 	const [input, setInput] = useState("");
@@ -93,6 +112,9 @@ export function SimpleChatView({
 	const [caretPos, setCaretPos] = useState(0);
 	const [slashHighlight, setSlashHighlight] = useState(0);
 	const [planNudgeOpen, setPlanNudgeOpen] = useState(false);
+	const [showModelThinking, setShowModelThinking] = useState(() =>
+		typeof window !== "undefined" ? readShowModelThinking() : true,
+	);
 	const endRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -134,8 +156,13 @@ export function SimpleChatView({
 		if (fileRef.current) fileRef.current.value = "";
 	};
 
-	const sessionPick = chatAgentName?.trim() || null;
-	const assistantTitle = sessionPick ? workspaceAgentDisplayName(sessionPick) : "Orchestrator";
+	const sessionLeadFallback = sessionLeadFallbackLabel?.trim() || "Orchestrator";
+	const clawChrome = sessionLeadFallback === "Claw";
+	const useClawAgentLead = clawChrome && clawAgentAvailable;
+	const sessionPickRaw = chatAgentName?.trim() || null;
+	const sessionPick =
+		useClawAgentLead && !sessionPickRaw ? "claw" : sessionPickRaw;
+	const assistantTitle = sessionPick ? workspaceAgentDisplayName(sessionPick) : sessionLeadFallback;
 	const assistantSubtitle =
 		connected && modelLabel && modelLabel !== "…"
 			? `Powered by ${modelLabel}`
@@ -143,9 +170,12 @@ export function SimpleChatView({
 				? "Loading model info…"
 				: "Ready when the server connects.";
 	const phraseDispatchNote =
-		!sessionPick && dispatchTurnAgent?.trim()
-			? `This reply uses phrase-dispatch (${workspaceAgentDisplayName(dispatchTurnAgent)}); the picker stays on Orchestrator unless you choose a workspace agent.`
+		!sessionPickRaw && dispatchTurnAgent?.trim()
+			? `This reply uses phrase-dispatch (${workspaceAgentDisplayName(dispatchTurnAgent)}); the picker stays on ${sessionLeadFallback} unless you choose a workspace agent.`
 			: null;
+
+	const showTelegramClawStrip =
+		clawChrome && (onGoToTelegramChannels || onOpenClawHelpSection);
 
 	const pickerAgents = useMemo(() => agentsForSessionPicker(agents), [agents]);
 	const rosterOnlyNames = useMemo(
@@ -162,7 +192,13 @@ export function SimpleChatView({
 
 	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
 	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
-	const planSummary = usePlanWorkspaceSummary(connected);
+	const {
+		planCatalogReady,
+		planFiles,
+		handoffPath,
+		handoffSummary,
+		setHandoffPath,
+	} = usePlanHandoffSelection(planHandoffWorkspaceKey, connected);
 	useEffect(() => {
 		setSlashHighlight(0);
 	}, [slashMenuKey]);
@@ -183,22 +219,20 @@ export function SimpleChatView({
 		return () => registerChatComposerInject(null);
 	}, [injectComposer]);
 
-	const applyPlanHandoff = async (kind: "implement" | "review") => {
-		try {
-			const d = await apiGet<{ latest: { path: string } | null }>("/api/plans");
-			const path = d.latest?.path;
-			if (!path) {
-				injectComposer(
-					kind === "implement"
-						? "No `plans/PLAN-*.md` file found yet — create one under `plans/` first."
-						: "No `plans/PLAN-*.md` file found yet — create a plan file first, then run this again.",
-				);
-				return;
-			}
-			injectComposer(kind === "implement" ? buildImplementPlanPrompt(path) : buildReviewPlanPrompt(path));
-		} catch {
-			injectComposer("Could not read the plans index — check the workspace and server.");
+	const applyPlanHandoff = (kind: "implement" | "review") => {
+		const path = handoffPath;
+		if (!path) {
+			injectComposer(
+				kind === "implement"
+					? "No `plans/PLAN-*.md` file found yet — create one under `plans/` first."
+					: "No `plans/PLAN-*.md` file found yet — create a plan file first, then run this again.",
+			);
+			return;
 		}
+		if (kind === "review") {
+			onOpenPlanFileForReview?.(path);
+		}
+		injectComposer(kind === "implement" ? buildImplementPlanPrompt(path) : buildReviewPlanPrompt(path));
 	};
 
 	const applySlashPick = (commandId: string, menuState: SlashMenuState | null = slashMenu) => {
@@ -249,6 +283,79 @@ export function SimpleChatView({
 							</div>
 						</div>
 					</div>
+
+					{showTelegramClawStrip ? (
+						<div
+							className={`mb-3 flex flex-col gap-2 rounded-xl border px-4 py-3 ${
+								appearanceDark
+									? "border-[#38bdf8]/25 bg-[#0c4a6e]/20"
+									: "border-sky-300/60 bg-sky-50"
+							}`}
+						>
+							<div className="flex items-center gap-2">
+								<Radio
+									size={16}
+									className={appearanceDark ? "shrink-0 text-sky-300" : "shrink-0 text-sky-600"}
+									aria-hidden
+								/>
+								<p
+									className={`text-[13px] font-semibold leading-snug ${
+										appearanceDark ? "text-sky-100" : "text-sky-950"
+									}`}
+								>
+									Telegram (via Pi)
+								</p>
+							</div>
+							<p className={`text-[12px] leading-relaxed ${appearanceDark ? "text-[#94a3b8]" : "text-sky-900/85"}`}>
+								The live bridge runs in a real Pi session with the{" "}
+								<code className="rounded bg-black/20 px-1 font-mono text-[11px]">pi-telegram</code> extension
+								(<code className="rounded bg-black/20 px-1 font-mono text-[11px]">/telegram-setup</code>,{" "}
+								<code className="rounded bg-black/20 px-1 font-mono text-[11px]">/telegram-connect</code>). Use
+								the buttons below to open the checklist in the composer, the Channels tab, or Help.
+							</p>
+							<div className="flex flex-wrap gap-2">
+								<button
+									type="button"
+									disabled={!connected || streaming}
+									onClick={() => injectComposer(clawTelegramSetupChecklist())}
+									className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+										appearanceDark
+											? "border-sky-500/40 bg-sky-950/40 text-sky-100 hover:bg-sky-900/50"
+											: "border-sky-400/70 bg-white text-sky-900 hover:bg-sky-100"
+									}`}
+								>
+									Insert setup checklist
+								</button>
+								{onGoToTelegramChannels ? (
+									<button
+										type="button"
+										disabled={!connected}
+										onClick={() => onGoToTelegramChannels()}
+										className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+											appearanceDark
+												? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:border-sky-500/40"
+												: "border-[#d4d4d4] bg-white text-[#333333] hover:border-sky-400"
+										}`}
+									>
+										Open Channels tab
+									</button>
+								) : null}
+								{onOpenClawHelpSection ? (
+									<button
+										type="button"
+										onClick={() => onOpenClawHelpSection("channels")}
+										className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors ${
+											appearanceDark
+												? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:border-sky-500/40"
+												: "border-[#d4d4d4] bg-white text-[#333333] hover:border-sky-400"
+										}`}
+									>
+										Help: Telegram
+									</button>
+								) : null}
+							</div>
+						</div>
+					) : null}
 
 					{!connected ? (
 						<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
@@ -324,6 +431,31 @@ export function SimpleChatView({
 								>
 									{msg.role === "assistant" ? (
 										<div className="flex flex-col gap-2">
+											{showModelThinking && msg.reasoning?.trim() ? (
+												<div
+													className={`mb-1 rounded-xl border p-3 ${
+														appearanceDark
+															? "border-[#6366f1]/30 bg-[#1e1b4b]/35"
+															: "border-indigo-200 bg-indigo-50/90"
+													}`}
+												>
+													<div
+														className={`mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide ${
+															appearanceDark ? "text-[#a5b4fc]" : "text-indigo-800"
+														}`}
+													>
+														<Brain size={14} className="shrink-0 opacity-90" />
+														Thinking
+													</div>
+													<div
+														className={`whitespace-pre-wrap text-[13px] leading-relaxed ${
+															appearanceDark ? "text-[#c7d2fe]" : "text-indigo-950"
+														}`}
+													>
+														{msg.reasoning}
+													</div>
+												</div>
+											) : null}
 											{parseMessageSegments(msg.content).map((seg, i) =>
 												seg.type === "text" ? (
 													<p key={i} className="whitespace-pre-wrap text-[15px] leading-relaxed">
@@ -433,14 +565,14 @@ export function SimpleChatView({
 						<select
 							value={chatAgentName ?? ""}
 							disabled={!connected || streaming || agentsLoading}
-							title="Orchestrator = session lead (phrase-dispatch can still merge a specialist for one reply). Pick a row to load that agent’s `.md` into every turn until you switch back."
+							title={`${sessionLeadFallback} = session lead (phrase-dispatch can still merge a specialist for one reply). Pick a row to load that agent's .md into every turn until you switch back.`}
 							onChange={(e) => {
 								const v = e.target.value;
 								onChatAgentChange(v === "" ? null : v);
 							}}
 							className={`rounded-lg border px-3 py-2 text-sm font-normal normal-case ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#d4d4d4] bg-white text-[#333333]"}`}
 						>
-							<option value="">Orchestrator (session lead)</option>
+							<option value="">{sessionLeadFallback} (session lead)</option>
 							{pickerAgents.map((a) => (
 								<option key={a.name} value={a.name} title={a.description || a.relativePath}>
 									{workspaceAgentDisplayName(a.name)}
@@ -493,44 +625,6 @@ export function SimpleChatView({
 								Plan
 							</button>
 						</div>
-						{chatMode === "plan" && planSummary ? (
-							<span
-								className={`max-w-[11rem] truncate font-mono text-[10px] ${subC}`}
-								title={planSummary.path}
-							>
-								{planSummary.doneTodos} done · {planSummary.openTodos} open
-							</span>
-						) : null}
-						{chatMode === "plan" ? (
-							<div className="flex flex-wrap gap-1">
-								<button
-									type="button"
-									disabled={streaming || !connected}
-									onClick={() => void applyPlanHandoff("implement")}
-									className={`rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
-										appearanceDark
-											? "border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] hover:border-[#ea580c]/50"
-											: "border-[#d4d4d4] bg-white text-[#333333] hover:border-[#ea580c]/50"
-									} disabled:opacity-40`}
-									title="Insert a Build handoff for the latest `plans/PLAN-*.md`"
-								>
-									From plan
-								</button>
-								<button
-									type="button"
-									disabled={streaming || !connected}
-									onClick={() => void applyPlanHandoff("review")}
-									className={`rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
-										appearanceDark
-											? "border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] hover:border-[#c586c0]/50"
-											: "border-[#d4d4d4] bg-white text-[#333333] hover:border-[#c586c0]/50"
-									} disabled:opacity-40`}
-									title="Insert a short plan-review prompt"
-								>
-									Review plan
-								</button>
-							</div>
-						) : null}
 					</div>
 					<div className="flex flex-col gap-1">
 						<span
@@ -576,6 +670,110 @@ export function SimpleChatView({
 							</button>
 						</div>
 					</div>
+					<div className="flex flex-col gap-1">
+						<span
+							className={`text-xs font-semibold uppercase tracking-wide ${subC}`}
+							title="When the model streams separate reasoning (Pi JSON, OpenRouter, etc.), show it above each reply"
+						>
+							Thinking
+						</span>
+						<div
+							className={`flex rounded-lg border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`}
+						>
+							<button
+								type="button"
+								aria-pressed={showModelThinking}
+								onClick={() => {
+									setShowModelThinking(true);
+									writeShowModelThinking(true);
+								}}
+								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+									showModelThinking
+										? appearanceDark
+											? "bg-[#312e81]/80 text-[#c7d2fe]"
+											: "bg-indigo-600 text-white"
+										: appearanceDark
+											? "text-[#858585]"
+											: "text-[#616161]"
+								}`}
+								title="Show model reasoning / thinking above assistant messages when the provider sends it"
+							>
+								On
+							</button>
+							<button
+								type="button"
+								aria-pressed={!showModelThinking}
+								onClick={() => {
+									setShowModelThinking(false);
+									writeShowModelThinking(false);
+								}}
+								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+									!showModelThinking
+										? appearanceDark
+											? "bg-[#3c3c3c] text-[#cccccc]"
+											: "bg-[#d4d4d4] text-[#333333]"
+										: appearanceDark
+											? "text-[#858585]"
+											: "text-[#616161]"
+								}`}
+								title="Hide reasoning blocks in the transcript (saved text is unchanged)"
+							>
+								Off
+							</button>
+						</div>
+					</div>
+					{chatMode === "plan" ? (
+						<div className={`flex w-full basis-full flex-wrap items-center gap-3 border-t pt-3 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}>
+							{planCatalogReady && planFiles.length > 0 ? (
+								<select
+									disabled={streaming}
+									value={handoffPath ?? planFiles[0]!.path}
+									onChange={(e) => setHandoffPath(e.target.value)}
+									className={`min-w-[160px] flex-1 cursor-pointer rounded-lg border px-3 py-2 text-sm disabled:opacity-40 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#c586c0]" : "border-[#d4d4d4] bg-white text-[#7c3aed]"}`}
+									title="Plan file for From plan / Review plan (saved per workspace)"
+									aria-label="Plan markdown file"
+								>
+									{planFiles.map((f) => (
+										<option key={f.path} value={f.path} title={f.path}>
+											{f.path.replace(/^plans\//, "")}
+										</option>
+									))}
+								</select>
+							) : null}
+							{handoffSummary ? (
+								<span className={`font-mono text-[10px] ${subC}`} title={handoffSummary.path}>
+									{handoffSummary.doneTodos} done · {handoffSummary.openTodos} open
+								</span>
+							) : null}
+							<div className="flex-1" />
+							<button
+								type="button"
+								disabled={streaming || !connected || !planCatalogReady || !handoffPath}
+								onClick={() => applyPlanHandoff("implement")}
+								className={`rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
+									appearanceDark
+										? "border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] hover:border-[#ea580c]/50"
+										: "border-[#d4d4d4] bg-white text-[#333333] hover:border-[#ea580c]/50"
+								} disabled:opacity-40`}
+								title="Insert a Build handoff for the selected plan file"
+							>
+								From plan
+							</button>
+							<button
+								type="button"
+								disabled={streaming || !connected || !planCatalogReady || !handoffPath}
+								onClick={() => applyPlanHandoff("review")}
+								className={`rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${
+									appearanceDark
+										? "border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] hover:border-[#c586c0]/50"
+										: "border-[#d4d4d4] bg-white text-[#333333] hover:border-[#c586c0]/50"
+								} disabled:opacity-40`}
+								title="Open the selected plan in the document pane and insert a short review prompt"
+							>
+								Review plan
+							</button>
+						</div>
+					) : null}
 				</div>
 				{attachment ? (
 					<div className="mx-auto mb-2 flex max-w-3xl items-center justify-between rounded-xl border border-[#ea580c]/40 bg-[#ea580c]/10 px-3 py-2 text-sm text-[#fed7aa]">

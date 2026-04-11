@@ -97,11 +97,18 @@ export function AgentPermissionsModal({
 	return (
 		<div
 			className={`fixed inset-0 z-[200] flex items-center justify-center p-4 ${overlay}`}
-			role="dialog"
-			aria-modal
-			aria-labelledby="wop-agent-perms-title"
+			role="presentation"
+			onMouseDown={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
 		>
-			<div className={`max-h-[90vh] w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl ${panel}`}>
+			<div
+				className={`max-h-[90vh] w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl ${panel}`}
+				role="dialog"
+				aria-modal
+				aria-labelledby="wop-agent-perms-title"
+				onMouseDown={(e) => e.stopPropagation()}
+			>
 				<div
 					className={`flex items-center justify-between border-b px-5 py-3 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
 				>
