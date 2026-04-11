@@ -16,11 +16,28 @@ import {
 	Users,
 	Zap,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { AgentMeta } from "../../hooks/useAgents";
 import type { LogRow } from "../../hooks/useWayOfPiSession";
 import type { ServerConfig } from "../../hooks/useServerConfig";
 import { useClawWorkspace } from "../../hooks/useClawWorkspace";
 import { ClawWorkspaceCard } from "./ClawWorkspaceCard";
+
+const CLAW_ACTIVITY_LIMIT_KEY = "wayofpi.claw.activityLimit";
+const ACTIVITY_LIMIT_OPTIONS = [10, 20, 50, 100] as const;
+
+function readStoredActivityLimit(): (typeof ACTIVITY_LIMIT_OPTIONS)[number] {
+	try {
+		const raw = localStorage.getItem(CLAW_ACTIVITY_LIMIT_KEY);
+		const n = raw ? Number.parseInt(raw, 10) : NaN;
+		if ((ACTIVITY_LIMIT_OPTIONS as readonly number[]).includes(n)) {
+			return n as (typeof ACTIVITY_LIMIT_OPTIONS)[number];
+		}
+	} catch {
+		/* ignore */
+	}
+	return 20;
+}
 
 function Card({
 	children,
@@ -150,8 +167,18 @@ export function ClawMissionView({
 	const muted = dark ? "text-[#858585]" : "text-[#888888]";
 	const sep = dark ? "border-[#252526]" : "border-[#e5e5e5]";
 
-	const recentLogs = logs.slice(-20).reverse();
+	const [activityLimit, setActivityLimit] = useState(readStoredActivityLimit);
+	const recentLogs = useMemo(
+		() => logs.slice(-activityLimit).reverse(),
+		[logs, activityLimit],
+	);
 	const clawWs = useClawWorkspace(workspacePath !== "—");
+
+	const activitySelectClass = `cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium outline-none ${
+		dark
+			? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:border-[#505050]"
+			: "border-[#d5d5d5] bg-white text-[#333333] hover:border-[#c0c0c0]"
+	}`;
 
 	return (
 		<div className={`flex min-h-0 min-w-0 w-full flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-4 ${bg} ${text}`}>
@@ -302,7 +329,36 @@ export function ClawMissionView({
 							title="Activity"
 							dark={dark}
 							action={
-								<span className={`text-[10px] ${muted}`}>last {recentLogs.length} events</span>
+								<div className={`flex flex-wrap items-center justify-end gap-1.5 text-[10px] ${muted}`}>
+									<span className="whitespace-nowrap">Last</span>
+									<select
+										id="claw-activity-limit"
+										aria-label="How many recent activity events to show"
+										className={activitySelectClass}
+										value={activityLimit}
+										onChange={(e) => {
+											const n = Number.parseInt(e.target.value, 10) as (typeof ACTIVITY_LIMIT_OPTIONS)[number];
+											setActivityLimit(n);
+											try {
+												localStorage.setItem(CLAW_ACTIVITY_LIMIT_KEY, String(n));
+											} catch {
+												/* ignore */
+											}
+										}}
+									>
+										{ACTIVITY_LIMIT_OPTIONS.map((n) => (
+											<option key={n} value={n}>
+												{n}
+											</option>
+										))}
+									</select>
+									<span className="whitespace-nowrap">events</span>
+									{logs.length > activityLimit ? (
+										<span className={`whitespace-nowrap ${dark ? "text-[#585858]" : "text-[#aaaaaa]"}`}>
+											({logs.length} total)
+										</span>
+									) : null}
+								</div>
 							}
 						/>
 						<div className="min-h-[200px] overflow-y-auto">

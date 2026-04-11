@@ -4,6 +4,58 @@
 
 For **Hermes** client configuration (`config.yaml`, toolsets, `hermes honcho status`), see **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)**. For a short end-to-end view, see **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)**. For **why / what you can do with local AI + Pi + Hermes + Honcho** (recording, continuity, ideas), see **[HONCHO_LOCAL_AI.md](HONCHO_LOCAL_AI.md)**. For **everything Honcho supports** (official docs digest), see **[HONCHO_CAPABILITIES.md](HONCHO_CAPABILITIES.md)**. For a **day-to-day runbook** (workspaces, anchors, cost, backups, Documents), see **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)**.
 
+## Honcho in plain language
+
+Imagine a **shared three-ring binder** that lives on a computer and speaks **HTTP** (a normal web-style API). **Pi** has its own in-chat memory (session file, recaps, `/remember` — see **[AGENT_MEMORY.md](AGENT_MEMORY.md)**). **Honcho** is separate: it is a **place other programs can also write to and read from**, so memory can **outlast one app** and **line up across tools**.
+
+- **Workspace** — which binder (often one per project or team).
+- **Peers** — name tags for **who** something is about (you vs a specific assistant).
+- **Sessions** — which conversation or thread inside that workspace.
+
+So **Honcho (memory API)** means: *store and fetch structured chat and context over the network*, not “Pi replaced its own memory.” Clients like **Hermes** call Honcho’s API on purpose; Pi can **mirror** turns into Honcho so Hermes search and Honcho’s background workers see the same workspace.
+
+---
+
+## Install Honcho (not shipped in this repo)
+
+**Honcho does not install when you clone this Pi playground.** You add the **Honcho server** (or use **Honcho Cloud**) yourself.
+
+### Self-hosted: official open-source server
+
+1. Install **[Docker](https://docs.docker.com/get-docker/)** with the **Compose** plugin.
+2. Clone Plastic Labs’ server repo (pick any parent folder; **`~/honcho-server`** is only a **convention** used in many commands below):
+
+   ```bash
+   git clone https://github.com/plastic-labs/honcho.git ~/honcho-server
+   cd ~/honcho-server
+   ```
+
+3. From that **`README.md`** “Docker” section: copy **`docker-compose.yml.example`** → **`docker-compose.yml`**, copy **`.env.template`** → **`.env`**, fill in database and API keys, then start the stack (exact service names follow upstream; typically database, API, optional worker). Official overview: **[docs.honcho.dev](https://docs.honcho.dev)** and repo **[Local Development](https://github.com/plastic-labs/honcho/blob/main/README.md#local-development)**.
+
+4. Note the **published API port** (upstream examples often differ from **`18000`**). Set **`HONCHO_BASE_URL`**, **`~/.honcho/config.json`** → **`baseUrl`**, and Hermes **`honcho.base_url`** to **whatever URL actually answers** (`curl` / **`/docs`**).
+
+### Managed: Honcho Cloud
+
+Sign up at **[app.honcho.dev](https://app.honcho.dev)**, create keys in the dashboard, and point clients at the **cloud base URL** (see their docs) instead of `localhost`.
+
+### `just honcho-up` and `install-honcho-bin.sh`
+
+Recipes like **`cd ~/honcho-server && just honcho-up`** and **`./scripts/install-honcho-bin.sh`** exist only if **your** Honcho checkout (or fork) includes a **`justfile`** / **`scripts/`** layout that defines them. **This playground does not vendor Honcho**; if **`just honcho-up`** is missing, use **`docker compose`** from the upstream **`README.md`**. When those scripts *are* present, **`install-honcho-bin.sh`** can install **`honcho-up`**, **`honcho-open-*`**, etc. into **`~/.local/bin`** — see **`~/honcho-server/scripts/README.md`** if your tree has it.
+
+---
+
+## Quick reference: memory API, mirror, env
+
+| Topic | Summary |
+|-------|---------|
+| **Honcho (memory API)** | Stores **cross-session** context over HTTP (**workspaces**, **peers**, **sessions**). Clients like **Hermes** read/write that API; Pi can **mirror** chat turns so everyone shares one workspace. |
+| **Pi mirror (playground)** | **`honcho-mirror`** extension posts finished user/assistant turns to Honcho when the API is up. Pi keeps working if Honcho is down (you may see **one** mirror warning). |
+| **Workspace env** | **`HONCHO_WORKSPACE`**, **`HONCHO_USER_PEER`**, **`HONCHO_AI_PEER`** — align with **`~/.honcho/config.json`** and Hermes when sharing memory. |
+| **Disable mirror** | **`PI_HONCHO_MIRROR=0`** (or `false` / `no` / `off`), or **`HONCHO_MIRROR_DISABLED=1`**, or remove **`honcho-mirror`** from **`extensions[]`** in **`.pi/settings.json`**, then **`/reload`** in Pi. |
+| **`HONCHO_BASE_URL`** | API root, often **`http://127.0.0.1:18000`** when local compose publishes that port (match your real port). |
+| **`HONCHO_JWT`** | When Honcho runs with auth enabled. |
+| **Run stack (when your checkout has `just`)** | `cd ~/honcho-server` then **`just honcho-up`**. Otherwise **`docker compose up -d`** per upstream **`README.md`**. Details: **sections 3 and 4** below and **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)**. |
+
 ---
 
 ## Keeping Honcho documentation in sync
@@ -20,7 +72,7 @@ For **Hermes** client configuration (`config.yaml`, toolsets, `hermes honcho sta
 | **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** | Hermes config, toolsets, `hermes` agent in Pi |
 | **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)** | Runbook: workspaces, anchors, cost, Pi, backups, Documents |
 
-**Also refresh:** **[docs/README.md](README.md)** (index row), **[REPO_INDEX.md](REPO_INDEX.md)**, root **[README.md](../README.md)** (doc table), **`~/Documents/Honcho/README.md`**, and any **symlinks** under **`~/Documents/Honcho/`** if filenames or canonical paths change.
+**Also refresh:** **[docs/README.md](README.md)** (index row), **[REPO_INDEX.md](REPO_INDEX.md)**, root **[README.md](../README.md)** (doc table), **`~/Documents/Honcho/README.md`**, any **symlinks** under **`~/Documents/Honcho/`** if filenames or canonical paths change, and **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)** / **[WOP_PLANNING.md](WOP_PLANNING.md)** when **Way of Pi** Honcho UI scope changes.
 
 The same rule applies when editing **`extensions/honcho-mirror.ts`** or **`.pi/settings.json`** mirror defaults—mirror **§9** here and **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)** / **[HONCHO_LOCAL_AI.md](HONCHO_LOCAL_AI.md)**.
 
@@ -196,6 +248,10 @@ Use the interactive docs to **list sessions**, **fetch messages**, and call read
 - **Hermes** with the **`honcho`** toolset is the main **interactive** way to ask “what do we know?”, run **`honcho_search`** / **`honcho_context`** / **`honcho_profile`**, and see **conclusions** in the chat loop—not a separate browser pane.
 - **Pi** does not embed a Honcho dashboard; **`honcho-mirror`** only **sends** turns into Honcho. Pi **still** uses **[AGENT_MEMORY.md](AGENT_MEMORY.md)** for in-session context — mirror is not a substitute. Inspect Honcho via **Swagger**, **Hermes**, or a custom tool.
 
+### Way of Pi web UI (planned)
+
+**`apps/wayofpi-ui`** (**Simple**, **Technical**, and **Claw** modes) does not yet surface Honcho connection state or memory browsing. Planned work: health and **`HONCHO_*`** transparency in each mode, optional read-only API helpers from the Way of Pi server where justified—see **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)** and planning hub **[WOP_PLANNING.md](WOP_PLANNING.md)** (Honcho paragraph). Heavy “ask Honcho” loops remain **Pi / Hermes** tool paths, not a Bun-parallel agent.
+
 ### If you want a richer UI (directions, not one-click here)
 
 These are **patterns** you can add; none are required for Hermes/Pi to work.
@@ -250,4 +306,5 @@ Assistant/user content is flattened from Pi message parts; very long text is tru
 | **[HONCHO_LOCAL_AI.md](HONCHO_LOCAL_AI.md)** | Stack-wide local AI patterns |
 | **[HONCHO_CAPABILITIES.md](HONCHO_CAPABILITIES.md)** | Official-feature summary: model, API groups, cloud UI, SDKs, integrations |
 | **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)** | Runbook: workspaces, anchors, cost, backups, Documents |
+| **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)** | Way of Pi **Simple / Technical / Claw** — Honcho UI wiring backlog |
 | §**9** above | Pi **honcho-mirror** extension |

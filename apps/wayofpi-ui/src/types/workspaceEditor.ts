@@ -127,6 +127,8 @@ export type SettingsMenuHandlers = {
 	onOpenProjects: () => void;
 	/** Settings → Indexing & Docs (local manifest under `.wayofpi/index`). */
 	onOpenIndexingDocs: () => void;
+	/** Settings → Honcho (memory API): env vars, mirror extension, doc links. */
+	onOpenHonchoSettings: () => void;
 	/** Open `.wayofpi/ui-views.json` in the Simple editor (optional). */
 	onEditWorkspaceViewsCatalog?: () => void;
 	/**

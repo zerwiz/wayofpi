@@ -3,6 +3,7 @@ import {
 	Bot,
 	Brain,
 	Code2,
+	Database,
 	FolderOpen,
 	LayoutDashboard,
 	Rocket,
@@ -695,6 +696,89 @@ function SectionForDevelopers() {
 	);
 }
 
+function SectionHoncho() {
+	return (
+		<>
+			<P>
+				<strong className="text-white">Honcho</strong> is a separate <em>memory and context</em> service
+				with an HTTP API. It stores structured, cross-session data so tools like{" "}
+				<strong className="text-white">Hermes</strong> can search and summarize what happened across many
+				chats — different from Pi&apos;s in-session JSONL and slash-command memory.
+			</P>
+
+			<InfoBox>
+				<strong className="text-white">Mental model:</strong> Pi still &ldquo;remembers&rdquo; the current
+				thread the usual way (<Chip>AGENT_MEMORY.md</Chip>, session files). Honcho is an optional{" "}
+				<strong>archive and retrieval layer</strong> other clients can query. If Honcho is down, Pi keeps
+				working normally.
+			</InfoBox>
+
+			<H>Pi → Honcho mirror (this playground)</H>
+			<P>
+				The <Chip>honcho-mirror</Chip> extension (<Chip>extensions/honcho-mirror.ts</Chip>, listed in{" "}
+				<Chip>.pi/settings.json</Chip>) posts each <strong>completed</strong> user or assistant turn to
+				Honcho&apos;s messages API so your local stack can correlate Pi work with Hermes sessions. It does{" "}
+				<strong className="text-white">not</strong> replace Pi prompts — it only copies finished text
+				(metadata includes <Chip>source: &quot;pi&quot;</Chip>, cwd, model id).
+			</P>
+
+			<H>What you need running</H>
+			<UL>
+				<li>
+					A reachable Honcho API (typical local URL <Chip>http://127.0.0.1:18000</Chip>) — often via Docker
+					from your <Chip>honcho-server</Chip> checkout; see <Chip>docs/HONCHO_INTEGRATION.md</Chip>.
+				</li>
+				<li>
+					<strong className="text-white">Hermes</strong> with the Honcho toolset if you want natural-language{" "}
+					<Chip>honcho_search</Chip>, <Chip>honcho_context</Chip>, etc. — see{" "}
+					<Chip>docs/HERMES_INTEGRATION.md</Chip>.
+				</li>
+				<li>
+					Align <Chip>HONCHO_WORKSPACE</Chip> (and Honcho SDK <Chip>~/.honcho/config.json</Chip>) with Hermes{" "}
+					<Chip>honcho.session_id</Chip> when you want one logical store across clients.
+				</li>
+			</UL>
+
+			<H>Turn mirroring off or tune it</H>
+			<div className="mb-4 overflow-hidden rounded-xl border border-[#3c3c3c] text-[12px]">
+				<Row
+					label={<Chip>PI_HONCHO_MIRROR</Chip>}
+					value={<>Set <Chip>0</Chip> / <Chip>false</Chip> / <Chip>off</Chip> to disable mirroring (default: on).</>}
+				/>
+				<Row label={<Chip>HONCHO_MIRROR_DISABLED</Chip>} value={<><Chip>1</Chip> — alternate opt-out.</>} />
+				<Row label={<Chip>HONCHO_BASE_URL</Chip>} value="Honcho API root (must match your running stack)." />
+				<Row label={<Chip>HONCHO_JWT</Chip>} value="Bearer token when Honcho auth is enabled." />
+			</div>
+			<P>
+				Remove <Chip>honcho-mirror</Chip> from <Chip>extensions[]</Chip> if you do not want the extension loaded
+				at all. After env changes, <Chip>/reload</Chip> in Pi or restart the app.
+			</P>
+
+			<H>Way of Pi UI (today)</H>
+			<P>
+				Simple, Technical, and Claw modes do <strong className="text-white">not</strong> yet show Honcho
+				connection health or browse Honcho data in-app. Use Honcho&apos;s <Chip>/docs</Chip> (Swagger), Hermes
+				tools, or the capability map in <Chip>docs/HONCHO_CAPABILITIES.md</Chip>. Shell integration is tracked
+				in <Chip>docs/WOP_OPEN_TODOS.md</Chip> (Honcho and Way of Pi UI).
+			</P>
+
+			<DevBox>
+				Full stack notes: <Chip>docs/HONCHO_INTEGRATION.md</Chip>, <Chip>docs/HONCHO_LOCAL_AI.md</Chip>,{" "}
+				<Chip>docs/Hermes_Honcho_connection.md</Chip>. Official product docs:{" "}
+				<a
+					href="https://docs.honcho.dev"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-[#4fc3f7] underline hover:text-[#81d4fa]"
+				>
+					docs.honcho.dev
+				</a>
+				.
+			</DevBox>
+		</>
+	);
+}
+
 function SectionCapabilities() {
 	return (
 		<>
@@ -753,6 +837,10 @@ function SectionCapabilities() {
 					["Multi-agent real dispatch", "Per-agent streams, real dispatch_agent from UI, WebSocket per agent"],
 					["Autonomous Claw flows", "Scheduled, tool-using, approval-gated agent runs"],
 					["Persistent Pi sidecar", "Long-lived Pi process behind WS — full extensions + tools every turn"],
+					[
+						"Honcho in the shell",
+						"Health, HONCHO_* transparency, optional read-only helpers — Pi/Hermes remain the interactive Honcho tool paths",
+					],
 				].map(([feat, note]) => (
 					<Row
 						key={feat}
@@ -786,6 +874,7 @@ const SECTIONS = [
 	{ id: "layout", label: "Layout Modes", icon: LayoutDashboard, component: SectionLayout },
 	{ id: "workspace", label: "Workspace", icon: FolderOpen, component: SectionWorkspace },
 	{ id: "devs", label: "For Developers", icon: Code2, component: SectionForDevelopers },
+	{ id: "honcho", label: "Honcho & memory", icon: Database, component: SectionHoncho },
 	{ id: "capabilities", label: "Capabilities", icon: Settings2, component: SectionCapabilities },
 ] as const;
 

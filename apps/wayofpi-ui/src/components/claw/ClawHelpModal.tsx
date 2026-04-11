@@ -3,7 +3,7 @@
  *
  * Covers: what Claw is, navigation tabs, .claw/ workspace files,
  * schedules, channels (Telegram), files & preview, extending Claw (Pi skills,
- * tools, extensions, community), and tips.
+ * tools, extensions, community), Honcho cross-session memory vs .claw/, and tips.
  */
 import {
 	AlertTriangle,
@@ -12,6 +12,7 @@ import {
 	CheckCircle2,
 	Cog,
 	Cpu,
+	Database,
 	Files,
 	FolderOpen,
 	MessageCircle,
@@ -217,6 +218,61 @@ function SectionExtendingClaw() {
 			<Note>
 				UI modules are <strong>Way of Pi client code</strong> — they do not replace Pi tools.
 				Heavy logic still belongs in Pi extensions or workspace scripts so every mode benefits.
+			</Note>
+		</>
+	);
+}
+
+function SectionHoncho() {
+	return (
+		<>
+			<H>Honcho (cross-session memory API)</H>
+			<P>
+				<strong className="text-[#cccccc]">Honcho</strong> is an HTTP service for structured memory and
+				context across sessions. It complements — but does not replace — Pi&apos;s in-thread memory and your{" "}
+				<Code>.claw/MEMORY.md</Code> index: Claw still loads <Code>.claw/</Code> docs at session start; Honcho is
+				where Hermes (and other clients) can persist and query a shared store.
+			</P>
+
+			<Tip>
+				When chat runs through the <strong className="text-[#cccccc]">Pi engine</strong>, the playground&apos;s{" "}
+				<Code>honcho-mirror</Code> extension can copy each finished turn into Honcho so Pi work shows up next to
+				Hermes conversations. Pi keeps working if Honcho is offline; you get a one-time TUI warning.
+			</Tip>
+
+			<H>How this differs from Claw-only files</H>
+			<div className="mb-4 rounded-xl border border-[#2a2a2a] overflow-hidden">
+				<TableRow
+					left={<Code>.claw/MEMORY.md</Code>}
+					right="Small operator index loaded every session — edited by you or the agent in the workspace."
+				/>
+				<TableRow
+					left="Honcho"
+					right="Server-side API (sessions, messages, peers). Inspected via Swagger, Hermes tools, or cloud dashboard — not yet surfaced in Way of Pi chrome."
+				/>
+			</div>
+
+			<H>Operator checklist</H>
+			<Step n={1}>
+				Run Honcho API (see <Code>docs/HONCHO_INTEGRATION.md</Code>) and point <Code>HONCHO_BASE_URL</Code> at it.
+			</Step>
+			<Step n={2}>
+				Keep <Code>honcho-mirror</Code> in <Code>.pi/settings.json</Code> <Code>extensions[]</Code> if you want Pi
+				turns mirrored; set <Code>PI_HONCHO_MIRROR=0</Code> to disable without removing the extension.
+			</Step>
+			<Step n={3}>
+				For natural-language search over Honcho, use <strong className="text-[#cccccc]">Hermes</strong> with the
+				Honcho toolset (<Code>docs/HERMES_INTEGRATION.md</Code>).
+			</Step>
+			<Step n={4}>
+				Align <Code>HONCHO_WORKSPACE</Code> with Hermes session settings when you want one logical workspace across
+				clients.
+			</Step>
+
+			<Note>
+				<strong>Product gap:</strong> Claw&apos;s Mission tab does not yet show Honcho health or browse API
+				data — see <Code>docs/WOP_OPEN_TODOS.md</Code> (Honcho and Way of Pi UI). Capability map:{" "}
+				<Code>docs/HONCHO_CAPABILITIES.md</Code>.
 			</Note>
 		</>
 	);
@@ -556,6 +612,7 @@ export type ClawHelpSectionId =
 	| "channels"
 	| "files"
 	| "extend"
+	| "honcho"
 	| "tips";
 
 type SectionId = ClawHelpSectionId;
@@ -568,6 +625,7 @@ const SECTIONS: { id: SectionId; label: string; icon: typeof Radar }[] = [
 	{ id: "channels", label: "Channels", icon: Radio },
 	{ id: "files", label: "Files & Preview", icon: Files },
 	{ id: "extend", label: "Extending Claw", icon: Puzzle },
+	{ id: "honcho", label: "Honcho & memory", icon: Database },
 	{ id: "tips", label: "Tips", icon: Zap },
 ];
 
@@ -580,6 +638,7 @@ function renderSection(id: SectionId) {
 		case "channels": return <SectionChannels />;
 		case "files": return <SectionFiles />;
 		case "extend": return <SectionExtendingClaw />;
+		case "honcho": return <SectionHoncho />;
 		case "tips": return <SectionTips />;
 	}
 }

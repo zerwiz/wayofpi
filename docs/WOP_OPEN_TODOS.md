@@ -104,6 +104,20 @@ Items from **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** pr
 
 ---
 
+## Honcho and Way of Pi UI
+
+**Honcho** is the HTTP **memory / context** service used by **Hermes** and mirrored from Pi via **`honcho-mirror`** (**[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**, **`extensions/honcho-mirror.ts`**). Way of Pi should **surface** Honcho in all three UI modes without inventing a **Bun-only** substitute for Pi’s tool loop (**[`.cursor/rules/wop-ui-pi-backend-parity.mdc`](../.cursor/rules/wop-ui-pi-backend-parity.mdc)**).
+
+| Mode | Planned connection |
+|------|---------------------|
+| **Simple** | Chat-adjacent or **Diagnostics**: Honcho **reachable** / **base URL**, workspace id (**`HONCHO_WORKSPACE`**), link to local **Swagger** and setup docs; when chat uses Pi, short **mirror** status (last turn forwarded vs disabled). |
+| **Technical** | **Integrations** or **Diagnostics**: editable display of **`HONCHO_BASE_URL`**, JWT if required, workspace; optional **read-only** API proxy for session/message peek (contract TBD in **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** if not Hermes-only). |
+| **Claw** | **Mission** or **Channels**-adjacent **memory** card: Honcho health, workspace alignment with **`.claw/`** operator context, link to **[WOP_CLAW_MODE_PLAN.md](WOP_CLAW_MODE_PLAN.md)** Phase C; optional Hermes / Pi tool path for **natural-language** recall (same as TUI today). |
+
+**Claw plan cross-link:** Phase C long-horizon memory — **[WOP_CLAW_MODE_PLAN.md](WOP_CLAW_MODE_PLAN.md#phase-c--persistence-and-memory-claw-shaped)**.
+
+---
+
 ## Scripts and upstream
 
 | Status | Item |

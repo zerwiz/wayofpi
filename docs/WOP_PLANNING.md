@@ -29,4 +29,6 @@ High-level **roadmaps and product plans** for this repository.
 | **[PLAN_AWESOME_CODEX_SUBAGENTS.md](PLAN_AWESOME_CODEX_SUBAGENTS.md)** | Port Codex subagents → Pi `.md` agents |
 | **[PLAN_AGENT_MODEL_ROUTING.md](PLAN_AGENT_MODEL_ROUTING.md)** | Agent/model routing experiments |
 
+**Honcho (memory API) ↔ Way of Pi web UI:** connect **Honcho** to **Simple** chat, **Technical** shell, and **Claw** mode for configuration, health, and read-only transparency—aligned with Pi **`honcho-mirror`** and **`HONCHO_*`** / workspace conventions (**[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**). Backlog: **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)**; merged checklist: **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md#17-honcho--way-of-pi-ui)**.
+
 **Implementation preview (web shell):** [apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md), **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**.

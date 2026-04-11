@@ -128,6 +128,7 @@ Aligned with existing repo plans: **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKE
 
 - **Long-horizon context** — workspace-visible memory artifacts under `.claw/memory/` (aligned with Pi **session-memory** / project docs), not hidden state in the web server alone.
 - **`WOP_CLAW_HOME`** env var (see isolation §above).
+- **Honcho (optional cross-session store)** — align **`HONCHO_WORKSPACE`** (and mirror defaults) with operator context; surface **health** and **transparency** in Claw (Mission / Channels), not a Bun-only Honcho client pretending to be the agent—backlog **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)**, stack notes **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §8–9.
 - **Optional vector / search** — only if Pi or an approved sidecar owns retrieval; avoid a Bun-only "mini RAG" that bypasses Pi policy.
 
 ### Phase D — Autonomy controls (heartbeat / schedules)

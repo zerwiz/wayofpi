@@ -19,6 +19,7 @@ import { ChatPanel } from "./components/ChatPanel";
 import { CommandPalette, type CommandItem } from "./components/CommandPalette";
 import { AgentPermissionsModal } from "./components/AgentPermissionsModal";
 import { HostDoctorModal } from "./components/HostDoctorModal";
+import { HonchoSettingsModal } from "./components/HonchoSettingsModal";
 import { IndexingDocsModal } from "./components/IndexingDocsModal";
 import { InstallDebuggersModal } from "./components/InstallDebuggersModal";
 import { HowToUseModal } from "./components/HowToUseModal";
@@ -889,6 +890,9 @@ description:
 			},
 			onOpenIndexingDocs: () => {
 				setIndexingDocsOpen(true);
+			},
+			onOpenHonchoSettings: () => {
+				setHonchoSettingsOpen(true);
 			},
 			onEditWorkspaceViewsCatalog: () => {
 				const rel = uiViewsCatalog.data?.catalogRelPath ?? ".wayofpi/ui-views.json";
@@ -1765,6 +1769,7 @@ description:
 
 	const [hostDoctorOpen, setHostDoctorOpen] = useState(false);
 	const [indexingDocsOpen, setIndexingDocsOpen] = useState(false);
+	const [honchoSettingsOpen, setHonchoSettingsOpen] = useState(false);
 	const [agentPermissionsOpen, setAgentPermissionsOpen] = useState(false);
 	const [launchConfigAddOpen, setLaunchConfigAddOpen] = useState(false);
 	const [installDebuggersModalOpen, setInstallDebuggersModalOpen] = useState(false);
@@ -3903,6 +3908,12 @@ description:
 					onClose={() => setIndexingDocsOpen(false)}
 					appearanceDark={llmFixModalAppearanceDark}
 				/>
+				<HonchoSettingsModal
+					open={honchoSettingsOpen}
+					onClose={() => setHonchoSettingsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`}
+				/>
 				<AgentPermissionsModal
 					open={agentPermissionsOpen}
 					onClose={() => setAgentPermissionsOpen(false)}
@@ -4098,6 +4109,12 @@ description:
 					open={indexingDocsOpen}
 					onClose={() => setIndexingDocsOpen(false)}
 					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<HonchoSettingsModal
+					open={honchoSettingsOpen}
+					onClose={() => setHonchoSettingsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`}
 				/>
 				<AgentPermissionsModal
 					open={agentPermissionsOpen}
@@ -4351,6 +4368,12 @@ description:
 				open={indexingDocsOpen}
 				onClose={() => setIndexingDocsOpen(false)}
 				appearanceDark={llmFixModalAppearanceDark}
+			/>
+			<HonchoSettingsModal
+				open={honchoSettingsOpen}
+				onClose={() => setHonchoSettingsOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+				integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`}
 			/>
 			<AgentPermissionsModal
 				open={agentPermissionsOpen}

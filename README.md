@@ -37,6 +37,7 @@ When people say **“headless Pi”**, they mean Pi running **without** the old 
 - **Teach Pi new habits** — Turn on **extensions**, **skills**, **agents**, and **teams** from **`.pi/`** and **`extensions/`**. Put the repo in **git** so teammates share the same agents and docs — see **[docs/CONCEPTS.md](docs/CONCEPTS.md)** and **[docs/EXTENSIONS.md](docs/EXTENSIONS.md)**.
 - **Chain specialists** — One flow can **hand work off**: plan, then build, then review; or use helpers like **project-scanner**, **Ralph** tickets, **`/skill:github`**, and **git worktrees** — see **[docs/AGENTS.md](docs/AGENTS.md)** and **[docs/AGENT_TEAMS.md](docs/AGENT_TEAMS.md)**.
 - **Choose how busy the screen is** — **Simple** keeps the layout calm. **Technical** adds IDE-style panels and an optional big grid. **Claw** is for an operator-style layout (missions, schedules, channels, and similar tabs). Browser or **Electron** — see **[docs/WOP_PRODUCT_OVERVIEW.md](docs/WOP_PRODUCT_OVERVIEW.md)**. For **what already works vs what is still being wired** (including running chat through the real **`pi`** CLI with **`WOP_CHAT_ENGINE`**), see **[docs/WOP_PRODUCT_CAPABILITIES.md](docs/WOP_PRODUCT_CAPABILITIES.md)**.
+- **Optional Honcho memory stack** — Run **[Honcho](https://docs.honcho.dev)** as a separate HTTP **memory / context** service so clients like **Hermes** can store and query structured data across sessions; Pi can **mirror** finished chat turns into Honcho with the **`honcho-mirror`** extension when **`HONCHO_*`** / **`~/.honcho/config.json`** match your stack. Start with **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)** and **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**. In the Way of Pi shell: **Settings → Honcho (memory API)…** for a short **plain-language + install** sheet; **Help → How to use… → Honcho & memory** for the longer integration notes and how this differs from Pi’s session JSONL.
 
 ### A little more detail (same repo, technical view)
 
@@ -155,6 +156,29 @@ Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openr
 
 Scripts prepend **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. They source repo **`.env`** when present and set **`WOP_WORKSPACE`** to the playground root unless already exported. Full setup, API table, production Electron, terminal env: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
 
+### Honcho (optional cross-session memory)
+
+**Simple picture:** Honcho is a **shared binder** other programs can read and write over the web (HTTP): a **workspace** is which binder, **peers** label you vs an assistant, **sessions** are conversation threads. Pi still uses its normal in-session memory (**[docs/AGENT_MEMORY.md](docs/AGENT_MEMORY.md)**); **Honcho** is an **extra** store so **Hermes** (and similar clients) can reuse the same memory across days and tools. The **`honcho-mirror`** extension **copies** finished Pi turns into Honcho when the API is reachable; if Honcho is down, Pi keeps working (you may see one mirror warning).
+
+**Honcho is not installed by cloning Way of Pi.** Install **[Docker](https://docs.docker.com/get-docker/)**, then clone and start the **official** server (folder name is yours; many docs use **`~/honcho-server`**):
+
+```bash
+git clone https://github.com/plastic-labs/honcho.git ~/honcho-server
+cd ~/honcho-server
+cp .env.template .env
+cp docker-compose.yml.example docker-compose.yml
+# edit .env (keys, DB) — then:
+docker compose up -d
+```
+
+Set **`HONCHO_BASE_URL`** (and **`~/.honcho/config.json`** → **`baseUrl`**) to **whatever host:port your compose publishes** (upstream may not use **`18000`**). Optional shortcuts **`just honcho-up`** / **`./scripts/install-honcho-bin.sh`** exist only if **your** Honcho checkout defines them. Managed Honcho: **[app.honcho.dev](https://app.honcho.dev)**.
+
+**Mirror and env (quick):** align **`HONCHO_WORKSPACE`**, **`HONCHO_USER_PEER`**, **`HONCHO_AI_PEER`** with **`~/.honcho/config.json`** and Hermes when sharing one store. **`HONCHO_JWT`** when auth is on. Disable mirror: **`PI_HONCHO_MIRROR=0`** or remove **`honcho-mirror`** from **`extensions[]`** in **`.pi/settings.json`**, then **`/reload`** in Pi.
+
+**In the Way of Pi UI:** **Settings → Honcho (memory API)…** — same cheat sheet as above (install, run, links). **Help → How to use… → Honcho & memory** — deeper notes. **Claw Help** also covers Honcho and memory.
+
+**Canonical guide (full detail, related doc index):** **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)**. Hermes client setup: **[docs/HERMES_INTEGRATION.md](docs/HERMES_INTEGRATION.md)**. Stack context: **[docs/HONCHO_LOCAL_AI.md](docs/HONCHO_LOCAL_AI.md)**, **[docs/Hermes_Honcho_connection.md](docs/Hermes_Honcho_connection.md)**.
+
 ### Recent Way of Pi updates (see [CHANGELOG.md](CHANGELOG.md) — Unreleased)
 
 - **Three UI modes** — Top bar: **Simple** | **Technical** | **Claw**. Persisted as **`wayofpi.uiMode`** in **`localStorage`** (`simple`, `technical`, `claw`). **Simple** (default): chat-first layout, friendly “You / agent” labels, lighter chrome; use **Technical** when you need the file tree, bottom panel, or tool log. **Technical**: full IDE shell (activity bar, explorer, **Tool Log** / Problems / Output, dense status bar) plus **View → Editor Layout → Workspace grid** (see next bullet). **Claw**: operator-oriented shell with its own **nav rail** and tabs (**Mission**, **Chat**, **Team**, **Schedule**, **Channels**, **Files**, **Settings**), optional **`.claw/`** workspace docs, and **Claw Help**; same Bun/Pi workspace and chat engine as the other modes (see **[docs/WOP_CLAW_MODE_PLAN.md](docs/WOP_CLAW_MODE_PLAN.md)** and **[docs/WOP_CLAW_UI_PLAN.md](docs/WOP_CLAW_UI_PLAN.md)**). Plan vs build: **[docs/WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)**.
@@ -239,6 +263,7 @@ Scripts prepend **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)*
 | **theme-cycler**        | `extensions/theme-cycler.ts`        | Keyboard shortcuts (Ctrl+X/Ctrl+Q) and `/theme` command to cycle/switch between custom themes                                                              |
 | **extension-picker**    | `extensions/extension-picker.ts`    | **`/extensions`** lists `pi.extensions` from settings packages + local `extensions/*.ts`; saves `pi -e` to `~/.pi/storage/`. In the slash menu, **`/ex`** filters to this command. `/remember` and `/memory` for cross-session notes |
 | **github-management**   | `extensions/github-management.ts`   | **`github_pr_*`** PR workflows (list/view/diff/checks/review + **inline suggested edits**), **`ghm_exec`**, **`/ghm`** — requires **[GitHub CLI](https://cli.github.com/)** (`gh`). |
+| **honcho-mirror**      | `extensions/honcho-mirror.ts`      | Posts finished user/assistant turns to a running **Honcho** HTTP API when **`HONCHO_BASE_URL`** (and optional **`HONCHO_JWT`**) are set; aligns with **`HONCHO_WORKSPACE`** / peer env vars and **`~/.honcho/config.json`**. Pi keeps working if Honcho is down. See **[docs/HONCHO_INTEGRATION.md](docs/HONCHO_INTEGRATION.md)** |
 | **session-memory**     | `extensions/session-memory.ts`     | Each turn: injects this chat’s **JSONL path**, **session id**, compaction/branch summaries, and a dialogue recap read from disk (`getSessionFile()`). Recap lines use **`zerwis`** (you) / **`pi`** (agent)—change in **`extensions/chatLabels.ts`**. Rules so **`1`** = pick previous numbered option. `/sessionmemory` toggles |
 | **session-saver**     | `extensions/sessions/index.ts`     | Auto-save user/assistant turns to JSON; **`/save`**, **`/list`**, **`/show`**, **`/load`** (`.jsonl` uses `switchSession`). See `extensions/sessions/README.md` |
 | **dynamic-loader**    | `extensions/dynamic-loader.ts`     | **`/extension-hint`** — prints stacked **`pi -e`** suggestions for this playground (`PLAYGROUND_BASES` optional) |
@@ -340,12 +365,12 @@ Then (with **`~/.local/bin`** on **`PATH`**):
 
 Hermes **`just`** recipes: **`just hermes-honcho-status`**, **`just hermes-honcho-setup`**, … (or **`ppi-…`** / **`hermes-honcho-*`** on **`PATH`** after **`install-global`**). Details: **[scripts/README.md](scripts/README.md)**.
 
-**Honcho** (optional — `~/honcho-server` clone):
+**Honcho** (optional — not vendored here; clone **[plastic-labs/honcho](https://github.com/plastic-labs/honcho)** to e.g. **`~/honcho-server`**, then **`docker compose up -d`** per that repo’s **`README.md`**). If your checkout ships **`just`** recipes:
 
 ```bash
-cd ~/honcho-server && just honcho-up    # Docker: database, redis, api, deriver
+cd ~/honcho-server && just honcho-up    # when defined: database, redis, api, deriver
 cd ~/honcho-server && just honcho-status
-./scripts/install-honcho-bin.sh         # ~/.local/bin: honcho-up, honcho-open-*, …
+./scripts/install-honcho-bin.sh         # when present: ~/.local/bin honcho-up, honcho-open-*, …
 ```
 
 **Hermes ↔ Honcho** check from the Pi repo: **`just hermes-honcho-status`** (expects local Hermes venv path in **`justfile`**).
@@ -505,6 +530,10 @@ Side-by-side comparison of lifecycle hooks in [Claude Code](https://docs.anthrop
 ### Changelog
 
 See **[CHANGELOG.md](CHANGELOG.md)** for notable playground updates (extensions, docs, agents, rules).
+
+### Way of Pi
+
+**Zerwiz** — developer of Way of Pi. **[WhyNot Productions](https://whynotproductions.netlify.app/)** — [**WhyNot Games**](https://whynotproductions.netlify.app/whynot-games/) (browser arcade: Bomber, Asteroids, Tetris, Pac-Man, and more), courses, local AI, projects, contact.
 
 ---
 

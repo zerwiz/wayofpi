@@ -352,4 +352,14 @@ From [Non-goals and risks](WOP_STANDALONE_SYSTEM_PLAN.md#non-goals-and-risks):
 
 ---
 
+## 17. Honcho ↔ Way of Pi UI
+
+Per **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)** and **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** — wire **Honcho** into the **web shell** for configuration and transparency (not a second agent runtime in Bun):
+
+- [ ] **Simple** — Honcho health / workspace / mirror awareness near chat or Diagnostics  
+- [ ] **Technical** — Integrations or Diagnostics row for **`HONCHO_*`**, optional read-only Honcho API glue (spec with **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)**)  
+- [ ] **Claw** — Mission or Channels-adjacent memory card; align **`HONCHO_WORKSPACE`** with operator context (**[WOP_CLAW_MODE_PLAN.md](WOP_CLAW_MODE_PLAN.md)** Phase C)
+
+---
+
 **Last updated:** 2026-04-11 (aggregated snapshot; edit sources of truth when behavior changes).

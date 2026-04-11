@@ -151,7 +151,7 @@ export function MenuBar({
 	onOpenAgentPermissions: () => void;
 	/** Settings → Simple pages, sidebars, layout, chrome toggles. */
 	settingsMenu?: SettingsMenuHandlers;
-	/** Optional: mirror chat Build/Plan + new plan file (Settings menu). */
+	/** Optional: chat Build/Plan mode (View menu). */
 	chatSessionControls?: {
 		mode: ChatSessionMode;
 		/** When true, mode switches are disabled (assistant reply streaming). */
@@ -797,6 +797,103 @@ export function MenuBar({
 													</button>
 												</li>
 											) : null}
+										</>
+									) : null}
+									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+									<li>
+										<button
+											type="button"
+											disabled={uiMode === "simple"}
+											className={menuBtnClass(uiMode === "simple")}
+											title={uiMode === "simple" ? "Already using Simple layout." : "Switch to Simple layout."}
+											onClick={() => {
+												onUiModeChange("simple");
+												closeMenus();
+											}}
+										>
+											Use Simple layout
+											{uiMode === "simple" ? (
+												<span className="float-right text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											disabled={uiMode === "technical"}
+											className={menuBtnClass(uiMode === "technical")}
+											title={
+												uiMode === "technical" ? "Already using Technical layout." : "Switch to IDE-style layout."
+											}
+											onClick={() => {
+												onUiModeChange("technical");
+												closeMenus();
+											}}
+										>
+											Use Technical layout
+											{uiMode === "technical" ? (
+												<span className="float-right text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+									<li>
+										<button
+											type="button"
+											disabled={uiMode === "claw"}
+											className={menuBtnClass(uiMode === "claw")}
+											title={
+												uiMode === "claw"
+													? "Already using Claw layout."
+													: "Claw mode: same IDE chrome with Claw roadmap banner — docs/WOP_CLAW_MODE_PLAN.md, docs/WOP_CLAW_UI_PLAN.md"
+											}
+											onClick={() => {
+												onUiModeChange("claw");
+												closeMenus();
+											}}
+										>
+											Use Claw layout
+											{uiMode === "claw" ? (
+												<span className="float-right text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+									{chatSessionControls ? (
+										<>
+											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
+											<li>
+												<button
+													type="button"
+													disabled={chatSessionControls.switchDisabled}
+													className={menuBtnClass(chatSessionControls.switchDisabled)}
+													title="Build mode — Orchestrator posture for implementation (no .md agent unless selected)"
+													onClick={() => {
+														chatSessionControls.onSetMode("build");
+														closeMenus();
+													}}
+												>
+													Chat mode: Build
+													{chatSessionControls.mode === "build" ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													disabled={chatSessionControls.switchDisabled}
+													className={menuBtnClass(chatSessionControls.switchDisabled)}
+													title="Plan mode — injects planner.md (or fallback) for structured plans"
+													onClick={() => {
+														chatSessionControls.onSetMode("plan");
+														closeMenus();
+													}}
+												>
+													Chat mode: Plan
+													{chatSessionControls.mode === "plan" ? (
+														<span className="float-right text-[#89d185]">✓</span>
+													) : null}
+												</button>
+											</li>
 										</>
 									) : null}
 									{viewSimple ? (
@@ -2963,6 +3060,19 @@ export function MenuBar({
 													Indexing & Docs…
 												</button>
 											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Honcho memory API: env vars, honcho-mirror extension, links to docs/HONCHO_INTEGRATION.md."
+													onClick={() => {
+														settingsMenu.onOpenHonchoSettings();
+														closeMenus();
+													}}
+												>
+													Honcho (memory API)…
+												</button>
+											</li>
 											{settingsMenu.onEditWorkspaceViewsCatalog ? (
 												<li>
 													<button
@@ -3043,64 +3153,6 @@ export function MenuBar({
 											title="MCP server configuration in the shell is not wired yet; track docs/WOP_OPEN_TODOS.md and Pi MCP parity."
 										>
 											MCP server <span className="text-[#555]">(planned)</span>
-										</button>
-									</li>
-									<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
-									<li>
-										<button
-											type="button"
-											disabled={uiMode === "simple"}
-											className={menuBtnClass(uiMode === "simple")}
-											title={uiMode === "simple" ? "Already using Simple layout." : "Switch to Simple layout."}
-											onClick={() => {
-												onUiModeChange("simple");
-												closeMenus();
-											}}
-										>
-											Use Simple layout
-											{uiMode === "simple" ? (
-												<span className="float-right text-[#89d185]">✓</span>
-											) : null}
-										</button>
-									</li>
-									<li>
-										<button
-											type="button"
-											disabled={uiMode === "technical"}
-											className={menuBtnClass(uiMode === "technical")}
-											title={
-												uiMode === "technical" ? "Already using Technical layout." : "Switch to IDE-style layout."
-											}
-											onClick={() => {
-												onUiModeChange("technical");
-												closeMenus();
-											}}
-										>
-											Use Technical layout
-											{uiMode === "technical" ? (
-												<span className="float-right text-[#89d185]">✓</span>
-											) : null}
-										</button>
-									</li>
-									<li>
-										<button
-											type="button"
-											disabled={uiMode === "claw"}
-											className={menuBtnClass(uiMode === "claw")}
-											title={
-												uiMode === "claw"
-													? "Already using Claw layout."
-													: "Claw mode: same IDE chrome with Claw roadmap banner — docs/WOP_CLAW_MODE_PLAN.md, docs/WOP_CLAW_UI_PLAN.md"
-											}
-											onClick={() => {
-												onUiModeChange("claw");
-												closeMenus();
-											}}
-										>
-											Use Claw layout
-											{uiMode === "claw" ? (
-												<span className="float-right text-[#89d185]">✓</span>
-											) : null}
 										</button>
 									</li>
 									{viewTechnical ? (
@@ -3305,45 +3357,6 @@ export function MenuBar({
 														</li>
 													</ul>
 												) : null}
-											</li>
-										</>
-									) : null}
-									{chatSessionControls ? (
-										<>
-											<li className="my-1 border-t border-[#3c3c3c]" role="separator" />
-											<li>
-												<button
-													type="button"
-													disabled={chatSessionControls.switchDisabled}
-													className={menuBtnClass(chatSessionControls.switchDisabled)}
-													title="Build mode — Orchestrator posture for implementation (no .md agent unless selected)"
-													onClick={() => {
-														chatSessionControls.onSetMode("build");
-														closeMenus();
-													}}
-												>
-													Chat mode: Build
-													{chatSessionControls.mode === "build" ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
-												</button>
-											</li>
-											<li>
-												<button
-													type="button"
-													disabled={chatSessionControls.switchDisabled}
-													className={menuBtnClass(chatSessionControls.switchDisabled)}
-													title="Plan mode — injects planner.md (or fallback) for structured plans"
-													onClick={() => {
-														chatSessionControls.onSetMode("plan");
-														closeMenus();
-													}}
-												>
-													Chat mode: Plan
-													{chatSessionControls.mode === "plan" ? (
-														<span className="float-right text-[#89d185]">✓</span>
-													) : null}
-												</button>
 											</li>
 										</>
 									) : null}
