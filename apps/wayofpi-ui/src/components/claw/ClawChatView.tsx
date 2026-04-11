@@ -20,7 +20,6 @@ import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
 import type { TreeNode } from "../../types/tree";
 import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
-import type { ClawHelpSectionId } from "./ClawHelpModal";
 import { SimpleChatView } from "../simple/SimpleChatView";
 import { SimpleFileTree } from "../simple/SimpleFileTree";
 import { SimpleFilePanel } from "../simple/SimpleFilePanel";
@@ -91,8 +90,6 @@ export function ClawChatView({
 	onRefreshTree,
 	onMoveFileToDirectory,
 	allowWorkspaceRootDrop = false,
-	onGoToTelegramChannels,
-	onOpenClawHelpSection,
 	dark,
 }: {
 	chatTabs: ChatSessionTab[];
@@ -149,8 +146,6 @@ export function ClawChatView({
 	onRefreshTree: () => void;
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	allowWorkspaceRootDrop?: boolean;
-	onGoToTelegramChannels?: () => void;
-	onOpenClawHelpSection?: (section: ClawHelpSectionId) => void;
 	dark: boolean;
 }) {
 	const clawAgentAvailable = agents.some((a) => a.name === "claw");
@@ -229,8 +224,6 @@ export function ClawChatView({
 						onOpenPlanFileForReview={handlePlanFileReview}
 						sessionLeadFallbackLabel="Claw"
 						clawAgentAvailable={clawAgentAvailable}
-						onGoToTelegramChannels={onGoToTelegramChannels}
-						onOpenClawHelpSection={onOpenClawHelpSection}
 					/>
 				</div>
 

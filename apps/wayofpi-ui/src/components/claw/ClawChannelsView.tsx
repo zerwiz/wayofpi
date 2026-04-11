@@ -8,6 +8,7 @@
 import {
 	AlertTriangle,
 	ArrowRight,
+	BookOpen,
 	CheckCircle2,
 	ExternalLink,
 	Info,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { useClawTelegramStatus } from "../../hooks/useClawTelegramStatus";
+import type { ClawHelpSectionId } from "./ClawHelpModal";
 import type { ClawTelegramStatusV1 } from "../../../shared/claw-telegram-status";
 
 // ──────────────────────────────────────────────
@@ -445,10 +447,13 @@ function EmailCard({ dark }: { dark: boolean }) {
 export function ClawChannelsView({
 	dark,
 	onOpenFile,
+	onOpenClawHelp,
 }: {
 	dark: boolean;
 	/** Navigate to a workspace file (switches to Files tab and opens it). */
 	onOpenFile: (path: string) => void;
+	/** Opens Claw Help (Channels section has Phase E roadmap). */
+	onOpenClawHelp?: (section?: ClawHelpSectionId | null) => void;
 }) {
 	const bg = dark ? "bg-[#161616]" : "bg-[#f5f5f5]";
 	const text = dark ? "text-[#cccccc]" : "text-[#333333]";
@@ -498,22 +503,20 @@ export function ClawChannelsView({
 				<EmailCard dark={dark} />
 			</div>
 
-			{/* ── Roadmap note ── */}
-			<div
-				className={`flex items-start gap-2 rounded-xl border border-dashed px-4 py-3 text-[11px] ${
-					dark
-						? "border-[#2a2a2a] text-[#585858]"
-						: "border-[#d5d5d5] text-[#aaaaaa]"
-				}`}
-			>
-				<Info size={12} className="mt-0.5 shrink-0" />
-				<span>
-					Next for Phase E: inbound webhook routing (Pi turn on HTTP event), outbound notification wiring, and
-					per-channel audit log. Telegram live bridge details:{" "}
-					<span className="font-mono text-[10px]">docs/WOP_TELEGRAM_PLAN.md</span> (T-3/T-4). Claw roadmap:{" "}
-					<span className="font-mono text-[10px]">docs/WOP_CLAW_MODE_PLAN.md</span> (Phase E).
-				</span>
-			</div>
+			{onOpenClawHelp ? (
+				<button
+					type="button"
+					onClick={() => onOpenClawHelp("channels")}
+					className={`flex w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-2.5 text-[11px] font-medium transition-colors ${
+						dark
+							? "border-[#2a2a2a] text-[#fb923c] hover:bg-[#ea580c]/10"
+							: "border-[#d5d5d5] text-[#ea580c] hover:bg-[#ea580c]/8"
+					}`}
+				>
+					<BookOpen size={14} className="shrink-0" />
+					<span>Phase E roadmap & channel plans — open Help</span>
+				</button>
+			) : null}
 
 			<div className={`flex items-start gap-2 text-[11px] ${muted}`}>
 				<Info size={12} className="mt-0.5 shrink-0 opacity-70" />

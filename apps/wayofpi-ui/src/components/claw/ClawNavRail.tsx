@@ -1,5 +1,6 @@
 import { CalendarDays, Cog, Cpu, Files, HelpCircle, MessageCircle, Puzzle, Radio, Radar, Users } from "lucide-react";
 import { listClawUiModules, type ClawTabId } from "../../claw/clawUiModules";
+import type { ClawHelpSectionId } from "./ClawHelpModal";
 
 export type { ClawBuiltinTabId, ClawTabId } from "../../claw/clawUiModules";
 
@@ -11,7 +12,7 @@ export function ClawNavRail({
 }: {
 	activeTab: ClawTabId;
 	onTab: (id: ClawTabId) => void;
-	onHelp?: () => void;
+	onHelp?: (defaultSection?: ClawHelpSectionId | null) => void;
 	appearanceDark: boolean;
 }) {
 	const rail = appearanceDark
@@ -100,7 +101,7 @@ export function ClawNavRail({
 			{onHelp ? (
 				<button
 					type="button"
-					onClick={onHelp}
+					onClick={() => onHelp()}
 					title="Help & how to use"
 					className={`relative flex w-16 flex-col items-center justify-center gap-1.5 rounded-xl py-3 transition-all ${
 						appearanceDark

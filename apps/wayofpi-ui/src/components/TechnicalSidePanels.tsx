@@ -482,7 +482,12 @@ export function ExtensionsSidePanel({
 									<li>
 										Stop old processes on the API port (default <span className="font-mono text-[#9cdcfe]">3333</span> or{" "}
 										<span className="font-mono text-[#9cdcfe]">WOP_SERVER_PORT</span>):{" "}
-										<span className="font-mono text-[10px] text-[#ce9178]">ss -tlnp | grep 3333</span> then kill the stray PID.
+										<span className="font-mono text-[10px] text-[#ce9178]">
+											macOS: lsof -nP -iTCP:3333 | grep LISTEN
+										</span>{" "}
+										or{" "}
+										<span className="font-mono text-[10px] text-[#ce9178]">Linux: ss -tlnp | grep 3333</span>, then kill the stray
+										PID.
 									</li>
 									<li>
 										From this repo:{" "}

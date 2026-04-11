@@ -77,10 +77,15 @@ export function TerminalSettingsSection({
 								<span className={`ml-1 ${muted}`}>(default)</span>
 							)}
 						</li>
-						{config.platform ? (
+						{config.platform || config.arch ? (
 							<li>
-								<span className={muted}>Server OS: </span>
-								<span className="text-[#cccccc]">{config.platform}</span>
+								<span className={muted}>Server host: </span>
+								<span className="text-[#cccccc]">
+									{config.platform ?? "—"}
+									{config.arch ? (
+										<span className="text-[#858585]">{` · ${config.arch}`}</span>
+									) : null}
+								</span>
 							</li>
 						) : null}
 					</ul>

@@ -23,11 +23,11 @@ import { SimpleFilePanel } from "../simple/SimpleFilePanel";
 import { SimpleFileTree } from "../simple/SimpleFileTree";
 import { getClawUiModule, isClawBuiltinTab } from "../../claw/clawUiModules";
 import { ClawNavRail, type ClawTabId } from "./ClawNavRail";
+import type { ClawHelpSectionId } from "./ClawHelpModal";
 import { ClawMissionView } from "./ClawMissionView";
 import { ClawChatView } from "./ClawChatView";
 import { ClawSchedulesView } from "./ClawSchedulesView";
 import { ClawChannelsView } from "./ClawChannelsView";
-import type { ClawHelpSectionId } from "./ClawHelpModal";
 import { DockSplitHandle } from "../DockSplitHandle";
 
 /** Files tab: resizable file tree column (default matches former `w-56`). */
@@ -118,11 +118,8 @@ export type ClawAppProps = {
 	newPlanFileDisabled: boolean;
 	onOpenIndexingDocs?: () => void;
 	onOpenHostDoctor: () => void;
-	onHelp?: () => void;
-	/** Claw Chat → Telegram strip: jump to Channels tab. */
-	onGoToTelegramChannels?: () => void;
-	/** Claw Chat → Telegram strip: open Help on a section. */
-	onOpenClawHelpSection?: (section: ClawHelpSectionId) => void;
+	/** Open Claw Help; optional section defaults to Overview (product roadmap). */
+	onHelp?: (defaultSection?: ClawHelpSectionId | null) => void;
 	contextPct: string;
 	contextFillPct: number | null;
 	tokensDown: string;
@@ -206,8 +203,6 @@ export function ClawApp({
 	onOpenIndexingDocs,
 	onOpenHostDoctor,
 	onHelp,
-	onGoToTelegramChannels,
-	onOpenClawHelpSection,
 	contextPct,
 	contextFillPct,
 	tokensDown,
@@ -310,6 +305,7 @@ export function ClawApp({
 							onSwitchToSchedule={() => onTabChange("schedule")}
 							onSwitchToChannels={() => onTabChange("channels")}
 							onOpenFile={openFile}
+							onOpenClawHelp={onHelp}
 							dark={isDark}
 						/>
 				) : activeTab === "chat" ? (
@@ -368,8 +364,6 @@ export function ClawApp({
 						onRefreshTree={refreshTree}
 						onMoveFileToDirectory={onMoveFileToDirectory}
 						allowWorkspaceRootDrop={allowWorkspaceRootDrop}
-						onGoToTelegramChannels={onGoToTelegramChannels}
-						onOpenClawHelpSection={onOpenClawHelpSection}
 						dark={isDark}
 					/>
 					) : activeTab === "team" ? (
@@ -389,9 +383,9 @@ export function ClawApp({
 							appearanceDark={isDark}
 						/>
 					) : activeTab === "schedule" ? (
-						<ClawSchedulesView dark={isDark} />
+						<ClawSchedulesView dark={isDark} onOpenClawHelp={onHelp} />
 					) : activeTab === "channels" ? (
-						<ClawChannelsView dark={isDark} onOpenFile={openFile} />
+						<ClawChannelsView dark={isDark} onOpenFile={openFile} onOpenClawHelp={onHelp} />
 					) : activeTab === "files" ? (
 						<div className="flex min-h-0 flex-1 overflow-hidden">
 							{/* File tree sidebar */}

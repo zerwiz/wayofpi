@@ -1,6 +1,7 @@
 import {
 	Activity,
 	AlertTriangle,
+	BookOpen,
 	Bot,
 	CalendarDays,
 	CheckCircle2,
@@ -20,6 +21,7 @@ import { useMemo, useState } from "react";
 import type { AgentMeta } from "../../hooks/useAgents";
 import type { LogRow } from "../../hooks/useWayOfPiSession";
 import type { ServerConfig } from "../../hooks/useServerConfig";
+import type { ClawHelpSectionId } from "./ClawHelpModal";
 import { useClawWorkspace } from "../../hooks/useClawWorkspace";
 import { ClawWorkspaceCard } from "./ClawWorkspaceCard";
 
@@ -143,6 +145,7 @@ export function ClawMissionView({
 	onSwitchToSchedule,
 	onSwitchToChannels,
 	onOpenFile,
+	onOpenClawHelp,
 	dark,
 }: {
 	config: ServerConfig | null;
@@ -160,6 +163,8 @@ export function ClawMissionView({
 	onSwitchToChannels?: () => void;
 	/** Navigate to a workspace file (switches to Files tab and opens it). */
 	onOpenFile: (path: string) => void;
+	/** Opens Claw Help; omit section for Overview (product roadmap). */
+	onOpenClawHelp?: (section?: ClawHelpSectionId | null) => void;
 	dark: boolean;
 }) {
 	const bg = dark ? "bg-[#161616]" : "bg-[#f5f5f5]";
@@ -263,6 +268,15 @@ export function ClawMissionView({
 							dark={dark}
 							onClick={onSwitchToChannels ?? (() => {})}
 						/>
+						{onOpenClawHelp ? (
+							<QuickBtn
+								icon={BookOpen}
+								label="Claw roadmap & help"
+								desc="Build order, phases — opens Help"
+								dark={dark}
+								onClick={() => onOpenClawHelp()}
+							/>
+						) : null}
 						</div>
 					</Card>
 
@@ -426,22 +440,6 @@ export function ClawMissionView({
 						)}
 					</Card>
 				</div>
-			</div>
-
-			{/* ── Roadmap notice ── */}
-			<div
-				className={`w-full min-w-0 rounded-xl border border-dashed px-4 py-3 text-[11px] leading-relaxed break-words ${
-					dark
-						? "border-[#ea580c]/25 text-[#858585]"
-						: "border-[#ea580c]/30 text-[#888888]"
-				}`}
-			>
-				<span className={`mr-1.5 font-semibold ${dark ? "text-[#fb923c]" : "text-[#ea580c]"}`}>
-					Claw roadmap
-				</span>
-				Scheduled ops, inbound channels, and deep multi-agent orchestration are planned in phases — see{" "}
-				<span className="font-mono text-[10px] break-all">docs/WOP_CLAW_MODE_PLAN.md</span> and{" "}
-				<span className="font-mono text-[10px] break-all">docs/WOP_CLAW_UI_PLAN.md</span> for the build order.
 			</div>
 		</div>
 	);

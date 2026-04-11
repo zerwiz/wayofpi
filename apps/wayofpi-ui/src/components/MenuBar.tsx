@@ -231,7 +231,7 @@ export function MenuBar({
 	const closeMenus = () => setOpenMenu(null);
 
 	return (
-		<header className="flex h-8 shrink-0 select-none items-center justify-between border-b border-[#252526] bg-[#323233] px-3">
+		<header className="relative z-[60] flex h-8 shrink-0 select-none items-center justify-between border-b border-[#252526] bg-[#323233] px-3">
 			<div className="flex min-w-0 items-center gap-4">
 				<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
 					<TerminalSquare size={14} className="text-[#007acc]" />

@@ -1,4 +1,4 @@
-import { Brain, Cpu, FileCode2, Paperclip, Radio, Send, Square, Users, X } from "lucide-react";
+import { Brain, Cpu, FileCode2, Paperclip, Send, Square, Users, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { readShowModelThinking, writeShowModelThinking } from "../../utils/showModelThinkingPreference";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
@@ -23,9 +23,6 @@ import { registerChatComposerInject } from "../../utils/chatComposerInjectBus";
 import { agentsForSessionPicker, rosterNamesMissingFromAgents } from "../../utils/workspaceChatAgentPicker";
 import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../../utils/planModeComposerTemplates";
 import { shouldSuggestPlanModeForMessage } from "../../utils/planModeHeuristics";
-import { clawTelegramSetupChecklist } from "../../utils/clawTelegramSetupPrompt";
-import type { ClawHelpSectionId } from "../claw/ClawHelpModal";
-
 /** Simple shell — **wired**: chat rows, agent picker, WebSocket send/stop (Pi tools in browser per server notes). */
 export function SimpleChatView({
 	rows,
@@ -61,8 +58,6 @@ export function SimpleChatView({
 	planHandoffWorkspaceKey = "",
 	sessionLeadFallbackLabel,
 	clawAgentAvailable = false,
-	onGoToTelegramChannels,
-	onOpenClawHelpSection,
 }: {
 	rows: ChatRow[];
 	streaming: boolean;
@@ -101,9 +96,6 @@ export function SimpleChatView({
 	sessionLeadFallbackLabel?: string;
 	/** When true with Claw chrome, the picker prefers the **claw** workspace agent (see `.pi/agents/claw.md`). */
 	clawAgentAvailable?: boolean;
-	onGoToTelegramChannels?: () => void;
-	/** Opens Claw Help on a section — wired from Claw shell only (e.g. Telegram deep-link). */
-	onOpenClawHelpSection?: (section: ClawHelpSectionId) => void;
 }) {
 	const [queueModalOpen, setQueueModalOpen] = useState(false);
 	const [input, setInput] = useState("");
@@ -173,9 +165,6 @@ export function SimpleChatView({
 		!sessionPickRaw && dispatchTurnAgent?.trim()
 			? `This reply uses phrase-dispatch (${workspaceAgentDisplayName(dispatchTurnAgent)}); the picker stays on ${sessionLeadFallback} unless you choose a workspace agent.`
 			: null;
-
-	const showTelegramClawStrip =
-		clawChrome && (onGoToTelegramChannels || onOpenClawHelpSection);
 
 	const pickerAgents = useMemo(() => agentsForSessionPicker(agents), [agents]);
 	const rosterOnlyNames = useMemo(
@@ -283,79 +272,6 @@ export function SimpleChatView({
 							</div>
 						</div>
 					</div>
-
-					{showTelegramClawStrip ? (
-						<div
-							className={`mb-3 flex flex-col gap-2 rounded-xl border px-4 py-3 ${
-								appearanceDark
-									? "border-[#38bdf8]/25 bg-[#0c4a6e]/20"
-									: "border-sky-300/60 bg-sky-50"
-							}`}
-						>
-							<div className="flex items-center gap-2">
-								<Radio
-									size={16}
-									className={appearanceDark ? "shrink-0 text-sky-300" : "shrink-0 text-sky-600"}
-									aria-hidden
-								/>
-								<p
-									className={`text-[13px] font-semibold leading-snug ${
-										appearanceDark ? "text-sky-100" : "text-sky-950"
-									}`}
-								>
-									Telegram (via Pi)
-								</p>
-							</div>
-							<p className={`text-[12px] leading-relaxed ${appearanceDark ? "text-[#94a3b8]" : "text-sky-900/85"}`}>
-								The live bridge runs in a real Pi session with the{" "}
-								<code className="rounded bg-black/20 px-1 font-mono text-[11px]">pi-telegram</code> extension
-								(<code className="rounded bg-black/20 px-1 font-mono text-[11px]">/telegram-setup</code>,{" "}
-								<code className="rounded bg-black/20 px-1 font-mono text-[11px]">/telegram-connect</code>). Use
-								the buttons below to open the checklist in the composer, the Channels tab, or Help.
-							</p>
-							<div className="flex flex-wrap gap-2">
-								<button
-									type="button"
-									disabled={!connected || streaming}
-									onClick={() => injectComposer(clawTelegramSetupChecklist())}
-									className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-										appearanceDark
-											? "border-sky-500/40 bg-sky-950/40 text-sky-100 hover:bg-sky-900/50"
-											: "border-sky-400/70 bg-white text-sky-900 hover:bg-sky-100"
-									}`}
-								>
-									Insert setup checklist
-								</button>
-								{onGoToTelegramChannels ? (
-									<button
-										type="button"
-										disabled={!connected}
-										onClick={() => onGoToTelegramChannels()}
-										className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-											appearanceDark
-												? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:border-sky-500/40"
-												: "border-[#d4d4d4] bg-white text-[#333333] hover:border-sky-400"
-										}`}
-									>
-										Open Channels tab
-									</button>
-								) : null}
-								{onOpenClawHelpSection ? (
-									<button
-										type="button"
-										onClick={() => onOpenClawHelpSection("channels")}
-										className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors ${
-											appearanceDark
-												? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:border-sky-500/40"
-												: "border-[#d4d4d4] bg-white text-[#333333] hover:border-sky-400"
-										}`}
-									>
-										Help: Telegram
-									</button>
-								) : null}
-							</div>
-						</div>
-					) : null}
 
 					{!connected ? (
 						<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
