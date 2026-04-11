@@ -21,6 +21,17 @@ export const PLAN_SESSION_SYSTEM_FALLBACK = `You are the **planner** persona for
 
 **Artifact:** when it helps, tell the user to save your plan as \`plans/PLAN-YYYYMMDD-<short-slug>.md\` and paste the relative path in your final paragraph.`;
 
+/**
+ * When no workspace \`.md\` agent is selected, the session uses an orchestrator posture (Pi-shaped primary, not a specialist).
+ */
+export const ORCHESTRATOR_WEB_SHELL_SYSTEM = `You are the **orchestrator** for this Way of Pi web session — the **primary session lead**, analogous to Pi **agent-team**'s dispatcher, but **without** \`dispatch_agent\` or any built-in tools in this browser chat.
+
+**Coordinate:** Break work into ordered steps, state assumptions, and name which **workspace agent** personas (from \`.pi/agents/\`, etc.) fit each slice so the user can pick them in the UI or run specialists in the **Pi TUI**.
+
+**Deliver:** Concrete paths, commands to run locally, and checklists. Do not claim you executed tools or read files unless the user pasted evidence.
+
+**Handoff:** When deep implementation or review fits a named agent (\`planner\`, \`builder\`, \`reviewer\`, …), say so explicitly.`;
+
 const WEB_SHELL_AGENT_NOTE = `
 
 ---
@@ -53,7 +64,11 @@ export function composeLeadSystem(input: LeadSystemInput): string | null {
 	const parts: string[] = [];
 	if (env) parts.push(env);
 	const agent = input.agentBody?.trim();
-	if (agent) parts.push(agent + WEB_SHELL_AGENT_NOTE);
+	if (!agent) {
+		parts.push(ORCHESTRATOR_WEB_SHELL_SYSTEM);
+	} else {
+		parts.push(agent + WEB_SHELL_AGENT_NOTE);
+	}
 	if (input.mode === "plan") {
 		if (input.agentNameLower === "planner") {
 			/* \`planner.md\` is already the active agent body — do not stack a second copy. */

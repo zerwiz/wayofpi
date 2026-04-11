@@ -101,12 +101,10 @@ function PulseCard({
 	const workDisplay = wrapWords(workRaw || "", 42, maxWorkLines);
 
 	return (
-		<div className="flex min-w-0 flex-col rounded border border-[#555] bg-[#1e1e1e] font-mono text-[11px] leading-snug">
-			<div className="border-b border-[#3c3c3c] px-2 py-1.5">
-				<div className="truncate font-semibold text-[#fb923c]">{displayAgentName(w.name)}</div>
-				<div className="truncate text-[#858585]">
-					⎆ {w.resolvedModel?.trim() || "—"}
-				</div>
+		<div className="flex h-full min-h-0 min-w-0 flex-col rounded-none border border-[#555555] bg-[#1e1e1e] font-mono text-[11px] leading-snug">
+			<div className="shrink-0 space-y-0 border-b border-[#3c3c3c] px-2 py-1.5">
+				<div className="truncate font-bold text-[#fb923c]">{displayAgentName(w.name)}</div>
+				<div className="truncate text-[#858585]">⎆ {w.resolvedModel?.trim() || "—"}</div>
 				<div className={`truncate ${statusColor}`}>
 					{statusIcon} {w.status}
 					{timeStr}
@@ -126,7 +124,7 @@ function PulseCard({
 					</>
 				) : null}
 			</div>
-			<div className="min-h-[2.5rem] px-2 py-1.5 text-[#a3a3a3]">
+			<div className="flex min-h-[2.75rem] flex-1 flex-col justify-start px-2 py-1.5 text-[#a3a3a3]">
 				{workDisplay.map((line, i) => (
 					<div key={i} className="break-words">
 						{line || "\u00a0"}
@@ -137,13 +135,14 @@ function PulseCard({
 	);
 }
 
-/** Roster overview styled after Pi TUI `agent-team` widget (`extensions/agent-team.ts` `renderCard` + grid). */
+/** `toolbar` / `roster` let **ChatPanel** pin controls under the tab bar and cards above the composer. */
 export function AgentTeamPulseGrid({
 	activeTeamName,
 	members,
 	streamDetail,
 	onStreamDetailChange,
 	showSessionHint = true,
+	section = "full",
 }: {
 	activeTeamName: string;
 	members: AgentTeamPulseMember[];
@@ -151,46 +150,72 @@ export function AgentTeamPulseGrid({
 	onStreamDetailChange?: (next: boolean) => void;
 	/** When false (workspace pane), omit the note about session chat / WebSocket plan. */
 	showSessionHint?: boolean;
+	section?: "full" | "toolbar" | "roster";
 }) {
 	const cols = Math.min(rosterGridCols(members.length), Math.max(1, members.length));
 
-	return (
-		<div className="flex min-h-0 flex-col gap-3">
-			<div className="flex flex-wrap items-center gap-2 border-b border-[#3c3c3c] pb-2 font-mono text-[11px]">
-				<span className="font-semibold text-[#fb923c]">◆ {activeTeamName}</span>
-				<span className="text-[#555]">—</span>
-				<span className="text-[#858585]">Pi agent-team TUI layout (idle roster)</span>
+	const toolbar = (
+		<div className={`flex min-h-0 flex-col gap-1 font-mono text-[11px] ${section === "toolbar" ? "pb-0" : "pb-2"}`}>
+			<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+				<span className="pl-0.5 font-bold text-[#fb923c]">◆ {activeTeamName}</span>
 				{onStreamDetailChange ? (
 					<button
 						type="button"
 						onClick={() => onStreamDetailChange(!streamDetail)}
-						className="ml-auto rounded border border-[#3c3c3c] px-2 py-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
-						title="Matches /agents-stream and Ctrl+Shift+V in Pi"
+						className="ml-auto shrink-0 rounded-none border border-[#3c3c3c] px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[#cccccc] hover:bg-[#3c3c3c]"
+						title="Pi: /agents-stream [on|off|toggle] — extra card lines (⚙ tool, τ thinking); Ctrl+Shift+V"
 					>
-						Stream detail: {streamDetail ? "on" : "off"}
+						stream {streamDetail ? "on" : "off"}
 					</button>
 				) : null}
 			</div>
-			<div
-				className="grid gap-2"
-				style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-			>
-				{members.map((m) => (
-					<PulseCard key={m.name} member={m} streamDetail={streamDetail} />
-				))}
+			{section !== "toolbar" ? (
+				<div className="h-px w-full shrink-0 bg-[#505050]" aria-hidden />
+			) : null}
+		</div>
+	);
+
+	const rosterGrid = (
+		<div
+			className="grid items-stretch gap-1"
+			style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+		>
+			{members.map((m) => (
+				<PulseCard key={m.name} member={m} streamDetail={streamDetail} />
+			))}
+		</div>
+	);
+
+	const hint = showSessionHint ? (
+		<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
+			Live running/done state, tools, thinking, and token streams will follow the multi-agent WebSocket plan (
+			<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). Session chat stays on the other tab.
+		</p>
+	) : (
+		<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
+			Mirrors the Pi <code className="text-[#858585]">agent-team</code> footer widget layout ({" "}
+			<code className="text-[#858585]">/agents-team</code>, <code className="text-[#858585]">/agents-grid N</code>
+			). <strong className="text-[#858585]">Pane team</strong> opens the roster as a workspace tab.
+		</p>
+	);
+
+	if (section === "toolbar") {
+		return <div className="flex min-h-0 flex-col gap-2">{toolbar}</div>;
+	}
+	if (section === "roster") {
+		return (
+			<div className="flex min-h-0 flex-col gap-3">
+				{rosterGrid}
+				{hint}
 			</div>
-			{showSessionHint ? (
-				<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
-					Live running/done state, tools, thinking, and token streams will follow the multi-agent WebSocket plan (
-					<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>). Session chat stays on the
-					other tab.
-				</p>
-			) : (
-				<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
-					Use <strong className="text-[#858585]">Pane team</strong> in the chat bar to open this here; keep{" "}
-					<strong className="text-[#858585]">Team</strong> for a quick overlay in the chat column.
-				</p>
-			)}
+		);
+	}
+
+	return (
+		<div className="flex min-h-0 flex-col gap-3">
+			{toolbar}
+			{rosterGrid}
+			{hint}
 		</div>
 	);
 }

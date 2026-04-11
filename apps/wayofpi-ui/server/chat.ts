@@ -1,3 +1,5 @@
+import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
+
 export type ChatRole = "system" | "user" | "assistant";
 
 export interface ChatMessage {
@@ -7,6 +9,41 @@ export interface ChatMessage {
 
 function nowTime(): string {
 	return new Date().toISOString().split("T")[1]?.slice(0, 12) ?? "";
+}
+
+/** Turn JSON error bodies (Ollama / OpenRouter) into a single readable line. */
+function formatLlmHttpError(vendor: string, status: number, body: string): string {
+	const slice = body.slice(0, 800).trim();
+	try {
+		const j = JSON.parse(slice) as {
+			error?: string | { message?: string; type?: string; code?: string };
+			message?: string;
+		};
+		if (typeof j.error === "string") {
+			return `${vendor} ${status}: ${j.error}`;
+		}
+		if (j.error && typeof j.error === "object") {
+			const m = j.error.message;
+			const t = j.error.type;
+			if (m) {
+				const tag = t ? ` (${t})` : "";
+				return `${vendor} ${status}${tag}: ${m}`;
+			}
+		}
+		if (typeof j.message === "string" && j.message) {
+			return `${vendor} ${status}: ${j.message}`;
+		}
+	} catch {
+		/* not JSON */
+	}
+	return `${vendor} ${status}: ${slice}`;
+}
+
+function ollamaErrorHint(status: number, detail: string, model: string): string {
+	if (status !== 404) return detail;
+	const lower = detail.toLowerCase();
+	if (!lower.includes("not found") && !lower.includes("model")) return detail;
+	return `${detail} — Hint: run ollama pull ${model} or set OLLAMA_MODEL / the header model to an id from ollama list (many installs use tags like qwen3.5:9b, not qwen3.5:latest).`;
 }
 
 export interface ChatRuntimeModel {
@@ -60,7 +97,7 @@ export async function streamChatCompletion(
 		}
 		if (!res.ok) {
 			const t = await res.text();
-			return { ok: false, error: `OpenRouter ${res.status}: ${t.slice(0, 500)}` };
+			return { ok: false, error: formatLlmHttpError("OpenRouter", res.status, t) };
 		}
 		try {
 			await parseOpenAIStyleSse(res, onDelta, onLog, signal);
@@ -80,9 +117,9 @@ export async function streamChatCompletion(
 		};
 	}
 
-	/* ollama OpenAI-compatible */
-	const host = (runtime?.ollamaHost || process.env.OLLAMA_HOST || "http://127.0.0.1:11434").replace(/\/$/, "");
-	const model = runtime?.ollamaModel?.trim() || process.env.OLLAMA_MODEL?.trim() || "llama3";
+	/* ollama OpenAI-compatible — host/model defaults align with Pi `.env` + `agent/settings.json` (see pi-ollama-env). */
+	const host = (runtime?.ollamaHost || resolveOllamaHost()).replace(/\/$/, "");
+	const model = runtime?.ollamaModel?.trim() || resolveOllamaModelDefault();
 	onLog("INFO", "ollama", `${host} model=${model}`);
 	let res: Response;
 	try {
@@ -105,7 +142,8 @@ export async function streamChatCompletion(
 	}
 	if (!res.ok) {
 		const t = await res.text();
-		return { ok: false, error: `Ollama ${res.status}: ${t.slice(0, 500)}` };
+		const detail = formatLlmHttpError("Ollama", res.status, t);
+		return { ok: false, error: ollamaErrorHint(res.status, detail, model) };
 	}
 	try {
 		await parseOpenAIStyleSse(res, onDelta, onLog, signal);

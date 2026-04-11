@@ -91,7 +91,20 @@ If a new split inverts by mistake, fix the sign in the **`onDelta`** handler rat
 - **Vite dev server** (e.g. `:5173`) serves the React app and **proxies** `/api` and `/ws` to the Bun backend (`vite.config.ts`).
 - **Bun server** (default `:3333`) implements REST + WebSocket; in production the same process can serve `dist/` static assets.
 
-The browser always calls **relative** URLs (`/api/...`, `/ws`), so the UI does not hard-code the API port in client code.
+The renderer always calls **relative** URLs (`/api/...`, `/ws`, `/api/manifest`, …), so the UI does not hard-code the API port — works the same in **Chrome** and in the **Electron** window (dev: both load the **Vite** origin, so the **Vite → Bun** proxy applies).
+
+**Product default:** treat the **Electron** desktop as the **primary** Way of Pi shell for daily dev and demos; use the **browser** flow when you explicitly need a normal tab (e.g. DevTools layout, sharing a URL). See **`apps/wayofpi-ui/README.md`** § **Electron first**.
+
+### Boot from the repo root (Electron vs browser)
+
+| Entry | Effect |
+|-------|--------|
+| **`./start-wayofpi-electron.sh`** or **`just wayofpi-electron`** (**recommended**) | **`npm run electron:dev`** in **`apps/wayofpi-ui`**: Bun + Vite + **Electron** window (no browser tab). Same **`WOP_ELECTRON_DEV_URL`** / Vite proxy stack as below. |
+| **`./start-wayofpi-ui.sh`** or **`./start-full-system.sh`** | **`npm run dev`**: Bun + Vite; opens the **default browser** when **5173** responds. Sources repo **`.env`** when present; sets **`WOP_WORKSPACE`** default. |
+| **`WOP_USE_ELECTRON=1 ./start-wayofpi-ui.sh`** | Same as **`start-wayofpi-electron.sh`**. |
+| **`apps/wayofpi-ui`** only | **`npm run dev`** (browser), **`npm run electron:dev`** (full stack + Electron), **`npm run electron:only`** (Electron only — Vite must already be running on **5173**). See **`apps/wayofpi-ui/README.md`**. |
+
+**Electron** loads the **same Vite dev URL** as the browser (`electron-main.mjs` → **`WOP_ELECTRON_DEV_URL`**); **`electron/`** also has **`preload.mjs`**, **`wait-prod.mjs`** (production window after **`npm run build`** + **`bun run start`**).
 
 ## Top-level layout (technical)
 

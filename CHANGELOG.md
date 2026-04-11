@@ -10,6 +10,14 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Added
 
+- **`apps/wayofpi-ui` server** — **`GET /api/manifest`** (**`server/web-manifest.ts`**) static v1: per workspace root, **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**; empty **`tools`** / **`slashCommands`** until Pi introspection. **`GET /api/config`** adds **`chatEngine`**, **`piDrivesChat`** (always false until Phase 2), **`manifestUrl`**. Boot log mentions **`chatEngine`** / manifest. **`GET /api/diagnostics`** includes **`manifestStatic`** counts. **`WOP_CHAT_ENGINE`** reserved in **`.env.sample`**. Docs: **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`docs/WOP_OPEN_TODOS.md`**, **`apps/wayofpi-ui/README.md`**.
+
+- **`apps/wayofpi-ui`** — **Settings → Restart server…** calls **`POST /api/server/restart`** when **`WOP_ALLOW_SERVER_RESTART=1`** (Bun exits; restart dev from the terminal); otherwise explains opt-in. Nudges chat WebSocket reconnect when the server does not self-exit. **`apps/wayofpi-ui/.env.sample`** documents the variable.
+
+- **`apps/wayofpi-ui` server** — **`GET /api/diagnostics`** (workspace, **`WOP_*`**, Ollama reachability when provider is Ollama, Pi binary **`--version`** probe) and **`GET /api/upstream`** (read-only **`wop.upstream.lock.json`** + **`scripts/wop-upstream/config.json`**). **`fetchOllamaTags`** accepts an optional **`AbortSignal`**. Docs: **`apps/wayofpi-ui/README.md`**, **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`docs/WOP_OPEN_TODOS.md`**.
+
+- **Repo root** — **`start-wayofpi-electron.sh`** starts the full Way of Pi desktop stack (Bun + Vite + Electron); **`just wayofpi-electron`** runs it. Documented in root **`README.md`**, **`apps/wayofpi-ui/README.md`**, **`docs/REPO_INDEX.md`**, **`docs/WOP_TECHNICAL_UI.md`**, **`docs/README.md`**, **`CLAUDE.md`**.
+
 - **`apps/wayofpi-ui`** — **Workspace grid resize:** **`DockSplitHandle`** splitters between workspace **rows** and **columns**; optional **`rowWeights`** / **`colWeights`** persisted in **`wayofpi.technical.workspaceGrid.v1`**. **`TechnicalWorkspaceGrid`** uses **nested flex** (not a bare CSS `grid` only) so splitters sit between **`WorkspacePane`** cells.
 - **`apps/wayofpi-ui`** — **Implicit grid growth on drop:** **`growWorkspaceGridForEdgeDrop`** — dropping a **file**, **panel tab**, or **pane swap** on an **edge snap zone** when the layout is **1×1** or on the **outer edge** of an **N×1** / **1×N** strip **adds** the neighbor cell before applying the drop (**`workspaceGridStorage.ts`**, **`App.tsx`** **`onWorkspaceSurfaceDrop`** with **`surfaceCellIndex` + zone**).
 - **`apps/wayofpi-ui`** — **Cross-cell tab moves:** another pane’s **tab bar** (**`data-wop-workspace-tab-bar`**) accepts **insert-before** drops; **`WorkspaceCellDropSurface`** hides the orange snap overlay while the pointer is over the tab bar so insert hints stay readable.
@@ -21,6 +29,14 @@ Earlier work is not backfilled; entries start from when this file was added.
 - **`apps/wayofpi-ui`** — **`StripFilePreview`** uses **`apiGet`** (same as **`useFileEditor`**) and **`AbortController`** so fast tab switches do not apply stale **`/api/file`** responses.
 
 ### Changed
+
+- **Docs** — **Electron-first** Way of Pi: **`apps/wayofpi-ui/README.md`** (new §), **`docs/WOP_TECHNICAL_UI.md`** (runtime + boot table), **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** (Electron operational note), **`docs/REPO_INDEX.md`**, root **`README.md`**, **`CLAUDE.md`**, **`start-wayofpi-ui.sh`** / **`start-wayofpi-electron.sh`** comments, **`electron/electron-main.mjs`** header — same Vite→Bun **`/api`** / **`/ws`** in Electron dev as in the browser.
+
+- **Docs** — **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** **§2.5** audit table (Bun server: what hits Pi process vs not); cross-links from **`docs/README.md`**, **`docs/WOP_OPEN_TODOS.md`**, **`CLAUDE.md`**.
+
+- **`apps/wayofpi-ui` server** — Ollama defaults follow **Pi** startup: **`OLLAMA_BASE_URL`** when **`OLLAMA_HOST`** is unset; default model from **`OLLAMA_MODEL`** else **`agent/settings.json`**. **`server/pi-ollama-env.ts`**; diagnostics env snapshot; **`.env.sample`** notes. Client: drop stale **`wayofpi.activeLlmModel`** **`qwen3.5:latest`** before reconnect.
+
+- **`apps/wayofpi-ui`** — Chat persona when no workspace `.md` is selected is labeled **Orchestrator** (Technical + Simple UI, status bar, command palette). The server injects a Pi-shaped **orchestrator** system prompt for that case; specialist agents still merge from **`/api/agents`** when chosen.
 
 - **`apps/wayofpi-ui`** — **Phase A dock parity:** **`EditorPanel`** and **`DockableToolStrip`** share the same **tab chrome** (orange active top border, **`h-9`**, **13px** labels, **Lucide** icons per panel / **`FileCode2`** for files, hover-reveal close). **Editor** + **Panels** region labels (grip + title) mirror each other; user-facing copy favors **Panels** over “tool dock”. Docs: **`docs/WOP_MODULAR_DOCKS_PLAN.md`**, **`docs/WOP_TECHNICAL_UI.md`**.
 

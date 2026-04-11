@@ -52,10 +52,10 @@ OLLAMA_BASE_URL=http://localhost:11434
 # API key for Ollama (can be any string, we use a local identifier)
 OLLAMA_API_KEY=ollama-local
 
-# Default model to use
-OLLAMA_MODEL=qwen3.5:latest
+# Default model to use (must match a NAME from `ollama list` — qwen3.5:latest is often absent; 9b tags are common)
+OLLAMA_MODEL=qwen3.5:9b
 
-# Your available Ollama models:
+# Your available Ollama models (examples — run `ollama list`):
 # unsloth-qwen2.5-coder-32b:latest
 # qwen3-14b-claude-sonnet-4.5-high-reasoning-distill-q4-k-m:latest
 # Qwen3-14B-claude-sonnet-4.5-high-reasoning-distill-Q4_K_M:latest
@@ -64,7 +64,7 @@ OLLAMA_MODEL=qwen3.5:latest
 # lfm2-long:latest
 # qwen3.5-35b:latest
 # qwen3.5-35b-long:latest
-# qwen3.5:latest
+# qwen3.5:9b / qwen3.5:9b-32k (typical Qwen 3.5 pulls; not always :latest)
 # glm-4.7-flash:latest
 # deepseek-r1-8b:latest
 

@@ -10,14 +10,14 @@ Purpose: onboarding and **accurate** descriptions of how this Pi extension playg
 
 | Document | Contents |
 |----------|-----------|
-| **[REPO_INDEX.md](REPO_INDEX.md)** | **Repo map:** what each top-level folder and **`.pi/`** subtree is for; **`projects/_template`** file list; gitignored paths; path cheatsheet (`/home/zerwiz/.pi/...`); **`apps/wayofpi-ui/`** |
+| **[REPO_INDEX.md](REPO_INDEX.md)** | **Repo map:** what each top-level folder and **`.pi/`** subtree is for; **`projects/_template`** file list; gitignored paths; path cheatsheet (`/home/zerwiz/.pi/...`); **`apps/wayofpi-ui/`**; root **`start-wayofpi-ui.sh`** / **`start-wayofpi-electron.sh`** |
 | **[WOP_PLANNING.md](WOP_PLANNING.md)** | **Planning hub:** links to Way of Pi and other roadmap docs |
 | **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** | **Combined build TODO** — merged backlog from WOP plans + **[WOP_STANDALONE_SYSTEM_PLAN](WOP_STANDALONE_SYSTEM_PLAN.md)** (**§15**) + **[WOP_PLANNING](WOP_PLANNING.md)** (**§16**); trim when items ship |
 | **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** | **Way of Pi** product plan — web UI + headless Pi, `WOP_*` isolation, sitemap, MVP, production checklist |
-| **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** | **Web UI → Pi backend wiring** — API/WebSocket inventory vs headless Pi target, surface matrix, phased roadmap (**manifest**, engine swap, sessions, orchestration); complements **WOP_STANDALONE_SYSTEM_PLAN** |
+| **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** | **Web UI → Pi backend wiring** — **§2.5** = audit of what **does / does not** invoke the Pi process (Bun chat vs Pi-shaped disk reads); **§3–§5** API/WS/UI matrices; phased roadmap (**manifest**, engine swap, sessions, orchestration); complements **WOP_STANDALONE_SYSTEM_PLAN** |
 | **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)** | **Explorer / IDE shell** — Cursor & Zed reference vs `wayofpi-ui` technical shell; gaps and behavior notes |
 | **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)** | **Generated/binary files** — Cursor ignore vs indexing, Zed/Git attributes, doc ↔ code **line parity**, `wayofpi-ui` previews |
-| **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** | **`wayofpi-ui` technical shell** — **`TechnicalWorkspaceGrid`** (up to **3×4** **`WorkspacePane`** cells, resizable flex + **`DockSplitHandle`**, edge-drop grid grow, cross-cell tab strip), persistence, components, hooks, server boundaries, extension checklist |
+| **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** | **`wayofpi-ui` technical shell** — **`TechnicalWorkspaceGrid`** (up to **3×4** **`WorkspacePane`** cells, resizable flex + **`DockSplitHandle`**, edge-drop grid grow, cross-cell tab strip), persistence, components, hooks, server boundaries, extension checklist; **Electron-first** dev (same **`/api`** / **`/ws`** proxy as browser) |
 | **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** | **Modular dock TODO** — **Zed reference model** (center panes vs docks), **Phase Z** pane/`PaneItem` target, **N** strips, movable agent/sidebar, **Phase E** graph, **Phase F** preview/review; pairs with **`.cursor/rules/wop-ui-modular-docks.mdc`** |
 | **[WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md](WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md)** | **Modular docks rule → functional work** — rebuild vs add vs extend, gaps vs **[WOP_MODULAR_DOCKS_PLAN](WOP_MODULAR_DOCKS_PLAN.md)** phases |
 | **[WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md](WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md)** | **`pi-e` appearances → web views** — menu inventory, dock preset model, roadmap phases; complements **WOP_MODULAR_DOCKS_PLAN** |
@@ -25,7 +25,7 @@ Purpose: onboarding and **accurate** descriptions of how this Pi extension playg
 | **[WOP_BUILD_PLAN_MODE.md](WOP_BUILD_PLAN_MODE.md)** | **Build vs Plan** chat mode — when to use each, Cursor Plan Mode comparison, **`plans/PLAN-…md`** artifacts, web session limits vs Pi TUI **`planner`** / **agent-team** |
 | **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)** | **Menu bar & shell parity** — File→Help, palette, panels; each row mapped to Way of Pi / Pi / server (**Planning** side panel links here) |
 | **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** | **`wop`** CLI names and **`WOP_*`** / **`WOP_HOME`** / **`WOP_PI_BINARY`** |
-| **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** | UI **manifest strategy** — runtime introspection vs static manifest for commands/tools/extensions |
+| **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** | UI **manifest strategy** — runtime introspection vs static manifest; **`GET /api/manifest`** (static v1 in **`wayofpi-ui`**) vs future Pi merge |
 | **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** | **Orchestration** WebSocket event contract (per-agent streams) |
 | **[WOP_SAFE_CUSTOMIZATION.md](WOP_SAFE_CUSTOMIZATION.md)** | **Safe** skills / extensions / packages / Pi update pipeline |
 | **[WOP_UPSTREAM_SYNC.md](WOP_UPSTREAM_SYNC.md)** | **Upstream sync:** check Pi GitHub/npm for updates; user-triggered **`vendor/wop-upstream/`** mirror + path renames |

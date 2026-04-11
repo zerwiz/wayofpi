@@ -32,6 +32,9 @@ import {
 	terminalAllowed,
 	type TerminalWsData,
 } from "./terminal-ws";
+import { collectDiagnostics, collectUpstreamSnapshot } from "./diagnostics";
+import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
+import { collectStaticWebManifest } from "./web-manifest";
 
 // Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
 // In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
@@ -53,7 +56,7 @@ type ChatWsData = {
 	busy: boolean;
 	/** User texts received while `busy`; run after the current turn completes. */
 	pendingChatTexts: string[];
-	/** Per-connection override (UI-selected); falls back to OLLAMA_MODEL / OPENROUTER_MODEL. */
+	/** Per-connection override (UI-selected); falls back to Pi-aligned defaults (`resolveOllamaModelDefault` / OPENROUTER_MODEL). */
 	ollamaModel?: string;
 	openrouterModel?: string;
 	/** Cursor-style Plan vs Build: Plan injects Pi planner-style system instructions. */
@@ -190,6 +193,47 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		return json({ ok: true, service: "wayofpi-ui-server", time: new Date().toISOString() });
 	}
 
+	if (p === "/api/diagnostics" && req.method === "GET") {
+		try {
+			return json(await collectDiagnostics());
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/upstream" && req.method === "GET") {
+		try {
+			return json(await collectUpstreamSnapshot());
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	/** Opt-in process exit for dev (e.g. pick up server code changes). `concurrently` does not auto-restart Bun alone. */
+	if (p === "/api/server/restart" && req.method === "POST") {
+		if (process.env.WOP_ALLOW_SERVER_RESTART?.trim() !== "1") {
+			return json(
+				{
+					ok: false,
+					error: "Server restart is disabled.",
+					hint: "Set WOP_ALLOW_SERVER_RESTART=1 on the Way of Pi Bun process, then use Settings → Restart server again. Otherwise stop and start your dev command in the terminal (e.g. npm run dev from apps/wayofpi-ui).",
+				},
+				403,
+			);
+		}
+		queueMicrotask(() => {
+			setTimeout(() => process.exit(0), 80);
+		});
+		return json({
+			ok: true,
+			exiting: true,
+			message:
+				"Way of Pi server process will exit. Start it again from the terminal (npm run dev / bun run server/index.ts).",
+		});
+	}
+
 	if (p === "/api/native-dialog/pick" && req.method === "POST") {
 		if (!workspaceSwitchAllowed()) {
 			return json({ error: "Native pick requires workspace switch (WOP_ALLOW_WORKSPACE_SWITCH)", fallback: true }, 403);
@@ -289,13 +333,29 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	}
 
 	if (p === "/api/config" && req.method === "GET") {
+		const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+		/** Reserved for Phase 2 (`pi` = headless Pi). If unset, same as `provider` for the active direct-LLM path. */
+		const chatEngine = (process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase() || provider;
 		return json({
-			provider: process.env.WOP_LLM_PROVIDER || "ollama",
-			ollamaHost: process.env.OLLAMA_HOST || "http://127.0.0.1:11434",
-			ollamaModel: process.env.OLLAMA_MODEL || "llama3",
+			provider,
+			chatEngine,
+			/** Always false until `/ws` chat is forwarded to a Pi subprocess (see docs/WOP_PI_BACKEND_WIRING_PLAN.md §2.5). */
+			piDrivesChat: false,
+			manifestUrl: "/api/manifest",
+			ollamaHost: resolveOllamaHost(),
+			ollamaModel: resolveOllamaModelDefault(),
 			openrouterModel: process.env.OPENROUTER_MODEL || "openrouter/auto",
 			terminalEnabled: terminalAllowed(),
 		});
+	}
+
+	if (p === "/api/manifest" && req.method === "GET") {
+		try {
+			return json(collectStaticWebManifest());
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: message }, 500);
+		}
 	}
 
 	if (p === "/api/ui/views" && req.method === "GET") {
@@ -310,8 +370,8 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/llm/models" && req.method === "GET") {
 		const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
-		const ollamaHost = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
-		const envDefaultOllama = process.env.OLLAMA_MODEL || "llama3";
+		const ollamaHost = resolveOllamaHost();
+		const envDefaultOllama = resolveOllamaModelDefault();
 		const envDefaultOpenrouter = process.env.OPENROUTER_MODEL || "openrouter/auto";
 
 		if (provider === "openrouter") {
@@ -611,7 +671,7 @@ const server = Bun.serve<ServerWsData>({
 			}
 			applyLeadFromCache(ws.data);
 			const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
-			const envOllama = process.env.OLLAMA_MODEL || "llama3";
+			const envOllama = resolveOllamaModelDefault();
 			const envOr = process.env.OPENROUTER_MODEL || "openrouter/auto";
 			const effectiveModel =
 				provider === "openrouter"
@@ -765,7 +825,7 @@ const server = Bun.serve<ServerWsData>({
 						"chat",
 						ws.data.agentName
 							? `Agent persona: ${ws.data.agentName} (markdown system prompt from workspace).`
-							: "Agent persona: default (no workspace .md agent).",
+							: "Agent persona: Orchestrator (no workspace .md — server injects Pi-shaped orchestrator system prompt).",
 					),
 				);
 				return;
@@ -850,4 +910,9 @@ const server = Bun.serve<ServerWsData>({
 	},
 });
 
-console.log(`Way of Pi server http://127.0.0.1:${server.port}  workspace=${getWorkspaceRoot()}`);
+const _bootChatEngine =
+	(process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase() ||
+	(process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+console.log(
+	`Way of Pi server http://127.0.0.1:${server.port} workspace=${getWorkspaceRoot()} chatEngine=${_bootChatEngine} piDrivesChat=false manifest=/api/manifest`,
+);

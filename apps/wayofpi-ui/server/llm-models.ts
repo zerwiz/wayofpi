@@ -10,12 +10,16 @@ export interface OllamaTagsResponse {
 	models?: OllamaTagModel[];
 }
 
-export async function fetchOllamaTags(ollamaHost: string): Promise<{ ok: true; models: OllamaTagModel[] } | { ok: false; error: string }> {
+export async function fetchOllamaTags(
+	ollamaHost: string,
+	opts?: { signal?: AbortSignal },
+): Promise<{ ok: true; models: OllamaTagModel[] } | { ok: false; error: string }> {
 	const host = ollamaHost.replace(/\/$/, "");
 	try {
 		const res = await fetch(`${host}/api/tags`, {
 			method: "GET",
 			headers: { Accept: "application/json" },
+			signal: opts?.signal,
 		});
 		if (!res.ok) {
 			const t = await res.text();

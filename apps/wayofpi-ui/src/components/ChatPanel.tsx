@@ -114,7 +114,7 @@ export function ChatPanel({
 	const fileRef = useRef<HTMLInputElement>(null);
 
 	const pending = chatQueuePending ?? 0;
-	const assistantShort = chatAgentName?.trim() || "Assistant";
+	const assistantShort = chatAgentName?.trim() || "Orchestrator";
 
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	useEffect(() => {
@@ -312,11 +312,11 @@ export function ChatPanel({
 				</div>
 			</div>
 
-			<div
-				className={`flex min-h-0 flex-1 flex-col overflow-y-auto text-[13px] ${technical ? "gap-4 p-4" : "gap-5 p-5"}`}
-			>
+			<div className="flex min-h-0 min-w-0 flex-1 flex-col text-[13px]">
 				{teamPaneOpen ? (
-					<div className="min-h-0 font-mono text-[12px] leading-relaxed text-[#858585]">
+					<div
+						className={`shrink-0 border-b border-[#3c3c3c] bg-[#1e1e1e] font-mono text-[12px] leading-relaxed text-[#858585] ${technical ? "px-4 pb-2 pt-3" : "px-5 pb-2 pt-4"}`}
+					>
 						{agentsLoading ? (
 							<p className="text-[#a3a3a3]">Loading workspace agents…</p>
 						) : teamNames.length === 0 ? (
@@ -341,7 +341,7 @@ export function ChatPanel({
 						) : (
 							<>
 								{teamNames.length > 1 ? (
-									<label className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-[#cccccc]">
+									<label className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-[#cccccc]">
 										<span className="text-[#858585]">Team</span>
 										<select
 											value={pulseTeam ?? ""}
@@ -362,6 +362,8 @@ export function ChatPanel({
 										members={pulseMembers}
 										streamDetail={pulseStreamDetail}
 										onStreamDetailChange={setPulseStreamDetail}
+										showSessionHint={false}
+										section="toolbar"
 									/>
 								) : (
 									<p className="text-[#a3a3a3]">Selected team has no members in YAML.</p>
@@ -370,85 +372,100 @@ export function ChatPanel({
 						)}
 					</div>
 				) : null}
-				{!teamPaneOpen && !connected ? (
-					<div
-						className={`text-[#ce9178] ${technical ? "font-mono text-[12px]" : "text-[13px]"}`}
-					>
-						Connecting to server…
-					</div>
-				) : null}
-				{!teamPaneOpen && error ? (
-					<button
-						type="button"
-						onClick={onClearError}
-						className="w-full rounded border border-[#f14c4c]/40 bg-[#f14c4c]/10 p-2 text-left font-mono text-[12px] text-[#f14c4c]"
-					>
-						{error}
-						<span className="mt-1 block text-[#858585]">Click to dismiss</span>
-					</button>
-				) : null}
-				{!teamPaneOpen
-					? rows.map((msg) => (
-							<div key={msg.id} className="flex w-full flex-col gap-1">
-								<div className="flex items-center justify-between">
-									<span
-										className={
-											technical
-												? "font-mono text-[11px] uppercase text-[#858585]"
-												: "text-[12px] font-medium text-[#858585]"
-										}
-									>
-										{technical
-											? msg.role === "user"
-												? "USER"
-												: assistantShort.toUpperCase()
-											: msg.role === "user"
-												? "You"
-												: assistantShort}
-									</span>
-									<span className={`text-[#555555] ${technical ? "font-mono text-[10px]" : "text-[11px]"}`}>
-										{msg.timestamp}
-									</span>
-								</div>
-								<div
-									className={`w-full leading-relaxed ${
-										technical ? "p-3 font-mono" : "rounded-md p-4 font-sans text-[14px]"
-									} ${
-										msg.role === "user"
-											? "border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#d4d4d4]"
-											: "border border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
-									}`}
-								>
-									<div className="whitespace-pre-wrap">{msg.content}</div>
-								</div>
-							</div>
-						))
-					: null}
-				{!teamPaneOpen && streaming ? (
-					<div className="flex flex-col gap-1">
-						<span
-							className={
-								technical
-									? "font-mono text-[11px] uppercase text-[#858585]"
-									: "text-[12px] text-[#858585]"
-							}
+				<div
+					className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${technical ? "gap-4 p-4" : "gap-5 p-5"}`}
+				>
+					{!connected ? (
+						<div
+							className={`text-[#ce9178] ${technical ? "font-mono text-[12px]" : "text-[13px]"}`}
 						>
-							{technical ? `${assistantShort.toUpperCase()} (streaming)` : `${assistantShort} is replying…`}
-						</span>
-						<div className="flex items-center gap-2 border border-[#3c3c3c] bg-[#252526] p-3">
-							<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]" />
-							<div
-								className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
-								style={{ animationDelay: "150ms" }}
-							/>
-							<div
-								className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
-								style={{ animationDelay: "300ms" }}
-							/>
+							Connecting to server…
 						</div>
+					) : null}
+					{error ? (
+						<button
+							type="button"
+							onClick={onClearError}
+							className="w-full rounded border border-[#f14c4c]/40 bg-[#f14c4c]/10 p-2 text-left font-mono text-[12px] text-[#f14c4c]"
+						>
+							{error}
+							<span className="mt-1 block text-[#858585]">Click to dismiss</span>
+						</button>
+					) : null}
+					{rows.map((msg) => (
+						<div key={msg.id} className="flex w-full flex-col gap-1">
+							<div className="flex items-center justify-between">
+								<span
+									className={
+										technical
+											? "font-mono text-[11px] uppercase text-[#858585]"
+											: "text-[12px] font-medium text-[#858585]"
+									}
+								>
+									{technical
+										? msg.role === "user"
+											? "USER"
+											: assistantShort.toUpperCase()
+										: msg.role === "user"
+											? "You"
+											: assistantShort}
+								</span>
+								<span className={`text-[#555555] ${technical ? "font-mono text-[10px]" : "text-[11px]"}`}>
+									{msg.timestamp}
+								</span>
+							</div>
+							<div
+								className={`w-full leading-relaxed ${
+									technical ? "p-3 font-mono" : "rounded-md p-4 font-sans text-[14px]"
+								} ${
+									msg.role === "user"
+										? "border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#d4d4d4]"
+										: "border border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
+								}`}
+							>
+								<div className="whitespace-pre-wrap">{msg.content}</div>
+							</div>
+						</div>
+					))}
+					{streaming ? (
+						<div className="flex flex-col gap-1">
+							<span
+								className={
+									technical
+										? "font-mono text-[11px] uppercase text-[#858585]"
+										: "text-[12px] text-[#858585]"
+								}
+							>
+								{technical ? `${assistantShort.toUpperCase()} (streaming)` : `${assistantShort} is replying…`}
+							</span>
+							<div className="flex items-center gap-2 border border-[#3c3c3c] bg-[#252526] p-3">
+								<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]" />
+								<div
+									className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
+									style={{ animationDelay: "150ms" }}
+								/>
+								<div
+									className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]"
+									style={{ animationDelay: "300ms" }}
+								/>
+							</div>
+						</div>
+					) : null}
+					<div ref={endRef} />
+				</div>
+				{teamPaneOpen && !agentsLoading && teamNames.length > 0 && pulseTeam && pulseMembers.length > 0 ? (
+					<div
+						className={`max-h-[min(45vh,440px)] shrink-0 overflow-y-auto border-t border-[#3c3c3c] bg-[#1e1e1e] font-mono text-[12px] leading-relaxed text-[#858585] ${technical ? "p-4 pt-3" : "p-5 pt-4"}`}
+					>
+						<AgentTeamPulseGrid
+							activeTeamName={pulseTeam}
+							members={pulseMembers}
+							streamDetail={pulseStreamDetail}
+							showSessionHint={false}
+							section="roster"
+						/>
 					</div>
 				) : null}
-				{!teamPaneOpen ? <div ref={endRef} /> : null}
 			</div>
 
 			<div className="shrink-0 border-t border-[#3c3c3c] bg-[#252526] p-3">
@@ -531,14 +548,14 @@ export function ChatPanel({
 								<select
 									value={chatAgentName ?? ""}
 									disabled={!connected || streaming || agentsLoading}
-									title="Pi agent markdown (agents/, .claude/agents/, .pi/agents/, .cursor/agents/)"
+									title="Orchestrator (no .md) = primary Pi-shaped session lead; or pick a workspace agent markdown (agents/, .claude/agents/, .pi/agents/, .cursor/agents/)"
 									onChange={(e) => {
 										const v = e.target.value;
 										onChatAgentChange(v === "" ? null : v);
 									}}
 									className="min-w-0 max-w-[min(200px,50%)] shrink rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-1 font-mono text-[10px] text-[#cccccc] outline-none focus:border-[#ea580c] disabled:opacity-40"
 								>
-									<option value="">Default assistant</option>
+									<option value="">Orchestrator</option>
 									{(agents ?? []).map((a) => (
 										<option key={a.name} value={a.name} title={a.description || a.relativePath}>
 											{a.name}

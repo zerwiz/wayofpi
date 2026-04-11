@@ -1,9 +1,11 @@
 /**
- * Electron shell for Way of Pi UI.
- * - Dev: loads Vite (proxies /api and /ws to Bun on 3333).
- * - Prod: loads the Bun server’s static + API origin (same process as `npm run start`).
+ * Electron shell for Way of Pi UI — **primary desktop** target (same renderer as browser dev).
+ * - Dev: `loadURL(WOP_ELECTRON_DEV_URL)` → Vite (default http://127.0.0.1:5173/) so relative `/api`, `/ws`,
+ *   `/api/manifest`, `/ws/terminal` use vite.config.ts proxies to Bun on WOP_SERVER_PORT (3333).
+ * - Prod: `loadURL(WOP_ELECTRON_PROD_URL)` → Bun origin serving `dist/` + API (`npm run start`).
  */
-import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, shell } from "electron";
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -16,6 +18,22 @@ app.commandLine.appendSwitch("enable-features", "OverlayScrollbar");
 
 const isMac = process.platform === "darwin";
 const isDev = process.env.ELECTRON_DEV === "1";
+const linuxWinIcon = path.join(__dirname, "..", "public", "wayofpi-icon.png");
+
+/** Match `StartupWMClass=` + `desktopName` in package.json (Electron lowercases WM_CLASS on Linux). */
+if (process.platform === "linux") {
+	app.setName("wayofpi");
+}
+
+function dockIconForPlatform() {
+	if (isMac) return undefined;
+	try {
+		if (fs.existsSync(linuxWinIcon)) return nativeImage.createFromPath(linuxWinIcon);
+	} catch {
+		/* ignore */
+	}
+	return linuxWinIcon;
+}
 
 /*
  * Electron builds the default File/Edit/View/Window/Help menu at **ready** unless the app
@@ -89,6 +107,7 @@ function createWindow() {
 		minWidth: 800,
 		minHeight: 600,
 		title: "Way of Pi",
+		...(isMac ? {} : { icon: dockIconForPlatform() }),
 		autoHideMenuBar: !isMac,
 		webPreferences: {
 			preload: preloadPath,

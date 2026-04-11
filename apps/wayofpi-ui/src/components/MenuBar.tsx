@@ -2874,6 +2874,21 @@ export function MenuBar({
 											Workspace & server (sidebar)…
 										</button>
 									</li>
+									{settingsMenu ? (
+										<li>
+											<button
+												type="button"
+												className={menuBtnClass()}
+												title="With WOP_ALLOW_SERVER_RESTART=1 on the Bun server: exits the process so you can restart dev from the terminal. Otherwise shows how to restart manually; always closes the chat socket so it reconnects after a restart."
+												onClick={() => {
+													void settingsMenu.onRestartServer();
+													closeMenus();
+												}}
+											>
+												Restart server…
+											</button>
+										</li>
+									) : null}
 									<li>
 										<button
 											type="button"
@@ -3086,7 +3101,7 @@ export function MenuBar({
 													type="button"
 													disabled={chatSessionControls.switchDisabled}
 													className={menuBtnClass(chatSessionControls.switchDisabled)}
-													title="Build mode — default assistant posture for implementation"
+													title="Build mode — Orchestrator posture for implementation (no .md agent unless selected)"
 													onClick={() => {
 														chatSessionControls.onSetMode("build");
 														closeMenus();

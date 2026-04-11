@@ -20,7 +20,7 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 | **`projects/`** | **Per-effort documentation** Pi maintains while working on other codebases or long tasks. See **`projects/README.md`**. |
 | **`projects/_template/`** | **Copy contents** into `projects/<slug>/` when starting a new tracked effort. **`project-scanner`** agent automates scan + fill (see **`.pi/agents/project-scanner.md`**, team **`new-project`**). |
 | **`docs/`** | Human-written guides (memory, extensions, agents, integrations, **this index**). |
-| **`apps/wayofpi-ui/`** | **Way of Pi** technical UI preview: Bun **HTTP + WebSocket** server, Vite + React IDE-style shell — **`TechnicalWorkspaceGrid`** (≤ **3×4**, resizable, edge-grow drops, cross-cell tabs) — see **`apps/wayofpi-ui/README.md`**, **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**, modular dock **TODO** **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**. |
+| **`apps/wayofpi-ui/`** | **Way of Pi** shell: **Electron-first** desktop (**`./start-wayofpi-electron.sh`**); Bun **HTTP + WebSocket** + Vite + React — **`TechnicalWorkspaceGrid`** (≤ **3×4**, resizable, edge-grow drops, cross-cell tabs); renderer uses **relative** `/api` / `/ws` via Vite proxy in dev — see **`apps/wayofpi-ui/README.md`** § Electron, **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**, **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)**. |
 | **`specs/`** | Feature **specifications** for extensions; may be ahead of or beside the code—check status banners in each file. |
 | **`.cursor/rules/`** | Cursor rules: **`pi-extensions-context.mdc`** (always-on), **`pi-pi-e-playground-modes.mdc`** (**`pi-e`** option **1** vs **2**, env flags), **`pi-extensions.mdc`** (extension `*.ts`), **`pi-projects-docs.mdc`** (project docs), **`pi-docs-core.mdc`** (core concept docs), **`pi-documentation-consistency.mdc`** (`docs/**/*.md`, README, CHANGELOG, etc.), **`wop-ui-modular-docks.mdc`** (`apps/wayofpi-ui/**` — **`WorkspacePane`**, workspace grid, dock persistence), **`wop-ui-workspace-agents.mdc`** (**`/api/agents`**, Simple vs technical chat), **`wop-ui-pi-backend-parity.mdc`** (real server wiring). |
 | **`justfile`** | **`just`** recipes: Pi stacks, Honcho/Hermes helpers, extension launchers. |
@@ -30,7 +30,9 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 | **`wop.upstream.lock.json`** | Way of Pi upstream: last-seen **`pi-mono`** tag / npm version; **`bun scripts/wop-pi-upstream.ts`** updates it. |
 | **`CLAUDE.md`** | Short **agent conventions** (Bun, `just`, shim pattern). |
 | **`README.md`** | Main **boot doc**: prerequisites, extension table, structure overview. |
-| **`start-wayofpi-ui.sh`** | Starts **`apps/wayofpi-ui`** dev (Bun + Vite) and opens the browser — see root **`README.md`** § Way of Pi web UI. |
+| **`start-wayofpi-ui.sh`** | Starts **`apps/wayofpi-ui`** dev (Bun + Vite on **3333** / **5173**) and opens the default browser when ready — root **`README.md`**, **`apps/wayofpi-ui/README.md`**. |
+| **`start-wayofpi-electron.sh`** | Same stack as above but **Electron** only (no browser tab); delegates to **`start-wayofpi-ui.sh`** with **`WOP_USE_ELECTRON=1`**. **`just wayofpi-electron`**. |
+| **`start-full-system.sh`** | Alias: **`exec ./start-wayofpi-ui.sh`** (browser flow). |
 | **[`TOOLS.md`](../TOOLS.md)** (repo root) | TypeScript-style signatures for **core built-in tools**; narrative: **[TOOLS.md](TOOLS.md)**. |
 | **`THEME.md`**, **`TOOLS.md`**, **`COMPARISON.md`**, etc. | Reference / comparison markdown at repo root. |
 | **`images/`** | Static assets (e.g. README logo). |

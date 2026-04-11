@@ -711,8 +711,43 @@ description:
 				setSelectedPath(rel);
 				setSimpleTab("chat");
 			},
+			onRestartServer: async () => {
+				const lines: string[] = [];
+				let serverChoseExit = false;
+				try {
+					const r = await apiPostJson<{
+						ok?: boolean;
+						exiting?: boolean;
+						message?: string;
+						hint?: string;
+					}>("/api/server/restart", {});
+					if (r.ok && r.exiting) serverChoseExit = true;
+					if (r.message) lines.push(r.message);
+					else if (r.ok && r.exiting) lines.push("Server process is exiting.");
+				} catch (e) {
+					const raw = e instanceof Error ? e.message : String(e);
+					const m = raw.match(/^403:\s*(.+)$/s);
+					if (m) {
+						try {
+							const j = JSON.parse(m[1]!.trim()) as { hint?: string; error?: string };
+							if (j.hint) lines.push(j.hint);
+							else if (j.error) lines.push(j.error);
+							else lines.push(raw);
+						} catch {
+							lines.push(raw);
+						}
+					} else {
+						lines.push(
+							"Could not reach /api/server/restart (server may already be down). After you restart Bun in the terminal, the chat socket will try to reconnect.",
+							raw,
+						);
+					}
+				}
+				if (!serverChoseExit) session.reconnectWebSocket();
+				window.alert(lines.filter(Boolean).join("\n\n"));
+			},
 		}),
-		[uiViewsCatalog.data?.catalogRelPath],
+		[session.reconnectWebSocket, uiViewsCatalog.data?.catalogRelPath],
 	);
 
 	const consumeSimpleProviderFocus = useCallback(() => {
@@ -2338,7 +2373,7 @@ description:
 			},
 			{
 				id: "chat-agent-default",
-				label: "Chat: Default assistant (no .md agent)",
+				label: "Chat: Orchestrator (no .md agent)",
 				keywords: ["persona", "pi"],
 				run: () => session.setChatAgent(null),
 			},

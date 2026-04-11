@@ -73,7 +73,7 @@
 
 ## Open questions
 
-1. Should **teams.yaml** drive a **default** workspace agent when the user picks a **team** (client-only) vs always starting at **Default assistant**?
+1. Should **teams.yaml** drive a **default** workspace agent when the user picks a **team** (client-only) vs always starting at **Orchestrator** (no `.md` agent)?
 2. For **Phase D**, is the supported bridge **spawn Pi per specialist** only, or a **long-lived Pi multiplexer**?
 3. Do we expose **skills** (`skills:` in frontmatter) in the web catalog read-only, or hide until a skill runner exists?
 

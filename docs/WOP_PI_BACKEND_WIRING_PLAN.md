@@ -16,6 +16,8 @@
 
 **Today’s gap:** **`apps/wayofpi-ui/server/chat.ts`** streams completions via **Ollama / OpenRouter** directly. That stack is **real** for editing and files but is **not** Pi — no `registerTool`, no slash commands, no `dispatch_agent`, no extension hooks.
 
+**Engineering bias (critical):** Treat that direct-LLM path as **interim** only. **Maximize Pi as backend** — new capabilities should default to **Pi subprocess / tunnel / manifest parity**, not a second implementation inside Bun. Enforced in **`.cursor/rules/wop-ui-pi-backend-parity.mdc`** (`alwaysApply`).
+
 ---
 
 ## 2. Runtime topology (as built)
@@ -28,15 +30,58 @@
 
 **Operational note:** If the SPA is served **without** this Bun process (static files only), **`/api/*`** returns **404** — see **[WOP_WORKSPACE_AGENTS_UI_PLAN.md](WOP_WORKSPACE_AGENTS_UI_PLAN.md)** Phase A.
 
+**Electron (recommended):** In dev, the **Electron** window loads the **Vite** origin (**`WOP_ELECTRON_DEV_URL`**, default **`http://127.0.0.1:5173/`**), so **`/api`**, **`/ws`**, **`/api/manifest`**, and **`/ws/terminal`** hit the same **Bun** backend as the browser via **Vite’s proxy** — no separate API base URL in client code. Production: Electron loads **`WOP_ELECTRON_PROD_URL`** (default Bun **`dist/`** origin on **`WOP_SERVER_PORT`**). See **`apps/wayofpi-ui/README.md`** § Electron first, **`electron/electron-main.mjs`**.
+
+---
+
+## 2.5 Audit — what hits the **Pi process** vs what does not
+
+**Definition:** **“Hits Pi”** means a **running Pi coding-agent process** (or a documented official headless Pi API) executing **extensions**, **tools**, **slash commands**, **`dispatch_agent`**, session JSONL, etc. Reading the **same workspace files** Pi would read is **Pi-shaped** but **not** hitting Pi unless that binary (or gateway) runs a turn.
+
+**Principle:** Prefer **more Pi backend**, less parallel Bun logic — see **§1** (engineering bias) and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**.
+
+### Bun server (`apps/wayofpi-ui/server/`) — process boundary
+
+| Area | Hits Pi process? | What runs today | Change lever (toward Pi) |
+|------|------------------|-----------------|---------------------------|
+| **Chat** (`/ws` → `chat` → **`streamChatCompletion`**) | **No** | HTTP to **Ollama** or **OpenRouter** from Bun | **§6 Phase 2** — spawn/tunnel **headless Pi**; feature flag; map stream + tools |
+| **`set_model` / `set_chat_mode` / `set_agent`** | **No** | In-memory WS state + **`applyLeadSystem`** (disk-read prompts) | After Pi owns chat: model/mode/agent become Pi session config |
+| **`GET /api/agents`** | **No** (filesystem parity) | **`loadWorkspaceAgents()`** — scan **`agents/`**, **`.claude/`**, **`.pi/agents/`**, **`.cursor/`** + **`teams.yaml`** | Keep catalog; **dispatch** = Pi (**§6 Phase 4**) |
+| **`GET /api/llm/models`** | **No** | Ollama **`/api/tags`** or OpenRouter placeholder | When engine is Pi: expose Pi/provider list (**§3** row) |
+| **`GET /api/config`** | **No** | Env + **`pi-ollama-env`** + **`chatEngine`**, **`piDrivesChat`** (always false until Phase 2), **`manifestUrl`** | Pi profile fields when runtime manifest exists |
+| **`GET /api/manifest`** | **No** | **`web-manifest.ts`** — scans **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`** per workspace root; **`tools`/`slashCommands`[]** | Replace with **headless Pi introspection** per **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** |
+| **`GET /api/diagnostics`** | **No** | Probes **`WOP_PI_BINARY`** or **`pi` on PATH** (`--version` only); includes **`manifestStatic`** counts | Full **doctor**: Pi load, extensions, jail (**§6 Phase 1**) |
+| **`GET /api/upstream`** | **No** | JSON read under playground root | CLI **`wop-pi-upstream`** for remote check |
+| **`POST /api/server/restart`** | **No** | **`process.exit`** when opt-in | Dev only |
+| **Workspace I/O** (`/api/tree`, **`/api/file`**, **`/api/fs/entry`**) | **No** (by design) | Bun jailed FS — **editor host** | Pi **tools** must share same jail (**§4.3**) |
+| **`POST /api/run-script`** | **No** | **`Bun.spawn(["bun","run",…])`** in workspace | **Not** Pi **`bash`** — keep gated (**`WOP_ALLOW_RUN`**); document |
+| **`/ws/terminal`** | **No** | Host shell PTY (**`terminal-ws.ts`**) | Policy vs Pi **approvals** / tool story (**§4.3**) |
+| **Git status** (if used from server) | **No** | **`Bun.spawn(["git",…])`** | Optional; not Pi |
+
+### Pi-shaped but still **no Pi subprocess**
+
+- **`session-prompts.ts`** — Orchestrator block + workspace **`.md`** agent bodies + Plan **`planner.md`** merge: same *sources* as TUI personas; **no** `registerTool`, **`dispatch_agent`**, or extension hooks.
+- **`pi-ollama-env.ts`** — **`OLLAMA_HOST`** / **`OLLAMA_BASE_URL`**, **`OLLAMA_MODEL`**, **`agent/settings.json`**: matches how **Pi** is started from repo **`.env`**; does not invoke Pi for inference.
+
+### Largest gap (single sentence)
+
+> **Every streamed assistant reply today bypasses Pi entirely** (`chat.ts` → Ollama/OpenRouter). That is the primary technical debt relative to **“Pi as backend as much as possible.”**
+
+Use **§3–§5** for route-level detail, **§6** for phased work, **`docs/WOP_OPEN_TODOS.md`** for backlog ticks.
+
 ---
 
 ## 3. HTTP API inventory — wired vs Pi target
 
 | Method | Path | Current implementation | Pi / product target |
 |--------|------|-------------------------|---------------------|
-| GET | `/api/health` | Liveness JSON | Extend with **Pi binary probe**, version, `WOP_HOME` path |
+| GET | `/api/health` | Liveness JSON | Unchanged; use **`/api/diagnostics`** for probes |
+| GET | `/api/diagnostics` | Workspace + **`WOP_*`**, Ollama ping, **`WOP_PI_BINARY` / PATH `pi`** + `--version` | Extend toward full **doctor** (Pi subprocess, extension load, jail proofs) |
+| GET | `/api/upstream` | Read-only **`wop.upstream.lock.json`** + upstream **config** under playground repo root | Remote refresh: **`bun scripts/wop-pi-upstream.ts check`** (CLI; updates lock) |
+| POST | `/api/server/restart` | **`WOP_ALLOW_SERVER_RESTART=1`**: **200** then **`process.exit(0)`**; else **403** + hint | UI: **Settings → Restart server…**; production policy is opt-in only |
 | GET/POST | `/api/workspace` | In-memory multi-root folders | Keep; Pi child cwd must track **primary** (or defined) root |
-| GET | `/api/config` | Env-backed provider + models + `terminalEnabled` | Add **Pi profile** snippet (extensions path, danger flags) when manifest exists |
+| GET | `/api/config` | Provider + **`chatEngine`** (defaults to provider; optional **`WOP_CHAT_ENGINE`**) + **`piDrivesChat: false`** until Phase 2 + **`manifestUrl`** + models + `terminalEnabled` | Pi profile / true **`piDrivesChat`** when chat engine is Pi |
+| GET | `/api/manifest` | **Static v1:** **`filesystem_static`** — per-root **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**; empty **`tools`** / **`slashCommands`** | **Runtime** merge from headless Pi + static overlay (**[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**) |
 | GET | `/api/tree`, GET/PUT `/api/file`, POST `/api/fs/entry` | Workspace-jailed FS | Keep as **host** editor I/O; Pi uses same roots for tools |
 | GET | `/api/llm/models` | Ollama tags / OpenRouter stub | Optional: mirror **Pi provider config** when chat is Pi-driven |
 | GET | `/api/agents` | **`loadWorkspaceAgents()`** — Pi-style scan + **`teams.yaml`** | Keep; catalog stays filesystem-sourced (same as TUI) |
@@ -50,10 +95,9 @@
 
 | Path | Purpose |
 |------|---------|
-| **`GET /api/manifest`** (or split routes) | Runtime **tools**, **slash commands**, **extensions** — **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** |
-| **`GET /api/diagnostics`** | **`wop doctor`**-style: Pi version, extensions load, Ollama, workspace jail |
+| **`GET /api/manifest`** — **runtime** | Pi subprocess (or probe) returns **tools**, **slash commands**, loaded **extensions** — **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**; ship merges with today’s **static** **`GET /api/manifest`** |
 | **`GET /api/sessions`** + mutations | List/load/save/delete — align format with Pi JSONL or adapter layer |
-| **Pi control** | **`POST /api/pi/reload`**, profile apply, optional **`/api/upstream`** wrapping **`scripts/wop-pi-upstream.ts`** |
+| **Pi control** | **`POST /api/pi/reload`**, profile apply; remote upstream check remains **`bun scripts/wop-pi-upstream.ts check`** (updates lock) — not invoked from **`GET /api/upstream`** |
 
 ---
 
@@ -119,7 +163,7 @@ Rows follow the **sitemap** in **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_
 
 ### Phase 0 — Foundations (no Pi subprocess yet)
 
-- Resolve **`WOP_PI_BINARY`** and **`WOP_HOME`** in server startup; surface in **`/api/health`** or **`/api/diagnostics`**.
+- Resolve **`WOP_PI_BINARY`** and **`WOP_HOME`** in server startup; surface in **`/api/diagnostics`** (partial shipped — probes only; full doctor still open).
 - **Backend naming audit** — **[WOP_NAMESPACE.md — Backend naming](WOP_NAMESPACE.md#backend-code-files-and-identifiers-critical)**.
 - **Client:** fail-soft banner when **`/api/health`** fails (operational clarity).
 
@@ -180,6 +224,7 @@ Short version: every **user-visible** control that implies Pi behavior **either*
 |---------|----------|
 | HTTP router | `apps/wayofpi-ui/server/index.ts` → `handleApi` |
 | Chat / LLM | `apps/wayofpi-ui/server/chat.ts`, `streamChatCompletion` |
+| Static manifest | `apps/wayofpi-ui/server/web-manifest.ts`, `GET /api/manifest` |
 | System prompt merge | `apps/wayofpi-ui/server/session-prompts.ts`, `applyLeadSystem` |
 | Agent scan | `apps/wayofpi-ui/server/agents.ts` |
 | Client session | `apps/wayofpi-ui/src/hooks/useWayOfPiSession.ts` |
@@ -197,4 +242,4 @@ Short version: every **user-visible** control that implies Pi behavior **either*
 
 ---
 
-**Last updated:** 2026-04-11 — planning only; update when phases ship (**[CHANGELOG.md](../CHANGELOG.md)**, **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)**).
+**Last updated:** 2026-04-11 — added **§2.5** audit (what hits Pi vs Bun-only); update when phases ship (**[CHANGELOG.md](../CHANGELOG.md)**, **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)**).

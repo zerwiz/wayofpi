@@ -4,7 +4,7 @@ Single place to track **what is not done yet** for the **Way of Pi** direction (
 
 **Merged build checklist (all WOP plans):** **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** — trim there and here when you ship.
 
-**Canonical roadmap:** **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **End-to-end wiring map (UI ↔ Pi):** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** · **Planning hub:** **[WOP_PLANNING.md](WOP_PLANNING.md)**
+**Canonical roadmap:** **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **End-to-end wiring map (UI ↔ Pi):** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** (**§2.5** = what still **does not** hit the Pi process vs Bun-only — prioritize changes that **maximize Pi as backend**) · **Planning hub:** **[WOP_PLANNING.md](WOP_PLANNING.md)**
 
 ---
 
@@ -55,8 +55,8 @@ Items from **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** pr
 |--------|------|
 | Missing | **Pi subprocess** (or official headless API) for chat, tools, extensions, skills — see **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)**. |
 | Missing | **Tool execution** / approvals / bash pipeline from the web UI. |
-| Missing | **`/api/manifest`** (or equivalent) for commands and tools. |
-| Missing | **`GET /api/upstream` or Diagnostics** calling **`wop-pi-upstream`** check (CLI exists: **`scripts/wop-pi-upstream.ts`**). |
+| Partial | **`GET /api/manifest`** — **static** scan (**`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**); **tools** / **slash commands** still need **headless Pi** runtime — **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**. |
+| Partial | **`GET /api/diagnostics`** + **`GET /api/upstream`** (read-only lock/config). Full **`wop-pi-upstream` check** (GitHub/npm + lock write) remains **CLI**: **`scripts/wop-pi-upstream.ts`**. |
 | Improve | WebSocket **auth**, **message size limits**, **reconnect** UX hardening for production. |
 
 ---

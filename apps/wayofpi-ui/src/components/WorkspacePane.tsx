@@ -687,7 +687,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 						)}
 					</div>
 				) : activeEntry.type === "tool" && activeEntry.id === "agent_team" ? (
-					<div className="min-h-0 flex-1 overflow-auto p-3">
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 						{agentTeamPane ? (
 							<WorkspaceAgentTeamPane
 								agentTeams={agentTeamPane.agentTeams}
@@ -695,7 +695,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								agentsLoading={agentTeamPane.agentsLoading}
 							/>
 						) : (
-							<p className="font-mono text-[12px] text-[#858585]">Team pulse data not wired for this pane.</p>
+							<p className="p-3 font-mono text-[12px] text-[#858585]">Team pulse data not wired for this pane.</p>
 						)}
 					</div>
 				) : activeEntry.type === "tool" ? (

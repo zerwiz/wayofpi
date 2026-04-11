@@ -313,7 +313,7 @@ export function StatusBar({
 						className="hidden max-w-[28vw] cursor-default truncate px-1 font-mono text-[10px] text-white/90 hover:bg-white/20 lg:inline"
 						title="Agent persona from workspace .md (see chat panel)"
 					>
-						{chatAgentName ? chatAgentName : "agent: default"}
+						{chatAgentName ? chatAgentName : "agent: orchestrator"}
 					</span>
 				) : null}
 				<button

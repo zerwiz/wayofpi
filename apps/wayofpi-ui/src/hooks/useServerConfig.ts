@@ -3,6 +3,12 @@ import { apiGet } from "../api/client";
 
 export interface ServerConfig {
 	provider: string;
+	/** Effective chat backend label (`ollama` / `openrouter` / reserved `pi`). */
+	chatEngine: string;
+	/** True when headless Pi owns chat turns (not shipped yet — always false today). */
+	piDrivesChat: boolean;
+	/** Static manifest path (filesystem scan; not runtime Pi introspection). */
+	manifestUrl?: string;
 	ollamaHost: string;
 	ollamaModel: string;
 	openrouterModel: string;
@@ -16,7 +22,13 @@ export function useServerConfig() {
 
 	useEffect(() => {
 		apiGet<ServerConfig>("/api/config")
-			.then(setConfig)
+			.then((raw) =>
+				setConfig({
+					...raw,
+					chatEngine: raw.chatEngine ?? raw.provider ?? "ollama",
+					piDrivesChat: raw.piDrivesChat ?? false,
+				}),
+			)
 			.catch((e) => setError(e instanceof Error ? e.message : String(e)));
 	}, []);
 

@@ -88,7 +88,7 @@ export function SimpleChatView({
 		if (fileRef.current) fileRef.current.value = "";
 	};
 
-	const assistantTitle = chatAgentName ? chatAgentName : "Assistant";
+	const assistantTitle = chatAgentName ? chatAgentName : "Orchestrator";
 	const assistantSubtitle =
 		modelLabel && modelLabel !== "…" ? `Powered by ${modelLabel}` : "Ready when the server connects.";
 
@@ -293,7 +293,7 @@ export function SimpleChatView({
 							}}
 							className={`rounded-lg border px-3 py-2 text-sm font-normal normal-case ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#d4d4d4] bg-white text-[#333333]"}`}
 						>
-							<option value="">Default assistant</option>
+							<option value="">Orchestrator</option>
 							{agents.map((a) => (
 								<option key={a.name} value={a.name} title={a.description}>
 									{a.name}

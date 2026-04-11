@@ -37,7 +37,7 @@ Ship as **`manifest.json`** (or embedded in server bundle). **Merge** with runti
 
 ## WebSocket / API shape (sketch)
 
-- **`GET /api/manifest`** — merged snapshot: `{ tools: [...], commands: [...], extensions: [...] }`.
+- **`GET /api/manifest`** — **today (Way of Pi):** static **v1** filesystem snapshot from **`apps/wayofpi-ui/server/web-manifest.ts`** (`extensions[]` from **`.pi/settings.json`** + **`.pi/extensions/*.ts`** per workspace root; **`tools`** / **`slashCommands`** empty). **Target:** merged snapshot from **headless Pi** + static overlay: `{ tools: [...], commands: [...], extensions: [...] }` — see **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** **§3**.
 - **`manifest_updated`** event on WebSocket when user applies **Reload** after config change.
 
 ## Non-goals

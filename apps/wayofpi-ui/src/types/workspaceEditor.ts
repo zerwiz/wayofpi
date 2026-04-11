@@ -113,6 +113,11 @@ export type SettingsMenuHandlers = {
 	onOpenProjects: () => void;
 	/** Open `.wayofpi/ui-views.json` in the Simple editor (optional). */
 	onEditWorkspaceViewsCatalog?: () => void;
+	/**
+	 * POST **`/api/server/restart`** when **`WOP_ALLOW_SERVER_RESTART=1`** (exits Bun); otherwise shows how to restart manually.
+	 * Always nudges the chat WebSocket to reconnect after.
+	 */
+	onRestartServer: () => void | Promise<void>;
 };
 
 /** Menu bar Help → … (documentation links; some items are inert in the browser). */

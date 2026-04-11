@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Way of Pi
+Comment=Way of Pi web shell (Bun + Vite; browser or Electron via env)
+Exec=/bin/bash "@REPO@/linux/wayofpi-launch.sh"
+Icon=wayofpi
+Terminal=false
+Categories=Development;IDE;WebDevelopment;
+StartupNotify=true
+StartupWMClass=wayofpi

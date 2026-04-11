@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Start the full Way of Pi web stack: Bun server (port 3333: /api, /ws) + Vite (5173).
+# Start the full Way of Pi web stack: Bun server (port 3333: /api, /ws) + Vite (5173) + browser.
 # Equivalent to: cd apps/wayofpi-ui && npm run dev
 # Not the same as dev:ui — Vite-only leaves the chat WebSocket unreachable.
+# For Electron instead of a browser tab: ./start-wayofpi-electron.sh (or just wayofpi-electron).
 #
 # Usage from repo root: ./start-full-system.sh
 set -euo pipefail

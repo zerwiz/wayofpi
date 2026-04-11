@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 
 const ACTIVE_LLM_STORAGE_KEY = "wayofpi.activeLlmModel";
+
+/** Stale UI picks / bad docs — never valid on typical `ollama list` for this playground. */
+const LEGACY_DISCARD_OLLAMA_MODEL_IDS = new Set(["qwen3.5:latest"]);
+
+function scrubLegacyStoredOllamaModel(): void {
+	try {
+		const v = localStorage.getItem(ACTIVE_LLM_STORAGE_KEY)?.trim().toLowerCase();
+		if (v && LEGACY_DISCARD_OLLAMA_MODEL_IDS.has(v)) {
+			localStorage.removeItem(ACTIVE_LLM_STORAGE_KEY);
+		}
+	} catch {
+		/* ignore */
+	}
+}
 const CHAT_MODE_STORAGE_KEY = "wayofpi.chatMode";
 const CHAT_AGENT_STORAGE_KEY = "wayofpi.chatAgent";
 
@@ -154,6 +168,7 @@ export function useWayOfPiSession(
 
 		function openSocket() {
 			if (disposed) return;
+			scrubLegacyStoredOllamaModel();
 			clearReconnect();
 			const ws = new WebSocket(wsUrl());
 			wsRef.current = ws;
@@ -490,6 +505,18 @@ export function useWayOfPiSession(
 		}
 	}, []);
 
+	/** Close the chat WebSocket so the client reconnect loop runs (e.g. after a manual server restart). */
+	const reconnectWebSocket = useCallback(() => {
+		const ws = wsRef.current;
+		if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+			try {
+				ws.close(4000, "client restart/reconnect");
+			} catch {
+				/* ignore */
+			}
+		}
+	}, []);
+
 	const startNewSession = useCallback(() => {
 		const newId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 		setChatTabs((tabs) => [...tabs, { id: newId, label: "New chat" }]);
@@ -584,6 +611,7 @@ export function useWayOfPiSession(
 		setLlmModel,
 		stop,
 		startNewSession,
+		reconnectWebSocket,
 		clearError: () => setError(null),
 	};
 }

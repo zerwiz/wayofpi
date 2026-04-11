@@ -113,7 +113,7 @@ export function PlanningSidePanel({
 					chat. <strong className="text-[#cccccc]">Plan</strong> uses the Pi{" "}
 					<span className="font-mono text-[12px] text-[#9cdcfe]">planner</span> role (structured goals, steps,{" "}
 					<span className="font-mono text-[11px]">plans/PLAN-*.md</span>).{" "}
-					<strong className="font-medium text-[#cccccc]">Build</strong> is the default assistant (plus{" "}
+					<strong className="font-medium text-[#cccccc]">Build</strong> uses the <strong className="text-[#cccccc]">Orchestrator</strong> posture when no agent is selected (plus{" "}
 					<span className="font-mono text-[11px]">WOP_SYSTEM_PROMPT</span> on the server if set).
 				</p>
 				<p className="text-[12px] text-[#858585]">

@@ -1,9 +1,16 @@
 ---
-description: Critical — wayofpi-ui must fully wire to the Way of Pi / Pi backend; no fake Pi parity in the UI
+description: Critical — maximize Pi as backend; wayofpi-ui + server must wire to Pi / Way of Pi server; no fake Pi parity
 alwaysApply: true
 ---
 
 # Way of Pi web UI ↔ Pi backend (critical)
+
+## North star — **Pi as backend (maximize)**
+
+- **Default engineering direction:** Treat **headless Pi** (same **`extensions[]`**, skills, tools, sessions, provider stack as the TUI) as the **authoritative runtime** behind **`apps/wayofpi-ui/server/`**. Prefer **spawning, attaching, or proxying Pi** for any capability Pi already owns instead of growing a **second parallel** “mini Pi” inside Bun (duplicate chat, tool registry, slash commands, session format, or model routing).
+- **Interim bridges are temporary:** Direct **Ollama / OpenRouter** in the Bun server exists as a **transition path** only. **New features** should integrate **through Pi** (or a documented Pi sidecar) unless explicitly scoped as pre-Pi infrastructure — and that scope must be **called out** in **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** / **`docs/WOP_OPEN_TODOS.md`** with a **time-bounded** follow-up to fold into Pi.
+- **Configuration alignment:** Reuse **Pi’s on-disk and env conventions** where practical (e.g. repo **`.env`**, **`agent/settings.json`**, **`OLLAMA_*`** / workspace **`agent/`**) so one workspace truth feeds both TUI and web until a single Pi process owns chat. **`server/pi-ollama-env.ts`** is the pattern: bridge env shapes, do not fork unrelated names without **`WOP_*`** / **`docs/WOP_NAMESPACE.md`** justification.
+- **When in doubt:** Add the **real Pi path** (HTTP forward, WebSocket tunnel, subprocess contract) or **shrink the UI** to stub — do **not** deepen bespoke Bun-only behavior that Pi will have to replace later.
 
 ## Non-negotiable
 
