@@ -95,7 +95,7 @@ Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openr
 
 ## Way of Pi web UI
 
-From the repo root, run **`./start-wayofpi-ui.sh`** (or **`./start-full-system.sh`**, same entrypoint) to start **`apps/wayofpi-ui`** in dev mode (Bun API on port **3333** + Vite on **5173**), wait until the page responds, then open your default browser (default URL **`http://localhost:5173/`**). The script prepends **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. It sources the repo **`.env`** when present and sets **`WOP_WORKSPACE`** to the playground root unless you already exported **`WOP_WORKSPACE`**. Override the opened URL with **`WOP_UI_URL`**. Full setup, API table, Electron, and terminal env: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
+From the repo root, run **`./start-wayofpi-ui.sh`** (or **`./start-full-system.sh`**, same entrypoint) to start **`apps/wayofpi-ui`** in dev mode (Bun API on port **3333** + Vite on **5173**), wait until the page responds, then open your default browser (default URL **`http://localhost:5173/`**). For the **Electron** desktop window instead of a browser tab, run **`./start-wayofpi-electron.sh`** (or **`just wayofpi-electron`**). The scripts prepend **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. They source the repo **`.env`** when present and set **`WOP_WORKSPACE`** to the playground root unless you already exported **`WOP_WORKSPACE`**. Override the opened URL with **`WOP_UI_URL`** (browser flow only). Full setup, API table, Electron, and terminal env: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
 
 ### Recent Way of Pi updates (see [CHANGELOG.md](CHANGELOG.md) § Unreleased)
 
@@ -107,7 +107,7 @@ From the repo root, run **`./start-wayofpi-ui.sh`** (or **`./start-full-system.s
 - **Pi integration map** — HTTP/WebSocket inventory and phased wiring: **[docs/WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)**.
 - **Upstream Pi mirror** — **`just wop-upstream-check`**, **`just wop-upstream-sync`**: **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)**.
 - **Docs and naming** — Way of Pi planning entrypoints use the **`WOP_*`** prefix (**[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** hub, **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)**, **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**). Gaps and stubs: **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)**.
-- **Optional desktop shell** — Set **`WOP_USE_ELECTRON=1`** with the start script, or **`just wayofpi-electron`**; **`npm run electron:*`** targets in **`apps/wayofpi-ui/package.json`**.
+- **Optional desktop shell** — **`./start-wayofpi-electron.sh`** (or **`just wayofpi-electron`**), or **`WOP_USE_ELECTRON=1 ./start-wayofpi-ui.sh`**; **`npm run electron:*`** in **`apps/wayofpi-ui/package.json`**.
 
 ---
 

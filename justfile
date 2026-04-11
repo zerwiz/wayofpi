@@ -20,8 +20,7 @@ wayofpi-full:
 wayofpi-electron:
     #!/usr/bin/env bash
     set -euo pipefail
-    export WOP_USE_ELECTRON=1
-    exec "{{justfile_directory()}}/start-wayofpi-ui.sh"
+    exec "{{justfile_directory()}}/start-wayofpi-electron.sh"
 
 # g1
 

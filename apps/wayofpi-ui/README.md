@@ -40,7 +40,7 @@ cp .env.sample .env
 
 Runs **Bun server** (port `3333`: `/api/*`, `/ws`) and **Vite** (port `5173`) with proxy.
 
-From the **repository root**, **`./start-wayofpi-ui.sh`** runs **`npm run dev`**, waits until the UI is up, and opens **`http://localhost:5173/`** in your default browser. To use a **desktop window** instead of a browser tab, set **`WOP_USE_ELECTRON=1`** (same stack: Bun server + Vite + Electron), or from repo root run **`just wayofpi-electron`**.
+From the **repository root**, **`./start-wayofpi-ui.sh`** runs **`npm run dev`**, waits until the UI is up, and opens **`http://localhost:5173/`** in your default browser. For the **Electron** desktop window (Bun + Vite + Electron, no browser tab), run **`./start-wayofpi-electron.sh`** or **`just wayofpi-electron`** (or **`WOP_USE_ELECTRON=1 ./start-wayofpi-ui.sh`**).
 
 ```bash
 npm run dev

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Start Way of Pi web UI (Bun API + Vite). By default opens the default browser when ready.
 # Set WOP_USE_ELECTRON=1 to open an Electron window instead (no separate browser tab).
+# Or run ./start-wayofpi-electron.sh / just wayofpi-electron for the same Electron stack.
 # Same full stack as ./start-full-system.sh or: just wayofpi-full
 # Usage: from repo root: ./start-wayofpi-ui.sh
 set -euo pipefail
