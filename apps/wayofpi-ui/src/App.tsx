@@ -54,7 +54,7 @@ import {
 import { useAgents } from "./hooks/useAgents";
 import { buildFilePutPayload, useFileEditor, type FilePersistEncoding } from "./hooks/useFileEditor";
 import { useServerConfig } from "./hooks/useServerConfig";
-import { useUiMode } from "./hooks/useUiMode";
+import { useUiMode, type UiMode } from "./hooks/useUiMode";
 import { useUiViewsCatalog } from "./hooks/useUiViewsCatalog";
 import { useRunMenuDebugState } from "./hooks/useRunMenuDebugState";
 import {
@@ -1777,18 +1777,27 @@ description:
 	const [howToUseModalOpen, setHowToUseModalOpen] = useState(false);
 	const [clawHelpOpen, setClawHelpOpen] = useState(false);
 	const [clawHelpDefaultSection, setClawHelpDefaultSection] = useState<ClawHelpSectionId | null>(null);
-	/** Per visit to Claw mode: auto-pick `claw` once when catalog has it and picker is on session lead. */
-	const clawDefaultAgentBootstrappedRef = useRef(false);
+	/**
+	 * Simple and Claw share one persisted `chatAgentName` — align defaults per shell so Simple stays
+	 * orchestrator (null) and Claw prefers the `claw` workspace agent when present (including after
+	 * `/api/agents` loads).
+	 */
+	const chatAgentShellPrevRef = useRef<UiMode | null>(null);
 	useEffect(() => {
-		if (uiMode !== "claw") {
-			clawDefaultAgentBootstrappedRef.current = false;
-			return;
+		const from = chatAgentShellPrevRef.current;
+		const to = uiMode;
+		const hasClaw = (agentsApi.data?.agents ?? []).some((a) => a.name.trim().toLowerCase() === "claw");
+
+		if (to === "simple") {
+			if (from !== "simple") session.setChatAgent(null);
+		} else if (to === "claw") {
+			if (hasClaw && (from !== "claw" || session.chatAgentName == null)) {
+				session.setChatAgent("claw");
+			}
 		}
-		const hasClaw = (agentsApi.data?.agents ?? []).some((a) => a.name === "claw");
-		if (!hasClaw || session.chatAgentName !== null || clawDefaultAgentBootstrappedRef.current) return;
-		session.setChatAgent("claw");
-		clawDefaultAgentBootstrappedRef.current = true;
-	}, [uiMode, agentsApi.data?.agents, session.chatAgentName, session.setChatAgent]);
+
+		chatAgentShellPrevRef.current = to;
+	}, [uiMode, session.chatAgentName, session.setChatAgent, agentsApi.data?.agents]);
 	const [newWorkspaceFileDraft, setNewWorkspaceFileDraft] = useState<{
 		defaultPath: string;
 		initialContent?: string;
@@ -1802,37 +1811,25 @@ description:
 		const shell = typeof window !== "undefined" ? window.wopShell : undefined;
 		return {
 			onShowAllCommands: () => setCommandPaletteOpen(true),
-			onHowToUse: () => setHowToUseModalOpen(true),
+			onHowToUse: () => {
+				if (uiMode === "claw") {
+					setClawHelpDefaultSection(null);
+					setClawHelpOpen(true);
+				} else {
+					setHowToUseModalOpen(true);
+				}
+			},
 			onOpenHostDoctor: openHostDoctor,
 			onEditorPlayground: () =>
 				window.open(`${repo}/blob/main/docs/PLAYGROUND.md`, "_blank", "noopener,noreferrer"),
 			onAccessibilityFeatures: () =>
 				window.open("https://code.visualstudio.com/docs/editor/accessibility", "_blank", "noopener,noreferrer"),
 			onGiveFeedback: () => {
-				void (async () => {
-					try {
-						if (shell?.openExternalUrl) {
-							await shell.openExternalUrl(WOP_FEEDBACK_CONTACT_URL);
-							return;
-						}
-					} catch {
-						/* fall through */
-					}
-					window.open(WOP_FEEDBACK_CONTACT_URL, "_blank", "noopener,noreferrer");
-				})();
+				// Use window.open (not openExternalUrl) so Electron’s setWindowOpenHandler opens an in-app window.
+				window.open(WOP_FEEDBACK_CONTACT_URL, "_blank", "noopener,noreferrer");
 			},
 			onSupportUs: () => {
-				void (async () => {
-					try {
-						if (shell?.openExternalUrl) {
-							await shell.openExternalUrl(WOP_SUPPORT_HOME_URL);
-							return;
-						}
-					} catch {
-						/* fall through */
-					}
-					window.open(WOP_SUPPORT_HOME_URL, "_blank", "noopener,noreferrer");
-				})();
+				window.open(WOP_SUPPORT_HOME_URL, "_blank", "noopener,noreferrer");
 			},
 			onViewLicense: () => setMitLicenseModalOpen(true),
 			canToggleDeveloperTools: Boolean(shell?.toggleDevtools),
@@ -1844,7 +1841,7 @@ description:
 			canDownloadUpdate: true,
 			onDownloadUpdate: () => window.open(`${repo}/releases`, "_blank", "noopener,noreferrer"),
 		};
-	}, [openHostDoctor]);
+	}, [openHostDoctor, uiMode]);
 
 	const saveAndRefresh = useCallback(async () => {
 		let ok = true;
@@ -3544,10 +3541,20 @@ description:
 			},
 			{
 				id: "s-how-to-use",
-				label: "Help: How to use Way of Pi",
-				detail: "Getting started modal + doc links",
-				keywords: ["help", "start", "guide", "tutorial"],
-				run: () => setHowToUseModalOpen(true),
+				label: uiMode === "claw" ? "Help: Claw guide & roadmap" : "Help: How to use Way of Pi",
+				detail:
+					uiMode === "claw"
+						? "Claw Help — operator shell, phases, schedules, channels"
+						: "Getting started modal + doc links",
+				keywords: ["help", "start", "guide", "tutorial", "claw", "roadmap"],
+				run: () => {
+					if (uiMode === "claw") {
+						setClawHelpDefaultSection(null);
+						setClawHelpOpen(true);
+					} else {
+						setHowToUseModalOpen(true);
+					}
+				},
 			},
 			{ id: "s-chat", label: "Simple: Chat", run: () => setSimpleTab("chat") },
 			{ id: "s-team", label: "Simple: My Team", run: () => setSimpleTab("team") },
@@ -3658,6 +3665,9 @@ description:
 		setUiMode,
 		openHostDoctor,
 		setHowToUseModalOpen,
+		uiMode,
+		setClawHelpOpen,
+		setClawHelpDefaultSection,
 	]);
 
 	const leftPanel =
@@ -3863,8 +3873,8 @@ description:
 						newPlanFileDisabled={!workspaceOperational}
 					onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
 					onOpenHostDoctor={openHostDoctor}
-					onHelp={() => {
-						setClawHelpDefaultSection(null);
+					onHelp={(section) => {
+						setClawHelpDefaultSection(section ?? null);
 						setClawHelpOpen(true);
 					}}
 					contextPct={session.tokenMeter.contextPct}
@@ -3875,11 +3885,6 @@ description:
 					tokensTitle={session.tokenMeter.tokensTitle}
 					onMoveFileToDirectory={handleExplorerMoveFile}
 					allowWorkspaceRootDrop={folders.length === 1}
-					onGoToTelegramChannels={() => setClawTab("channels")}
-					onOpenClawHelpSection={(section) => {
-						setClawHelpDefaultSection(section);
-						setClawHelpOpen(true);
-					}}
 				/>
 			</div>
 				<CommandPalette
@@ -3924,11 +3929,6 @@ description:
 				onDismiss={() => setMitLicenseModalOpen(false)}
 				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
 			/>
-			<HowToUseModal
-				open={howToUseModalOpen}
-				onDismiss={() => setHowToUseModalOpen(false)}
-				repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`}
-			/>
 			<ClawHelpModal
 				open={clawHelpOpen}
 				onDismiss={() => {
@@ -3936,6 +3936,10 @@ description:
 					setClawHelpDefaultSection(null);
 				}}
 				defaultSection={clawHelpDefaultSection}
+				connected={session.connected}
+				streaming={session.streaming}
+				onGoToTelegramChannels={() => setClawTab("channels")}
+				onFocusClawChatTab={() => setClawTab("chat")}
 			/>
 			<NewPlanFileModal
 				open={newPlanFileModalOpen}

@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { injectIntoChatComposer } from "../../utils/chatComposerInjectBus";
+import { clawTelegramSetupChecklist } from "../../utils/clawTelegramSetupPrompt";
 
 // ──────────────────────────────────────────────
 // Tiny prose helpers
@@ -137,6 +139,13 @@ function SectionOverview() {
 				<TableRow left="Claw" right="Mission-control for autonomous ops: schedules, channels, agent memory, sessions." />
 			</div>
 			<P>Switch modes at any time using the toggle in the top-left corner of the menu bar or via Settings.</P>
+
+			<H>Product roadmap</H>
+			<P>
+				<strong className="text-[#fb923c]">Claw roadmap.</strong> Scheduled ops, inbound channels, and deep
+				multi-agent orchestration are planned in phases — see <Code>docs/WOP_CLAW_MODE_PLAN.md</Code> and{" "}
+				<Code>docs/WOP_CLAW_UI_PLAN.md</Code> for the build order.
+			</P>
 
 			<H>Extending Claw</H>
 			<P>
@@ -422,6 +431,12 @@ function SectionSchedules() {
 				automations.
 			</Note>
 
+			<P>
+				<strong className="text-[#fb923c]">Phase D will add:</strong> cron runner (Pi turn on interval),
+				per-schedule audit log, global pause / kill-switch, and rate-limit caps. See{" "}
+				<Code>docs/WOP_CLAW_MODE_PLAN.md</Code> for the full roadmap.
+			</P>
+
 			<H>Creating a schedule</H>
 			<Step n={1}>Click <strong className="text-[#cccccc]">New schedule</strong> in the Schedule tab header.</Step>
 			<Step n={2}>Give it a clear name (e.g. &ldquo;Daily standup digest&rdquo;).</Step>
@@ -443,9 +458,60 @@ function SectionSchedules() {
 	);
 }
 
-function SectionChannels() {
+function SectionChannels({
+	connected,
+	streaming,
+	onGoToTelegramChannels,
+	onDismissHelp,
+	onFocusClawChatTab,
+}: {
+	connected: boolean;
+	streaming: boolean;
+	onGoToTelegramChannels?: () => void;
+	onDismissHelp: () => void;
+	/** Ensures Claw Chat is mounted so the composer inject listener is active. */
+	onFocusClawChatTab?: () => void;
+}) {
 	return (
 		<>
+			<div className="mb-5 flex flex-col gap-2 rounded-xl border border-sky-500/25 bg-[#0c4a6e]/20 px-4 py-3">
+				<div className="flex items-center gap-2">
+					<Radio size={16} className="shrink-0 text-sky-300" aria-hidden />
+					<p className="text-[13px] font-semibold leading-snug text-sky-100">Telegram (via Pi)</p>
+				</div>
+				<p className="text-[12px] leading-relaxed text-[#94a3b8]">
+					The live bridge runs in a real Pi session with the <Code>pi-telegram</Code> extension (
+					<Code>/telegram-setup</Code>, <Code>/telegram-connect</Code>). Use the buttons below to
+					insert a setup checklist into the chat composer or open the Channels tab.
+				</p>
+				<div className="flex flex-wrap gap-2">
+					<button
+						type="button"
+						disabled={!connected || streaming}
+						onClick={() => {
+							onFocusClawChatTab?.();
+							injectIntoChatComposer(clawTelegramSetupChecklist());
+						}}
+						className="rounded-lg border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-sky-100 transition-colors hover:bg-sky-900/50 disabled:cursor-not-allowed disabled:opacity-40"
+					>
+						Insert setup checklist
+					</button>
+					{onGoToTelegramChannels ? (
+						<button
+							type="button"
+							disabled={!connected}
+							onClick={() => {
+								onGoToTelegramChannels();
+								onDismissHelp();
+							}}
+							className="rounded-lg border border-[#3c3c3c] bg-[#252526] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#cccccc] transition-colors hover:border-sky-500/40 disabled:cursor-not-allowed disabled:opacity-40"
+						>
+							Open Channels tab
+						</button>
+					) : null}
+				</div>
+			</div>
+
 			<H>Channels</H>
 			<P>
 				Channels let Claw send and receive messages through external services. The{" "}
@@ -495,6 +561,14 @@ function SectionChannels() {
 				See <Code>docs/WOP_TELEGRAM_PLAN.md</Code> in the repo for the full integration
 				roadmap and security notes.
 			</Tip>
+
+			<H>Phase E — what&apos;s next for channels</H>
+			<P>
+				<strong className="text-[#fb923c]">Next for Phase E:</strong> inbound webhook routing (Pi turn on HTTP
+				event), outbound notification wiring, and per-channel audit log. Telegram live bridge details:{" "}
+				<Code>docs/WOP_TELEGRAM_PLAN.md</Code> (T-3/T-4). Claw-wide phases: <Code>docs/WOP_CLAW_MODE_PLAN.md</Code>{" "}
+				(Phase E).
+			</P>
 		</>
 	);
 }
@@ -629,13 +703,31 @@ const SECTIONS: { id: SectionId; label: string; icon: typeof Radar }[] = [
 	{ id: "tips", label: "Tips", icon: Zap },
 ];
 
-function renderSection(id: SectionId) {
+function renderSection(
+	id: SectionId,
+	channelsHelp: {
+		connected: boolean;
+		streaming: boolean;
+		onGoToTelegramChannels?: () => void;
+		onDismissHelp: () => void;
+		onFocusClawChatTab?: () => void;
+	},
+) {
 	switch (id) {
 		case "overview": return <SectionOverview />;
 		case "tabs": return <SectionTabs />;
 		case "workspace": return <SectionWorkspace />;
 		case "schedules": return <SectionSchedules />;
-		case "channels": return <SectionChannels />;
+		case "channels":
+			return (
+				<SectionChannels
+					connected={channelsHelp.connected}
+					streaming={channelsHelp.streaming}
+					onGoToTelegramChannels={channelsHelp.onGoToTelegramChannels}
+					onDismissHelp={channelsHelp.onDismissHelp}
+					onFocusClawChatTab={channelsHelp.onFocusClawChatTab}
+				/>
+			);
 		case "files": return <SectionFiles />;
 		case "extend": return <SectionExtendingClaw />;
 		case "honcho": return <SectionHoncho />;
@@ -650,12 +742,23 @@ function renderSection(id: SectionId) {
 export function ClawHelpModal({
 	open,
 	onDismiss,
-	/** When the modal opens, show this section first (e.g. **channels** from chat Telegram strip). */
+	/** When the modal opens, show this section first (e.g. **channels**). */
 	defaultSection,
+	connected = false,
+	streaming = false,
+	onGoToTelegramChannels,
+	onFocusClawChatTab,
 }: {
 	open: boolean;
 	onDismiss: () => void;
 	defaultSection?: ClawHelpSectionId | null;
+	/** From Claw session — disables composer inject while disconnected or streaming. */
+	connected?: boolean;
+	streaming?: boolean;
+	/** Jump to Claw Channels tab (closes help). */
+	onGoToTelegramChannels?: () => void;
+	/** Switch to Claw Chat before composer inject (Help can open from any tab). */
+	onFocusClawChatTab?: () => void;
 }) {
 	const [activeSection, setActiveSection] = useState<SectionId>("overview");
 
@@ -665,6 +768,14 @@ export function ClawHelpModal({
 	}, [open, defaultSection]);
 
 	if (!open) return null;
+
+	const channelsHelp = {
+		connected,
+		streaming,
+		onGoToTelegramChannels,
+		onDismissHelp: onDismiss,
+		onFocusClawChatTab,
+	};
 
 	const modal = (
 		<div
@@ -724,7 +835,7 @@ export function ClawHelpModal({
 
 					{/* Content */}
 					<div className="min-h-0 flex-1 overflow-y-auto p-6">
-						{renderSection(activeSection)}
+						{renderSection(activeSection, channelsHelp)}
 					</div>
 				</div>
 

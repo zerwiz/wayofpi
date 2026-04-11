@@ -22,6 +22,8 @@ export function terminalShellHints(): {
 	customShell: boolean;
 	/** Same as Node `process.platform` (e.g. `linux`, `darwin`, `win32`). */
 	platform: string;
+	/** Same as Node `process.arch` (e.g. `arm64`, `x64`) — Apple Silicon macOS is `darwin` + `arm64`. */
+	arch: string;
 } {
 	const { file, args } = shellArgv();
 	return {
@@ -29,6 +31,7 @@ export function terminalShellHints(): {
 		shellArgs: args,
 		customShell: Boolean(process.env.WOP_SHELL?.trim()),
 		platform: process.platform,
+		arch: process.arch,
 	};
 }
 

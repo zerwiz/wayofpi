@@ -38,6 +38,8 @@ export interface ServerConfig {
 	customShell?: boolean;
 	/** Node `process.platform` from the Bun server. */
 	platform?: string;
+	/** Node `process.arch` from the Bun server (`arm64` on Apple Silicon, `x64` on Intel/Rosetta). */
+	arch?: string;
 }
 
 function normalizeServerConfig(raw: ServerConfig): ServerConfig {

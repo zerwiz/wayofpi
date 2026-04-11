@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld("wopShell", {
 	toggleDevtools: () => ipcRenderer.invoke("wop-shell:toggle-devtools"),
 	/** File → Close Window / Exit — `window.close()` is unreliable under Electron. */
 	closeWindow: () => ipcRenderer.invoke("wop-shell:close-window"),
-	/** Open **`http(s):`** in the default browser (Host doctor **Open raw**, menu links). */
+	/** Open **`http(s):`** in the **system default browser** (use when you explicitly want an external app). */
 	openExternalUrl: (url) => ipcRenderer.invoke("wop-shell:open-external-url", url),
 	/**
 	 * Native save dialog (Electron). Renderer should POST `save_code_workspace_file` to the Bun server with the returned path.

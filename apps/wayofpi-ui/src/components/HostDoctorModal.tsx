@@ -338,30 +338,55 @@ export function HostDoctorModal({
 	}, [getJsonTextForCopy]);
 
 	const openRawTab = useCallback(async () => {
+		const openBlobInNewTab = (text: string): boolean => {
+			const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+			const blobUrl = URL.createObjectURL(blob);
+			const w = window.open(blobUrl, "_blank", "noopener,noreferrer");
+			if (w) {
+				window.setTimeout(() => URL.revokeObjectURL(blobUrl), 120_000);
+				return true;
+			}
+			URL.revokeObjectURL(blobUrl);
+			return false;
+		};
+
 		let href: string;
 		try {
 			href = new URL("/api/diagnostics", window.location.href).href;
 		} catch {
 			href = `${window.location.origin}/api/diagnostics`;
 		}
+
+		// Prefer blob from the snapshot we already have (reliable in Electron; avoids system browser on localhost).
+		const cached = getJsonTextForCopy();
+		if (cached && openBlobInNewTab(cached)) return;
+
+		// Same user gesture: fetch raw JSON if we have nothing cached yet (e.g. clicked before load finished).
+		try {
+			const res = await fetch(href, { credentials: "same-origin" });
+			const body = await res.text();
+			if (body && openBlobInNewTab(body)) return;
+		} catch {
+			/* fall through */
+		}
+
+		const w = window.open(href, "_blank", "noopener,noreferrer");
+		if (w != null) return;
+
+		const payload = data ?? (loadError ? { ok: false, error: loadError } : null);
+		if (payload) {
+			const text = JSON.stringify(payload, null, 2);
+			if (openBlobInNewTab(text)) return;
+		}
+
 		try {
 			if (typeof window !== "undefined" && window.wopShell?.openExternalUrl) {
 				await window.wopShell.openExternalUrl(href);
-				return;
 			}
 		} catch {
-			/* fall through to window.open / blob */
+			/* no-op */
 		}
-		const w = window.open(href, "_blank");
-		if (w != null) return;
-		const payload = data ?? (loadError ? { ok: false, error: loadError } : null);
-		if (!payload) return;
-		const text = JSON.stringify(payload, null, 2);
-		const blob = new Blob([text], { type: "application/json;charset=utf-8" });
-		const blobUrl = URL.createObjectURL(blob);
-		const w2 = window.open(blobUrl, "_blank");
-		if (w2) window.setTimeout(() => URL.revokeObjectURL(blobUrl), 120_000);
-	}, [data, loadError]);
+	}, [data, loadError, getJsonTextForCopy]);
 
 	if (!open) return null;
 

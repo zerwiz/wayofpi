@@ -8,11 +8,11 @@
 import { useState, useCallback, useMemo } from "react";
 import {
 	AlertTriangle,
+	BookOpen,
 	CalendarDays,
 	ChevronUp,
 	Clock,
 	Edit2,
-	Info,
 	Plus,
 	Trash2,
 } from "lucide-react";
@@ -31,6 +31,7 @@ import {
 	startOfLocalDay,
 } from "../../utils/localCalendarDate";
 import { scheduleAppliesToLocalDay } from "../../utils/clawScheduleDayMatch";
+import type { ClawHelpSectionId } from "./ClawHelpModal";
 
 // ──────────────────────────────────────────────
 // Cron helpers
@@ -704,7 +705,14 @@ function ScheduleCalendarSideList({
 // Main view
 // ──────────────────────────────────────────────
 
-export function ClawSchedulesView({ dark }: { dark: boolean }) {
+export function ClawSchedulesView({
+	dark,
+	onOpenClawHelp,
+}: {
+	dark: boolean;
+	/** Opens Claw Help (Schedules section has Phase D roadmap). */
+	onOpenClawHelp?: (section?: ClawHelpSectionId | null) => void;
+}) {
 	const { schedules, addSchedule, updateSchedule, deleteSchedule, toggleSchedule } =
 		useClawSchedules();
 	const { data: agentsData, loading: agentsLoading, error: agentsError } = useAgents();
@@ -951,22 +959,20 @@ export function ClawSchedulesView({ dark }: { dark: boolean }) {
 						</div>
 					)}
 
-					{/* ── Roadmap note ── */}
-					<div
-						className={`flex items-start gap-2 rounded-xl border border-dashed px-4 py-3 text-[11px] ${
-							dark
-								? "border-[#2a2a2a] text-[#585858]"
-								: "border-[#d5d5d5] text-[#aaaaaa]"
-						}`}
-					>
-						<Info size={12} className="mt-0.5 shrink-0" />
-						<span>
-							Phase D will add: cron runner (Pi turn on interval), per-schedule audit log,
-							global pause / kill-switch, and rate-limit caps.
-							See{" "}
-							<span className="font-mono text-[10px]">docs/WOP_CLAW_MODE_PLAN.md</span> for the full roadmap.
-						</span>
-					</div>
+					{onOpenClawHelp ? (
+						<button
+							type="button"
+							onClick={() => onOpenClawHelp("schedules")}
+							className={`flex w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-2.5 text-[11px] font-medium transition-colors ${
+								dark
+									? "border-[#2a2a2a] text-[#fb923c] hover:bg-[#ea580c]/10"
+									: "border-[#d5d5d5] text-[#ea580c] hover:bg-[#ea580c]/8"
+							}`}
+						>
+							<BookOpen size={14} className="shrink-0" />
+							<span>Phase D roadmap & execution plans — open Help</span>
+						</button>
+					) : null}
 
 					<div className="h-6 shrink-0 lg:hidden" />
 				</div>

@@ -254,15 +254,31 @@ function createWindow() {
 	const url = isDev ? devUrl : prodUrl;
 	void win.loadURL(url);
 
+	/**
+	 * Keep http(s) and blob: popups inside Electron (same as clicking links with target=_blank in the UI).
+	 * `shell.openExternal` would send every link to the system browser, which feels broken for Help →
+	 * Give feedback / Support us and for in-app raw JSON tabs.
+	 */
 	win.webContents.setWindowOpenHandler(({ url: target }) => {
-		void (async () => {
-			try {
-				await shell.openExternal(target);
-			} catch (e) {
-				console.error("[wayofpi] shell.openExternal failed:", e);
-			}
-		})();
-		return { action: "deny" };
+		const t = String(target ?? "").trim();
+		const allowInApp = /^https?:\/\//i.test(t) || t.startsWith("blob:");
+		if (!allowInApp) return { action: "deny" };
+		return {
+			action: "allow",
+			overrideBrowserWindowOptions: {
+				width: 1200,
+				height: 820,
+				minWidth: 560,
+				minHeight: 400,
+				autoHideMenuBar: !isMac,
+				...(isMac ? {} : { icon: dockIconForPlatform() }),
+				webPreferences: {
+					nodeIntegration: false,
+					contextIsolation: true,
+					sandbox: true,
+				},
+			},
+		};
 	});
 }
 

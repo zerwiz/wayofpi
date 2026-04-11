@@ -80,7 +80,7 @@ function wayofpiDevStartApiPlugin(): Plugin {
 							JSON.stringify({
 								ok: false,
 								staleServer: true,
-								message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems + configRuntimePost on /api/health — old Bun). Stop the old process (ss -tlnp | grep ${port}), then click Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
+								message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems + configRuntimePost on /api/health — old Bun). Stop the old process (macOS: lsof -nP -iTCP:${port} | grep LISTEN; Linux: ss -tlnp | grep ${port}), then click Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
 							}),
 						);
 						return;

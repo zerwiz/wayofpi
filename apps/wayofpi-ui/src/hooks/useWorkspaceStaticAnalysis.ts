@@ -36,7 +36,7 @@ export function useWorkspaceStaticAnalysis(enabled: boolean) {
 				ok: false,
 				error: "Could not reach the Way of Pi Bun server (GET /api/workspace/problems failed).",
 				log: stale404
-					? `${hint}\n\nOften this 404 means an old Bun process is still bound to port 3333 (/api/health works but routes are missing). Stop that process (ss -tlnp | grep 3333, then kill the PID) and start again: cd apps/wayofpi-ui && bun run server/index.ts — or use Start service after restarting Vite so it can detect a stale API.`
+					? `${hint}\n\nOften this 404 means an old Bun process is still bound to port 3333 (/api/health works but routes are missing). Stop that process (macOS: lsof -nP -iTCP:3333 | grep LISTEN; Linux: ss -tlnp | grep 3333), then kill the PID and start again: cd apps/wayofpi-ui && bun run server/index.ts — or use Start service after restarting Vite so it can detect a stale API.`
 					: `${hint}\n\nFix: run the API from apps/wayofpi-ui (e.g. bun run server/index.ts or the full dev script) so Vite can proxy /api. Opening only the Vite preview without the server returns 404 for this route.`,
 			});
 		}
