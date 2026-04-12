@@ -64,7 +64,7 @@ Operational detail is outside this playbook—match your usual DB backup practic
 
 ## 6. Documents stash (`~/Documents/Honcho`)
 
-Use **`/home/zerwiz/Documents/Honcho`** for **personal** notes, printouts, and exports that do not belong in git.
+Use a **personal** folder outside git (e.g. **`~/Documents/Honcho`**) for notes, printouts, and exports that do not belong in the repo.
 
 **Symlinks** there point at **`~/.pi/docs/`** for **`HONCHO_INTEGRATION.md`**, **`HONCHO_CAPABILITIES.md`**, **`PI_LOCAL_AI.md`**, and **`HONCHO_OPERATIONS.md`** (this file)—**one canonical file** with the repo. See **`README.md`** in that folder.
 

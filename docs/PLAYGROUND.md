@@ -2,9 +2,7 @@
 
 In this repo, **“the playground”** means a **self-contained Pi project** you can run Pi from (by `cd`’ing into it) that also serves as a **reusable toolbox** for other projects.
 
-On this machine, the playground root is:
-
-- **`/home/zerwiz/.pi`**
+The **playground root** is **whatever directory you cloned** this repository into (it contains **`extensions/`**, **`.pi/`**, **`justfile`**, …). It is **not** a fixed path on disk.
 
 ---
 
@@ -34,7 +32,7 @@ The goal is to keep Pi configuration and reusable automation **out of your appli
 Use this when you’re working on Pi itself (extensions, agents, docs):
 
 ```bash
-cd /home/zerwiz/.pi
+cd /path/to/your/wayofpi-clone
 just pi
 ```
 

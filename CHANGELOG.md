@@ -8,7 +8,17 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Changed
+
+- **Root `README.md` — Installation:** expanded GitHub-facing steps (clone, bootstrap script table, **`bun install`**, **`npm install`** in **`apps/wayofpi-ui`**, API keys pointer, **`start-wayofpi-electron.sh`**, optional **`install-global`**); platform note for Linux / macOS / WSL vs Windows. Prerequisites now link to this section.
+
 ### Added
+
+- **`apps/wayofpi-ui/server/chat-context-budget.ts`** — before each chat turn, trims oldest **full user turns** after the **`system`** prefix when **`WOP_CHAT_CONTEXT_BUDGET`** is on (defaults **`WOP_CHAT_MAX_MESSAGES`**, **`WOP_CHAT_MAX_INPUT_CHARS`**); syncs session JSONL when rows drop. Documented in **`docs/WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md`** (repo enforcement) and **`docs/WOP_NAMESPACE.md`**.
+
+- **`docs/WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md`** — why upstream Pi keeps context lean (compaction, minimal tools, MCP token cost), citations to **pi-mono** `compaction.md` and Mario Zechner’s Pi post, operator checklist, and Way of Pi vs **`WOP_CHAT_ENGINE`** gaps; linked from **`docs/README.md`** and **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**.
+
+- **`docs/WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md`** — compares Way of Pi orchestration to Pi **`agent-team`** dispatcher (**headless Pi** vs interim **Bun** tool loop, **`dispatch_agent`** vs broader lead tools); indexed from **`docs/README.md`**, **`docs/TOOLS.md`**, and **`docs/WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md`**.
 
 - **`scripts/bootstrap-wayofpi-environment.sh`** — probes **OS** / **CPU**, **PATH** tools (**bun**, **node**, **npm**, **git**, **just**, **pi**, **rg**, **ollama**) and Ollama HTTP reachability; prints distro-specific install hints (no silent **sudo**). Flags: **`--check-only`** (CI), **`--install -y`** (official Bun installer + **`npm install`** in **`apps/wayofpi-ui`**), **`--init-env`**. **`just bootstrap-wayofpi`** runs the probe; documented in **`scripts/README.md`** and root **`README.md`**.
 
@@ -320,7 +330,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 - **Ralph** — **`.pi/skills/ralph/SKILL.md`**, **`.pi/agents/ralph.md`**, **`extensions/ralph.ts`** + shim (**`ralph_queue_status`**, **`/ralph`**); team **`ralph`** in **`teams.yaml`**; **`settings.json`** + README + **`docs/AGENTS.md`** / **`AGENT_TEAMS.md`** + **`agent/AGENTS.md`** + **`dynamic-loader`** list.
 
-- **`project-scanner`** agent (`.pi/agents/project-scanner.md`) — scans a workspace and writes **`/home/zerwiz/.pi/projects/<slug>/`** from **`projects/_template/`**; teams **`new-project`**, **`full`**, **`info`** updated in **`teams.yaml`**. **`pi-projects-docs.mdc`**, **`agent/AGENTS.md`**, **`projects/README.md`**, **`docs/AGENTS.md`**, **`docs/REPO_INDEX.md`** — every new project: read **`REPO_INDEX.md`**, bootstrap from **`_template`**, use scanner or manual fill.
+- **`project-scanner`** agent (`.pi/agents/project-scanner.md`) — scans a workspace and writes **`projects/<slug>/`** from **`projects/_template/`**; teams **`new-project`**, **`full`**, **`info`** updated in **`teams.yaml`**. **`pi-projects-docs.mdc`**, **`agent/AGENTS.md`**, **`projects/README.md`**, **`docs/AGENTS.md`**, **`docs/REPO_INDEX.md`** — every new project: read **`REPO_INDEX.md`**, bootstrap from **`_template`**, use scanner or manual fill.
 
 - **`.cursor/rules/pi-docs-core.mdc`** — File-scoped rule when editing **`docs/TOOLS.md`**, **`SKILLS.md`**, **`AGENTS.md`**, **`AGENT_TEAMS.md`**. **`pi-extensions.mdc`** + **`pi-extensions-context.mdc`** updated to link CONCEPTS + those guides.
 

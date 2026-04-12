@@ -3,11 +3,5 @@
   "prompts": [
     "../.claude/commands"
   ],
-  "extensions": [
-    ".pi/extensions/web-tools.ts",
-    ".pi/extensions/session-memory.ts",
-    ".pi/extensions/github-management.ts",
-    ".pi/extensions/session-saver.ts",
-    ".pi/extensions/context-local-hints.ts"
-  ]
+  "extensions": []
 }

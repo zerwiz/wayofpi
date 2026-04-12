@@ -6,6 +6,11 @@
  * **Mission** tab as default instead of a file tree; no workspace grid.
  */
 import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
+import { useClawWorkspace } from "../../hooks/useClawWorkspace";
+import {
+	isClawWorkspaceOnboardingDismissed,
+	markClawWorkspaceOnboardingDismissed,
+} from "../../utils/clawWorkspaceOnboardingStorage";
 import type { ServerConfig } from "../../hooks/useServerConfig";
 import type { ChatRow, ChatSessionMode, ChatSessionTab, LogRow } from "../../hooks/useWayOfPiSession";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
@@ -28,6 +33,7 @@ import { ClawMissionView } from "./ClawMissionView";
 import { ClawChatView } from "./ClawChatView";
 import { ClawSchedulesView } from "./ClawSchedulesView";
 import { ClawChannelsView } from "./ClawChannelsView";
+import { ClawWorkspaceOnboardingModal } from "./ClawWorkspaceOnboardingModal";
 import { DockSplitHandle } from "../DockSplitHandle";
 
 /** Files tab: resizable file tree column (default matches former `w-56`). */
@@ -222,6 +228,39 @@ export function ClawApp({
 	const agentsApi = useAgents();
 
 	const workspacePath = root ?? "—";
+	const clawWorkspace = useClawWorkspace(!!root);
+
+	const [clawWorkspaceOnboardingOpen, setClawWorkspaceOnboardingOpen] = useState(false);
+
+	useEffect(() => {
+		setClawWorkspaceOnboardingOpen(false);
+	}, [root]);
+
+	useEffect(() => {
+		if (!root || !clawWorkspace.ready || clawWorkspace.missingCount === 0) return;
+		if (isClawWorkspaceOnboardingDismissed(root)) return;
+		setClawWorkspaceOnboardingOpen(true);
+	}, [root, clawWorkspace.ready, clawWorkspace.missingCount]);
+
+	const dismissClawWorkspaceOnboarding = useCallback(() => {
+		if (root) markClawWorkspaceOnboardingDismissed(root);
+		setClawWorkspaceOnboardingOpen(false);
+	}, [root]);
+
+	useEffect(() => {
+		if (!clawWorkspaceOnboardingOpen) return;
+		if (!clawWorkspace.ready || clawWorkspace.scaffolding) return;
+		if (clawWorkspace.missingCount === 0) {
+			if (root) markClawWorkspaceOnboardingDismissed(root);
+			setClawWorkspaceOnboardingOpen(false);
+		}
+	}, [
+		clawWorkspaceOnboardingOpen,
+		root,
+		clawWorkspace.ready,
+		clawWorkspace.missingCount,
+		clawWorkspace.scaffolding,
+	]);
 
 	const clawModuleContext = useMemo(
 		() => ({
@@ -307,6 +346,7 @@ export function ClawApp({
 							onOpenFile={openFile}
 							onOpenClawHelp={onHelp}
 							dark={isDark}
+							clawWorkspace={clawWorkspace}
 						/>
 				) : activeTab === "chat" ? (
 					<ClawChatView
@@ -498,6 +538,16 @@ export function ClawApp({
 				onCopyWorkspacePath={copyWorkspacePath}
 				simpleAppearanceDark={isDark}
 			/>
+
+			{root ? (
+				<ClawWorkspaceOnboardingModal
+					open={clawWorkspaceOnboardingOpen}
+					dark={isDark}
+					workspaceRoot={root}
+					ws={clawWorkspace}
+					onDismiss={dismissClawWorkspaceOnboarding}
+				/>
+			) : null}
 		</div>
 	);
 }

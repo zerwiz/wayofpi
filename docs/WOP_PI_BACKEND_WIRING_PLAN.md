@@ -2,7 +2,7 @@
 
 **Purpose:** Inventory **what the web UI and Bun server do today**, what **headless Pi** must provide per **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**, and a **phased wiring map** so every product surface can eventually call the **real Pi engine** (extensions, tools, skills, sessions, orchestration) instead of parallel or stub implementations.
 
-**Related:** **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** (living gaps) · **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** (`WOP_PI_BINARY`, `WOP_HOME`) · **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** · **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** · **[WOP_WORKSPACE_AGENTS_UI_PLAN.md](WOP_WORKSPACE_AGENTS_UI_PLAN.md)** · Cursor rules **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**, **`.cursor/rules/wop-ui-workspace-agents.mdc`**
+**Related:** **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** (living gaps) · **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** (`WOP_PI_BINARY`, `WOP_HOME`) · **[WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md](WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md)** (why Pi uses fewer tokens, compaction, mimic checklist) · **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** · **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** · **[WOP_WORKSPACE_AGENTS_UI_PLAN.md](WOP_WORKSPACE_AGENTS_UI_PLAN.md)** · Cursor rules **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**, **`.cursor/rules/wop-ui-workspace-agents.mdc`**
 
 ---
 

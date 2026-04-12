@@ -91,6 +91,7 @@ type WorkspaceGridCellProps = {
 		chatAgentName?: string | null;
 		dispatchTurnAgent?: string | null;
 		chatPulseMeters?: ChatPulseMeters | null;
+		sessionTokenSummary?: { tokensDown: string; tokensUp: string; tokensTitle?: string } | null;
 		onEditTeam?: () => void;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (
@@ -424,6 +425,7 @@ export type TechnicalWorkspaceGridProps = {
 		chatAgentName?: string | null;
 		dispatchTurnAgent?: string | null;
 		chatPulseMeters?: ChatPulseMeters | null;
+		sessionTokenSummary?: { tokensDown: string; tokensUp: string; tokensTitle?: string } | null;
 		onEditTeam?: () => void;
 	} | null;
 	onCrossCellTabMoveBetweenCells?: (

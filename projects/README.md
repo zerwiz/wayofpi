@@ -2,7 +2,7 @@
 
 Full playground layout (including **`projects/_template/`**): **[../docs/REPO_INDEX.md](../docs/REPO_INDEX.md)**.
 
-**Agent:** **`project-scanner`** (`.pi/agents/project-scanner.md`) scans the **target workspace** and writes fills under **`/home/zerwiz/.pi/projects/<slug>/`**. Team **`new-project`** in **`teams.yaml`** is scanner-only; **`info`** / **`full`** also include the scanner. Primary agent should pass the codebase **absolute path** when dispatching.
+**Agent:** **`project-scanner`** (`.pi/agents/project-scanner.md`) scans the **target workspace** and writes under **`projects/<slug>/`** in **this** playground checkout (never assume a fixed home-directory path). Team **`new-project`** in **`teams.yaml`** is scanner-only; **`info`** / **`full`** also include the scanner. Primary agent should pass the **target workspace** absolute path when dispatching, and the **playground checkout** path if the scanner cannot infer it.
 
 This directory is the **canonical place** for documentation about **work Pi is doing on a specific codebase or effort**. Agents and humans should **create or update** these files when work spans more than a single chat, when assumptions change, or when handoff matters.
 

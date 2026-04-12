@@ -10,6 +10,7 @@ import {
 	estimateContextWindowTokens,
 	type StreamTokenUsage,
 } from "./chat-usage";
+import { applyChatContextBudget } from "./chat-context-budget";
 import { applyLeadSystem, type ChatSessionMode } from "./session-prompts";
 import { getAgentBodyByName, loadWorkspaceAgents, readPlannerAgentBodySync } from "./agents";
 import { fetchOllamaTags, isValidOllamaModelId, isValidOpenRouterModelId } from "./llm-models";
@@ -222,6 +223,7 @@ function sendChatUsageMeter(
 		ws.send(
 			JSON.stringify({
 				type: "chat_usage",
+				streamPeek: false,
 				lastPrompt: lastTurn.promptTokens,
 				lastCompletion: lastTurn.completionTokens,
 				cumPrompt: data.cumPromptTokens,
@@ -229,6 +231,39 @@ function sendChatUsageMeter(
 				contextWindow: win,
 				contextPercent: pct,
 				approximate: usageApproximate,
+			}),
+		);
+	} catch {
+		/* closing */
+	}
+}
+
+/** Mid-stream usage from SSE (Pi-style live footer) — session cum not incremented until the turn completes. */
+function sendChatUsageStreamPeek(
+	ws: { send: (data: string) => void },
+	data: ChatWsData,
+	u: StreamTokenUsage,
+) {
+	const model = effectiveChatModelId(data);
+	const win = estimateContextWindowTokens(model);
+	const cumP = data.cumPromptTokens;
+	const cumC = data.cumCompletionTokens;
+	const lp = Math.max(0, u.promptTokens);
+	const lc = Math.max(0, u.completionTokens);
+	const estInput = cumP + lp;
+	const pct = win != null && estInput > 0 ? Math.min(100, (estInput / win) * 100) : null;
+	try {
+		ws.send(
+			JSON.stringify({
+				type: "chat_usage",
+				streamPeek: true,
+				lastPrompt: lp,
+				lastCompletion: lc,
+				cumPrompt: cumP,
+				cumCompletion: cumC,
+				contextWindow: win,
+				contextPercent: pct,
+				approximate: false,
 			}),
 		);
 	} catch {
@@ -539,6 +574,16 @@ async function runChatTurn(
 			return;
 		}
 
+		const budget = applyChatContextBudget(data.messages, sendLog);
+		if (budget.droppedMessages > 0 && data.wopSessionKey) {
+			try {
+				await syncWayofpiSessionFile(data.wopSessionKey, data.messages);
+			} catch (e) {
+				const m = e instanceof Error ? e.message : String(e);
+				sendLog("WARN", "session", `sync JSONL after context budget trim: ${m}`);
+			}
+		}
+
 		const ac = new AbortController();
 		data.chatAbort = ac;
 		const usePiChat = shouldUsePiJsonChat();
@@ -554,6 +599,9 @@ async function runChatTurn(
 		);
 		let full = "";
 		let lastStreamUsage: StreamTokenUsage | null = null;
+		const emitUsagePeek = (u: StreamTokenUsage) => {
+			sendChatUsageStreamPeek(ws, data, u);
+		};
 		const sendReasoning = (delta: string) => {
 			try {
 				ws.send(JSON.stringify({ type: "assistant_reasoning_delta", content: delta }));
@@ -572,6 +620,7 @@ async function runChatTurn(
 						ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));
 					},
 					onReasoningDelta: sendReasoning,
+					onStreamUsage: emitUsagePeek,
 					onLog: sendLog,
 					signal: ac.signal,
 				});
@@ -591,6 +640,7 @@ async function runChatTurn(
 					},
 					{
 						signal: ac.signal,
+						onStreamUsage: emitUsagePeek,
 						onReasoningDelta: sendReasoning,
 						onAgentsCatalogChanged: () => {
 							try {
@@ -628,6 +678,7 @@ async function runChatTurn(
 						onReasoningDelta: sendReasoning,
 						onStreamUsage: (u) => {
 							lastStreamUsage = u;
+							emitUsagePeek(u);
 						},
 					},
 				);

@@ -43,7 +43,7 @@ When touching **`docs/TOOLS.md`**, **`docs/SKILLS.md`**, **`docs/AGENTS.md`**, *
 ## Style
 
 1. **Headings** — Use logical `##` / `###` hierarchy; one H1 per file (title) or start at `##` if the file is a chapter.
-2. **Paths** — Wrap paths, commands, and filenames in **backticks** (`extensions/foo.ts`, `.pi/settings.json`). Prefer repo-relative paths; for machine-specific examples, use **`/home/zerwiz/.pi/...`** only where **`REPO_INDEX.md`** already does.
+2. **Paths** — Wrap paths, commands, and filenames in **backticks** (`extensions/foo.ts`, `.pi/settings.json`). Prefer **repo-relative** paths or placeholders (**`<playground-root>`** / **`git rev-parse --show-toplevel`**); do **not** document another user’s **`/home/...`** path as if it were canonical.
 3. **Links** — Use **relative** links between repo files (`[Title](AGENTS.md)` from `docs/`). For external URLs, full `https://` string.
 4. **Tables** — Prefer markdown tables for inventories (extensions, agents, env vars); keep columns aligned in source for readability.
 5. **Code blocks** — Fenced blocks with a language tag when useful (`bash`, `json`, `yaml`, `text`). One command per line in copy-paste examples; no ellipses.

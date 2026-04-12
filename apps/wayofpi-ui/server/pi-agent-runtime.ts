@@ -80,6 +80,8 @@ export type RunPiChatTurnOpts = {
 	onDelta: (s: string) => void;
 	/** Forward Pi `thinking_delta` to the client as `assistant_reasoning_delta`. */
 	onReasoningDelta?: (s: string) => void;
+	/** Pi JSON lines that carry `usage` — live Team pulse / status meters (same as Bun SSE `streamPeek`). */
+	onStreamUsage?: (u: StreamTokenUsage) => void;
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
 	signal?: AbortSignal;
 };
@@ -123,6 +125,7 @@ export async function runPiChatTurn(
 		signal: opts.signal,
 		onDelta: opts.onDelta,
 		onReasoningDelta: opts.onReasoningDelta,
+		onStreamUsage: opts.onStreamUsage,
 		onLog: opts.onLog,
 	});
 	if (r.ok) {

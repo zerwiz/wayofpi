@@ -167,6 +167,7 @@ export type WorkspacePaneProps = {
 		chatAgentName?: string | null;
 		dispatchTurnAgent?: string | null;
 		chatPulseMeters?: ChatPulseMeters | null;
+		sessionTokenSummary?: { tokensDown: string; tokensUp: string; tokensTitle?: string } | null;
 		onEditTeam?: () => void;
 	} | null;
 	/** First breadcrumb segment (e.g. workspace folder name); optional. */
@@ -412,19 +413,26 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 	}, [histFuture, entries, safeIndex, onActiveIndexChange, onSelectFileTab]);
 
 	const goAdjacentFileForReview = useCallback(
-		(direction: 1 | -1) => {
+		async (direction: 1 | -1, opts?: { saveFirst?: boolean }) => {
 			const idxs = entries.map((e, i) => (e.type === "file" ? i : -1)).filter((i): i is number => i >= 0);
 			if (idxs.length < 2) return;
 			let k = idxs.indexOf(safeIndex);
 			if (k < 0) k = direction > 0 ? idxs.length - 1 : 0;
 			const next = idxs[(k + direction + idxs.length) % idxs.length]!;
-			if (dirty && onDiscardUnsaved) {
-				if (!window.confirm("Discard unsaved changes and open another file?")) return;
-				onDiscardUnsaved();
+			if (dirty) {
+				if (opts?.saveFirst) {
+					await onSave();
+					userActivateTab(next);
+					return;
+				}
+				if (onDiscardUnsaved) {
+					if (!window.confirm("Discard unsaved changes and open another file?")) return;
+					onDiscardUnsaved();
+				}
 			}
 			userActivateTab(next);
 		},
-		[entries, safeIndex, dirty, onDiscardUnsaved, userActivateTab],
+		[entries, safeIndex, dirty, onDiscardUnsaved, onSave, userActivateTab],
 	);
 
 	const canHistBack = entries.length > 0 && histPast.length > 0;
@@ -822,28 +830,57 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 							</div>
 						) : null}
 						{canNextFileForReview ? (
-							<div className="flex items-center gap-1 border-l border-[#3c3c3c] pl-2 font-mono text-[11px] text-[#858585]">
-								<button
-									type="button"
-									onClick={() => goAdjacentFileForReview(-1)}
-									className="rounded p-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
-									title="Previous open file tab in this pane"
-									aria-label="Previous file in review"
-								>
-									<ChevronLeft size={14} strokeWidth={2} aria-hidden />
-								</button>
-								<span className="min-w-[3.25rem] text-center tabular-nums" title="Open file tabs in this workspace pane">
-									{fileReviewIndexLabel || "—"}
-								</span>
-								<button
-									type="button"
-									onClick={() => goAdjacentFileForReview(1)}
-									className="rounded p-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
-									title="Next open file tab in this pane"
-									aria-label="Next file in review"
-								>
-									<ChevronRight size={14} strokeWidth={2} aria-hidden />
-								</button>
+							<div
+								className="flex flex-wrap items-center gap-2 border-l border-[#3c3c3c] pl-2"
+								role="group"
+								aria-label="File review"
+							>
+								<div className="flex flex-wrap items-center gap-1.5">
+									<button
+										type="button"
+										disabled={!dirty}
+										onClick={() => void onSave()}
+										className={reviewBtnPrimary}
+										title={dirty ? "Save this file (Ctrl+Enter)" : "No unsaved changes"}
+									>
+										Keep
+									</button>
+									<button
+										type="button"
+										onClick={() => void goAdjacentFileForReview(1, { saveFirst: true })}
+										className={reviewBtnGhost}
+										title={
+											dirty
+												? "Save this file, then open the next file tab in this pane"
+												: "Open the next file tab in this pane"
+										}
+									>
+										Review next
+									</button>
+								</div>
+								<div className="flex items-center gap-1 font-mono text-[11px] text-[#858585]">
+									<button
+										type="button"
+										onClick={() => void goAdjacentFileForReview(-1)}
+										className="rounded p-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
+										title="Previous open file tab in this pane (discards unsaved changes — confirm)"
+										aria-label="Previous file in review"
+									>
+										<ChevronLeft size={14} strokeWidth={2} aria-hidden />
+									</button>
+									<span className="min-w-[3.25rem] text-center tabular-nums" title="Open file tabs in this workspace pane">
+										{fileReviewIndexLabel || "—"}
+									</span>
+									<button
+										type="button"
+										onClick={() => void goAdjacentFileForReview(1)}
+										className="rounded p-0.5 text-[#cccccc] hover:bg-[#3c3c3c]"
+										title="Next open file tab in this pane (discards unsaved changes — confirm)"
+										aria-label="Next file in review"
+									>
+										<ChevronRight size={14} strokeWidth={2} aria-hidden />
+									</button>
+								</div>
 							</div>
 						) : null}
 						{dirty ? (
@@ -858,15 +895,17 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 										Undo changes
 									</button>
 								) : null}
-								<button
-									type="button"
-									onClick={() => void onSave()}
-									className={reviewBtnPrimary}
-									title="Save file (Ctrl+Enter)"
-								>
-									Keep file
-									<span className="ml-1.5 hidden font-normal opacity-80 sm:inline">Ctrl+Enter</span>
-								</button>
+								{canNextFileForReview ? null : (
+									<button
+										type="button"
+										onClick={() => void onSave()}
+										className={reviewBtnPrimary}
+										title="Save file (Ctrl+Enter)"
+									>
+										Keep file
+										<span className="ml-1.5 hidden font-normal opacity-80 sm:inline">Ctrl+Enter</span>
+									</button>
+								)}
 							</div>
 						) : null}
 					</div>
@@ -940,6 +979,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								chatAgentName={agentTeamPane.chatAgentName}
 								dispatchTurnAgent={agentTeamPane.dispatchTurnAgent}
 								chatPulseMeters={agentTeamPane.chatPulseMeters}
+								sessionTokenSummary={agentTeamPane.sessionTokenSummary}
 								onEditTeam={agentTeamPane.onEditTeam}
 							/>
 						) : (

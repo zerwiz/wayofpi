@@ -79,7 +79,7 @@ All three are required:
 | **just**        | Task runner (for `just …` / `ppi …` recipes) | **macOS:** `brew install just` · **Ubuntu/Debian:** `sudo snap install just` or [cargo](https://github.com/casey/just#installation) · See [just releases](https://github.com/casey/just/releases) |
 | **pi**          | Pi Coding Agent CLI       | [Pi docs](https://github.com/mariozechner/pi-coding-agent) |
 
-**Automated probe (optional):** run **`./scripts/bootstrap-wayofpi-environment.sh`** from the repo root to print OS/CPU, which tools are installed, and copy-paste install hints. Use **`--check-only`** in CI, or **`--install -y`** to run the official [Bun installer](https://bun.sh) and **`npm install`** in **`apps/wayofpi-ui`** (still no silent `sudo`). Details: **[scripts/README.md](scripts/README.md)** (`just bootstrap-wayofpi` runs the probe without extra flags).
+**Automated probe / optional Bun + npm install:** see **[Installation](#installation)** below. Flag reference: **[scripts/README.md](scripts/README.md)**.
 
 ---
 
@@ -128,9 +128,60 @@ just ext-minimal  # works for all recipes, not just `pi`
 
 ## Installation
 
+**Platforms:** Shell entrypoints (**`./start-*.sh`**, **`just`**) assume **Linux**, **macOS**, or **WSL** with **bash**. On native **Windows**, use **WSL2** for the same flow, or install **[Bun](https://bun.sh)** and **[Node.js](https://nodejs.org)** yourself and follow **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/zerwiz/wayofpi.git
+cd wayofpi
+```
+
+### 2. Check or install dev tools (recommended)
+
+From the repo root, run the **bootstrap** script. It prints **OS / CPU**, what is already on your **`PATH`**, and **copy-paste** commands for missing tools. It **does not run `sudo`** or package managers unless you ask it to install **Bun** / **npm** deps (see table).
+
+```bash
+chmod +x ./scripts/bootstrap-wayofpi-environment.sh
+./scripts/bootstrap-wayofpi-environment.sh
+```
+
+| Goal | Command |
+| ---- | ------- |
+| Report only (default) | `./scripts/bootstrap-wayofpi-environment.sh` |
+| **CI:** fail if **bun**, **git**, **node**, **npm** missing or Bun too old for the UI | `./scripts/bootstrap-wayofpi-environment.sh --check-only` |
+| Install **Bun** (official [bun.sh](https://bun.sh) script) + **`npm install`** in **`apps/wayofpi-ui`** | `./scripts/bootstrap-wayofpi-environment.sh --install -y` |
+| Create **`.env`** from **`.env.sample`** if **`.env`** is missing | `./scripts/bootstrap-wayofpi-environment.sh --init-env` |
+
+**`just bootstrap-wayofpi`** runs the same probe **without** extra flags (pass **`--check-only`** / **`--install`** by invoking the script path above). More detail: **[scripts/README.md](scripts/README.md)**.
+
+### 3. Install playground dependencies (root)
+
 ```bash
 bun install
 ```
+
+### 4. Install Way of Pi UI dependencies
+
+```bash
+cd apps/wayofpi-ui
+npm install
+cd ../..
+```
+
+Skip this if you already ran **`./scripts/bootstrap-wayofpi-environment.sh --install -y`** (it runs **`npm install`** in **`apps/wayofpi-ui`**).
+
+### 5. API keys and run the app
+
+Copy **`.env.sample`** → **`.env`** and add keys (see **[API Keys](#api-keys)** above). Then start the **Electron** shell from the repo root (recommended):
+
+```bash
+./start-wayofpi-electron.sh
+```
+
+Or **`just wayofpi-electron`**. **Browser dev:** **`./start-wayofpi-ui.sh`**. Ports, **`WOP_*`** env, and production: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
+
+**Optional — global `ppi` / `pi-e` shims** on your **`PATH`**: **`./scripts/install-ppi-global.sh`** or **`just install-global`** (see **[scripts/README.md](scripts/README.md)**).
 
 ### Ollama (this repo’s defaults)
 

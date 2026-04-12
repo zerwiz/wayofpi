@@ -57,6 +57,9 @@ Final spelling (`wop` vs `wayofpi`) is a product decision; this repo uses **`wop
 | **`WOP_PLAYGROUND_ROOT`** | Path to this playground clone when linking extensions/skills into app repos. |
 | **`WOP_LLM_PROVIDER`** | Until headless Pi owns chat: `ollama` \| `openrouter` (see wayofpi-ui `.env.sample`). |
 | **`WOP_SYSTEM_PROMPT`** | Optional system message prepended to chat sessions (WebSocket). |
+| **`WOP_CHAT_CONTEXT_BUDGET`** | When unset or truthy, the Way of Pi server **trims** older chat rows before each model request on the **bundled Bun** path (and before building the headless Pi prompt) so transcripts cannot grow without bound. Set to **0**, **false**, **no**, or **off** to disable. See **`docs/WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md`**. |
+| **`WOP_CHAT_MAX_MESSAGES`** | With the context budget on: max **non-system** messages kept after trim (default **120**). |
+| **`WOP_CHAT_MAX_INPUT_CHARS`** | With the context budget on: approximate max **characters** (content + tool JSON) in the **non-system** tail (default **120000**). |
 | **`WOP_OPENROUTER_REFERER`** | HTTP Referer for OpenRouter API (optional). |
 
 **Inside** a headless Pi child process only, the server may map selected vars to whatever Pi expects (document per integration version)—**never** export fake `PI_*` into the user’s interactive shell by default.

@@ -283,6 +283,14 @@ export default function App() {
 		reloadAgentsCatalog,
 		(rel) => focusAgentWrittenWorkspaceFileRef.current(rel),
 	);
+	const teamPulseSessionTokenSummary = useMemo(
+		() => ({
+			tokensDown: session.tokenMeter.tokensDown,
+			tokensUp: session.tokenMeter.tokensUp,
+			tokensTitle: session.tokenMeter.tokensTitle,
+		}),
+		[session.tokenMeter.tokensDown, session.tokenMeter.tokensUp, session.tokenMeter.tokensTitle],
+	);
 	const { isDark: simpleIsDark } = useSimplePreferences();
 	const llmFixModalAppearanceDark = technical || simpleIsDark;
 	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
@@ -2602,6 +2610,7 @@ description:
 			chatAgentName: session.chatAgentName,
 			dispatchTurnAgent: session.dispatchTurnAgent,
 			chatPulseMeters: session.chatPulseMeters,
+			sessionTokenSummary: teamPulseSessionTokenSummary,
 			onEditTeam: openAgentSetupFromMenu,
 		}),
 		[
@@ -2613,6 +2622,7 @@ description:
 			session.chatAgentName,
 			session.dispatchTurnAgent,
 			session.chatPulseMeters,
+			teamPulseSessionTokenSummary,
 			openAgentSetupFromMenu,
 		],
 	);
@@ -2680,6 +2690,7 @@ description:
 				forceChatQueueItem={session.forceChatQueueItem}
 				chatPulseMeters={session.chatPulseMeters}
 				contextTitle={session.tokenMeter.contextTitle}
+				sessionTokenSummary={teamPulseSessionTokenSummary}
 				embeddedInWorkspace
 				onOpenPlanFileForReview={openPlanFileForReview}
 				planHandoffWorkspaceKey={planHandoffWorkspaceKey}
@@ -2718,6 +2729,7 @@ description:
 			session.forceChatQueueItem,
 			session.chatPulseMeters,
 			session.tokenMeter.contextTitle,
+			teamPulseSessionTokenSummary,
 			openPlanFileForReview,
 			planHandoffWorkspaceKey,
 		],
@@ -4501,6 +4513,7 @@ description:
 												forceChatQueueItem={session.forceChatQueueItem}
 												chatPulseMeters={session.chatPulseMeters}
 												contextTitle={session.tokenMeter.contextTitle}
+												sessionTokenSummary={teamPulseSessionTokenSummary}
 												dockPanelFrame
 												onOpenPlanFileForReview={openPlanFileForReview}
 												planHandoffWorkspaceKey={planHandoffWorkspaceKey}
@@ -4574,6 +4587,7 @@ description:
 												forceChatQueueItem={session.forceChatQueueItem}
 												chatPulseMeters={session.chatPulseMeters}
 												contextTitle={session.tokenMeter.contextTitle}
+												sessionTokenSummary={teamPulseSessionTokenSummary}
 												dockPanelFrame
 												onOpenPlanFileForReview={openPlanFileForReview}
 												planHandoffWorkspaceKey={planHandoffWorkspaceKey}

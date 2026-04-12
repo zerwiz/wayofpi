@@ -6,7 +6,7 @@ Scratch notes, discoveries, and quick thoughts while scanning the pi-playground 
 
 ## 2026-03-26 — Scan notes
 
-- **Repository:** `/home/zerwiz/.pi`
+- **Repository:** Way of Pi playground (this monorepo — path varies per machine)
 - **Type:** Pi Coding Agent playground
 - **Goal:** Showcase UI customization, agent orchestration, safety auditing, cross-agent integrations
 - **Key features:**

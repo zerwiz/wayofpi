@@ -138,6 +138,7 @@ export function AgentTeamPulseGrid({
 	onStreamDetailChange,
 	showSessionHint = true,
 	section = "full",
+	sessionTokenSummary,
 }: {
 	activeTeamName: string;
 	members: AgentTeamPulseMember[];
@@ -146,6 +147,8 @@ export function AgentTeamPulseGrid({
 	/** When false (workspace pane), omit the note about session chat / WebSocket plan. */
 	showSessionHint?: boolean;
 	section?: "full" | "toolbar" | "roster";
+	/** Pi-style session cumulative (status bar parity) — shown in the team toolbar. */
+	sessionTokenSummary?: { tokensDown: string; tokensUp: string; tokensTitle?: string } | null;
 }) {
 	const cols = Math.min(rosterGridCols(members.length), Math.max(1, members.length));
 
@@ -164,6 +167,18 @@ export function AgentTeamPulseGrid({
 					</button>
 				) : null}
 			</div>
+			{sessionTokenSummary &&
+			(sessionTokenSummary.tokensDown !== "—" || sessionTokenSummary.tokensUp !== "—") ? (
+				<div
+					className="pl-0.5 text-[10px] leading-tight text-[#6b6b6b]"
+					title={sessionTokenSummary.tokensTitle ?? "Session cumulative tokens (prompt ↓ / completion ↑)"}
+				>
+					Session{" "}
+					<span className="text-[#a3a3a3]">
+						{sessionTokenSummary.tokensDown} ↓ / {sessionTokenSummary.tokensUp} ↑
+					</span>
+				</div>
+			) : null}
 			{section !== "toolbar" ? (
 				<div className="h-px w-full shrink-0 bg-[#505050]" aria-hidden />
 			) : null}
@@ -184,7 +199,8 @@ export function AgentTeamPulseGrid({
 	const hint = showSessionHint ? (
 		<p className="font-mono text-[10px] leading-relaxed text-[#6b6b6b]">
 			Session persona shows <strong className="text-[#858585]">running</strong> / <strong className="text-[#858585]">done</strong>{" "}
-			from chat streaming and <code className="text-[#858585]">chat_usage</code>. Per-subagent tools, thinking lines, and
+			from chat streaming, <code className="text-[#858585]">chat_usage</code> (including live SSE <code className="text-[#858585]">streamPeek</code>
+			). Per-subagent tools, thinking lines, and
 			separate Pi subprocess pulses remain on the multi-agent WebSocket plan (
 			<code className="text-[#858585]">docs/WOP_MULTI_AGENT_WEBSOCKET.md</code>).
 		</p>
@@ -193,7 +209,7 @@ export function AgentTeamPulseGrid({
 			Mirrors the Pi <code className="text-[#858585]">agent-team</code> footer widget layout ({" "}
 			<code className="text-[#858585]">/agents-team</code>, <code className="text-[#858585]">/agents-grid N</code>
 			). <strong className="text-[#858585]">Pane team</strong> opens the roster in the agent panel beside the editor. Use
-			workspace <strong className="text-[#858585]">+ → Team pulse</strong> for the full tab with session mirror.
+			workspace <strong className="text-[#858585]">+ → Team pulse</strong> for the full tab with roster agent transcript.
 		</p>
 	);
 
@@ -203,6 +219,18 @@ export function AgentTeamPulseGrid({
 	if (section === "roster") {
 		return (
 			<div className="flex min-h-0 flex-col gap-3">
+				{sessionTokenSummary &&
+				(sessionTokenSummary.tokensDown !== "—" || sessionTokenSummary.tokensUp !== "—") ? (
+					<div
+						className="font-mono text-[10px] leading-tight text-[#6b6b6b]"
+						title={sessionTokenSummary.tokensTitle ?? "Session cumulative tokens"}
+					>
+						Session{" "}
+						<span className="text-[#a3a3a3]">
+							{sessionTokenSummary.tokensDown} ↓ / {sessionTokenSummary.tokensUp} ↑
+						</span>
+					</div>
+				) : null}
 				{rosterGrid}
 				{hint}
 			</div>
@@ -277,12 +305,17 @@ export function overlayPulseMembersWithActiveChat(
 		const key = mem.name.trim().toLowerCase();
 		if (active && key === active && opts.streaming) {
 			const ctx = m?.contextFillPct != null ? Math.round(m.contextFillPct) : mem.contextPct;
+			const hasPeek =
+				m != null &&
+				((m.peekPrompt != null && m.peekPrompt > 0) || (m.peekCompletion != null && m.peekCompletion > 0));
+			const tin = hasPeek ? (m!.peekPrompt ?? 0) : (m?.cumPrompt ?? 0);
+			const tout = hasPeek ? (m!.peekCompletion ?? 0) : (m?.cumCompletion ?? 0);
 			return {
 				...mem,
 				status: "running",
 				contextPct: ctx,
-				tokensIn: m?.cumPrompt ?? 0,
-				tokensOut: m?.cumCompletion ?? 0,
+				tokensIn: tin,
+				tokensOut: tout,
 				task: task ?? mem.task,
 			};
 		}

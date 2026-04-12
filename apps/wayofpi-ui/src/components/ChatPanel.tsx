@@ -79,7 +79,7 @@ export function ChatPanel({
 	onEditTeam,
 	chatAgentName,
 	/** Phrase-dispatch specialist for this turn (picker unchanged). */
-	dispatchTurnAgent,
+	dispatchTurnAgent: _dispatchTurnAgent,
 	onChatAgentChange,
 	/** Server-side messages waiting after the current assistant turn. */
 	chatQueuePending,
@@ -90,6 +90,8 @@ export function ChatPanel({
 	chatPulseMeters,
 	/** Tooltip for the context ring (same as status bar / `tokenMeter.contextTitle`). */
 	contextTitle,
+	/** Session cumulative tokens for Team pulse toolbar (status bar parity). */
+	sessionTokenSummary,
 	/** When wrapped in TechnicalDockPanelFrame — omit outer border; frame provides the edge. */
 	dockPanelFrame,
 	/** Technical: chat fills a workspace editor pane tab (no fixed sidebar width). */
@@ -140,6 +142,7 @@ export function ChatPanel({
 	forceChatQueueItem?: (id: string) => void;
 	chatPulseMeters?: ChatPulseMeters | null;
 	contextTitle?: string;
+	sessionTokenSummary?: { tokensDown: string; tokensUp: string; tokensTitle?: string } | null;
 	dockPanelFrame?: boolean;
 	embeddedInWorkspace?: boolean;
 	onOpenPlanFileForReview?: (workspaceRelativePath: string) => void;
@@ -181,15 +184,49 @@ export function ChatPanel({
 	/** Session picker + chat headers — phrase-dispatch does not replace “Orchestrator” here. */
 	const sessionPick = chatAgentName?.trim() || null;
 	const assistantShort = sessionPick ? workspaceAgentDisplayName(sessionPick) : "Orchestrator";
-	/** Pulse grid / team highlight — includes auto-dispatch specialist for this turn. */
-	const pulseAgentName = sessionPick || dispatchTurnAgent?.trim() || null;
+	/** Pulse grid / team highlight — session picker only (matches who “speaks” in Team pulse transcript). */
+	const pulseAgentName = sessionPick;
 	const embedSplit = embedPane && technical;
-	const assistantRows = useMemo(() => rows.filter((r) => r.role === "assistant"), [rows]);
 	const userRows = useMemo(() => rows.filter((r) => r.role === "user"), [rows]);
+	const transcriptRows = useMemo(() => {
+		if (!teamPaneOpen || !pulseTeam || !agentTeams?.[pulseTeam]?.length) return rows;
+		const roster = new Set(agentTeams[pulseTeam]!.map((n) => n.trim().toLowerCase()).filter(Boolean));
+		return rows.filter((r) => {
+			if (r.role === "user") return false;
+			const p = r.assistantPersona?.trim().toLowerCase();
+			return Boolean(p && roster.has(p));
+		});
+	}, [teamPaneOpen, pulseTeam, agentTeams, rows]);
+	const assistantRowsForView = useMemo(
+		() => transcriptRows.filter((r) => r.role === "assistant"),
+		[transcriptRows],
+	);
+	const teamPulseHidesUserColumn = Boolean(
+		teamPaneOpen && pulseTeam && agentTeams?.[pulseTeam] && agentTeams[pulseTeam]!.length > 0,
+	);
+	const userRowsForTeamPulse = useMemo(
+		() => (teamPulseHidesUserColumn ? [] : userRows),
+		[teamPulseHidesUserColumn, userRows],
+	);
 	const lastRow = rows.length ? rows[rows.length - 1]! : undefined;
-	const streamingNeedsPlaceholder =
-		streaming &&
-		(!lastRow || lastRow.role !== "assistant" || !String(lastRow.content ?? "").trim());
+	const streamingNeedsPlaceholder = useMemo(() => {
+		if (!streaming) return false;
+		if (teamPulseHidesUserColumn) {
+			const lead = (chatAgentName?.trim() || "").toLowerCase();
+			const roster = new Set(
+				(agentTeams?.[pulseTeam!] ?? []).map((n) => n.trim().toLowerCase()).filter(Boolean),
+			);
+			if (!lead || !roster.has(lead)) return false;
+		}
+		return !lastRow || lastRow.role !== "assistant" || !String(lastRow.content ?? "").trim();
+	}, [
+		streaming,
+		teamPulseHidesUserColumn,
+		chatAgentName,
+		agentTeams,
+		pulseTeam,
+		lastRow,
+	]);
 
 	const toggleShowModelThinking = useCallback(() => {
 		setShowModelThinking((prev) => {
@@ -283,7 +320,7 @@ export function ChatPanel({
 	useEffect(() => {
 		if (!embedSplit) return;
 		queueMicrotask(() => assistantColEndRef.current?.scrollIntoView({ behavior: "smooth" }));
-	}, [embedSplit, assistantRows, streaming]);
+	}, [embedSplit, assistantRowsForView, streaming]);
 
 	const applySlashPick = (commandId: string, menuState: SlashMenuState | null = slashMenu) => {
 		if (!menuState) return;
@@ -606,6 +643,7 @@ export function ChatPanel({
 										onStreamDetailChange={setPulseStreamDetail}
 										showSessionHint={false}
 										section="toolbar"
+										sessionTokenSummary={sessionTokenSummary ?? null}
 									/>
 								) : (
 									<p className="text-[#a3a3a3]">Selected team has no members in YAML.</p>
@@ -656,17 +694,20 @@ export function ChatPanel({
 								<p className="font-mono text-[10px] uppercase tracking-wide text-[#858585]">
 									{assistantShort} (session)
 								</p>
-								{assistantRows.length === 0 && !streamingNeedsPlaceholder ? (
+								{assistantRowsForView.length === 0 && !streamingNeedsPlaceholder ? (
 									<p className="font-mono text-[11px] leading-relaxed text-[#6b6b6b]">
-										Assistant replies from the model stream here. Your prompts stay in the column on the
-										right.
+										{teamPulseHidesUserColumn
+											? "Roster agent replies stream here when Session Chat’s workspace agent (picker) is a team member."
+											: "Assistant replies from the model stream here. Your prompts stay in the column on the right."}
 									</p>
 								) : null}
-								{assistantRows.map((msg) => (
+								{assistantRowsForView.map((msg) => (
 									<div key={msg.id} className="flex w-full flex-col gap-1">
 										<div className="flex items-center justify-between">
 											<span className="font-mono text-[11px] uppercase text-[#858585]">
-												{assistantShort.toUpperCase()}
+												{teamPulseHidesUserColumn && msg.assistantPersona?.trim()
+													? workspaceAgentDisplayName(msg.assistantPersona.trim())
+													: assistantShort.toUpperCase()}
 											</span>
 											<span className="font-mono text-[10px] text-[#555555]">{msg.timestamp}</span>
 										</div>
@@ -688,7 +729,9 @@ export function ChatPanel({
 								{streamingNeedsPlaceholder ? (
 									<div className="flex flex-col gap-1">
 										<span className="font-mono text-[11px] uppercase text-[#858585]">
-											{assistantShort.toUpperCase()} (streaming)
+											{teamPulseHidesUserColumn && chatAgentName?.trim()
+												? `${workspaceAgentDisplayName(chatAgentName.trim())} (streaming)`
+												: `${assistantShort.toUpperCase()} (streaming)`}
 										</span>
 										<div className="flex items-center gap-2 border border-[#3c3c3c] bg-[#252526] p-3">
 											<div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#858585]" />
@@ -709,13 +752,17 @@ export function ChatPanel({
 								className={`flex min-h-0 w-[min(300px,44%)] max-w-[400px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-[#3c3c3c] bg-[#252526]/40 ${technical ? "p-4" : "p-4"}`}
 								aria-label="Your messages"
 							>
-								<p className="font-mono text-[10px] uppercase tracking-wide text-[#858585]">You</p>
-								{userRows.length === 0 ? (
+								<p className="font-mono text-[10px] uppercase tracking-wide text-[#858585]">
+									{teamPulseHidesUserColumn ? "Session chat" : "You"}
+								</p>
+								{userRowsForTeamPulse.length === 0 ? (
 									<p className="font-mono text-[11px] leading-relaxed text-[#6b6b6b]">
-										Your messages and attachments appear here; compose below.
+										{teamPulseHidesUserColumn
+											? "You and the orchestrator stay in Session Chat; this column is roster output only."
+											: "Your messages and attachments appear here; compose below."}
 									</p>
 								) : null}
-								{userRows.map((msg) => (
+								{userRowsForTeamPulse.map((msg) => (
 									<div key={msg.id} className="flex w-full flex-col gap-1">
 										<div className="flex items-center justify-between">
 											<span className="font-mono text-[11px] uppercase text-[#858585]">USER</span>
@@ -764,7 +811,7 @@ export function ChatPanel({
 								</div>
 							</div>
 						) : null}
-						{rows.map((msg) => (
+						{transcriptRows.map((msg) => (
 							<div key={msg.id} className="flex w-full flex-col gap-1">
 								<div className="flex items-center justify-between">
 									<span
@@ -777,10 +824,14 @@ export function ChatPanel({
 										{technical
 											? msg.role === "user"
 												? "USER"
-												: assistantShort.toUpperCase()
+												: teamPulseHidesUserColumn && msg.assistantPersona?.trim()
+													? workspaceAgentDisplayName(msg.assistantPersona.trim()).toUpperCase()
+													: assistantShort.toUpperCase()
 											: msg.role === "user"
 												? "You"
-												: assistantShort}
+												: teamPulseHidesUserColumn && msg.assistantPersona?.trim()
+													? workspaceAgentDisplayName(msg.assistantPersona.trim())
+													: assistantShort}
 									</span>
 									<span className={`text-[#555555] ${technical ? "font-mono text-[10px]" : "text-[11px]"}`}>
 										{msg.timestamp}
@@ -846,6 +897,7 @@ export function ChatPanel({
 							streamDetail={pulseStreamDetail}
 							showSessionHint={false}
 							section="roster"
+							sessionTokenSummary={sessionTokenSummary ?? null}
 						/>
 					</div>
 				) : null}

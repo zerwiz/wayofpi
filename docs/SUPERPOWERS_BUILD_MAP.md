@@ -2,7 +2,7 @@
 
 Source: [zerwiz/superpowers](https://github.com/zerwiz/superpowers)
 
-This document is a practical “what we could build” mapping from the Superpowers skills/workflows concept into components you can implement in this Pi playground (`/home/zerwiz/.pi`).
+This document is a practical “what we could build” mapping from the Superpowers skills/workflows concept into components you can implement in this Pi playground (this repository).
 
 ---
 

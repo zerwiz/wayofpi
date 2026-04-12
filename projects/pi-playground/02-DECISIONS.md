@@ -6,7 +6,7 @@ This file records dated decisions made by agents or the user while working on th
 
 ## 2026-03-26 — Initial project scan
 
-- **Project scanned:** `/home/zerwiz/.pi` (Pi playground)
+- **Project scanned:** Pi / Way of Pi playground repo (path on scanner’s machine; use `git rev-parse --show-toplevel` from the clone)
 - **Slug chosen:** `pi-playground`
 - **Documentation created:** `projects/pi-playground/` (copied from `_template/`)
 - **KEY FILE:** INDEX.md — Comprehensive project map covering:

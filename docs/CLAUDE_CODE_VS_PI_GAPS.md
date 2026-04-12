@@ -1,6 +1,6 @@
 # Claude Code vs this Pi setup — what they have, what we lack
 
-**Purpose:** A **Pi-centric** gap analysis: what [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) ships as a product vs what **upstream Pi** provides by default vs what **this extension playground** (`/home/zerwiz/.pi`) adds. For a full side‑by‑side feature matrix, see root **[COMPARISON.md](../COMPARISON.md)** (Pi v0.52.x vs Claude Code narrative).
+**Purpose:** A **Pi-centric** gap analysis: what [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) ships as a product vs what **upstream Pi** provides by default vs what **this extension playground** (this repository) adds. For a full side‑by‑side feature matrix, see root **[COMPARISON.md](../COMPARISON.md)** (Pi v0.52.x vs Claude Code narrative).
 
 **Last updated:** 2026-03-27
 

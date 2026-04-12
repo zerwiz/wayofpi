@@ -13,7 +13,7 @@ This document summarizes **what worked**, **what failed or partially worked**, a
 |------|-------------|
 | **Agent-team UI** | Team roster, `/agents-*` commands, grid/thinking controls, session saver paths were visible and usable. |
 | **`dispatch_agent hermes`** | Completed (~26s). Hermes CLI ran; the assistant relayed an introduction and capabilities. |
-| **`dispatch_agent scout`** | Completed multiple times. Scout reported cwd **`/home/zerwiz/.pi`** and described read capabilities in principle. |
+| **`dispatch_agent scout`** | Completed multiple times. Scout reported cwd as the **playground repo** and described read capabilities in principle. |
 | **`dispatch_agent code-documenter` / `documenter`** | Tools reported success (~15s / ~31s). *See §3 — output files were not verified on disk by the dispatcher.* |
 | **`dispatch_agent reviewer`** | Completed when invoked for a review-style task. |
 | **Session saver** | Auto-save to `storage/.../sessions` with predictable filenames. |
@@ -36,7 +36,7 @@ This document summarizes **what worked**, **what failed or partially worked**, a
 
 ## 3. Verification (this repo, after the session)
 
-- **`/home/zerwiz/.pi/docs/`** contains standard guides (**`REPO_INDEX.md`**, **`TOOLS.md`**, **`AGENTS.md`**, …) — **17 files**; **no** `codereadme.md` and **no** `grep` hits for `codereadme` in the workspace.
+- **`docs/`** (in the playground checkout) contains standard guides (**`REPO_INDEX.md`**, **`TOOLS.md`**, **`AGENTS.md`**, …) — **17 files**; **no** `codereadme.md` and **no** `grep` hits for `codereadme` in the workspace.
 - Conclusion: the **“code documentation file”** described in chat was **not** persisted as named, or was **never written** despite the success UI.
 
 ---

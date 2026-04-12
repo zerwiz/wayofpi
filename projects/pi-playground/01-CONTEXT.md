@@ -1,12 +1,12 @@
 # Context
 
-This file describes the **stack** and **structure** of the `/home/zerwiz/.pi` project playground.
+This file describes the **stack** and **structure** of this **Pi / Way of Pi playground** repository (clone root on your machine).
 
 ---
 
 ## Repository / paths
 
-- **Root:** `/home/zerwiz/.pi`
+- **Root:** the playground git checkout (use `git rev-parse --show-toplevel` from inside the clone)
 
 ## Stack
 
@@ -126,7 +126,7 @@ The playground does not auto-source `.env`. Use one of:
 ## Key Paths Summary
 
 ```
-/home/zerwiz/.pi/
+./   # repo root (your clone path)
 ├── extensions/               # Extension source files (*.ts)
 ├── .pi/                      # Pi workspace
 │   ├── agents/              # Agent definitions (*.md)

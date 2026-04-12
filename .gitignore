@@ -33,6 +33,9 @@ vendor/wop-upstream/
 # Local / vendored reference dumps (import scripts may use a path outside the repo)
 ref/
 
+# Machine-local playground link marker — never commit (belongs under `<project>/.pi/` when linked)
+/.playground-from
+
 # Pi UI state under repo root (not `.pi/storage/`)
 storage/
 

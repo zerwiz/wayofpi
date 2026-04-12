@@ -38,4 +38,4 @@
 
 ---
 
-*Full project at `/home/zerwiz/.pi/projects/8gent-code/`*
+*Full project docs live under **`projects/8gent-code/`** in this playground repo.*

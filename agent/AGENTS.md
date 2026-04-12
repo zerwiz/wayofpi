@@ -18,7 +18,7 @@ This file is loaded into **[Context]** for sessions using this agent directory. 
 ## Project documentation (`projects/`) — every new project
 
 1. Read **`docs/REPO_INDEX.md`** once per new effort to orient yourself in this playground.
-2. For **every new codebase or sustained effort**, bootstrap **`/home/zerwiz/.pi/projects/<slug>/`** from **`projects/_template/`** (copy template **files** into `<slug>/`, not a nested `_template`).
+2. For **every new codebase or sustained effort**, bootstrap **`projects/<slug>/`** (under **this** playground repo root) from **`projects/_template/`** (copy template **files** into `<slug>/`, not a nested `_template`).
 3. Populate overview and context from the **target repo** (scan README, manifests, layout) or **`dispatch_agent`** → **`project-scanner`** with the workspace **absolute path** (team **`new-project`**). For a **durable file tree + per-file purpose map** at the codebase root, **`dispatch_agent`** → **`indexer`** (teams **`index`**, **`new-project`**, **`info`**) — output **`INDEX.md`**; other agents should **`read`** it first. To **embed** a playground extension/skill into the **target repo** (not only link it), use **`playground-portal`** (teams **`playground-portal`**, **`new-project`**, **`full`**, **`info`**) after **`pi-e` option 2** or **`init-project-local-pi-env.sh`**.
 4. Keep **`README.md`**, **`01-CONTEXT.md`**, **`02-DECISIONS.md`** current; see **`projects/README.md`** and **`.cursor/rules/pi-projects-docs.mdc`**. Do not commit secrets.
 

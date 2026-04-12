@@ -13,7 +13,7 @@ This guide is for **using** the extensions that are already wired into this repo
   export { default } from "../../extensions/minimal.ts";
   ```
 
-- **Settings**: `.pi/settings.json` → `"extensions"` lists which shims Pi loads **by default** when you run Pi from `/home/zerwiz/.pi`.
+- **Settings**: `.pi/settings.json` → `"extensions"` lists which shims Pi loads **by default** when you run Pi from **this repo’s root** (your clone path).
 
 You can also run ad-hoc stacks with:
 
