@@ -1,5 +1,7 @@
 # Pi tools reference and Way of Pi orchestrator parity
 
+**Conceptual summary (“same as Pi dispatcher? More?”):** **[WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md](WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md)**.
+
 This document (1) catalogs **Pi’s LLM-callable tools** as used in this playground, (2) maps them to **Way of Pi** (`apps/wayofpi-ui/server/`), and (3) lists **orchestrator UX/runtime differences** between **Pi TUI + agent-team** and the **web shell**.
 
 Canonical Pi narrative: **[docs/TOOLS.md](TOOLS.md)**. Agent-team dispatcher and specialists: **[docs/AGENT_TEAMS.md](AGENT_TEAMS.md)**. Core built-in signatures (repo root): **[TOOLS.md](../TOOLS.md)**. Way of Pi server tools implementation: **`apps/wayofpi-ui/server/orchestrator-tools-exec.ts`**. Pi vs Bun wiring: **[docs/WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)**.
@@ -132,4 +134,4 @@ Per **`.cursor/rules/wop-ui-pi-backend-parity.mdc`** and **[docs/WOP_PI_BACKEND_
 2. Extend Bun orchestrator only where it is a **documented interim** bridge; add missing **`team_*`** parity and **`edit`** only if product asks for Bun-first behavior before Pi owns the turn.
 3. Keep this table updated when **`ORCHESTRATOR_TOOLS_OPENAI`** or Pi **`setActiveTools`** changes.
 
-Last updated: 2026-04-11.
+Last updated: 2026-04-12.

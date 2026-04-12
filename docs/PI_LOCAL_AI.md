@@ -19,7 +19,7 @@ For the **whole-stack** story (all three pieces, Honcho “why”), see **[HONCH
 | **Stack-wide local AI (Pi + Hermes + Honcho)** | **[HONCHO_LOCAL_AI.md](HONCHO_LOCAL_AI.md)** |
 | **Day-to-day runbook** | **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)** |
 | **`just` / global launchers** | Root **`justfile`**, **[`scripts/README.md`](../scripts/README.md)** |
-| **Docs in Documents** | **`/home/zerwiz/Documents/Honcho/`** — symlinks **`PI_LOCAL_AI.md`**, **`HONCHO_INTEGRATION.md`**, **`HONCHO_CAPABILITIES.md`** → **`~/.pi/docs/`** |
+| **Docs in Documents** | **`~/Documents/Honcho/`** (example) — symlinks **`PI_LOCAL_AI.md`**, **`HONCHO_INTEGRATION.md`**, **`HONCHO_CAPABILITIES.md`** → **`~/.pi/docs/`** |
 
 ---
 

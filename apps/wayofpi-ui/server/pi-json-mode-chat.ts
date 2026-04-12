@@ -83,6 +83,8 @@ export async function streamPiJsonChatTurn(opts: {
 	onDelta: (s: string) => void;
 	/** Model thinking / reasoning chunks (Pi `thinking_delta` in JSON mode). */
 	onReasoningDelta?: (s: string) => void;
+	/** Pi lines with token `usage` — forwarded for live meters (Team pulse). */
+	onStreamUsage?: (u: StreamTokenUsage) => void;
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
 }): Promise<PiJsonChatResult> {
 	if (opts.signal?.aborted) {
@@ -179,10 +181,16 @@ export async function streamPiJsonChatTurn(opts: {
 				broadcastToolLog("INFO", name, `end${err} ${res}`);
 			}
 			const u = tryUsageFromLine(parsed);
-			if (u) lastUsage = u;
+			if (u) {
+				lastUsage = u;
+				opts.onStreamUsage?.(u);
+			}
 			if (t === "message_end") {
 				const u2 = parseStreamUsage(parsed);
-				if (u2) lastUsage = u2;
+				if (u2) {
+					lastUsage = u2;
+					opts.onStreamUsage?.(u2);
+				}
 			}
 		}
 

@@ -16,7 +16,7 @@ This note is for **zerwiz’s local stack**: **Hermes** (CLI agent), **Pi** (cod
 | **Hermes config detail** | **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** |
 | **What Honcho can do (v3 API, integrations)** | **[HONCHO_CAPABILITIES.md](HONCHO_CAPABILITIES.md)** |
 | **Pi memory (always — with or without Honcho)** | **[AGENT_MEMORY.md](AGENT_MEMORY.md)** — primary; Honcho mirror is additive |
-| **Docs in your Documents folder** | **`/home/zerwiz/Documents/Honcho/`** — symlinks **`HONCHO_INTEGRATION.md`** & **`HONCHO_CAPABILITIES.md`** → **`~/.pi/docs/`**; see **`README.md`** there |
+| **Docs in your Documents folder** | **`~/Documents/Honcho/`** (or your OS equivalent) — symlinks **`HONCHO_INTEGRATION.md`** & **`HONCHO_CAPABILITIES.md`** → **`~/.pi/docs/`**; see **`README.md`** there |
 
 ---
 
@@ -106,7 +106,7 @@ Expanded step-by-step: **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)** (workspa
 | **[HONCHO_CAPABILITIES.md](HONCHO_CAPABILITIES.md)** | Official capability map + links |
 | **[Hermes_Honcho_connection.md](Hermes_Honcho_connection.md)** | Hermes ↔ Honcho bridge |
 | **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** | Hermes YAML, toolsets |
-| **`/home/zerwiz/Documents/Honcho/`** | Local folder + symlinks — see **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)** §6 |
+| **`~/Documents/Honcho/`** (example) | Local folder + symlinks — see **[HONCHO_OPERATIONS.md](HONCHO_OPERATIONS.md)** §6 |
 | **Pi playground** / **`install-ppi-global`** | **`ppi-*`**, **`pg-pi`**, **`hermes-honcho-*`** |
 | **`~/honcho-server`** | **`just honcho-*`**, **`scripts/install-honcho-bin.sh`** → **`honcho-up`**, **`honcho-open-*`** on **`PATH`** — **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md#command-namespaces-system-first)** |
 | Hermes repo (local) | `~/.hermes/hermes-agent/docs/honcho-integration-spec.md` |

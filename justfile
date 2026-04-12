@@ -175,6 +175,10 @@ hermes-honcho-setup:
 
 # utils
 
+# Repo path doctor: stale .playground-from, absolute paths in settings*.json (pass --fix to rewrite)
+doctor *args:
+    ./doctor.sh {{args}}
+
 # Ensure OpenRouter `:free` entries are grouped before other OpenRouter rows in pi.config.json
 normalize-pi-config-models:
     python3 scripts/normalize-pi-config-model-order.py

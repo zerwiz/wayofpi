@@ -61,7 +61,7 @@ These live under **`.pi/agents/`** and are wired into the default **agent-team**
 - **`indexer`**:
   - Writes an **`INDEX.md`** map at a path you specify (tree + per-file purpose).
 - **`project-scanner`**:
-  - Scans an **external project** and fills `/home/zerwiz/.pi/projects/<slug>/` docs from `projects/_template/`.
+  - Scans an **external project** and fills **`projects/<slug>/`** in this playground (from `projects/_template/`).
 - **How to call**:
   - With **agent-team**: team **index** or **new-project**, or use skill **`/skill:indexer`**.
 

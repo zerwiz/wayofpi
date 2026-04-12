@@ -22,7 +22,7 @@ import type { AgentMeta } from "../../hooks/useAgents";
 import type { LogRow } from "../../hooks/useWayOfPiSession";
 import type { ServerConfig } from "../../hooks/useServerConfig";
 import type { ClawHelpSectionId } from "./ClawHelpModal";
-import { useClawWorkspace } from "../../hooks/useClawWorkspace";
+import type { UseClawWorkspaceResult } from "../../hooks/useClawWorkspace";
 import { ClawWorkspaceCard } from "./ClawWorkspaceCard";
 
 const CLAW_ACTIVITY_LIMIT_KEY = "wayofpi.claw.activityLimit";
@@ -147,6 +147,7 @@ export function ClawMissionView({
 	onOpenFile,
 	onOpenClawHelp,
 	dark,
+	clawWorkspace,
 }: {
 	config: ServerConfig | null;
 	connected: boolean;
@@ -166,6 +167,7 @@ export function ClawMissionView({
 	/** Opens Claw Help; omit section for Overview (product roadmap). */
 	onOpenClawHelp?: (section?: ClawHelpSectionId | null) => void;
 	dark: boolean;
+	clawWorkspace: UseClawWorkspaceResult;
 }) {
 	const bg = dark ? "bg-[#161616]" : "bg-[#f5f5f5]";
 	const text = dark ? "text-[#cccccc]" : "text-[#333333]";
@@ -177,7 +179,6 @@ export function ClawMissionView({
 		() => logs.slice(-activityLimit).reverse(),
 		[logs, activityLimit],
 	);
-	const clawWs = useClawWorkspace(workspacePath !== "—");
 
 	const activitySelectClass = `cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium outline-none ${
 		dark
@@ -327,7 +328,7 @@ export function ClawMissionView({
 
 				{/* Claw workspace */}
 				<ClawWorkspaceCard
-					ws={clawWs}
+					ws={clawWorkspace}
 					workspacePath={workspacePath}
 					dark={dark}
 					onOpenFile={onOpenFile}

@@ -110,3 +110,4 @@ See root **[README.md](../README.md)** (Damage Control) and **`extensions/damage
 | **[TOOLS.md](../TOOLS.md)** | Core function signatures (repo root) |
 | **[COMPARISON.md](../COMPARISON.md)** | Pi vs Claude Code tool surface (optional tools, etc.) |
 | **[WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md](WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md)** | Pi tool catalog + Way of Pi web orchestrator vs Pi **agent-team** dispatcher |
+| **[WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md](WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md)** | Short conceptual comparison: headless Pi vs interim Bun path; **`dispatch_agent`** vs broader lead tools |

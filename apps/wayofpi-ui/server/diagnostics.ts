@@ -406,6 +406,49 @@ export async function collectDiagnostics(): Promise<Record<string, unknown>> {
 		terminalEnabled,
 		openRouterKeySet,
 	});
+
+	const bundlePlaygroundMarker = join(bundleRepoRoot, ".playground-from");
+	if ((await readTextIfExists(bundlePlaygroundMarker)) != null) {
+		checks.push({
+			id: "legacy_bundle_playground_marker",
+			title: "Remove repo-root .playground-from",
+			status: "warn",
+			summary: "Machine-specific playground path marker exists at the Way of Pi checkout root.",
+			hint: "Delete `.playground-from` in the repo root. Linked projects record the playground only in `<project>/.pi/.playground-from` (see `scripts/enable-playground-in-project`).",
+		});
+	}
+
+	const projectPlaygroundMarker = join(primary, ".pi", ".playground-from");
+	const markerRaw = await readTextIfExists(projectPlaygroundMarker);
+	if (markerRaw != null) {
+		const target = markerRaw.split(/\r?\n/)[0]?.trim() ?? "";
+		if (!target) {
+			checks.push({
+				id: "pi_playground_link_marker",
+				title: "Pi playground link (.pi/.playground-from)",
+				status: "warn",
+				summary: "Marker file is empty or whitespace only.",
+				hint: "Remove `.pi/.playground-from` or re-run `enable-playground-in-project` / `pi-e` option 2 from your Way of Pi clone on this machine.",
+			});
+		} else if (!existsSync(target)) {
+			checks.push({
+				id: "pi_playground_link_marker",
+				title: "Pi playground link (.pi/.playground-from)",
+				status: "error",
+				summary: `Recorded playground root does not exist: ${target}`,
+				hint: "Another machine’s absolute path is often the cause. Re-link: run `disable-playground-in-project` in the project, then `enable-playground-in-project` from your local Way of Pi checkout.",
+			});
+		} else {
+			checks.push({
+				id: "pi_playground_link_marker",
+				title: "Pi playground link (.pi/.playground-from)",
+				status: "ok",
+				summary: target,
+				hint: "Project `.pi/` is wired to load agents/skills/themes from this playground checkout.",
+			});
+		}
+	}
+
 	const doctorRollup = summarizeDoctorChecks(checks);
 
 	return {

@@ -2,9 +2,9 @@
 
 This project folder (`projects/pi-playground/`) serves as **documentation artifacts** for when Pi works on a specific codebase or sustained workflow.
 
-**Note:** This template is copied when a new workspace is scanned. The final populated version lives at:
-- Template: `/home/zerwiz/.pi/projects/_template/` (this file)
-- Generated: `/home/zerwiz/.pi/projects/<slug>/` where `<slug>` is the codebase name
+**Note:** This template is copied when a new workspace is scanned. Paths are always under the **playground repo root**:
+- Template: `projects/_template/` (this file)
+- Generated: `projects/<slug>/` where `<slug>` is the codebase name
 
 The `projects/pi-playground/` folder here tracks **meta-documents** about the pi-playground playground itself, while `projects/myrepo/` would track documents about `myrepo` when agents work on it.
 

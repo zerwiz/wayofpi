@@ -1,41 +1,41 @@
 {
   "theme": "synthwave",
   "prompts": [
-    "/home/zerwiz/.pi/.claude/commands"
+    ".claude/commands"
   ],
   "extensions": [
-    "/home/zerwiz/.pi/.pi/extensions/workspace-boundary.ts",
-    "/home/zerwiz/.pi/.pi/extensions/minimal.ts",
-    "/home/zerwiz/.pi/.pi/extensions/theme-cycler.ts",
-    "/home/zerwiz/.pi/.pi/extensions/session-memory.ts",
-    "/home/zerwiz/.pi/.pi/extensions/context-local-hints.ts",
-    "/home/zerwiz/.pi/.pi/extensions/extension-picker.ts",
-    "/home/zerwiz/.pi/.pi/extensions/session-saver.ts",
-    "/home/zerwiz/.pi/.pi/extensions/honcho-mirror.ts",
-    "/home/zerwiz/.pi/.pi/extensions/chronicle.ts",
-    "/home/zerwiz/.pi/.pi/extensions/agent-forge.ts",
-    "/home/zerwiz/.pi/.pi/extensions/dynamic-loader.ts",
-    "/home/zerwiz/.pi/.pi/extensions/ralph.ts",
-    "/home/zerwiz/.pi/.pi/extensions/github-management.ts",
-    "/home/zerwiz/.pi/.pi/extensions/pi-doctor.ts",
-    "/home/zerwiz/.pi/.pi/extensions/web-tools.ts",
-    "/home/zerwiz/.pi/extensions/agent-chain.ts",
-    "/home/zerwiz/.pi/extensions/cross-agent.ts",
-    "/home/zerwiz/.pi/extensions/damage-control.ts",
-    "/home/zerwiz/.pi/extensions/footer-context-stats.ts",
-    "/home/zerwiz/.pi/extensions/pure-focus.ts",
-    "/home/zerwiz/.pi/extensions/purpose-gate.ts",
-    "/home/zerwiz/.pi/extensions/session-replay.ts",
-    "/home/zerwiz/.pi/extensions/subagent-widget.ts",
-    "/home/zerwiz/.pi/extensions/system-select.ts",
-    "/home/zerwiz/.pi/extensions/tilldone.ts",
-    "/home/zerwiz/.pi/extensions/tool-counter-widget.ts",
-    "/home/zerwiz/.pi/extensions/tool-counter.ts"
+    ".pi/extensions/workspace-boundary.ts",
+    ".pi/extensions/minimal.ts",
+    ".pi/extensions/theme-cycler.ts",
+    ".pi/extensions/session-memory.ts",
+    ".pi/extensions/context-local-hints.ts",
+    ".pi/extensions/extension-picker.ts",
+    ".pi/extensions/session-saver.ts",
+    ".pi/extensions/honcho-mirror.ts",
+    ".pi/extensions/chronicle.ts",
+    ".pi/extensions/agent-forge.ts",
+    ".pi/extensions/dynamic-loader.ts",
+    ".pi/extensions/ralph.ts",
+    ".pi/extensions/github-management.ts",
+    ".pi/extensions/pi-doctor.ts",
+    ".pi/extensions/web-tools.ts",
+    "extensions/agent-chain.ts",
+    "extensions/cross-agent.ts",
+    "extensions/damage-control.ts",
+    "extensions/footer-context-stats.ts",
+    "extensions/pure-focus.ts",
+    "extensions/purpose-gate.ts",
+    "extensions/session-replay.ts",
+    "extensions/subagent-widget.ts",
+    "extensions/system-select.ts",
+    "extensions/tilldone.ts",
+    "extensions/tool-counter-widget.ts",
+    "extensions/tool-counter.ts"
   ],
   "skills": [
-    "/home/zerwiz/.pi/.pi/skills"
+    ".pi/skills"
   ],
   "themes": [
-    "/home/zerwiz/.pi/.pi/themes"
+    ".pi/themes"
   ]
 }

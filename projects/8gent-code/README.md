@@ -14,7 +14,7 @@ Terminal-first agentic coding experience. 8gent Code is the kernel of the 8gent 
 - Memory layer with SQLite + FTS5, consolidation, and self-reflection
 - Continuous RL fine-tuning via GRPO (off by default)
 
-See [CLAUDE.md](/home/zerwiz/CodeP/8gent-code-main/CLAUDE.md) for full project context.
+See **`CLAUDE.md`** at the root of **your** 8gent-code clone (path differs per machine), or the repo’s default branch on GitHub, for full project context.
 
 ## Repo
 
@@ -60,7 +60,7 @@ npm install -g @podjamz/8gent-code
 8gent                                     # launches TUI
 
 # From source
-cd /home/zerwiz/CodeP/8gent-code-main
+cd /path/to/your/8gent-code-clone
 bun install
 8gent tui                                 # or directly with bun run
 ```
@@ -122,9 +122,9 @@ Required env vars (all optional, defaults provided):
 
 ## Links
 
-- **Main README**: [`/home/zerwiz/CodeP/8gent-code-main/README.md`](/home/zerwiz/CodeP/8gent-code-main/README.md)
+- **Main README**: `README.md` at the root of your 8gent-code clone (or on GitHub: [`github.com/zerwiz/8gent-code`](https://github.com/zerwiz/8gent-code))
 - **8gent Documentation**: [`8gent.world`](https://8gent.world)
 - **8gent OS**: [`8gentos.com`](https://8gentos.com)
 - **Fly.io Vessel**: [`eight-vessel.fly.dev`](https://eight-vessel.fly.dev)
 
-See `/home/zerwiz/.pi/projects/8gent-code/00-OVERVIEW.md` for scope details, and `01-CONTEXT.md` for stack/commands.
+See **`projects/8gent-code/00-OVERVIEW.md`** in this playground for scope details, and **`01-CONTEXT.md`** in the same folder for stack/commands.

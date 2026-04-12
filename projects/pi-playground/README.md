@@ -1,6 +1,6 @@
 # Pi Playground Project Documentation
 
-**Playground root:** `/home/zerwiz/.pi`  
+**Playground root:** your Way of Pi / Pi playground **git clone** (directory that contains `extensions/`, `.pi/`, `projects/`).  
 **Last updated:** 2026-03-26
 
 ## Goal
@@ -9,7 +9,7 @@ This documentation set (`projects/pi-playground/`) tracks on-disk documentation 
 
 - **Template:** Files copied from `projects/_template/` (README, 00-04 overview/markdown).
 - **Usage:** Created by `project-scanner` agent (team `new-project`) when scanning a new workspace.
-- **Location:** `/home/zerwiz/.pi/projects/pi-playground/`
+- **Location:** `projects/pi-playground/` (under that clone)
 
 ### Purpose
 
@@ -30,7 +30,7 @@ This folder is **not** the playground itself — it's **per-codebase notes** gen
 
 - Full playground docs: [docs/README.md](../../docs/README.md)
 - Project rules: [projects/README.md](../README.md)
-- This project: `/home/zerwiz/.pi/projects/pi-playground/`
+- This project: `projects/pi-playground/` (relative to the playground repo root)
 
 ---
 

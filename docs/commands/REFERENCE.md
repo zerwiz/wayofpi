@@ -615,7 +615,7 @@ Export review findings to file.
 
 **Description**: Save all review findings to a report file.
 
-**Output**: Creates `/home/zerwiz/.pi/reviews/session-review-YYYY-MM-DD.json`
+**Output**: Creates `<project-root>/reviews/session-review-YYYY-MM-DD.json` (path depends on your Pi project / cwd)
 
 ---
 
@@ -882,8 +882,8 @@ Error: No space left on device
 
 ## Additional Resources
 
-- **Documentation**: See `/home/zerwiz/.pi/docs/` for detailed guides
-- **Configuration**: Edit `/home/zerwiz/.pi/storage/config.json` for custom settings
+- **Documentation**: See **`docs/`** in your Pi / playground checkout (repo-relative)
+- **Configuration**: Edit **`storage/config.json`** under the project (or paths your Pi build uses) for custom settings
 - **Session Replay**: See `ext-session-replay` for timeline overlay
 
 ---
@@ -898,7 +898,7 @@ This command reference is part of the Pi Coding Agent project and is available u
 
 For issues with commands or this reference, check:
 - Error messages in the terminal
-- Documentation in `/home/zerwiz/.pi/docs/`
+- Documentation in your checkout’s **`docs/`** tree
 - The README.md in your project directory
 </think>
 

@@ -4,7 +4,7 @@ This is a **map** of the Pi extension playground: **what each area is for** and 
 
 **Canonical GitHub:** [zerwiz/wayofpi](https://github.com/zerwiz/wayofpi)
 
-**Playground root** on this machine: **`/home/zerwiz/.pi`** (same as the Git repo root when you `cd` here).
+**Playground root** means **this git checkout** (the directory that contains **`extensions/`**, **`.pi/`**, **`projects/`**). Run Pi and scripts with **`cd`** set to that directory (path differs on every machine — use **`git rev-parse --show-toplevel`** from inside the clone).
 
 For narrative docs, start at **[README.md](README.md)** (this folder) or root **[README.md](../README.md)**. For an explanation of what “the playground” means here, see **[PLAYGROUND.md](PLAYGROUND.md)**.
 
@@ -12,7 +12,7 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 
 ## 1. Top-level layout (repo root)
 
-| Path (under `/home/zerwiz/.pi/`) | Purpose |
+| Path (under repo root) | Purpose |
 |----------------------------------|---------|
 | **`extensions/`** | **Source** for Pi extensions (TypeScript, one main file per extension). Pi does **not** auto-load from here alone—see **`.pi/extensions/`** shims. |
 | **`.pi/`** | **Project-local Pi workspace**: settings, shims, agents, skills, themes, rules consumed when you run Pi from this directory. |
@@ -64,8 +64,8 @@ For narrative docs, start at **[README.md](README.md)** (this folder) or root **
 
 | Path | Purpose |
 |------|---------|
-| **`/home/zerwiz/.pi/projects/README.md`** | Rules: when to create `projects/<slug>/`, slug naming, agent behavior pointers. |
-| **`/home/zerwiz/.pi/projects/_template/README.md`** | Template **index** for a new slug (goal, links, file table). |
+| **`projects/README.md`** | Rules: when to create `projects/<slug>/`, slug naming, agent behavior pointers. |
+| **`projects/_template/README.md`** | Template **index** for a new slug (goal, links, file table). |
 | **`.../_template/00-OVERVIEW.md`** | Scope, success criteria. |
 | **`.../_template/01-CONTEXT.md`** | Paths, stack, commands, env. |
 | **`.../_template/02-DECISIONS.md`** | Dated decisions log. |
@@ -122,15 +122,15 @@ See **`.gitignore`** for the authoritative list.
 ## 7. Quick path cheatsheet
 
 ```text
-/home/zerwiz/.pi/extensions/<name>.ts     # extension source
-/home/zerwiz/.pi/.pi/extensions/<name>.ts # shim Pi loads
-/home/zerwiz/.pi/.pi/settings.json        # Pi project settings
-/home/zerwiz/.pi/.pi/agents/              # agent .md + YAML
-/home/zerwiz/.pi/.pi/skills/<skill>/SKILL.md
-/home/zerwiz/.pi/projects/_template/      # copy → projects/<slug>/
-/home/zerwiz/.pi/docs/                    # guides + REPO_INDEX.md
-/home/zerwiz/.pi/specs/                   # extension specs
-/home/zerwiz/.pi/agent/AGENTS.md          # Pi context file
+extensions/<name>.ts              # extension source
+.pi/extensions/<name>.ts          # shim Pi loads
+.pi/settings.json                 # Pi project settings
+.pi/agents/                       # agent .md + YAML
+.pi/skills/<skill>/SKILL.md
+projects/_template/               # copy → projects/<slug>/
+docs/                             # guides + REPO_INDEX.md
+specs/                            # extension specs
+agent/AGENTS.md                   # Pi context file (this tree)
 ```
 
-If this repo is checked out elsewhere, replace **`/home/zerwiz/.pi`** with your clone path.
+Paths are **relative to the repo root** above. After `git clone`, use **`./doctor.sh`** (repo root) to catch stale machine-specific JSON or markers.

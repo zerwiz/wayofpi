@@ -8,6 +8,9 @@ export type ChatPulseMeters = {
 	cumCompletion: number;
 	/** 0–100 when server sends usage or derives from lastPrompt/contextWindow. */
 	contextFillPct: number | null;
+	/** In-flight turn from SSE / Pi JSON (`streamPeek`); cleared on final `chat_usage`. */
+	peekPrompt?: number;
+	peekCompletion?: number;
 };
 
 type ChatUsageCore = {
@@ -150,6 +153,13 @@ export interface ChatRow {
 	reasoning?: string;
 	/** Server queue slot while message waits behind an in-flight assistant turn. */
 	queueId?: string;
+	/**
+	 * Workspace agent from the **session picker** only (`set_agent` / persisted pick).
+	 * Phrase-dispatch merges a specialist for one turn but Session Chat still shows **Orchestrator** — we do not tag those
+	 * rows with the dispatch name so Team pulse does not relabel orchestrator replies as specialists.
+	 * Absent / null = orchestrator for transcript purposes.
+	 */
+	assistantPersona?: string | null;
 }
 
 export interface LogRow {
@@ -241,6 +251,10 @@ export function useWayOfPiSession(
 	onFocusWorkspaceFileRef.current = onFocusWorkspaceFile;
 	const [chatPulseMeters, setChatPulseMeters] = useState<ChatPulseMeters | null>(null);
 	const wsRef = useRef<WebSocket | null>(null);
+	const chatAgentNameRef = useRef<string | null>(chatAgentName);
+	const dispatchTurnAgentRef = useRef<string | null>(null);
+	/** Snapshot at `assistant_turn_start` — phrase-dispatch wins over session picker (matches server merge). */
+	const assistantTurnPersonaRef = useRef<string | null>(null);
 	const assistantIdRef = useRef<string | null>(null);
 	const bufferThisTurnRef = useRef(false);
 	const bufferedAssistantRef = useRef("");
@@ -258,6 +272,12 @@ export function useWayOfPiSession(
 	useEffect(() => {
 		chatTabsRef.current = chatTabs;
 	}, [chatTabs]);
+	useEffect(() => {
+		chatAgentNameRef.current = chatAgentName;
+	}, [chatAgentName]);
+	useEffect(() => {
+		dispatchTurnAgentRef.current = dispatchTurnAgent;
+	}, [dispatchTurnAgent]);
 
 	/** Empty tabs show **New Chat**; normalize legacy **Session Chat** / **New chat** when there are no user rows yet. */
 	useEffect(() => {
@@ -332,6 +352,7 @@ export function useWayOfPiSession(
 				prevQueueSnapshotRef.current = [];
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				setChatPulseMeters(null);
+				dispatchTurnAgentRef.current = null;
 				setDispatchTurnAgent(null);
 				queueMicrotask(() => {
 					const w = wsRef.current;
@@ -391,6 +412,7 @@ export function useWayOfPiSession(
 						const srvAgent =
 							data.agentName === null || typeof data.agentName === "string" ? data.agentName : null;
 						const wantAgent = readStoredChatAgent();
+						chatAgentNameRef.current = wantAgent;
 						setChatAgentNameState(wantAgent);
 						if (wantAgent !== srvAgent && ws.readyState === WebSocket.OPEN) {
 							ws.send(JSON.stringify({ type: "set_agent", agent: wantAgent }));
@@ -425,6 +447,7 @@ export function useWayOfPiSession(
 				}
 				if (type === "agent") {
 					const n = data.name === null || typeof data.name === "string" ? data.name : null;
+					chatAgentNameRef.current = n;
 					setChatAgentNameState(n);
 					try {
 						if (n) localStorage.setItem(CHAT_AGENT_STORAGE_KEY, n);
@@ -535,10 +558,14 @@ export function useWayOfPiSession(
 				}
 				if (type === "dispatch_turn") {
 					const a = data.agent;
-					setDispatchTurnAgent(typeof a === "string" && a.trim() ? a.trim() : null);
+					const next = typeof a === "string" && a.trim() ? a.trim() : null;
+					dispatchTurnAgentRef.current = next;
+					setDispatchTurnAgent(next);
 					return;
 				}
 				if (type === "assistant_turn_start") {
+					const picker = chatAgentNameRef.current?.trim() ?? "";
+					assistantTurnPersonaRef.current = picker || null;
 					assistantIdRef.current = `a-${Date.now()}`;
 					bufferThisTurnRef.current = shouldBufferDeltas();
 					bufferedAssistantRef.current = "";
@@ -585,9 +612,19 @@ export function useWayOfPiSession(
 						const i = R.findIndex((r) => r.id === aid);
 						if (i === -1) {
 							const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
+							const persona = assistantTurnPersonaRef.current;
 							return {
 								...prev,
-								[tabId]: [...R, { id: aid, role: "assistant" as const, content: piece, timestamp: ts }],
+								[tabId]: [
+									...R,
+									{
+										id: aid,
+										role: "assistant" as const,
+										content: piece,
+										timestamp: ts,
+										...(persona ? { assistantPersona: persona } : {}),
+									},
+								],
 							};
 						}
 						const next = [...R];
@@ -611,6 +648,7 @@ export function useWayOfPiSession(
 						const R = prev[tabId] ?? [];
 						const i = R.findIndex((r) => r.id === aid);
 						if (i === -1) {
+							const persona = assistantTurnPersonaRef.current;
 							return {
 								...prev,
 								[tabId]: [
@@ -621,6 +659,7 @@ export function useWayOfPiSession(
 										content: "",
 										reasoning: piece,
 										timestamp: ts,
+										...(persona ? { assistantPersona: persona } : {}),
 									},
 								],
 							};
@@ -643,22 +682,43 @@ export function useWayOfPiSession(
 					setChatQueueItems([]);
 					prevQueueSnapshotRef.current = [];
 					assistantIdRef.current = null;
+					assistantTurnPersonaRef.current = null;
 					bufferThisTurnRef.current = false;
 					bufferedAssistantRef.current = "";
 					bufferedReasoningRef.current = "";
 					setTokenMeter({ ...TOKEN_METER_EMPTY });
 					setChatPulseMeters(null);
+					dispatchTurnAgentRef.current = null;
 					setDispatchTurnAgent(null);
 					return;
 				}
 				if (type === "chat_usage") {
 					setTokenMeter(formatChatUsagePayload(data));
 					const u = computeChatUsageCore(data);
-					setChatPulseMeters({
-						cumPrompt: u.cumP,
-						cumCompletion: u.cumC,
-						contextFillPct: u.pct,
-					});
+					const peek = data.streamPeek === true;
+					const lp =
+						typeof data.lastPrompt === "number" && Number.isFinite(data.lastPrompt)
+							? Math.max(0, data.lastPrompt)
+							: 0;
+					const lc =
+						typeof data.lastCompletion === "number" && Number.isFinite(data.lastCompletion)
+							? Math.max(0, data.lastCompletion)
+							: 0;
+					if (peek) {
+						setChatPulseMeters({
+							cumPrompt: u.cumP,
+							cumCompletion: u.cumC,
+							contextFillPct: u.pct,
+							peekPrompt: lp,
+							peekCompletion: lc,
+						});
+					} else {
+						setChatPulseMeters({
+							cumPrompt: u.cumP,
+							cumCompletion: u.cumC,
+							contextFillPct: u.pct,
+						});
+					}
 					return;
 				}
 				if (type === "session_transcript") {
@@ -696,6 +756,7 @@ export function useWayOfPiSession(
 								const R = prev[tabId] ?? [];
 								const i = R.findIndex((r) => r.id === aid);
 								if (i === -1) {
+									const persona = assistantTurnPersonaRef.current;
 									return {
 										...prev,
 										[tabId]: [
@@ -706,16 +767,19 @@ export function useWayOfPiSession(
 												content: buf,
 												...(rbuf ? { reasoning: rbuf } : {}),
 												timestamp: ts,
+												...(persona ? { assistantPersona: persona } : {}),
 											},
 										],
 									};
 								}
 								const next = [...R];
 								const cur = next[i]!;
+								const persona = assistantTurnPersonaRef.current;
 								next[i] = {
 									...cur,
 									content: cur.content + buf,
 									...(rbuf ? { reasoning: (cur.reasoning ?? "") + rbuf } : {}),
+									...(persona && cur.assistantPersona == null ? { assistantPersona: persona } : {}),
 								};
 								return { ...prev, [tabId]: next };
 							});
@@ -727,6 +791,8 @@ export function useWayOfPiSession(
 					}
 					setStreaming(false);
 					assistantIdRef.current = null;
+					assistantTurnPersonaRef.current = null;
+					dispatchTurnAgentRef.current = null;
 					setDispatchTurnAgent(null);
 					onTreeRefresh?.();
 					return;
@@ -736,6 +802,7 @@ export function useWayOfPiSession(
 					bufferedAssistantRef.current = "";
 					bufferedReasoningRef.current = "";
 					setStreaming(false);
+					dispatchTurnAgentRef.current = null;
 					setDispatchTurnAgent(null);
 					setError(String(data.message ?? "Unknown error"));
 					setLogs((L) => [
@@ -823,6 +890,7 @@ export function useWayOfPiSession(
 
 	const setChatAgent = useCallback((name: string | null) => {
 		const next = name?.trim() || null;
+		chatAgentNameRef.current = next;
 		setChatAgentNameState(next);
 		try {
 			if (next) localStorage.setItem(CHAT_AGENT_STORAGE_KEY, next);
@@ -880,6 +948,7 @@ export function useWayOfPiSession(
 		setRowsByTab((prev) => ({ ...prev, [newId]: [] }));
 		setTokenMeter({ ...TOKEN_METER_EMPTY });
 		setChatPulseMeters(null);
+		dispatchTurnAgentRef.current = null;
 		setDispatchTurnAgent(null);
 		setError(null);
 		setStreaming(false);
@@ -907,6 +976,7 @@ export function useWayOfPiSession(
 		setChatQueueItems([]);
 		setTokenMeter({ ...TOKEN_METER_EMPTY });
 		setChatPulseMeters(null);
+		dispatchTurnAgentRef.current = null;
 		setDispatchTurnAgent(null);
 		const tabRows = rowsByTabRef.current[id] ?? [];
 		const ws = wsRef.current;
@@ -952,6 +1022,7 @@ export function useWayOfPiSession(
 				setRowsByTab({ [newId]: [] });
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				setChatPulseMeters(null);
+				dispatchTurnAgentRef.current = null;
 				setDispatchTurnAgent(null);
 				setError(null);
 				setStreaming(false);
@@ -998,6 +1069,7 @@ export function useWayOfPiSession(
 				setChatQueueItems([]);
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				setChatPulseMeters(null);
+				dispatchTurnAgentRef.current = null;
 				setDispatchTurnAgent(null);
 				const tabRows = rowsByTabRef.current[nextActiveId] ?? [];
 				const ws = wsRef.current;

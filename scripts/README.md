@@ -154,6 +154,22 @@ bun scripts/pi-models-scoped-priority.ts
 - **`scripts/wop-pi-upstream.ts`** — **`check`**: compares **`badlogic/pi-mono`** tags and **`@mariozechner/pi-coding-agent`** npm **`latest`** to **`wop.upstream.lock.json`** (no downloads). **`sync`**: optional tarball of a **tag** into **`vendor/wop-upstream/`** with path rewrites (**`--dry-run`** | **`--apply`**). See **`scripts/wop-upstream/README.md`**, **`docs/WOP_UPSTREAM_SYNC.md`**.
 - **`just wop-upstream-check`** · **`just wop-upstream-sync --source pi-mono --ref v0.66.1 --dry-run`**
 
+## `./doctor.sh` (repo root) — portable paths
+
+After a bad merge or an old clone, **`settings*.json`** can contain **another machine’s absolute paths**, or a stray **`.playground-from`** at the repo root. From the **Way of Pi checkout**:
+
+```bash
+./doctor.sh                    # report only (exit 1 if problems)
+./doctor.sh --fix              # remove repo-root marker + relativize known paths
+./doctor.sh --project /abs/app # also read `.pi/.playground-from` + `.pi/settings.json` there
+just doctor
+just doctor --fix
+```
+
+Also warns if a **stale dev-home path snippet** (see the constant in **`doctor.sh`**) reappears in **`.pi/agents/*.md`**, **`docs/REPO_INDEX.md`**, **`docs/PLAYGROUND.md`**, **`agent/AGENTS.md`**, **`projects/README.md`**, or selected **`.cursor/rules/*.mdc`** (manual edit — not auto-fixed).
+
+See **`scripts/enable-playground-in-project`** / **[docs/PLAYGROUND.md](../docs/PLAYGROUND.md)** for linking another project; **Help → Host doctor** in **Way of Pi** for the live server snapshot.
+
 ## Other
 
 - **`quick-start.sh`** — Ollama-oriented Pi quick start (legacy/helper).

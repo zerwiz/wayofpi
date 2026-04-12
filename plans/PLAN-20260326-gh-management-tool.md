@@ -3,7 +3,7 @@
 **Status:** implement  
 **Created:** 2026-03-26  
 **Revision:** 2  
-**Session cwd:** /home/zerwiz/.pi  
+**Session cwd:** playground repo root (path varies; use `git rev-parse --show-toplevel` from the clone)  
 **Sources:** github-management-reviewer-feedback.txt, PLAN-20260326-gh-management-tool.md.rev, Pi project docs
 
 ---
@@ -59,15 +59,16 @@ Build a comprehensive GitHub management CLI tool (named `ghm`) that enables deve
 
 ### Phase 1: Project Setup (1-2 hours)
 
-1. **Create file structure**
+1. **Create file structure** (from the playground repo root — **`$ROOT`** = `git rev-parse --show-toplevel`)
    ```bash
-   mkdir -p /home/zerwiz/.pi/extensions/github-management
-   mkdir -p /home/zerwiz/.pi/tools
+   ROOT="$(git rev-parse --show-toplevel)"
+   mkdir -p "$ROOT/extensions/github-management"
+   mkdir -p "$ROOT/tools"
    ```
 
 2. **Create shim file for Pi loading**
    ```bash
-   echo 'export { default } from "../../extensions/github-management"' > /home/zerwiz/.pi/.pi/extensions/github-management.ts
+   echo 'export { default } from "../../extensions/github-management"' > "$ROOT/.pi/extensions/github-management.ts"
    ```
 
 3. **Create CLI shim at `.pi/tools/github-management.js`**
@@ -708,7 +709,7 @@ Build a comprehensive GitHub management CLI tool (named `ghm`) that enables deve
 - **Start with:** Phase 1: Project Setup (step 1 or 2)
 - **Avoid:** Touching `.pi/agent-sessions/`, modifying existing extensions without review
 - **Parallel agents (optional):**
-  - `indexer` agent can run with cwd `/home/zerwiz/.pi` to create INDEX.md
+  - `indexer` agent can run with cwd at the **playground repo root** to create INDEX.md
   - `github` skill agent can run with `bash` commands for verification
 
 **Command for dispatcher:**
