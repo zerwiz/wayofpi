@@ -14,13 +14,20 @@ import { applyChatContextBudget } from "./chat-context-budget";
 import { applyLeadSystem, type ChatSessionMode } from "./session-prompts";
 import { getAgentBodyByName, loadWorkspaceAgents, readPlannerAgentBodySync } from "./agents";
 import { fetchOllamaTags, isValidOllamaModelId, isValidOpenRouterModelId } from "./llm-models";
+import {
+	getClawDotDirAbs,
+	getClawHostRepoRoot,
+	getClawWorkspaceBundleDirAbs,
+	clawWorkspaceBundleToLegacyFlatRel,
+	resolveWorkspaceOrClawAbs,
+} from "./claw-workspace-root";
 import { getWorkspaceRoot, MAX_FILE_BYTES, safeResolveUnderWorkspace } from "./paths";
 import { imageMimeFromPath } from "./workspace-file-mime";
 import { listPlansCatalog } from "./plans-catalog";
 import { readPackageScripts } from "./package-scripts";
 import { readUiViewsCatalog, seedUiViewsCatalogIfMissing } from "./ui-views-catalog";
 import { gitStageAbsolutePath, gitStageAllFromAbsolutePath } from "./git";
-import { buildWorkspaceTree } from "./tree";
+import { buildClawHostTree, buildWorkspaceTree } from "./tree";
 import {
 	addFolder,
 	getFrozenInitialWorkspacePath,
@@ -44,6 +51,23 @@ import {
 	terminalShellHints,
 	type TerminalWsData,
 } from "./terminal-ws";
+import { getClawAutomationStatus } from "./claw-automation-status";
+import { readClawMissionEvents } from "./claw-mission-events";
+import {
+	normalizeSchedule,
+	readClawSchedulesMerged,
+	writeClawSchedulesDefinitions,
+} from "./claw-schedules-store";
+import { executeClawAutomation } from "./claw-schedule-executor";
+import { startClawScheduler } from "./claw-scheduler";
+import {
+	clawWebhookConfigured,
+	clawWebhookInboundEnabled,
+	ensureWebhookSecret,
+	readWebhookSecret,
+	rotateWebhookSecret,
+	verifyWebhookBearer,
+} from "./claw-webhook-store";
 import { getClawTelegramIntegrationStatus } from "./claw-telegram-status";
 import { collectDiagnostics, collectUpstreamSnapshot } from "./diagnostics";
 import { runWorkspaceProblemsAnalysis, type WorkspaceProblemsRunResult } from "./workspace-problems";
@@ -103,6 +127,17 @@ if (process.env.NODE_ENV !== "production") {
 	if (v === undefined || v === "") {
 		process.env.WOP_ALLOW_TERMINAL = "1";
 	}
+}
+
+/** Settings → Restart server: allowed when unset in dev (`NODE_ENV !== "production"`). Production requires explicit `1`/`true`/`yes`/`on`. Disable in dev with `0`/`false`/`no`/`off`. */
+function isWopServerRestartHttpAllowed(): boolean {
+	const raw = process.env.WOP_ALLOW_SERVER_RESTART?.trim() ?? "";
+	if (raw === "") {
+		return process.env.NODE_ENV !== "production";
+	}
+	const v = raw.toLowerCase();
+	if (v === "0" || v === "false" || v === "no" || v === "off") return false;
+	return v === "1" || v === "true" || v === "yes" || v === "on";
 }
 
 const PORT = Number(process.env.WOP_SERVER_PORT || "3333");
@@ -826,6 +861,18 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	/** Collapse duplicate slashes; strip trailing slash (except root). */
 	const p = url.pathname.replace(/\/{2,}/g, "/").replace(/\/+$/, "") || "/";
 
+	if (req.method === "OPTIONS" && p.startsWith("/api/")) {
+		return new Response(null, {
+			status: 204,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Methods": "GET, HEAD, POST, PUT, DELETE, OPTIONS",
+				"Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
+				"Access-Control-Max-Age": "86400",
+			},
+		});
+	}
+
 	if (p === "/api/health") {
 		return json({
 			ok: true,
@@ -836,8 +883,71 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				workspaceProblems: true,
 				/** **`POST /api/config`** runtime toggles (Pi drives chat, orchestrator tools/bash) exist on this build. */
 				configRuntimePost: true,
+				/** **`GET /api/claw/tree`** — host **`.claw/`** file explorer for Claw mode. */
+				clawHostTreeGet: true,
+				/** **`GET /api/claw/telegram/status`** and **`GET /api/config`** → **`clawTelegramStatus`**. */
+				clawTelegramStatusGet: true,
 			},
 		});
+	}
+
+	if (p === "/api/claw/tree" && req.method === "GET") {
+		try {
+			const { rootDisplay, nodes } = await buildClawHostTree();
+			return json({ rootDisplay, nodes });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/automation" && req.method === "GET") {
+		try {
+			return json(getClawAutomationStatus());
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ version: 1, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/mission-events" && req.method === "GET") {
+		try {
+			const events = await readClawMissionEvents(40);
+			return json({ version: 1, events });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ version: 1, events: [], error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/schedules" && req.method === "GET") {
+		try {
+			const schedules = await readClawSchedulesMerged();
+			return json({ version: 1, schedules });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ version: 1, schedules: [], error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/schedules" && req.method === "PUT") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const raw = body.schedules;
+		if (!Array.isArray(raw)) return json({ error: "schedules array required" }, 400);
+		const coerced = raw.map(normalizeSchedule).filter((s): s is NonNullable<typeof s> => s !== null);
+		try {
+			await writeClawSchedulesDefinitions(coerced);
+			const schedules = await readClawSchedulesMerged();
+			return json({ ok: true, version: 1, schedules });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
 	}
 
 	if (p === "/api/diagnostics" && req.method === "GET") {
@@ -858,14 +968,22 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		}
 	}
 
-	/** Opt-in process exit for dev (e.g. pick up server code changes). `concurrently` does not auto-restart Bun alone. */
+	/** Process exit from Settings → Restart server (dev default on; production needs WOP_ALLOW_SERVER_RESTART=1). `concurrently` does not auto-restart Bun alone. */
 	if (p === "/api/server/restart" && req.method === "POST") {
-		if (process.env.WOP_ALLOW_SERVER_RESTART?.trim() !== "1") {
+		if (!isWopServerRestartHttpAllowed()) {
+			const raw = process.env.WOP_ALLOW_SERVER_RESTART?.trim() ?? "";
+			const v = raw.toLowerCase();
+			const hint =
+				v === "0" || v === "false" || v === "no" || v === "off"
+					? "WOP_ALLOW_SERVER_RESTART disables this exit. Unset it for the usual dev default (on), or set it to 1, then use Settings → Restart server again."
+					: process.env.NODE_ENV === "production"
+						? "Set WOP_ALLOW_SERVER_RESTART=1 on the Way of Pi Bun process, then use Settings → Restart server again. Otherwise stop and start your dev command in the terminal (e.g. npm run dev from apps/wayofpi-ui)."
+						: `Unrecognized WOP_ALLOW_SERVER_RESTART value. Use 1, true, yes, or on; unset for the dev default. Current: ${raw || "(empty)"}`;
 			return json(
 				{
 					ok: false,
 					error: "Server restart is disabled.",
-					hint: "Set WOP_ALLOW_SERVER_RESTART=1 on the Way of Pi Bun process, then use Settings → Restart server again. Otherwise stop and start your dev command in the terminal (e.g. npm run dev from apps/wayofpi-ui).",
+					hint,
 				},
 				403,
 			);
@@ -1196,9 +1314,34 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		const piEngineLive = shouldUsePiJsonChat();
 		const piBackendRequested = engineMode === "pi" || engineMode === "auto";
 		const piBinaryResolved = resolvePiBinaryPath() != null;
+		const wantClawTree = url.searchParams.get("clawTree") === "1";
+		let clawHostTree: Awaited<ReturnType<typeof buildClawHostTree>> | undefined;
+		if (wantClawTree) {
+			try {
+				clawHostTree = await buildClawHostTree();
+			} catch {
+				clawHostTree = { rootDisplay: "", nodes: [] };
+			}
+		}
+		const wantSchedules = url.searchParams.get("schedules") === "1";
+		let clawSchedules: { version: 1; schedules: Awaited<ReturnType<typeof readClawSchedulesMerged>> } | undefined;
+		if (wantSchedules) {
+			try {
+				const schedules = await readClawSchedulesMerged();
+				clawSchedules = { version: 1, schedules };
+			} catch {
+				clawSchedules = { version: 1, schedules: [] };
+			}
+		}
 		return json({
 			provider,
 			chatEngine,
+			/** Absolute Way of Pi checkout root where host-scoped **`.claw/`** lives (not `WOP_WORKSPACE`). */
+			clawHostRepoRoot: getClawHostRepoRoot(),
+			/** Absolute path to host **`.claw/`** (e.g. optional `telegram.json`). */
+			clawDotDirAbs: getClawDotDirAbs(),
+			/** Absolute path to **`.claw/workspace/`** (seven scaffold files + `memory/`). */
+			clawWorkspaceDirAbs: getClawWorkspaceBundleDirAbs(),
 			/** True when `WOP_CHAT_ENGINE` is **`pi`** or **`auto`** and the **`pi`** CLI resolves — all personas use `pi --mode json` (full Pi tools). */
 			piDrivesChat: piEngineLive,
 			/** Whether a **`pi`** executable was resolved (`WOP_PI_BINARY` or PATH); **on** still needs this for headless Pi turns. */
@@ -1212,6 +1355,8 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			capabilities: {
 				workspaceProblems: true,
 				configRuntimePost: true,
+				clawHostTreeGet: true,
+				clawTelegramStatusGet: true,
 			},
 			manifestUrl: "/api/manifest",
 			ollamaHost: resolveOllamaHost(),
@@ -1219,6 +1364,13 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			openrouterModel: process.env.OPENROUTER_MODEL || "openrouter/auto",
 			terminalEnabled: terminalAllowed(),
 			...terminalShellHints(),
+			...(clawHostTree ? { clawHostTree } : {}),
+			/** Same shape as **`GET /api/claw/schedules`** when **`?schedules=1`** — Claw Schedule tab fallback if the dedicated path 404s. */
+			...(clawSchedules ? { clawSchedules } : {}),
+			/** Same payload as **`GET /api/claw/automation`** — embedded so Claw Mission survives older route ordering or proxy quirks. */
+			clawAutomation: getClawAutomationStatus(),
+			/** Same payload as **`GET /api/claw/telegram/status`** — embedded so Claw Channels works even if a proxy drops that path. */
+			clawTelegramStatus: getClawTelegramIntegrationStatus(),
 		});
 	}
 
@@ -1237,6 +1389,77 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ version: 1, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/webhook/ensure" && req.method === "POST") {
+		try {
+			const r = await ensureWebhookSecret();
+			return json({ ok: true, created: r.created, secret: r.secret });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/webhook/rotate" && req.method === "POST") {
+		try {
+			const secret = await rotateWebhookSecret();
+			return json({ ok: true, secret });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	if (p === "/api/claw/webhook/meta" && req.method === "GET") {
+		return json({
+			version: 1,
+			configured: clawWebhookConfigured(),
+			inboundEnabled: clawWebhookInboundEnabled(),
+		});
+	}
+
+	if (p === "/api/claw/inbound" && req.method === "POST") {
+		const secret = await readWebhookSecret();
+		if (!secret) {
+			return json({ ok: false, error: "No webhook secret — use POST /api/claw/webhook/ensure first." }, 404);
+		}
+		if (!clawWebhookInboundEnabled()) {
+			return json({ ok: false, error: "Inbound webhook disabled (WOP_CLAW_INBOUND)." }, 403);
+		}
+		const auth = req.headers.get("authorization");
+		if (!verifyWebhookBearer(auth, secret)) {
+			return json({ ok: false, error: "Unauthorized" }, 401);
+		}
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ ok: false, error: "Invalid JSON" }, 400);
+		}
+		const prompt = String(body.prompt ?? "").trim();
+		if (!prompt) return json({ ok: false, error: "prompt required" }, 400);
+		const agentRaw = body.agentName;
+		const agentName =
+			agentRaw === null || agentRaw === undefined
+				? null
+				: typeof agentRaw === "string"
+					? agentRaw.trim() || null
+					: null;
+		const name = String(body.name ?? "Inbound webhook").trim() || "Inbound webhook";
+		try {
+			const r = await executeClawAutomation({
+				name,
+				prompt,
+				agentName,
+				source: "webhook",
+			});
+			if (r.ok) return json({ ok: true });
+			return json({ ok: false, error: r.error }, 500);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ ok: false, error: message }, 500);
 		}
 	}
 
@@ -1458,18 +1681,38 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/file" && req.method === "GET") {
 		const rel = url.searchParams.get("path") || "";
-		const abs = safeResolveUnderWorkspace(rel);
+		const relNorm = rel.trim();
+		let abs = resolveWorkspaceOrClawAbs(relNorm);
 		if (!abs) return json({ error: "Invalid path" }, 400);
+		let readRel = relNorm;
+		let st: Awaited<ReturnType<typeof stat>>;
 		try {
-			const st = await stat(abs);
+			st = await stat(abs);
+		} catch {
+			const legRel = clawWorkspaceBundleToLegacyFlatRel(relNorm);
+			if (!legRel) {
+				const message = "Not found";
+				return json({ error: message }, 404);
+			}
+			const legAbs = resolveWorkspaceOrClawAbs(legRel);
+			if (!legAbs) return json({ error: "Not found" }, 404);
+			try {
+				st = await stat(legAbs);
+				readRel = legRel;
+				abs = legAbs;
+			} catch {
+				return json({ error: "Not found" }, 404);
+			}
+		}
+		try {
 			if (!st.isFile()) return json({ error: "Not a file" }, 400);
 			if (st.size > MAX_FILE_BYTES) return json({ error: "File too large for editor" }, 413);
-			const imageMime = imageMimeFromPath(rel);
+			const imageMime = imageMimeFromPath(readRel);
 			if (imageMime) {
 				const buf = await readFile(abs);
-				broadcastToolLog("INFO", "read", `read ${rel} (image, ${buf.length} bytes)`);
+				broadcastToolLog("INFO", "read", `read ${readRel} (image, ${buf.length} bytes)`);
 				return json({
-					path: rel,
+					path: readRel,
 					encoding: "base64",
 					mimeType: imageMime,
 					content: buf.toString("base64"),
@@ -1477,16 +1720,16 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			}
 			const buf = await readFile(abs);
 			if (buf.includes(0)) {
-				broadcastToolLog("INFO", "read", `read ${rel} (binary, ${buf.length} bytes)`);
+				broadcastToolLog("INFO", "read", `read ${readRel} (binary, ${buf.length} bytes)`);
 				return json({
-					path: rel,
+					path: readRel,
 					encoding: "base64",
 					mimeType: "application/octet-stream",
 					content: buf.toString("base64"),
 				});
 			}
-			broadcastToolLog("INFO", "read", `read ${rel} (${buf.length} chars utf8)`);
-			return json({ path: rel, content: buf.toString("utf8") });
+			broadcastToolLog("INFO", "read", `read ${readRel} (${buf.length} chars utf8)`);
+			return json({ path: readRel, content: buf.toString("utf8") });
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ error: message }, 404);
@@ -1501,7 +1744,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			return json({ error: "Invalid JSON" }, 400);
 		}
 		const rel = body.path || "";
-		const abs = safeResolveUnderWorkspace(rel);
+		const abs = resolveWorkspaceOrClawAbs(rel);
 		if (!abs) return json({ error: "Invalid path" }, 400);
 		const raw = body.content ?? "";
 		try {
@@ -1552,7 +1795,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		if (listWorkspaceFolders().length > 1 && !toDirRel) {
 			return json({ error: "Drop onto a folder (multi-root workspace has no single root)." }, 400);
 		}
-		const fromAbs = safeResolveUnderWorkspace(fromRel);
+		const fromAbs = resolveWorkspaceOrClawAbs(fromRel);
 		if (!fromAbs) {
 			return json({ error: "Invalid from path" }, 400);
 		}
@@ -1571,12 +1814,12 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		if (normDest === normFrom) {
 			return json({ error: "Already in that folder" }, 400);
 		}
-		const destAbs = safeResolveUnderWorkspace(destRel);
+		const destAbs = resolveWorkspaceOrClawAbs(destRel);
 		if (!destAbs) {
 			return json({ error: "Invalid destination" }, 400);
 		}
 		if (toDirRel) {
-			const toDirAbs = safeResolveUnderWorkspace(toDirRel);
+			const toDirAbs = resolveWorkspaceOrClawAbs(toDirRel);
 			if (!toDirAbs) {
 				return json({ error: "Invalid folder" }, 400);
 			}
@@ -1618,7 +1861,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		if (kind !== "file" && kind !== "dir") {
 			return json({ error: 'kind must be "file" or "dir"' }, 400);
 		}
-		const abs = safeResolveUnderWorkspace(rel);
+		const abs = resolveWorkspaceOrClawAbs(rel);
 		if (!abs) return json({ error: "Invalid path" }, 400);
 		if (existsSync(abs)) {
 			return json({ error: "Path already exists" }, 409);
@@ -1633,6 +1876,31 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				broadcastToolLog("INFO", "write", `touch ${rel}`);
 			}
 			return json({ ok: true, path: rel });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: message }, 500);
+		}
+	}
+
+	if (p === "/api/fs/delete" && req.method === "POST") {
+		let body: { path?: string };
+		try {
+			body = (await req.json()) as { path?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const rel = String(body.path ?? "")
+			.trim()
+			.replace(/^[/\\]+/, "");
+		if (!rel || rel === "." || rel.includes("..")) {
+			return json({ error: "Invalid path" }, 400);
+		}
+		const abs = resolveWorkspaceOrClawAbs(rel);
+		if (!abs) return json({ error: "Invalid path" }, 400);
+		try {
+			await rm(abs, { recursive: true, force: true });
+			broadcastToolLog("INFO", "rm", `rm ${rel}`);
+			return json({ ok: true as const, path: rel });
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ error: message }, 500);
@@ -2017,3 +2285,5 @@ void applyAutoSync((result) => {
 		`auto-sync: files=${result.state.fileCount} fingerprint=${result.state.merkleRoot}`,
 	);
 });
+
+startClawScheduler();

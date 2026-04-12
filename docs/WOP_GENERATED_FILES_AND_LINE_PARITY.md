@@ -43,6 +43,8 @@ When docs say “see line 42” or cite `path:line`:
 
 **`wayofpi-ui`** text editor shows **one line number per logical newline** in the buffer (`WorkspaceTextBuffer`), matching the file on disk for UTF-8 text. **Binary** and **raster images** use a **preview** path (no line gutter) so we do not pretend a PNG is text.
 
+Implementation detail (gutter vs body font metrics, soft wrap measurement, and all call sites): **[WOP_CODE_EDITOR_LINE_NUMBERS.md](WOP_CODE_EDITOR_LINE_NUMBERS.md)**.
+
 ## 4. Behavior in `wayofpi-ui` (implementation)
 
 | Case | Server `GET /api/file` | UI |

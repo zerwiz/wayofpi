@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
+import { parseClawTelegramStatusV1, type ClawTelegramStatusV1 } from "../../shared/claw-telegram-status";
 import { apiGet } from "../api/client";
+import type { ClawAutomationStatus } from "./useClawAutomationStatus";
 
 export type WayofpiApiCapabilities = {
 	workspaceProblems?: boolean;
 	/** This Bun build supports **`POST /api/config`** session toggles (Extensions → Orchestration). */
 	configRuntimePost?: boolean;
+	/** This Bun build exposes **`GET /api/claw/tree`** (Claw host `.claw/` explorer). */
+	clawHostTreeGet?: boolean;
+	/** Telegram snapshot on **`GET /api/config`** and **`GET /api/claw/telegram/status`**. */
+	clawTelegramStatusGet?: boolean;
 };
 
 export interface ServerConfig {
@@ -40,6 +46,16 @@ export interface ServerConfig {
 	platform?: string;
 	/** Node `process.arch` from the Bun server (`arm64` on Apple Silicon, `x64` on Intel/Rosetta). */
 	arch?: string;
+	/** Way of Pi checkout root where host-scoped **`.claw/`** lives (not the opened project workspace). */
+	clawHostRepoRoot?: string;
+	/** Absolute host **`.claw/`** (optional `telegram.json`, etc.). */
+	clawDotDirAbs?: string;
+	/** Absolute **`.claw/workspace/`** (seven scaffold files + `memory/`). */
+	clawWorkspaceDirAbs?: string;
+	/** Same shape as **`GET /api/claw/automation`** — echoed on **`GET /api/config`** for Claw Mission. */
+	clawAutomation?: ClawAutomationStatus;
+	/** Same shape as **`GET /api/claw/telegram/status`** — echoed on **`GET /api/config`** for Claw Channels. */
+	clawTelegramStatus?: ClawTelegramStatusV1;
 }
 
 function normalizeServerConfig(raw: ServerConfig): ServerConfig {
@@ -50,6 +66,8 @@ function normalizeServerConfig(raw: ServerConfig): ServerConfig {
 			? {
 					workspaceProblems: cap.workspaceProblems === true,
 					configRuntimePost: cap.configRuntimePost === true,
+					clawHostTreeGet: cap.clawHostTreeGet === true,
+					clawTelegramStatusGet: cap.clawTelegramStatusGet === true,
 				}
 			: undefined,
 		chatEngine: raw.chatEngine ?? raw.provider ?? "ollama",
@@ -59,6 +77,16 @@ function normalizeServerConfig(raw: ServerConfig): ServerConfig {
 		piBinaryResolved: raw.piBinaryResolved ?? false,
 		orchestratorTools: raw.orchestratorTools ?? false,
 		orchestratorBash: raw.orchestratorBash ?? false,
+		clawHostRepoRoot: typeof raw.clawHostRepoRoot === "string" ? raw.clawHostRepoRoot : undefined,
+		clawDotDirAbs: typeof raw.clawDotDirAbs === "string" ? raw.clawDotDirAbs : undefined,
+		clawWorkspaceDirAbs: typeof raw.clawWorkspaceDirAbs === "string" ? raw.clawWorkspaceDirAbs : undefined,
+		clawAutomation: (() => {
+			const a = raw.clawAutomation;
+			if (!a || typeof a !== "object") return undefined;
+			if ((a as ClawAutomationStatus).version !== 1) return undefined;
+			return a as ClawAutomationStatus;
+		})(),
+		clawTelegramStatus: parseClawTelegramStatusV1(raw.clawTelegramStatus) ?? undefined,
 	};
 }
 

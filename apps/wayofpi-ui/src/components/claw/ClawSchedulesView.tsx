@@ -1,18 +1,18 @@
 /**
- * Claw UI — Schedules tab (Phase D stub).
+ * Claw UI — Schedules tab (Phase D).
  *
- * Lets the operator define Pi turns that should run on a timer.
- * Schedules are stored in localStorage today; backend execution
- * is tracked in docs/WOP_CLAW_MODE_PLAN.md §Phase D.
+ * Definitions sync to **`<host>/.claw/schedule/claw-schedules.v1.json`**; the Bun server
+ * runs enabled entries when **`WOP_CLAW_SCHEDULER=1`** and **`WOP_CHAT_ENGINE`** enables Pi.
  */
 import { useState, useCallback, useMemo } from "react";
 import {
-	AlertTriangle,
 	BookOpen,
 	CalendarDays,
+	CheckCircle2,
 	ChevronUp,
 	Clock,
 	Edit2,
+	Info,
 	Plus,
 	Trash2,
 } from "lucide-react";
@@ -23,6 +23,8 @@ import {
 	type ScheduleTriggerMode,
 } from "../../hooks/useClawSchedules";
 import { useAgents, type AgentMeta } from "../../hooks/useAgents";
+import { useClawAutomationStatus } from "../../hooks/useClawAutomationStatus";
+import type { ServerConfig } from "../../hooks/useServerConfig";
 import { ClawScheduleMonthCalendar } from "./ClawScheduleMonthCalendar";
 import {
 	formatYMDLocal,
@@ -705,15 +707,89 @@ function ScheduleCalendarSideList({
 // Main view
 // ──────────────────────────────────────────────
 
+function ScheduleExecutionNotice({
+	dark,
+	serverConfig,
+}: {
+	dark: boolean;
+	serverConfig: ServerConfig;
+}) {
+	const { status: auto, loaded } = useClawAutomationStatus(30_000);
+	const piReady = serverConfig.piDrivesChat === true;
+	const schedulerOn = auto?.schedulerEnvEnabled === true;
+
+	const base = "flex items-start gap-2.5 rounded-xl border px-4 py-3 text-[11px] leading-relaxed";
+
+	if (!loaded) {
+		return (
+			<div
+				className={`${base} ${
+					dark ? "border-[#2a2a2a] bg-[#1a1a1a] text-[#858585]" : "border-[#e5e5e5] bg-[#f9fafb] text-[#6b7280]"
+				}`}
+			>
+				<Clock size={13} className="mt-0.5 shrink-0 opacity-70" aria-hidden />
+				<span>Checking whether the server can run schedules on a timer…</span>
+			</div>
+		);
+	}
+
+	if (piReady && schedulerOn) {
+		return (
+			<div
+				className={`${base} ${
+					dark
+						? "border-emerald-500/30 bg-emerald-500/10 text-[#a7f3d0]"
+						: "border-emerald-600/25 bg-emerald-50 text-[#065f46]"
+				}`}
+			>
+				<CheckCircle2
+					size={13}
+					className={`mt-0.5 shrink-0 ${dark ? "text-emerald-400" : "text-emerald-600"}`}
+					aria-hidden
+				/>
+				<span>
+					<strong className={dark ? "text-emerald-200" : "text-emerald-800"}>Automatic runs are on.</strong>{" "}
+					Enabled schedules are evaluated about every 45 seconds and executed as headless Pi turns. Outputs go to
+					host <span className="font-mono text-[10px]">.claw/workspace/memory/</span>; a short log is appended to{" "}
+					<span className="font-mono text-[10px]">.claw/mission-events/claw-mission-events.v1.json</span>.
+				</span>
+			</div>
+		);
+	}
+
+	if (!piReady) {
+		return null;
+	}
+
+	return (
+		<div
+			className={`${base} ${
+				dark ? "border-sky-500/25 bg-sky-950/40 text-[#94a3b8]" : "border-sky-200 bg-sky-50 text-[#0c4a6e]"
+			}`}
+		>
+			<Info size={13} className={`mt-0.5 shrink-0 ${dark ? "text-sky-300" : "text-sky-600"}`} aria-hidden />
+			<span>
+				<strong className={dark ? "text-sky-100" : "text-sky-900"}>Pi is ready.</strong> Set{" "}
+				<span className="font-mono text-[10px]">WOP_CLAW_SCHEDULER=1</span> on the Way of Pi Bun server and restart so
+				the timer starts. Schedules are stored under host{" "}
+				<span className="font-mono text-[10px]">.claw/schedule/</span>.
+			</span>
+		</div>
+	);
+}
+
 export function ClawSchedulesView({
 	dark,
 	onOpenClawHelp,
+	serverConfig,
 }: {
 	dark: boolean;
 	/** Opens Claw Help (Schedules section has Phase D roadmap). */
 	onOpenClawHelp?: (section?: ClawHelpSectionId | null) => void;
+	/** From **`GET /api/config`** — drives execution-status copy (Pi + scheduler). */
+	serverConfig?: ServerConfig | null;
 }) {
-	const { schedules, addSchedule, updateSchedule, deleteSchedule, toggleSchedule } =
+	const { schedules, hydrated, syncError, addSchedule, updateSchedule, deleteSchedule, toggleSchedule } =
 		useClawSchedules();
 	const { data: agentsData, loading: agentsLoading, error: agentsError } = useAgents();
 	const agentsSorted = useMemo(() => {
@@ -880,27 +956,21 @@ export function ClawSchedulesView({
 						</button>
 					</div>
 
-					{/* ── Phase notice ── */}
-					<div
-						className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-[11px] leading-relaxed ${
-							dark
-								? "border-[#ea580c]/20 bg-[#ea580c]/5 text-[#858585]"
-								: "border-[#ea580c]/20 bg-[#ea580c]/5 text-[#888888]"
-						}`}
-					>
-						<AlertTriangle
-							size={13}
-							className={`mt-0.5 shrink-0 ${dark ? "text-[#fb923c]" : "text-[#ea580c]"}`}
-						/>
-						<span>
-							<span className={`font-semibold ${dark ? "text-[#fb923c]" : "text-[#ea580c]"}`}>
-								Phase D stub
-							</span>{" "}
-							— Schedules are stored locally and not yet executed. Backend wiring (Pi turn
-							on timer, audit log, kill switch) is planned in{" "}
-							<span className="font-mono text-[10px]">docs/WOP_CLAW_MODE_PLAN.md §Phase D</span>.
-						</span>
-					</div>
+					{serverConfig ? (
+						<ScheduleExecutionNotice dark={dark} serverConfig={serverConfig} />
+					) : (
+						<div className={`rounded-xl border px-4 py-3 text-[11px] ${dark ? "border-[#2a2a2a] text-[#858585]" : "border-[#e5e5e5] text-[#6b7280]"}`}>
+							Loading server status…
+						</div>
+					)}
+					{syncError ? (
+						<p
+							className={`font-mono text-[10px] leading-snug ${dark ? "text-red-400" : "text-red-600"}`}
+							title={syncError}
+						>
+							{syncError.length > 200 ? `${syncError.slice(0, 197)}…` : syncError}
+						</p>
+					) : null}
 
 					{/* ── Form ── */}
 					{showForm && (
@@ -917,7 +987,17 @@ export function ClawSchedulesView({
 					)}
 
 					{/* ── Schedule list ── */}
-					{schedules.length === 0 ? (
+					{!hydrated ? (
+						<div
+							className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-16 ${
+								dark ? "border-[#2a2a2a] text-[#858585]" : "border-[#d5d5d5] text-[#6b7280]"
+							}`}
+						>
+							<Clock size={32} className="opacity-40" aria-hidden />
+							<p className="text-[13px] font-medium">Loading schedules…</p>
+							<p className={`max-w-sm text-center text-[11px] ${muted}`}>Syncing with the server under .claw/schedule/</p>
+						</div>
+					) : schedules.length === 0 ? (
 						<div
 							className={`flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed py-16 ${
 								dark ? "border-[#2a2a2a]" : "border-[#d5d5d5]"
@@ -970,7 +1050,7 @@ export function ClawSchedulesView({
 							}`}
 						>
 							<BookOpen size={14} className="shrink-0" />
-							<span>Phase D roadmap & execution plans — open Help</span>
+							<span>Schedules help & cron tips — open Help</span>
 						</button>
 					) : null}
 

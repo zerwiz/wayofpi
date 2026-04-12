@@ -1,9 +1,9 @@
 /**
  * Claw Help Modal — operator guide for the Claw UI.
  *
- * Covers: what Claw is, navigation tabs, .claw/ workspace files,
+ * Covers: what Claw is, navigation tabs, `.claw/workspace/` files,
  * schedules, channels (Telegram), files & preview, extending Claw (Pi skills,
- * tools, extensions, community), Honcho cross-session memory vs .claw/, and tips.
+ * tools, extensions, community), Honcho cross-session memory vs `.claw/workspace/`, and tips.
  */
 import {
 	AlertTriangle,
@@ -15,6 +15,7 @@ import {
 	Database,
 	Files,
 	FolderOpen,
+	Info,
 	MessageCircle,
 	Puzzle,
 	Radio,
@@ -50,7 +51,30 @@ function Code({ children }: { children: React.ReactNode }) {
 	);
 }
 
-function Note({ children }: { children: React.ReactNode }) {
+function Note({
+	children,
+	tone = "caution",
+}: {
+	children: React.ReactNode;
+	/** `caution` = orange warning strip (default). `success` / `info` for shipped or neutral callouts. */
+	tone?: "caution" | "success" | "info";
+}) {
+	if (tone === "success") {
+		return (
+			<div className="mb-4 flex items-start gap-2.5 rounded-xl border border-[#4ec9b0]/20 bg-[#4ec9b0]/8 px-4 py-3 text-[12px] leading-relaxed text-[#cccccc]">
+				<CheckCircle2 size={13} className="mt-0.5 shrink-0 text-[#4ec9b0]" />
+				<span>{children}</span>
+			</div>
+		);
+	}
+	if (tone === "info") {
+		return (
+			<div className="mb-4 flex items-start gap-2.5 rounded-xl border border-sky-500/25 bg-sky-500/8 px-4 py-3 text-[12px] leading-relaxed text-[#cccccc]">
+				<Info size={13} className="mt-0.5 shrink-0 text-sky-400" />
+				<span>{children}</span>
+			</div>
+		);
+	}
 	return (
 		<div className="mb-4 flex items-start gap-2.5 rounded-xl border border-[#ea580c]/25 bg-[#ea580c]/8 px-4 py-3 text-[12px] leading-relaxed text-[#cccccc]">
 			<AlertTriangle size={13} className="mt-0.5 shrink-0 text-[#fb923c]" />
@@ -183,7 +207,7 @@ function SectionExtendingClaw() {
 				(folder name must match frontmatter <Code>name</Code>). With workspace tools enabled,
 				the <strong className="text-[#cccccc]">Claw agent</strong> can create or refine those
 				files, attach skills in <Code>.pi/agents/*.md</Code> frontmatter, and log what changed
-				in <Code>.claw/TOOLS.md</Code>. Skills compose with tools: the agent follows the skill
+				in <Code>.claw/workspace/TOOLS.md</Code>. Skills compose with tools: the agent follows the skill
 				while using Pi&apos;s built-ins and extension tools.
 			</P>
 
@@ -239,7 +263,8 @@ function SectionHoncho() {
 			<P>
 				<strong className="text-[#cccccc]">Honcho</strong> is an HTTP service for structured memory and
 				context across sessions. It complements — but does not replace — Pi&apos;s in-thread memory and your{" "}
-				<Code>.claw/MEMORY.md</Code> index: Claw still loads <Code>.claw/</Code> docs at session start; Honcho is
+				<Code>.claw/workspace/MEMORY.md</Code> index: Claw still loads <Code>.claw/workspace/</Code> docs at session
+				start; Honcho is
 				where Hermes (and other clients) can persist and query a shared store.
 			</P>
 
@@ -252,7 +277,7 @@ function SectionHoncho() {
 			<H>How this differs from Claw-only files</H>
 			<div className="mb-4 rounded-xl border border-[#2a2a2a] overflow-hidden">
 				<TableRow
-					left={<Code>.claw/MEMORY.md</Code>}
+					left={<Code>.claw/workspace/MEMORY.md</Code>}
 					right="Small operator index loaded every session — edited by you or the agent in the workspace."
 				/>
 				<TableRow
@@ -292,12 +317,12 @@ function SectionTabs() {
 		{
 			icon: Radar,
 			name: "Mission",
-			desc: "Your home dashboard. Shows connection status, Pi engine health, recent activity, agent roster, and your .claw/ workspace status. Quick action buttons let you start a chat, create a plan, open the team, run diagnostics, or jump to Schedules and Channels.",
+			desc: "Your home dashboard. Shows connection status, Pi engine health, recent activity, agent roster, and whether your Claw Workspace files are set up. Quick action buttons let you start a chat, create a plan, open the team, run diagnostics, or jump to Schedules and Channels.",
 		},
 		{
 			icon: MessageCircle,
 			name: "Chat",
-			desc: "Multi-session chat with Pi. Each session is a separate conversation thread. Use the session strip at the top to create new sessions, switch between them, or close old ones. The .claw/ button opens a file panel alongside the chat so you can read and edit workspace documents while talking to the agent.",
+			desc: "Multi-session chat with Pi. Each session is a separate conversation thread. Use the session strip at the top to create new sessions, switch between them, or close old ones. The Workspace button opens a file panel next to the chat so you can read and edit the assistant profile files while you talk.",
 		},
 		{
 			icon: Users,
@@ -307,7 +332,7 @@ function SectionTabs() {
 		{
 			icon: CalendarDays,
 			name: "Schedule",
-			desc: "Define timed Pi turns — instructions that should run automatically on a cron-like interval (every hour, weekday mornings, daily digest…). Schedules are stored locally today; backend execution is planned in Phase D.",
+			desc: "Define timed Pi turns — cron or one-shot — saved on the Way of Pi host under .claw/schedule/. When WOP_CLAW_SCHEDULER=1 and Pi drives chat, the Bun server runs them as headless Pi turns.",
 		},
 		{
 			icon: Radio,
@@ -365,25 +390,27 @@ function SectionTabs() {
 
 function SectionWorkspace() {
 	const files = [
-		{ file: "SOUL.md", desc: "Agent identity — name, personality, mission statement, and tone." },
-		{ file: "AGENTS.md", desc: "Startup procedures: how the agent loads MEMORY.md, what tools to register, and how to format responses." },
-		{ file: "USER.md", desc: "Context about you: timezone, working style, preferences, and ongoing projects." },
-		{ file: "MEMORY.md", desc: "Long-term memory index. Keep this under 2 KB — it is loaded on every session start. Log larger items to memory/YYYY-MM-DD.md." },
-		{ file: "HEARTBEAT.md", desc: "Proactive task checklist. The agent consults this on each session to decide if any background tasks are due." },
-		{ file: "TOOLS.md", desc: "Tool and extension configuration. Add your Telegram bot token reference here (the actual secret goes in a gitignored file)." },
-		{ file: "SECURITY.md", desc: "File access policy and secret handling rules for this agent." },
-		{ file: "memory/", desc: "Daily session logs. The agent writes a YYYY-MM-DD.md summary here at the end of each session." },
+		{ file: "SOUL.md", desc: "Who the assistant is: name, tone, and how it should sound when it talks to you." },
+		{ file: "AGENTS.md", desc: "How each chat session starts: what to load first and how replies should be structured." },
+		{ file: "USER.md", desc: "About you: time zone, how you like to work, preferences, and what you are focused on." },
+		{ file: "MEMORY.md", desc: "A short list of facts the assistant should always remember. Keep it small (under about 2 KB) because it is read at the start of every session. Put longer notes in the memory folder instead." },
+		{ file: "HEARTBEAT.md", desc: "A simple checklist of things to check or do regularly (for example weekly reviews)." },
+		{ file: "TOOLS.md", desc: "Which integrations are turned on. If you use something like Telegram, this file points to where the real secret is stored (never commit the secret itself)." },
+		{ file: "SECURITY.md", desc: "Rules for what files the assistant may touch and how to handle passwords and keys safely." },
+		{ file: "memory/", desc: "Day-by-day notes. The assistant can add a dated summary here after a session so longer history does not clutter MEMORY.md." },
 	];
 
 	return (
 		<>
-			<H>The .claw/ workspace folder</H>
+			<H>Workspace</H>
 			<P>
-				Claw stores its operational state in a <Code>.claw/</Code> folder at your workspace
-				root. This is Claw&apos;s private space — Simple mode file trees and Technical IDE
-				panels do not show it by default. Use the{" "}
-				<strong className="text-[#cccccc]">Mission tab → Set up workspace</strong> button to
-				create all files from templates.
+				The <strong className="text-[#cccccc]">Workspace</strong> is a small set of text files Claw uses to remember
+				who the assistant is, how you like to work, and what it should do next. On disk they live under{" "}
+				<Code>.claw/workspace/</Code> next to your <strong className="text-[#cccccc]">Way of Pi installation</strong>{" "}
+				(the folder where the app lives), <em>not</em> inside the project folder you opened to edit your own code.
+				If you have not created them yet, use{" "}
+				<strong className="text-[#cccccc]">Mission → Create Claw workspace folder</strong> (or the workspace setup
+				in Settings). Optional Telegram settings can sit beside this folder as <Code>.claw/telegram.json</Code>.
 			</P>
 
 			<div className="mb-4 rounded-xl border border-[#2a2a2a] overflow-hidden">
@@ -393,22 +420,23 @@ function SectionWorkspace() {
 			</div>
 
 			<Note>
-				Add <Code>.claw/memory/</Code> and <Code>.claw/TOOLS.md</Code> (which may contain
-				secret references) to your project&apos;s <Code>.gitignore</Code> to avoid
-				committing sensitive data.
+				If you store API keys or tokens under <Code>.claw/</Code>, make sure that folder (or those files) is listed in
+				your project&apos;s <Code>.gitignore</Code> before you commit or share the repo, so private data is not
+				uploaded by mistake.
 			</Note>
 
-			<H>How workspace isolation works</H>
+			<H>Your project folder vs the Workspace</H>
 			<P>
-				Claw can <strong className="text-[#cccccc]">reach any workspace file</strong> when
-				its tasks require it — the isolation rule only governs where Claw writes its own
-				operational state:
+				<strong className="text-[#cccccc]">The folder you open</strong> (File → Open Folder) is your everyday work:
+				source code, docs, and anything you see in the file tree. <strong className="text-[#cccccc]">The Workspace</strong>{" "}
+				is separate: it is the assistant&apos;s profile and memory, bundled with Way of Pi. The assistant can still read
+				and change files in your opened project when you ask it to.
 			</P>
 			<div className="mb-4 rounded-xl border border-[#2a2a2a] overflow-hidden">
-				<TableRow left="Agent memory" right=".claw/memory/YYYY-MM-DD.md (Claw only)" />
-				<TableRow left="Code edits" right="Target path in workspace — visible everywhere" />
-				<TableRow left="Plan files" right="plans/PLAN-*.md — intentionally shared with all modes" />
-				<TableRow left="Pi sessions" right=".pi/agent-sessions/ (Pi runtime)" />
+				<TableRow left="Daily memory notes" right="Inside Workspace → memory (one dated file per day)" />
+				<TableRow left="Your code and project files" right="In the folder you opened — shown in Explorer" />
+				<TableRow left="Plans" right="Shared plan documents, available in every UI mode" />
+				<TableRow left="Saved chat sessions" right="Kept by the Pi assistant runtime for continuity" />
 			</div>
 		</>
 	);
@@ -424,17 +452,17 @@ function SectionSchedules() {
 				cron frequency, an optional agent, and a prompt instruction.
 			</P>
 
-			<Note>
-				<strong>Phase D stub</strong> — Schedules are stored locally in your browser and
-				are not yet executed automatically. Backend execution (timer runner, audit log,
-				kill switch) is planned for Phase D. You can define schedules now to plan your
-				automations.
+			<Note tone="success">
+				<strong className="text-[#cccccc]">Phase D (core) is shipped:</strong> definitions and last-run
+				state live in <Code>.claw/schedule/</Code> on the host checkout (synced via the API). With{" "}
+				<Code>WOP_CLAW_SCHEDULER=1</Code> and Pi driving chat (<Code>WOP_CHAT_ENGINE=auto</Code> or{" "}
+				<Code>pi</Code> with a working <Code>pi</Code> CLI), the server timer runs enabled schedules as
+				headless Pi turns. The browser may still mirror drafts in localStorage until the server responds.
 			</Note>
 
 			<P>
-				<strong className="text-[#fb923c]">Phase D will add:</strong> cron runner (Pi turn on interval),
-				per-schedule audit log, global pause / kill-switch, and rate-limit caps. See{" "}
-				<Code>docs/WOP_CLAW_MODE_PLAN.md</Code> for the full roadmap.
+				<strong className="text-[#fb923c]">Still on the roadmap:</strong> richer per-schedule audit UI,
+				global pause / kill-switch, and rate-limit caps. See <Code>docs/WOP_CLAW_MODE_PLAN.md</Code>.
 			</P>
 
 			<H>Creating a schedule</H>
@@ -540,7 +568,7 @@ function SectionChannels({
 				In Pi, run <Code>/telegram-setup</Code> and paste the token (writes{" "}
 				<Code>~/.pi/agent/telegram.json</Code> or a workspace gitignored path).{" "}
 				<strong className="text-[#f14c4c]">Never commit the raw token</strong>. Optionally note in{" "}
-				<Code>.claw/TOOLS.md</Code> that Telegram is enabled.
+				<Code>.claw/workspace/TOOLS.md</Code> that Telegram is enabled.
 			</Step>
 			<Step n={3}>
 				Add <Code>pi-telegram</Code> to the <Code>extensions[]</Code> array in{" "}
@@ -580,7 +608,7 @@ function SectionFiles() {
 			<P>
 				The <strong className="text-[#cccccc]">Files tab</strong> lets you browse and
 				preview all workspace files. The chat-side file panel (open via the{" "}
-				<Code>.claw/</Code> button in the Chat tab) works the same way.
+				<strong className="text-[#cccccc]">Workspace</strong> button in the Chat tab) works the same way.
 			</P>
 
 			<H>Preview modes</H>
@@ -606,12 +634,11 @@ function SectionFiles() {
 				tab. You do not need to open a file manually before asking the agent to edit it.
 			</Tip>
 
-			<H>Opening .claw/ files quickly</H>
+			<H>Opening Workspace files quickly</H>
 			<P>
 				From the <strong>Mission tab</strong>, click any file name in the Claw Workspace
-				card to open it directly in the Files tab. The{" "}
-				<Code>.claw/</Code> panel in Chat also shows your agent documents alongside the
-				conversation.
+				card to open it directly in the Files tab. In <strong>Chat</strong>, the Workspace side panel lists the same
+				files next to the conversation.
 			</P>
 		</>
 	);
@@ -627,17 +654,17 @@ function SectionTips() {
 		{
 			icon: Bot,
 			title: "Agent context in chat",
-			body: "Pi loads .claw/SOUL.md, .claw/AGENTS.md, and .claw/MEMORY.md at session start to give the agent its identity and memory. Keep MEMORY.md concise (under 2 KB).",
+			body: "At the start of each session, Pi reads your Workspace files SOUL.md, AGENTS.md, and MEMORY.md so the assistant knows its personality and what to remember. Keep MEMORY.md short (under about 2 KB).",
 		},
 		{
 			icon: FolderOpen,
-			title: "Scaffold .claw/ in one click",
-			body: "Go to Mission tab → Claw Workspace card → Set up workspace. All 7 template files are created with sensible defaults you can edit.",
+			title: "Create the Workspace in one step",
+			body: "Go to Mission tab → Claw Workspace card → Set up workspace. Seven starter files are created with sensible defaults you can edit.",
 		},
 		{
 			icon: CalendarDays,
-			title: "Plan your schedules now",
-			body: "Even though schedule execution is not wired yet (Phase D), you can define your automations in the Schedule tab so they're ready when execution is enabled.",
+			title: "Schedules on the server",
+			body: "Define automations in the Schedule tab — they persist under .claw/schedule/ on the host checkout. Set WOP_CLAW_SCHEDULER=1 and use Pi for chat so the timer can run them automatically.",
 		},
 		{
 			icon: Zap,
@@ -647,7 +674,7 @@ function SectionTips() {
 		{
 			icon: Cpu,
 			title: "Pi engine check",
-			body: "On the Mission tab → Claw Status card, the Engine row shows whether Pi is driving chat (green) or the interim Bun path is active (orange). Full tool and extension support requires Pi engine.",
+			body: "Mission → Claw status: Engine is green when Pi drives chat, or when this server is intentionally on Bun-backed chat (Pi not requested). Orange means Pi was requested (WOP_CHAT_ENGINE) but the CLI is missing or not active. Schedules / channels is green when automation data loaded; Pi is only required for timed and inbound webhook runs.",
 		},
 	];
 
@@ -694,7 +721,7 @@ type SectionId = ClawHelpSectionId;
 const SECTIONS: { id: SectionId; label: string; icon: typeof Radar }[] = [
 	{ id: "overview", label: "Overview", icon: Cpu },
 	{ id: "tabs", label: "Navigation", icon: Radar },
-	{ id: "workspace", label: ".claw/ Workspace", icon: FolderOpen },
+	{ id: "workspace", label: "Workspace", icon: FolderOpen },
 	{ id: "schedules", label: "Schedules", icon: CalendarDays },
 	{ id: "channels", label: "Channels", icon: Radio },
 	{ id: "files", label: "Files & Preview", icon: Files },

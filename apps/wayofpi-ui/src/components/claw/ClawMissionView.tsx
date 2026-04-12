@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { AgentMeta } from "../../hooks/useAgents";
+import { useClawAutomationStatus } from "../../hooks/useClawAutomationStatus";
+import { useClawMissionEvents } from "../../hooks/useClawMissionEvents";
 import type { LogRow } from "../../hooks/useWayOfPiSession";
 import type { ServerConfig } from "../../hooks/useServerConfig";
 import type { ClawHelpSectionId } from "./ClawHelpModal";
@@ -109,10 +111,15 @@ function StatusDot({ ok, dark }: { ok: boolean; dark: boolean }) {
 function EngineChip({ config, dark }: { config: ServerConfig | null; dark: boolean }) {
 	if (!config) return <span className={`text-[11px] ${dark ? "text-[#858585]" : "text-[#888888]"}`}>…</span>;
 	const ispi = config.piDrivesChat;
+	const piRequested = config.piChatEngineRequested === true;
+	const piMissing = piRequested && config.piBinaryResolved !== true;
+	const piRequestedButNotDriving = piRequested && config.piBinaryResolved === true && !ispi;
+	const bunProductionOk = !piRequested && !ispi;
+	const chipOk = ispi || bunProductionOk;
 	return (
 		<span
 			className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-				ispi
+				chipOk
 					? dark
 						? "bg-[#4ec9b0]/15 text-[#4ec9b0]"
 						: "bg-[#4ec9b0]/20 text-[#0a7a68]"
@@ -120,11 +127,28 @@ function EngineChip({ config, dark }: { config: ServerConfig | null; dark: boole
 						? "bg-[#fb923c]/15 text-[#fb923c]"
 						: "bg-[#ea580c]/12 text-[#c2410c]"
 			}`}
+			title={
+				piMissing
+					? "WOP_CHAT_ENGINE requests Pi but no pi CLI was resolved — install pi or set WOP_PI_BINARY."
+					: piRequestedButNotDriving
+						? "Pi CLI resolves but chat is not in Pi JSON mode — check WOP_CHAT_ENGINE and server logs."
+						: bunProductionOk
+							? "Chat uses the Bun provider path; Pi is not required for this server configuration."
+							: undefined
+			}
 		>
 			<span
-				className={`h-1.5 w-1.5 rounded-full ${ispi ? "bg-[#4ec9b0]" : "bg-[#fb923c]"}`}
+				className={`h-1.5 w-1.5 rounded-full ${chipOk ? "bg-[#4ec9b0]" : "bg-[#fb923c]"}`}
 			/>
-			{ispi ? "Pi engine" : config.chatEngine === "auto" ? "auto (Bun)" : `Bun · ${config.provider ?? "ollama"}`}
+			{ispi
+				? "Pi engine"
+				: piMissing
+					? "Pi requested (missing CLI)"
+					: piRequestedButNotDriving
+						? "Pi idle (Bun chat)"
+						: config.chatEngine === "auto"
+							? "auto (Bun)"
+							: `Bun · ${config.provider ?? "ollama"}`}
 		</span>
 	);
 }
@@ -179,6 +203,100 @@ export function ClawMissionView({
 		() => logs.slice(-activityLimit).reverse(),
 		[logs, activityLimit],
 	);
+
+	const { status: clawAuto, error: clawAutoError, loaded: clawAutoLoaded } = useClawAutomationStatus();
+	const { events: missionEvents } = useClawMissionEvents();
+
+	const engineStatusLine = useMemo(() => {
+		if (!config) {
+			return {
+				icon: AlertTriangle,
+				value: "Loading server config…",
+				ok: false,
+				planned: true,
+			};
+		}
+		if (config.piDrivesChat) {
+			return {
+				icon: CheckCircle2,
+				value: "Pi engine — workspace agents, extensions, and tools match the Pi TUI",
+				ok: true,
+				planned: false,
+			};
+		}
+		if (config.piChatEngineRequested && !config.piBinaryResolved) {
+			return {
+				icon: AlertTriangle,
+				value: "Pi requested (WOP_CHAT_ENGINE=auto|pi) but the pi CLI was not found",
+				ok: false,
+				planned: false,
+				detail:
+					"Install the Pi coding-agent CLI on the server PATH, or set WOP_PI_BINARY to the absolute pi executable, then restart the Way of Pi API (apps/wayofpi-ui).",
+			};
+		}
+		if (config.piChatEngineRequested && config.piBinaryResolved) {
+			return {
+				icon: AlertTriangle,
+				value: "Pi is installed but this process is still on the interim Bun chat path",
+				ok: false,
+				planned: false,
+				detail:
+					"Technical mode → Extensions → Orchestration: ensure Pi JSON is on (or clear a false POST /api/config override), then restart the server. Check server logs if this persists.",
+			};
+		}
+		return {
+			icon: AlertTriangle,
+			value: `Interim Bun chat only (${config.chatEngine}) — no Pi extensions or dispatch_agent`,
+			ok: false,
+			planned: false,
+			detail:
+				"Claw uses the same session as Simple/Technical. For full Pi agents and tools: set WOP_CHAT_ENGINE=auto (or pi) in apps/wayofpi-ui/.env, ensure pi resolves (PATH or WOP_PI_BINARY), restart the API. See docs/WOP_PI_BACKEND_WIRING_PLAN.md.",
+		};
+	}, [config]);
+
+	const schedulesChannelsLine = useMemo(() => {
+		if (!clawAutoLoaded && !clawAuto) {
+			return { icon: AlertTriangle, value: "Loading…", ok: false, planned: true };
+		}
+		if (clawAutoError && !clawAuto) {
+			const short =
+				clawAutoError.length > 140 ? `${clawAutoError.slice(0, 137)}…` : clawAutoError;
+			return { icon: AlertTriangle, value: short, ok: false, planned: true };
+		}
+		if (!clawAuto) {
+			return { icon: AlertTriangle, value: "Automation status unavailable.", ok: false, planned: true };
+		}
+
+		const queue =
+			missionEvents.length > 0 ? ` · Mission log: ${missionEvents.length} recent` : "";
+
+		if (!clawAuto.piAutomationReady) {
+			const disk = clawAuto.schedulesOnDisk ? "schedule definitions on disk" : "no schedule file yet";
+			return {
+				icon: CheckCircle2,
+				value: `Claw storage + API ready (${disk})${queue} — timed / inbound automation uses Pi when WOP_CHAT_ENGINE=auto|pi and pi resolves`,
+				ok: true,
+				planned: false,
+			};
+		}
+
+		const sch = clawAuto.schedulerRunning
+			? "Scheduler running"
+			: clawAuto.schedulerEnvEnabled
+				? "Scheduler enabled"
+				: "Scheduler idle (set WOP_CLAW_SCHEDULER=1 for cron runs)";
+		const wh = clawAuto.webhookInboundEnabled
+			? "Inbound webhook on"
+			: clawAuto.webhookSecretConfigured
+				? "Webhook secret set (enable inbound env to accept POSTs)"
+				: "Webhook optional";
+		return {
+			icon: CheckCircle2,
+			value: `${sch} · ${wh}${queue}`,
+			ok: true,
+			planned: false,
+		};
+	}, [clawAuto, clawAutoError, clawAutoLoaded, missionEvents.length]);
 
 	const activitySelectClass = `cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium outline-none ${
 		dark
@@ -258,14 +376,14 @@ export function ClawMissionView({
 						<QuickBtn
 							icon={CalendarDays}
 							label="Schedules"
-							desc="Timer-driven Pi turns (Phase D)"
+							desc="Timer-driven Pi turns (server runner when enabled)"
 							dark={dark}
 							onClick={onSwitchToSchedule ?? (() => {})}
 						/>
 						<QuickBtn
 							icon={Radio}
 							label="Channels"
-							desc="Telegram status + setup; webhook & email planned"
+							desc="Telegram + inbound webhook (Phase E)"
 							dark={dark}
 							onClick={onSwitchToChannels ?? (() => {})}
 						/>
@@ -286,14 +404,12 @@ export function ClawMissionView({
 						<CardHeader icon={Shield} title="Claw status" dark={dark} />
 						<div className="flex flex-col gap-2.5 p-4">
 							<StatusRow
-								icon={config?.piDrivesChat ? CheckCircle2 : AlertTriangle}
+								icon={engineStatusLine.icon}
 								label="Engine"
-								value={
-									config?.piDrivesChat
-										? "Pi (full tools + extensions)"
-										: "Bun (interim, no Pi tools)"
-								}
-								ok={!!config?.piDrivesChat}
+								value={engineStatusLine.value}
+								ok={engineStatusLine.ok}
+								planned={engineStatusLine.planned}
+								detail={engineStatusLine.detail}
 								dark={dark}
 							/>
 							<StatusRow
@@ -304,11 +420,11 @@ export function ClawMissionView({
 								dark={dark}
 							/>
 							<StatusRow
-								icon={CheckCircle2}
+								icon={schedulesChannelsLine.icon}
 								label="Schedules / channels"
-								value="UI ready · execution Phase D–F"
-								ok={false}
-								planned
+								value={schedulesChannelsLine.value}
+								ok={schedulesChannelsLine.ok}
+								planned={schedulesChannelsLine.planned}
 								dark={dark}
 							/>
 							<button
@@ -333,6 +449,7 @@ export function ClawMissionView({
 					dark={dark}
 					onOpenFile={onOpenFile}
 					onOpenChannels={onSwitchToChannels}
+					hostClawDirAbs={config?.clawWorkspaceDirAbs}
 				/>
 				</div>
 
@@ -389,6 +506,54 @@ export function ClawMissionView({
 									))}
 								</ul>
 							)}
+						</div>
+					</Card>
+
+					<Card dark={dark} className="flex max-h-[220px] min-h-0 flex-col">
+						<CardHeader icon={Play} title="Automation log" dark={dark} />
+						<div className={`min-h-0 overflow-y-auto px-3 py-2 text-[11px] ${muted}`}>
+							{missionEvents.length === 0 ? (
+								<span>
+									Schedule and webhook runs append here (and to host{" "}
+									<span className="font-mono text-[10px]">.claw/workspace/memory/</span>) once Pi executes
+									them.
+								</span>
+							) : null}
+							{missionEvents.length > 0 ? (
+								<ul className="flex flex-col gap-2">
+									{missionEvents.slice(0, 12).map((ev, i) => (
+										<li
+											key={`${ev.at}-${i}`}
+											className={`rounded border px-2 py-1.5 ${
+												dark ? "border-[#2a2a2a] bg-[#252526]" : "border-[#f0f0f0] bg-[#fafafa]"
+											}`}
+										>
+											<div className="flex items-center justify-between gap-2">
+												<span className={`font-mono text-[10px] ${muted}`}>
+													{ev.at.replace("T", " ").slice(0, 19)}
+												</span>
+												<span
+													className={
+														ev.ok
+															? dark
+																? "text-[#4ec9b0]"
+																: "text-[#0a7a68]"
+															: dark
+																? "text-[#fb923c]"
+																: "text-[#c2410c]"
+													}
+												>
+													{ev.ok ? "ok" : "error"}
+												</span>
+											</div>
+											<div className={`mt-0.5 font-medium ${text}`}>{ev.name}</div>
+											{ev.error ? (
+												<div className={`mt-1 line-clamp-2 text-[10px] ${muted}`}>{ev.error}</div>
+											) : null}
+										</li>
+									))}
+								</ul>
+							) : null}
 						</div>
 					</Card>
 
@@ -492,6 +657,7 @@ function StatusRow({
 	value,
 	ok,
 	planned = false,
+	detail,
 	dark,
 }: {
 	icon: typeof CheckCircle2;
@@ -499,6 +665,8 @@ function StatusRow({
 	value: string;
 	ok: boolean;
 	planned?: boolean;
+	/** Second line — env / remediation (Mission engine row). */
+	detail?: string;
 	dark: boolean;
 }) {
 	return (
@@ -517,11 +685,18 @@ function StatusRow({
 								: "text-[#ea580c]"
 				}`}
 			/>
-			<div className="min-w-0">
+			<div className="min-w-0 flex-1">
 				<span className={`text-[11px] font-semibold ${dark ? "text-[#858585]" : "text-[#888888]"}`}>
 					{label}:{" "}
 				</span>
 				<span className={`text-[11px] ${dark ? "text-[#cccccc]" : "text-[#444444]"}`}>{value}</span>
+				{detail ? (
+					<p
+						className={`mt-1.5 text-[10px] leading-snug ${dark ? "text-[#a3a3a3]" : "text-[#6b7280]"}`}
+					>
+						{detail}
+					</p>
+				) : null}
 			</div>
 		</div>
 	);

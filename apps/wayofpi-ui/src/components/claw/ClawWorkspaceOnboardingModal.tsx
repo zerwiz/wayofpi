@@ -1,16 +1,17 @@
 /**
- * First-time (per workspace) onboarding: explains `.claw/` and creates scaffold files.
+ * First-time (per host bundle) onboarding: explains `.claw/workspace/` and creates scaffold files.
  */
 import { FolderOpen, Loader, Sparkles, X } from "lucide-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { CLAW_WORKSPACE_FILES } from "../../utils/clawWorkspaceTemplates";
+import { CLAW_WORKSPACE_BUNDLE_REL, CLAW_WORKSPACE_FILES } from "../../utils/clawWorkspaceTemplates";
 import type { UseClawWorkspaceResult } from "../../hooks/useClawWorkspace";
 
 export type ClawWorkspaceOnboardingModalProps = {
 	open: boolean;
 	dark: boolean;
-	workspaceRoot: string;
+	/** Absolute path to the host **`.claw/workspace/`** directory (Way of Pi checkout, not project workspace). */
+	clawWorkspaceDirAbs: string;
 	ws: UseClawWorkspaceResult;
 	onDismiss: () => void;
 };
@@ -18,7 +19,7 @@ export type ClawWorkspaceOnboardingModalProps = {
 export function ClawWorkspaceOnboardingModal({
 	open,
 	dark,
-	workspaceRoot,
+	clawWorkspaceDirAbs,
 	ws,
 	onDismiss,
 }: ClawWorkspaceOnboardingModalProps) {
@@ -65,8 +66,10 @@ export function ClawWorkspaceOnboardingModal({
 								Welcome to Claw
 							</h2>
 							<p className={`mt-0.5 text-[11px] leading-snug ${subText}`}>
-								Set up your agent workspace folder. Claw reads these files each session so behaviour stays
-								consistent with your project and preferences.
+								Create the <strong className={headerText}>Claw workspace folder</strong> (
+								<span className="font-mono text-[10px]">.claw/workspace/</span>) with the seven agent files below.
+								Claw reads
+								them each session so behaviour stays aligned with your project and preferences.
 							</p>
 						</div>
 					</div>
@@ -92,22 +95,31 @@ export function ClawWorkspaceOnboardingModal({
 					>
 						<FolderOpen size={14} className={`mt-0.5 shrink-0 ${dark ? "text-[#fb923c]" : "text-[#ea580c]"}`} />
 						<span className={subText}>
-							<span className={`font-mono text-[10px] ${headerText}`}>.claw/</span> in{" "}
-							<span className="break-all font-mono text-[10px]">{workspaceRoot}</span>
+							<span className={`font-mono text-[10px] ${headerText}`}>.claw/workspace/</span> — on-disk folder:{" "}
+							<span className="break-all font-mono text-[10px]">{clawWorkspaceDirAbs}</span>
 						</span>
 					</div>
 
-					<p className={`mb-3 text-[12px] font-semibold ${headerText}`}>Seven starter files</p>
+					<p className={`mb-3 text-[12px] font-semibold ${headerText}`}>Seven files in the folder</p>
 					<ul className={`divide-y rounded-xl border text-[11px] ${rowBorder} ${border}`}>
 						{CLAW_WORKSPACE_FILES.map((f) => (
 							<li key={f.path} className={`flex flex-col gap-0.5 px-3 py-2 sm:flex-row sm:items-baseline sm:gap-2`}>
 								<span className={`shrink-0 font-mono text-[10px] ${dark ? "text-[#fb923c]" : "text-[#c2410c]"}`}>
-									{f.path.replace(".claw/", "")}
+									{f.path.startsWith(`${CLAW_WORKSPACE_BUNDLE_REL}/`)
+										? f.path.slice(CLAW_WORKSPACE_BUNDLE_REL.length + 1)
+										: f.path}
 								</span>
 								<span className={`min-w-0 sm:flex-1 ${subText}`}>{f.description}</span>
 							</li>
 						))}
 					</ul>
+
+					{ws.ready && ws.missingCount === 0 ? (
+						<p className={`mt-3 text-[11px] leading-relaxed ${subText}`}>
+							The Claw workspace folder is complete (all seven files present). Review the list above, or close and
+							edit under Mission or Files.
+						</p>
+					) : null}
 
 					{ws.scaffoldError ? (
 						<p className="mt-3 text-[11px] text-[#f14c4c]">{ws.scaffoldError}</p>
@@ -115,42 +127,58 @@ export function ClawWorkspaceOnboardingModal({
 				</div>
 
 				<div className={`flex shrink-0 flex-col gap-2 border-t px-5 py-4 sm:flex-row sm:justify-end ${border}`}>
-					<button
-						type="button"
-						onClick={onDismiss}
-						disabled={ws.scaffolding}
-						className={`order-2 rounded-lg px-4 py-2.5 text-[12px] font-semibold transition-colors sm:order-1 ${
-							dark
-								? "text-[#858585] hover:bg-[#252526] hover:text-[#cccccc] disabled:opacity-40"
-								: "text-[#666666] hover:bg-[#f5f5f5] hover:text-[#333333] disabled:opacity-40"
-						}`}
-					>
-						Skip for now
-					</button>
-					<button
-						type="button"
-						disabled={ws.scaffolding || ws.missingCount === 0 || !ws.ready}
-						onClick={() => void ws.scaffold()}
-						className={`order-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[12px] font-semibold transition-colors sm:order-2 ${
-							ws.scaffolding || ws.missingCount === 0 || !ws.ready
-								? "cursor-not-allowed opacity-50"
-								: dark
+					{ws.ready && ws.missingCount === 0 ? (
+						<button
+							type="button"
+							onClick={onDismiss}
+							className={`w-full rounded-lg px-4 py-2.5 text-[12px] font-semibold sm:w-auto ${
+								dark
 									? "bg-[#ea580c]/20 text-[#fb923c] hover:bg-[#ea580c]/30"
 									: "bg-[#ea580c] text-white hover:bg-[#d97706]"
-						}`}
-					>
-						{ws.scaffolding ? (
-							<>
-								<Loader size={14} className="animate-spin" />
-								Creating files…
-							</>
-						) : (
-							<>
-								<Sparkles size={14} />
-								Create .claw/ files ({ws.missingCount} missing)
-							</>
-						)}
-					</button>
+							}`}
+						>
+							Close
+						</button>
+					) : (
+						<>
+							<button
+								type="button"
+								onClick={onDismiss}
+								disabled={ws.scaffolding}
+								className={`order-2 rounded-lg px-4 py-2.5 text-[12px] font-semibold transition-colors sm:order-1 ${
+									dark
+										? "text-[#858585] hover:bg-[#252526] hover:text-[#cccccc] disabled:opacity-40"
+										: "text-[#666666] hover:bg-[#f5f5f5] hover:text-[#333333] disabled:opacity-40"
+								}`}
+							>
+								Skip for now
+							</button>
+							<button
+								type="button"
+								disabled={ws.scaffolding || ws.missingCount === 0 || !ws.ready}
+								onClick={() => void ws.scaffold()}
+								className={`order-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[12px] font-semibold transition-colors sm:order-2 ${
+									ws.scaffolding || ws.missingCount === 0 || !ws.ready
+										? "cursor-not-allowed opacity-50"
+										: dark
+											? "bg-[#ea580c]/20 text-[#fb923c] hover:bg-[#ea580c]/30"
+											: "bg-[#ea580c] text-white hover:bg-[#d97706]"
+								}`}
+							>
+								{ws.scaffolding ? (
+									<>
+										<Loader size={14} className="animate-spin" />
+										Creating Claw workspace folder…
+									</>
+								) : (
+									<>
+										<Sparkles size={14} />
+										Create Claw workspace folder ({ws.missingCount} missing)
+									</>
+								)}
+							</button>
+						</>
+					)}
 				</div>
 			</div>
 		</div>

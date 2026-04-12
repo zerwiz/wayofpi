@@ -17,7 +17,7 @@ export function useWorkspaceTree() {
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 
-	const silentRefreshRef = useRef<() => Promise<void>>(async () => {});
+	const silentRefreshRef = useRef<() => Promise<WorkspaceResponse | null>>(async () => null);
 
 	const refresh = useCallback(async () => {
 		setLoading(true);
@@ -43,7 +43,7 @@ export function useWorkspaceTree() {
 	}, []);
 
 	/** Silent background poll: updates tree without flashing the loading state. */
-	const silentRefresh = useCallback(async () => {
+	const silentRefresh = useCallback(async (): Promise<WorkspaceResponse | null> => {
 		try {
 			const data = await apiGet<WorkspaceResponse>("/api/tree");
 			setRoot(data.root);
@@ -52,8 +52,10 @@ export function useWorkspaceTree() {
 			setGit(data.git ?? emptyGit);
 			setSwitchAllowed(data.switchAllowed !== false);
 			setInitialRoot(data.initialRoot ?? "");
+			return data;
 		} catch {
 			// ignore background poll errors — the explicit refresh will surface them
+			return null;
 		}
 	}, []);
 
@@ -72,5 +74,17 @@ export function useWorkspaceTree() {
 		return () => window.clearInterval(id);
 	}, []);
 
-	return { root, nodes, folders, git, switchAllowed, initialRoot, error, loading, refresh };
+	return {
+		root,
+		nodes,
+		folders,
+		git,
+		switchAllowed,
+		initialRoot,
+		error,
+		loading,
+		refresh,
+		/** Same payload as `refresh` without toggling `loading` — use after explorer Git actions so badges update without swapping the tree for “Loading…”. */
+		refreshQuiet: silentRefresh,
+	};
 }

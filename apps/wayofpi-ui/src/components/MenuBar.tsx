@@ -3109,13 +3109,13 @@ export function MenuBar({
 											<button
 												type="button"
 												className={menuBtnClass()}
-												title="With WOP_ALLOW_SERVER_RESTART=1 on the Bun server: exits the process so you can restart dev from the terminal. Otherwise shows how to restart manually; always closes the chat socket so it reconnects after a restart."
+												title="Opens a short dialog: you can turn Way of Pi off so it can start fresh, then open it again the way you usually do."
 												onClick={() => {
 													void settingsMenu.onRestartServer();
 													closeMenus();
 												}}
 											>
-												Restart server…
+												Restart Way of Pi…
 											</button>
 										</li>
 									) : null}

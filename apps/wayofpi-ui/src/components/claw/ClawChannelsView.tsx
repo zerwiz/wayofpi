@@ -2,7 +2,8 @@
  * Claw UI — Channels tab (Phase E).
  *
  * Telegram: setup guide plus read-only integration snapshot from
- * `GET /api/claw/telegram/status` (filesystem + extensions[] scan — no secrets).
+ * `GET /api/config` → `clawTelegramStatus` (fallback: `GET /api/claw/telegram/status`) — filesystem +
+ * `.pi/settings.json` scan — no secrets.
  * Webhook URL generation and email remain planned.
  */
 import {
@@ -19,8 +20,10 @@ import {
 	RefreshCw,
 	Webhook,
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-import { useClawTelegramStatus } from "../../hooks/useClawTelegramStatus";
+import { apiGet, apiPostJson } from "../../api/client";
+import { useClawTelegramStatus, type ClawTelegramLoadIssue } from "../../hooks/useClawTelegramStatus";
 import type { ClawHelpSectionId } from "./ClawHelpModal";
 import type { ClawTelegramStatusV1 } from "../../../shared/claw-telegram-status";
 
@@ -54,7 +57,9 @@ type ChannelState =
 	| "planned"
 	| "token_saved"
 	| "pi_ready"
-	| "checking";
+	| "checking"
+	/** Bun API missing Telegram snapshot (usually old process on `WOP_SERVER_PORT`). */
+	| "needs_api";
 
 function StatusBadge({
 	state,
@@ -72,6 +77,18 @@ function StatusBadge({
 			>
 				<Loader size={10} className="animate-spin" />
 				Checking…
+			</span>
+		);
+	}
+	if (state === "needs_api") {
+		return (
+			<span
+				className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+					dark ? "bg-amber-500/15 text-amber-200" : "bg-amber-500/12 text-amber-900"
+				}`}
+			>
+				<AlertTriangle size={10} className="shrink-0" />
+				Update Bun API
 			</span>
 		);
 	}
@@ -169,9 +186,9 @@ function SetupStep({
 function telegramIntegrationBadge(
 	tg: ClawTelegramStatusV1 | null,
 	loading: boolean,
-	hasError: boolean,
+	loadIssue: ClawTelegramLoadIssue | null,
 ): ChannelState {
-	if (hasError && !tg) return "not_configured";
+	if (loadIssue) return "needs_api";
 	if (loading && !tg) return "checking";
 	if (!tg) return "not_configured";
 	const tokenOk = tg.globalTokenConfigured || tg.workspaceTokenConfigured;
@@ -193,6 +210,7 @@ function TelegramCard({
 	telegram,
 	loading,
 	error,
+	loadIssue,
 	onRefresh,
 }: {
 	dark: boolean;
@@ -200,6 +218,7 @@ function TelegramCard({
 	telegram: ClawTelegramStatusV1 | null;
 	loading: boolean;
 	error: string | null;
+	loadIssue: ClawTelegramLoadIssue | null;
 	onRefresh: (mode?: "full" | "silent") => void;
 }) {
 	const border = dark ? "border-[#2a2a2a]" : "border-[#f0f0f0]";
@@ -212,7 +231,7 @@ function TelegramCard({
 		dark ? "text-[#fb923c] hover:text-[#fed7aa]" : "text-[#ea580c] hover:text-[#9a3412]"
 	}`;
 
-	const badge = telegramIntegrationBadge(telegram, loading, !!error);
+	const badge = telegramIntegrationBadge(telegram, loading, loadIssue);
 
 	return (
 		<Card dark={dark} className="flex flex-col">
@@ -249,12 +268,46 @@ function TelegramCard({
 
 			{error ? (
 				<div
-					className={`flex items-start gap-2 border-b px-4 py-2.5 text-[10px] ${border} ${
-						dark ? "text-[#f14c4c]/90" : "text-[#dc2626]"
+					className={`flex flex-col gap-1 border-b px-4 py-2.5 text-[10px] leading-relaxed ${border} ${
+						loadIssue === "stale_api" || loadIssue === "network"
+							? dark
+								? "bg-amber-950/40 text-amber-100/95"
+								: "bg-amber-50 text-amber-950"
+							: dark
+								? "text-[#f14c4c]/90"
+								: "text-[#dc2626]"
 					}`}
 				>
-					<AlertTriangle size={12} className="mt-0.5 shrink-0" />
-					<span>Could not load status: {error}</span>
+					<div className="flex items-start gap-2">
+						<AlertTriangle size={12} className="mt-0.5 shrink-0" />
+						<div className="min-w-0">
+							{loadIssue === "stale_api" || loadIssue === "network" ? (
+								<>
+									<span className="font-semibold">
+										{loadIssue === "network"
+											? "Cannot reach the Way of Pi API."
+											: "Bun server on your API port is out of date."}
+									</span>{" "}
+									<span>This is not the same as “Telegram not set up” — the Channels snapshot needs a current server build.</span>
+								</>
+							) : (
+								<span className="font-semibold">Could not load snapshot</span>
+							)}
+						</div>
+					</div>
+					<p
+						className={`pl-[20px] ${
+							loadIssue === "stale_api" || loadIssue === "network"
+								? dark
+									? "text-amber-100/85"
+									: "text-amber-950/90"
+								: dark
+									? "text-[#f14c4c]/85"
+									: "text-[#dc2626]"
+						}`}
+					>
+						{error}
+					</p>
 				</div>
 			) : null}
 
@@ -279,8 +332,8 @@ function TelegramCard({
 						In Pi, run <span className={codeC}>/telegram-setup</span> and paste the token (writes{" "}
 						<span className={codeC}>~/.pi/agent/telegram.json</span> or your workspace secret file — never
 						commit it). Optionally note in{" "}
-						<button type="button" className={linkBtn} onClick={() => onOpenFile(".claw/TOOLS.md")}>
-							<span className={codeC}>.claw/TOOLS.md</span>
+						<button type="button" className={linkBtn} onClick={() => onOpenFile(".claw/workspace/TOOLS.md")}>
+							<span className={codeC}>.claw/workspace/TOOLS.md</span>
 							<ExternalLink size={10} />
 						</button>{" "}
 						that Telegram is enabled.
@@ -312,7 +365,7 @@ function TelegramCard({
 			<div className={`flex flex-wrap items-center gap-3 border-t px-4 py-3 ${border}`}>
 				<button
 					type="button"
-					onClick={() => onOpenFile(".claw/TOOLS.md")}
+					onClick={() => onOpenFile(".claw/workspace/TOOLS.md")}
 					className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium transition-colors ${
 						dark
 							? "bg-[#2a2a2a] text-[#cccccc] hover:bg-[#3c3c3c]"
@@ -348,6 +401,33 @@ function WebhookCard({ dark }: { dark: boolean }) {
 	const border = dark ? "border-[#2a2a2a]" : "border-[#f0f0f0]";
 	const headText = dark ? "text-[#cccccc]" : "text-[#333333]";
 	const muted = dark ? "text-[#858585]" : "text-[#888888]";
+	const [configured, setConfigured] = useState(false);
+	const [inboundEnabled, setInboundEnabled] = useState(false);
+	const [tokenReveal, setTokenReveal] = useState<string | null>(null);
+	const [busy, setBusy] = useState(false);
+
+	const refreshMeta = useCallback(async () => {
+		try {
+			const r = await apiGet<{ configured?: boolean; inboundEnabled?: boolean }>("/api/claw/webhook/meta");
+			setConfigured(r.configured === true);
+			setInboundEnabled(r.inboundEnabled === true);
+		} catch {
+			/* ignore */
+		}
+	}, []);
+
+	useEffect(() => {
+		void refreshMeta();
+	}, [refreshMeta]);
+
+	const inboundUrl =
+		typeof window !== "undefined" ? `${window.location.origin}/api/claw/inbound` : "/api/claw/inbound";
+
+	const badgeState: ChannelState = configured
+		? inboundEnabled
+			? "connected"
+			: "token_saved"
+		: "not_configured";
 
 	return (
 		<Card dark={dark}>
@@ -362,42 +442,103 @@ function WebhookCard({ dark }: { dark: boolean }) {
 					</div>
 					<div>
 						<div className={`text-[13px] font-semibold ${headText}`}>Webhook</div>
-						<div className={`text-[10px] ${muted}`}>Inbound HTTP events</div>
+						<div className={`text-[10px] ${muted}`}>Inbound HTTP → Pi turn</div>
 					</div>
 				</div>
-				<StatusBadge state="not_configured" dark={dark} />
+				<StatusBadge state={badgeState} dark={dark} />
 			</div>
 			<div className="flex flex-col gap-3 px-4 py-4">
 				<p className={`text-[11px] leading-relaxed ${muted}`}>
-					Receive HTTP POST events from external services (CI/CD, monitoring alerts,
-					GitHub webhooks…) and route them to a Claw agent turn.
+					POST JSON to the Way of Pi server with{" "}
+					<span className="font-mono text-[10px]">Authorization: Bearer …</span>. Each request runs one
+					headless <span className="font-mono text-[10px]">pi --mode json</span> turn (same as schedules).
 				</p>
 				<div
-					className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-[11px] ${
-						dark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-[#fafafa]"
+					className={`rounded-lg border px-3 py-2 font-mono text-[10px] leading-relaxed ${
+						dark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#e5e5e5] bg-[#fafafa] text-[#333333]"
 					}`}
 				>
-					<AlertTriangle
-						size={12}
-						className={`mt-0.5 shrink-0 ${dark ? "text-[#585858]" : "text-[#aaaaaa]"}`}
-					/>
-					<span className={muted}>
-						Webhook URL generation and routing logic is planned for Phase E.
-						Requires server-side support in <span className="font-mono text-[10px]">apps/wayofpi-ui/server/</span>.
-					</span>
+					{inboundUrl}
 				</div>
-				<button
-					type="button"
-					disabled
-					className={`flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border py-2 text-[11px] font-medium opacity-40 ${
-						dark ? "border-[#3c3c3c] text-[#858585]" : "border-[#d5d5d5] text-[#888888]"
-					}`}
-				>
-					Generate webhook URL
-					<span className={`rounded px-1 py-0.5 text-[9px] font-bold ${
-						dark ? "bg-[#3c3c3c] text-[#585858]" : "bg-[#e5e5e5] text-[#aaaaaa]"
-					}`}>Phase E</span>
-				</button>
+				<div className="flex flex-wrap gap-2">
+					<button
+						type="button"
+						disabled={busy}
+						onClick={() => {
+							setBusy(true);
+							setTokenReveal(null);
+							void (async () => {
+								try {
+									const r = await apiPostJson<{ secret?: string | null }>("/api/claw/webhook/ensure", {});
+									if (r.secret) setTokenReveal(r.secret);
+									await refreshMeta();
+								} finally {
+									setBusy(false);
+								}
+							})();
+						}}
+						className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-medium transition-colors disabled:opacity-40 ${
+							dark
+								? "border-[#3c3c3c] text-[#cccccc] hover:bg-[#252526]"
+								: "border-[#e5e5e5] text-[#444444] hover:bg-[#fafafa]"
+						}`}
+					>
+						{configured ? "Ensure secret file" : "Create webhook secret"}
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						onClick={() => {
+							setBusy(true);
+							setTokenReveal(null);
+							void (async () => {
+								try {
+									const r = await apiPostJson<{ secret?: string }>("/api/claw/webhook/rotate", {});
+									if (r.secret) setTokenReveal(r.secret);
+									await refreshMeta();
+								} finally {
+									setBusy(false);
+								}
+							})();
+						}}
+						className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-medium transition-colors disabled:opacity-40 ${
+							dark
+								? "border-[#fb923c]/40 text-[#fb923c] hover:bg-[#ea580c]/10"
+								: "border-[#ea580c]/40 text-[#c2410c] hover:bg-[#ea580c]/8"
+						}`}
+					>
+						Rotate secret
+					</button>
+				</div>
+				{tokenReveal ? (
+					<div
+						className={`rounded-lg border px-3 py-2 text-[11px] ${
+							dark ? "border-[#fb923c]/40 bg-[#ea580c]/10 text-[#fed7aa]" : "border-[#ea580c]/30 bg-[#fff7ed] text-[#9a3412]"
+						}`}
+					>
+						<strong>Copy now</strong> — this token is not shown again until you rotate:{" "}
+						<span className="break-all font-mono text-[10px]">{tokenReveal}</span>
+					</div>
+				) : null}
+				{configured && !inboundEnabled ? (
+					<div
+						className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-[11px] ${
+							dark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-[#fafafa]"
+						}`}
+					>
+						<AlertTriangle size={12} className={`mt-0.5 shrink-0 ${dark ? "text-[#fb923c]" : "text-[#ea580c]"}`} />
+						<span className={muted}>
+							Inbound POST is off because <span className="font-mono text-[10px]">WOP_CLAW_INBOUND</span> is set to
+							disable. Remove that override (default: inbound allowed when a secret file exists).
+						</span>
+					</div>
+				) : null}
+				<p className={`text-[10px] leading-relaxed ${muted}`}>
+					Example body:{" "}
+					<span className="font-mono">
+						{`{ "prompt": "Summarize CI", "agentName": "scout", "name": "GitHub Actions" }`}
+					</span>
+				</p>
 			</div>
 		</Card>
 	);
@@ -458,8 +599,13 @@ export function ClawChannelsView({
 	const bg = dark ? "bg-[#161616]" : "bg-[#f5f5f5]";
 	const text = dark ? "text-[#cccccc]" : "text-[#333333]";
 	const muted = dark ? "text-[#858585]" : "text-[#888888]";
-	const { status: telegramStatus, loading: telegramLoading, error: telegramError, refresh: refreshTelegram } =
-		useClawTelegramStatus();
+	const {
+		status: telegramStatus,
+		loading: telegramLoading,
+		error: telegramError,
+		loadIssue: telegramLoadIssue,
+		refresh: refreshTelegram,
+	} = useClawTelegramStatus();
 
 	return (
 		<div className={`flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-4 ${bg} ${text}`}>
@@ -467,26 +613,6 @@ export function ClawChannelsView({
 			<div className="flex items-center gap-2.5">
 				<Radio size={18} className={dark ? "text-[#fb923c]" : "text-[#ea580c]"} />
 				<h1 className={`text-[16px] font-bold ${text}`}>Channels</h1>
-			</div>
-
-			{/* ── Phase notice ── */}
-			<div
-				className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-[11px] leading-relaxed ${
-					dark
-						? "border-[#2a3f4a] bg-[#229ED9]/8 text-[#858585]"
-						: "border-[#bae6fd] bg-[#f0f9ff] text-[#64748b]"
-				}`}
-			>
-				<Info size={13} className={`mt-0.5 shrink-0 ${dark ? "text-[#38bdf8]" : "text-[#0284c7]"}`} />
-				<span>
-					<span className={`font-semibold ${dark ? "text-[#7dd3fc]" : "text-[#0369a1]"}`}>
-						Phase E (production snapshot)
-					</span>{" "}
-					Telegram status is refreshed automatically from disk and{" "}
-					<span className="font-mono text-[10px]">.pi/settings.json</span> (no token content is ever sent to the
-					browser). Inbound webhooks and email adapters are still planned; live Telegram traffic is owned by Pi
-					after <span className="font-mono text-[10px]">/telegram-connect</span>.
-				</span>
 			</div>
 
 			{/* ── Channel cards ── */}
@@ -497,6 +623,7 @@ export function ClawChannelsView({
 					telegram={telegramStatus}
 					loading={telegramLoading}
 					error={telegramError}
+					loadIssue={telegramLoadIssue}
 					onRefresh={refreshTelegram}
 				/>
 				<WebhookCard dark={dark} />
@@ -522,7 +649,7 @@ export function ClawChannelsView({
 				<Info size={12} className="mt-0.5 shrink-0 opacity-70" />
 				<span>
 					Want a channel not listed here? Add it to{" "}
-					<span className="font-mono text-[10px]">.claw/TOOLS.md</span> as a note, or capture it in your workspace
+					<span className="font-mono text-[10px]">.claw/workspace/TOOLS.md</span> as a note, or capture it in your workspace
 					planning docs.
 				</span>
 			</div>

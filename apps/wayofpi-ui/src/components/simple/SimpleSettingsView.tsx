@@ -3,6 +3,20 @@ import type { ServerConfig } from "../../hooks/useServerConfig";
 import { GithubManageSettingsCard } from "../GithubManageSettingsCard";
 import { TerminalSettingsSection } from "../TerminalSettingsSection";
 
+export type ClawWorkspaceSettingsActions = {
+	/** False when no folder is open (or workspace not ready). */
+	workspacePresent: boolean;
+	/** Create **`.claw/workspace/`** and write any missing scaffold files (same as Mission). */
+	onCreateClawWorkspaceFolder: () => void;
+	creatingClawWorkspaceFolder: boolean;
+	clawWorkspaceScaffoldReady: boolean;
+	clawWorkspaceScaffoldMissingCount: number;
+	clawWorkspaceScaffoldError: string | null;
+	onRunNewOnboarding: () => void;
+	onDeleteClawWorkspace: () => void;
+	deletingClawWorkspace: boolean;
+};
+
 function ToggleRow({
 	title,
 	description,
@@ -54,6 +68,7 @@ export function SimpleSettingsView({
 	onOpenIndexingDocs,
 	serverConfig,
 	onConfigRefresh,
+	clawWorkspaceActions,
 }: {
 	colorMode: SimpleColorMode;
 	onColorMode: (m: SimpleColorMode) => void;
@@ -66,6 +81,8 @@ export function SimpleSettingsView({
 	serverConfig: ServerConfig | null;
 	/** Called after toggling terminal so parent can refresh /api/config. */
 	onConfigRefresh?: () => void | Promise<void>;
+	/** Claw shell only — `.claw/workspace/` bundle, onboarding, and removal. */
+	clawWorkspaceActions?: ClawWorkspaceSettingsActions;
 }) {
 	const appearanceDark = colorMode === "dark";
 	const pageBg = appearanceDark ? "" : "bg-[#f3f3f3]";
@@ -127,6 +144,96 @@ export function SimpleSettingsView({
 						onToggle={() => onApprovalQueue(!approvalQueue)}
 						appearanceDark={appearanceDark}
 					/>
+
+					{clawWorkspaceActions ? (
+						<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>
+							<h3 className={`mb-2 font-bold ${heading}`}>Claw workspace folder</h3>
+							<p className={`mb-4 text-sm ${sub}`}>
+								The <strong className={heading}>Claw workspace folder</strong> is host-scoped: it lives under the
+								Way of Pi checkout as <code className="text-xs">.claw/workspace/</code> (not inside the folder you
+								opened as
+								the project workspace). It holds seven markdown files (SOUL, AGENTS, USER, MEMORY, HEARTBEAT,
+								TOOLS, SECURITY). Override the host root with <code className="text-xs">WOP_CLAW_HOST_ROOT</code>{" "}
+								or <code className="text-xs">WOP_PLAYGROUND_ROOT</code> on the server. Use{" "}
+								<strong className={heading}>Create Claw workspace folder</strong> to add the directory and any
+								missing files. <strong className={heading}>Run new onboarding</strong> opens the guided setup
+								dialog. <strong className={heading}>Delete Claw workspace folder</strong> removes that host{" "}
+								<code className="text-xs">.claw/workspace/</code> tree (including <code className="text-xs">
+									memory/
+								</code>
+								). Optional <code className="text-xs">.claw/telegram.json</code> stays outside that folder.
+							</p>
+							{!clawWorkspaceActions.workspacePresent ? (
+								<p className={`text-sm ${sub}`}>
+									Claw host paths are not available yet — ensure the Way of Pi Bun server is running and{" "}
+									<code className="text-xs">GET /api/config</code> returns <code className="text-xs">
+										clawWorkspaceDirAbs
+									</code>
+									.
+								</p>
+							) : (
+								<div className="flex flex-col gap-3">
+									{clawWorkspaceActions.clawWorkspaceScaffoldError ? (
+										<p className={`text-sm ${appearanceDark ? "text-[#f87171]" : "text-red-600"}`}>
+											{clawWorkspaceActions.clawWorkspaceScaffoldError}
+										</p>
+									) : null}
+									<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+										<button
+											type="button"
+											disabled={
+												clawWorkspaceActions.creatingClawWorkspaceFolder ||
+												!clawWorkspaceActions.clawWorkspaceScaffoldReady ||
+												clawWorkspaceActions.clawWorkspaceScaffoldMissingCount === 0
+											}
+											onClick={clawWorkspaceActions.onCreateClawWorkspaceFolder}
+											className={`rounded-xl px-4 py-2 text-sm font-bold text-white transition-colors ${
+												clawWorkspaceActions.creatingClawWorkspaceFolder ||
+												!clawWorkspaceActions.clawWorkspaceScaffoldReady ||
+												clawWorkspaceActions.clawWorkspaceScaffoldMissingCount === 0
+													? "cursor-not-allowed bg-[#9a9a9a]"
+													: "bg-[#ea580c] hover:bg-[#c2410c]"
+											}`}
+										>
+											{clawWorkspaceActions.creatingClawWorkspaceFolder
+												? "Creating folder…"
+												: clawWorkspaceActions.clawWorkspaceScaffoldReady &&
+													  clawWorkspaceActions.clawWorkspaceScaffoldMissingCount === 0
+													? "Claw workspace folder complete"
+													: `Create Claw workspace folder (${clawWorkspaceActions.clawWorkspaceScaffoldMissingCount} missing)`}
+										</button>
+										<button
+											type="button"
+											onClick={clawWorkspaceActions.onRunNewOnboarding}
+											className={`rounded-xl border px-4 py-2 text-sm font-bold transition-colors ${
+												appearanceDark
+													? "border-[#6f6f6f] text-[#cccccc] hover:bg-[#3c3c3c]"
+													: "border-[#d4d4d4] text-[#333333] hover:bg-[#e5e5e5]"
+											}`}
+										>
+											Run new onboarding
+										</button>
+										<button
+											type="button"
+											disabled={clawWorkspaceActions.deletingClawWorkspace}
+											onClick={clawWorkspaceActions.onDeleteClawWorkspace}
+											className={`rounded-xl border px-4 py-2 text-sm font-bold transition-colors ${
+												clawWorkspaceActions.deletingClawWorkspace
+													? "cursor-not-allowed opacity-50"
+													: appearanceDark
+														? "border-[#f14c4c]/50 text-[#f87171] hover:bg-[#f14c4c]/10"
+														: "border-[#dc2626] text-[#b91c1c] hover:bg-[#fef2f2]"
+											}`}
+										>
+											{clawWorkspaceActions.deletingClawWorkspace
+												? "Deleting…"
+												: "Delete Claw workspace folder"}
+										</button>
+									</div>
+								</div>
+							)}
+						</div>
+					) : null}
 
 					{onOpenIndexingDocs ? (
 						<div className={`rounded-2xl border p-6 shadow-sm ${card}`}>

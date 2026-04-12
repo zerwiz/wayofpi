@@ -95,7 +95,7 @@ export function GitExplorerStatusBadge({
 				const fx = help.fix;
 				if (!fx) return;
 				if (fx.kind === "refresh_tree") {
-					onExplorerGitMutated?.();
+					await Promise.resolve(onExplorerGitMutated?.());
 					setOpen(false);
 					return;
 				}
@@ -122,7 +122,7 @@ export function GitExplorerStatusBadge({
 					return;
 				}
 				setFixHint(stageEntireRepo ? "All changes staged." : "Staged.");
-				onExplorerGitMutated?.();
+				await Promise.resolve(onExplorerGitMutated?.());
 				window.setTimeout(() => setOpen(false), 700);
 			} catch (e) {
 				setFixHint(e instanceof Error ? e.message : String(e));

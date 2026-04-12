@@ -54,7 +54,10 @@ Final spelling (`wop` vs `wayofpi`) is a product decision; this repo uses **`wop
 | **`WOP_WORKSPACE`** | Active project root the web UI / server may read and write (jailed I/O). Used by **[apps/wayofpi-ui](../apps/wayofpi-ui/)** server today. |
 | **`WOP_SERVER_PORT`** | HTTP + WebSocket port (default `3333` in wayofpi-ui). |
 | **`WOP_PI_BINARY`** | Absolute path to **Pi** executable used **only inside** Way of Pi’s child processes. |
-| **`WOP_PLAYGROUND_ROOT`** | Path to this playground clone when linking extensions/skills into app repos. |
+| **`WOP_PLAYGROUND_ROOT`** | Path to this playground clone when linking extensions/skills into app repos. Also used as fallback for the **host** Way of Pi checkout root where **`.claw/`** lives when **`WOP_CLAW_HOST_ROOT`** is unset. |
+| **`WOP_CLAW_HOST_ROOT`** | Optional absolute path to the Way of Pi **checkout root** (parent of **`.claw/`**). Claw’s seven workspace files and **`memory/`** live under **`<root>/.claw/workspace/`**; optional **`telegram.json`** may live at **`<root>/.claw/telegram.json`**. **Not** under **`WOP_WORKSPACE`**. Default: inferred from `apps/wayofpi-ui/server` layout (repo root). |
+| **`WOP_CLAW_SCHEDULER`** | When **`1`** / **`true`** / **`on`**, the Bun server runs an interval job that executes enabled Claw schedules as headless **`pi --mode json`** turns (definitions under **`<host>/.claw/schedule/claw-schedules.v1.json`** on the Way of Pi checkout). See **`docs/WOP_CLAW_MODE_PLAN.md`** (Phase D). |
+| **`WOP_CLAW_INBOUND`** | When **`0`** / **`false`** / **`off`**, **POST `/api/claw/inbound`** is rejected even if **`.wayofpi/claw-webhook.v1.json`** exists. Unset = inbound allowed when a secret is configured. |
 | **`WOP_LLM_PROVIDER`** | Until headless Pi owns chat: `ollama` \| `openrouter` (see wayofpi-ui `.env.sample`). |
 | **`WOP_SYSTEM_PROMPT`** | Optional system message prepended to chat sessions (WebSocket). |
 | **`WOP_CHAT_CONTEXT_BUDGET`** | When unset or truthy, the Way of Pi server **trims** older chat rows before each model request on the **bundled Bun** path (and before building the headless Pi prompt) so transcripts cannot grow without bound. Set to **0**, **false**, **no**, or **off** to disable. See **`docs/WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md`**. |

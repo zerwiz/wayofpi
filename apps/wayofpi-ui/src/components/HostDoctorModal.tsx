@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	WOP_WORKSPACE_EDITOR_FIND_BAR_INACTIVE,
+	WOP_WORKSPACE_EDITOR_GUTTER_DARK,
+	WOP_WORKSPACE_EDITOR_GUTTER_LIGHT,
+	WOP_WORKSPACE_EDITOR_SCROLL_DARK,
+	WOP_WORKSPACE_EDITOR_SCROLL_LIGHT,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_DARK,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT,
+} from "../constants/workspaceEditorChrome";
 import { HostDoctorWorkspaceFileEditor } from "./HostDoctorWorkspaceFileEditor";
+import { WorkspaceTextBuffer } from "./WorkspaceTextBuffer";
 import {
 	Activity,
 	ChevronDown,
@@ -11,6 +21,8 @@ import {
 } from "lucide-react";
 import { apiGet } from "../api/client";
 import type { DoctorCheck, HostDoctorDiagnostics } from "../types/hostDoctor";
+
+function hostDoctorReadonlySnapshotNoop(): void {}
 
 async function copyTextToClipboard(text: string): Promise<boolean> {
 	try {
@@ -260,9 +272,6 @@ export function HostDoctorModal({
 	const ghostBtn = appearanceDark
 		? "border border-[#3c3c3c] bg-[#3c3c3c] text-[#cccccc] hover:bg-[#4a4a4a] disabled:opacity-50"
 		: "border border-[#e5e5e5] bg-[#f3f3f3] text-[#333333] hover:bg-[#e5e5e5] disabled:opacity-50";
-	const monoBlock = appearanceDark
-		? "border border-[#3c3c3c] bg-[#1e1e1e] text-[#d4d4d4]"
-		: "border border-[#e5e5e5] bg-[#fafafa] text-[#111]";
 
 	const loadInternal = useCallback(async (): Promise<HostDoctorDiagnostics | null> => {
 		setLoading(true);
@@ -665,11 +674,39 @@ export function HostDoctorModal({
 										})}
 									</div>
 									{advancedTabKey === "snapshot" ? (
-										<pre
-											className={`max-h-[min(480px,55vh)] overflow-auto rounded-lg p-3 font-mono text-[10px] leading-relaxed ${monoBlock}`}
+										<div
+											className={`flex min-h-0 max-h-[min(480px,55vh)] flex-col overflow-hidden rounded-lg border p-2 ${
+												appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-[#fafafa]"
+											}`}
 										>
-											{JSON.stringify(data, null, 2)}
-										</pre>
+											<WorkspaceTextBuffer
+												path="host-doctor-live-snapshot.json"
+												content={JSON.stringify(data, null, 2)}
+												onChange={hostDoctorReadonlySnapshotNoop}
+												loading={false}
+												error={null}
+												readOnly
+												wordWrap
+												scrollClassName={
+													appearanceDark
+														? `${WOP_WORKSPACE_EDITOR_SCROLL_DARK} px-2 py-2`
+														: `${WOP_WORKSPACE_EDITOR_SCROLL_LIGHT} px-2 py-2`
+												}
+												lineGutterClassName={
+													appearanceDark
+														? WOP_WORKSPACE_EDITOR_GUTTER_DARK
+														: WOP_WORKSPACE_EDITOR_GUTTER_LIGHT
+												}
+												textareaClassName={
+													appearanceDark
+														? WOP_WORKSPACE_EDITOR_TEXTAREA_DARK
+														: WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT
+												}
+												findBarClassName={WOP_WORKSPACE_EDITOR_FIND_BAR_INACTIVE}
+												statusLoadingClassName="p-4 text-sm text-[#858585]"
+												statusErrorClassName="p-4 text-sm text-red-500"
+											/>
+										</div>
 									) : (
 										(() => {
 											const p = HOST_DOCTOR_ADVANCED_TABS.find((t) => t.key === advancedTabKey)?.path;

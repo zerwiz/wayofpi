@@ -199,7 +199,14 @@ function registerWopShellIpc() {
 				if (!r.ok) return "absent";
 				const j = await r.json().catch(() => ({}));
 				const c = j?.capabilities;
-				if (c?.workspaceProblems === true && c?.configRuntimePost === true) return "fresh";
+				if (
+					c?.workspaceProblems === true &&
+					c?.configRuntimePost === true &&
+					c?.clawHostTreeGet === true &&
+					c?.clawTelegramStatusGet === true
+				) {
+					return "fresh";
+				}
 				return "stale";
 			} catch {
 				return "absent";
@@ -223,7 +230,7 @@ function registerWopShellIpc() {
 				return {
 					ok: false,
 					staleServer: true,
-					message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems + configRuntimePost — old Bun). Stop the old process, then try Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
+					message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems, configRuntimePost, clawHostTreeGet, and/or clawTelegramStatusGet — old Bun). Stop the old process, then try Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
 				};
 			}
 			const bunExe = process.platform === "win32" ? "bun.exe" : "bun";

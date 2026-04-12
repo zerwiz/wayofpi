@@ -35,3 +35,9 @@ export function markClawWorkspaceOnboardingDismissed(workspaceRoot: string): voi
 	roots.add(workspaceRoot);
 	writeRoots([...roots]);
 }
+
+/** Removes dismissal so auto-onboarding (or Settings → Run new onboarding) can show again. */
+export function clearClawWorkspaceOnboardingDismissed(workspaceRoot: string): void {
+	const roots = parseRoots(localStorage.getItem(LS_KEY)).filter((r) => r !== workspaceRoot);
+	writeRoots(roots);
+}

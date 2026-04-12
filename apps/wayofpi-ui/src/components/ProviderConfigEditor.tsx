@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PI_MODEL_CONFIG_ENTRIES, type PiModelConfigPath } from "../constants/piModelConfigPaths";
+import {
+	WOP_WORKSPACE_EDITOR_FIND_BAR_INACTIVE,
+	WOP_WORKSPACE_EDITOR_GUTTER_DARK,
+	WOP_WORKSPACE_EDITOR_GUTTER_LIGHT,
+	WOP_WORKSPACE_EDITOR_SCROLL_DARK,
+	WOP_WORKSPACE_EDITOR_SCROLL_LIGHT,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_DARK,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT,
+} from "../constants/workspaceEditorChrome";
 import { useFileEditor } from "../hooks/useFileEditor";
+import { WorkspaceTextBuffer } from "./WorkspaceTextBuffer";
 
 function tryParseJson(text: string): { ok: true } | { ok: false; message: string } {
 	try {
@@ -69,9 +79,6 @@ export function ProviderConfigEditor({
 		: "text-left text-zinc-800 hover:bg-white";
 	const navActive = appearanceDark ? "border-l-2 border-sky-500 bg-slate-900/90 text-white" : "border-l-2 border-sky-600 bg-white text-zinc-900";
 	const sub = appearanceDark ? "text-slate-500" : "text-zinc-500";
-	const ta = appearanceDark
-		? "border-slate-700 bg-slate-950 text-slate-200 placeholder:text-slate-600"
-		: "border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-400";
 
 	const onSave = useCallback(async () => {
 		if (!parseCheck.ok) return;
@@ -179,13 +186,30 @@ export function ProviderConfigEditor({
 						Invalid JSON — fix before save: {parseCheck.message}
 					</div>
 				) : null}
-				<textarea
-					value={content}
-					onChange={(e) => setContent(e.target.value)}
-					spellCheck={false}
-					className={`m-2 min-h-[280px] flex-1 resize-none rounded border p-3 font-mono text-[12px] leading-relaxed outline-none focus:border-sky-600 ${ta}`}
-					aria-label={`Edit ${selected}`}
-				/>
+				<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-2 pb-2">
+					<WorkspaceTextBuffer
+						path={selected}
+						content={content}
+						onChange={setContent}
+						loading={loading}
+						error={error}
+						wordWrap
+						scrollClassName={
+							appearanceDark
+								? `${WOP_WORKSPACE_EDITOR_SCROLL_DARK} rounded border border-slate-800`
+								: `${WOP_WORKSPACE_EDITOR_SCROLL_LIGHT} rounded border border-zinc-200`
+						}
+						lineGutterClassName={
+							appearanceDark ? WOP_WORKSPACE_EDITOR_GUTTER_DARK : WOP_WORKSPACE_EDITOR_GUTTER_LIGHT
+						}
+						textareaClassName={
+							appearanceDark ? WOP_WORKSPACE_EDITOR_TEXTAREA_DARK : WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT
+						}
+						findBarClassName={WOP_WORKSPACE_EDITOR_FIND_BAR_INACTIVE}
+						statusLoadingClassName="p-4 text-sm text-slate-500"
+						statusErrorClassName="p-4 text-sm text-red-500"
+					/>
+				</div>
 			</div>
 		</div>
 	);

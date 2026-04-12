@@ -11,6 +11,12 @@ import {
 import { MarkdownPreviewPane } from "../MarkdownPreviewPane";
 import { MermaidPreviewPane } from "../MermaidPreviewPane";
 import { WorkspaceSvgPreview } from "../WorkspaceSvgPreview";
+import {
+	WOP_WORKSPACE_EDITOR_GUTTER_DARK,
+	WOP_WORKSPACE_EDITOR_GUTTER_LIGHT,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_DARK,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT,
+} from "../../constants/workspaceEditorChrome";
 import { WorkspaceTextBuffer } from "../WorkspaceTextBuffer";
 
 export const SimpleFilePanel = forwardRef<
@@ -106,7 +112,6 @@ export const SimpleFilePanel = forwardRef<
 			? "inline-flex items-center gap-1.5 rounded-lg border border-[#3c3c3c] bg-[#2d2d2d] px-3 py-1.5 text-xs font-semibold text-[#cccccc] hover:bg-[#3c3c3c]"
 			: "inline-flex items-center gap-1.5 rounded-lg border border-[#e5e5e5] bg-[#f3f3f3] px-3 py-1.5 text-xs font-semibold text-[#333333] hover:bg-[#e5e5e5]";
 	const bodyBg = appearanceDark ? "bg-[#1e1e1e]" : "bg-[#f3f3f3]";
-	const lineNums = appearanceDark ? "text-[#858585]" : "text-[#858585]";
 	const textArea = appearanceDark
 		? "text-[13px] leading-relaxed text-[#cccccc] selection:bg-[#9a3412]"
 		: "text-[13px] leading-relaxed text-[#333333] selection:bg-[#fed7aa]/40";
@@ -231,8 +236,12 @@ export const SimpleFilePanel = forwardRef<
 						Byte editor — Save writes exact file bytes.
 					</div>
 				) : null}
-				{isMarkdown && mdView === "preview" && !loading && !error ? (
-					<MarkdownPreviewPane markdown={content} appearanceDark={appearanceDark} />
+				{isMarkdown && mdView === "preview" && !error ? (
+					loading ? (
+						<div className={`flex min-h-0 flex-1 items-start p-4 text-sm ${pathMuted}`}>Loading…</div>
+					) : (
+						<MarkdownPreviewPane markdown={content} appearanceDark={appearanceDark} />
+					)
 				) : showMediaSource ? (
 					<WorkspaceTextBuffer
 						ref={ref}
@@ -245,8 +254,12 @@ export const SimpleFilePanel = forwardRef<
 						wordWrap
 						disableSyntaxHighlight={persistEncoding === "base64"}
 						scrollClassName="font-mono"
-						lineGutterClassName={`w-9 py-1 pr-2 font-mono text-[12px] ${lineNums}`}
-						textareaClassName={`py-1 pr-2 ${textArea}`}
+						lineGutterClassName={
+							appearanceDark ? WOP_WORKSPACE_EDITOR_GUTTER_DARK : WOP_WORKSPACE_EDITOR_GUTTER_LIGHT
+						}
+						textareaClassName={
+							appearanceDark ? WOP_WORKSPACE_EDITOR_TEXTAREA_DARK : WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT
+						}
 						findBarClassName={`shrink-0 border-t ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
 						statusLoadingClassName={`p-4 text-sm ${pathMuted}`}
 						statusErrorClassName="p-4 text-sm text-red-500"
@@ -296,8 +309,12 @@ export const SimpleFilePanel = forwardRef<
 						wordWrap
 						disableSyntaxHighlight={persistEncoding === "base64"}
 						scrollClassName="font-mono"
-						lineGutterClassName={`w-9 py-1 pr-2 font-mono text-[12px] ${lineNums}`}
-						textareaClassName={`py-1 pr-2 ${textArea}`}
+						lineGutterClassName={
+							appearanceDark ? WOP_WORKSPACE_EDITOR_GUTTER_DARK : WOP_WORKSPACE_EDITOR_GUTTER_LIGHT
+						}
+						textareaClassName={
+							appearanceDark ? WOP_WORKSPACE_EDITOR_TEXTAREA_DARK : WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT
+						}
 						findBarClassName={`shrink-0 border-t ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
 						statusLoadingClassName={`p-4 text-sm ${pathMuted}`}
 						statusErrorClassName="p-4 text-sm text-red-500"

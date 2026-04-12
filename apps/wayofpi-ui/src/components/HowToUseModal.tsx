@@ -505,7 +505,7 @@ function SectionLayout() {
 						tips: [
 							"Mission tab: agent status dashboard, workspace health, and quick actions.",
 							"Chat tab: multi-session conversations with session strip for switching threads.",
-							"Schedule tab: define timed Pi turns (cron-based, Phase D execution planned).",
+							"Schedule tab: cron or one-shot Pi turns — saved on host .claw/schedule/; set WOP_CLAW_SCHEDULER=1 and Pi-backed chat to run them automatically.",
 							"Channels tab: Telegram bot integration setup and future webhook/email channels.",
 							"Files tab: browse and preview workspace files — Markdown opens in Preview by default.",
 							"The .claw/ folder stores agent identity, memory, and tool config (isolated from Simple/Technical).",

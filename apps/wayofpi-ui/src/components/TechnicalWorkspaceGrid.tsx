@@ -1,9 +1,11 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { apiPostJson } from "../api/client";
 import type { AgentMeta } from "../hooks/useAgents";
 import type { ChatPulseMeters, ChatRow, LogRow } from "../hooks/useWayOfPiSession";
 import { useFileEditor } from "../hooks/useFileEditor";
 import type { BottomPanelTab } from "../types/technicalShell";
+import type { TreeNode, WorkspaceResponse } from "../types/tree";
 import type { WorkspaceEditorRef } from "../types/workspaceEditor";
 import type { FilePersistEncoding } from "../hooks/useFileEditor";
 import type { WorkspaceGridState } from "../utils/workspaceGridStorage";
@@ -16,6 +18,7 @@ import {
 	type PanelDockLayout,
 	type PanelTab,
 } from "../utils/panelDockLayout";
+import { gitMarkedFilePathsSorted, nextGitReviewFilePath } from "../utils/flattenTree";
 import { computeWorkspaceFilePreview } from "../utils/workspaceFilePreview";
 import type { WopDropZone } from "../utils/workspaceDropZones";
 import type { DockFileActionItem } from "./dockToolAddMenu";
@@ -41,7 +44,8 @@ export type TechnicalWorkspaceCellSnapshot = {
 type WorkspaceGridCellProps = {
 	cellIndex: number;
 	panelDock: PanelDockLayout;
-	patchDock: (u: SetStateAction<PanelDockLayout>) => void;
+	/** Stable per-cell wrapper — do not pass a fresh inline `(u) => onPatchCell(i,u)` each parent render. */
+	onPatchCell: (cellIndex: number, update: SetStateAction<PanelDockLayout>) => void;
 	isFocused: boolean;
 	onActivate: () => void;
 	onReportFocused: (s: TechnicalWorkspaceCellSnapshot) => void;
@@ -104,12 +108,16 @@ type WorkspaceGridCellProps = {
 	registerCellSave?: (cellIndex: number, entry: { dirty: boolean; save: () => Promise<boolean> } | null) => void;
 	/** First breadcrumb segment in the editor chrome (workspace folder name). */
 	breadcrumbWorkspaceLabel?: string | null;
+	/** Tree from `/api/tree` (Git badges) — powers Git-aware **Keep** / **Review next** in this cell. */
+	workspaceTreeNodes: TreeNode[];
+	/** Reload tree without toggling global loading (same as explorer after Git stage). */
+	refreshQuiet: () => Promise<WorkspaceResponse | null>;
 };
 
 function WorkspaceGridCell({
 	cellIndex,
 	panelDock,
-	patchDock,
+	onPatchCell,
 	isFocused,
 	onActivate,
 	onReportFocused,
@@ -146,7 +154,13 @@ function WorkspaceGridCell({
 	registerCellSave,
 	externalCloseEditor,
 	breadcrumbWorkspaceLabel = null,
+	workspaceTreeNodes,
+	refreshQuiet,
 }: WorkspaceGridCellProps) {
+	const patchDock = useCallback(
+		(u: SetStateAction<PanelDockLayout>) => onPatchCell(cellIndex, u),
+		[onPatchCell, cellIndex],
+	);
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
 	const lastExternalRev = useRef(0);
 	const lastCloseEditorRev = useRef(0);
@@ -286,6 +300,45 @@ function WorkspaceGridCell({
 		if (ok) await refresh();
 	}, [save, refresh]);
 
+	const gitReviewHasAnyMarked = useMemo(
+		() => gitMarkedFilePathsSorted(workspaceTreeNodes).length > 0,
+		[workspaceTreeNodes],
+	);
+	const gitReviewCanAdvanceNext = useMemo(
+		() => nextGitReviewFilePath(selectedPath, workspaceTreeNodes) != null,
+		[selectedPath, workspaceTreeNodes],
+	);
+
+	const cellGitFileReviewActions = useMemo(
+		() => ({
+			onSaveAndStage: async () => {
+				if (!selectedPath) return;
+				if (dirty) {
+					const ok = await save();
+					if (!ok) return;
+				}
+				const r = await apiPostJson<{ ok?: boolean; error?: string }>("/api/git/stage", { path: selectedPath });
+				if (!r.ok) return;
+				await refreshQuiet();
+			},
+			onOpenNextGitReviewPath: async () => {
+				if (!selectedPath) return;
+				if (dirty) {
+					const ok = await save();
+					if (!ok) return;
+				}
+				const data = await refreshQuiet();
+				if (!data) return;
+				const next = nextGitReviewFilePath(selectedPath, data.nodes);
+				if (next) {
+					patchDock((prev) => applyAddFileTab(prev, next));
+					setSelectedPath(next);
+				}
+			},
+		}),
+		[selectedPath, dirty, save, refreshQuiet, patchDock],
+	);
+
 	const onExternalFileDrop = useCallback(
 		(path: string, before: PanelTab | null) => {
 			patchDock((prev) => {
@@ -376,6 +429,9 @@ function WorkspaceGridCell({
 					agentTeamPane={agentTeamPane}
 					workspaceEmbeddedChat={workspaceEmbeddedChat}
 					breadcrumbWorkspaceLabel={breadcrumbWorkspaceLabel}
+					gitFileReviewActions={cellGitFileReviewActions}
+					gitReviewHasAnyMarked={gitReviewHasAnyMarked}
+					gitReviewCanAdvanceNext={gitReviewCanAdvanceNext}
 				/>
 			</div>
 		</WorkspaceCellDropSurface>
@@ -443,6 +499,9 @@ export type TechnicalWorkspaceGridProps = {
 	onMultiCellAnyDirtyChange?: (anyDirty: boolean) => void;
 	/** First breadcrumb segment in the editor chrome (workspace folder name). */
 	breadcrumbWorkspaceLabel?: string | null;
+	/** Workspace tree (Git badges) for per-cell **Keep** / **Review next**. */
+	workspaceTreeNodes: TreeNode[];
+	refreshQuiet: () => Promise<WorkspaceResponse | null>;
 };
 
 export function TechnicalWorkspaceGrid({
@@ -483,6 +542,8 @@ export function TechnicalWorkspaceGrid({
 	onBindMultiCellSaveApi,
 	onMultiCellAnyDirtyChange,
 	breadcrumbWorkspaceLabel = null,
+	workspaceTreeNodes,
+	refreshQuiet,
 }: TechnicalWorkspaceGridProps) {
 	const total = grid.cols * grid.rows;
 
@@ -522,14 +583,13 @@ export function TechnicalWorkspaceGrid({
 
 	if (maximizedCell != null && maximizedCell >= 0 && maximizedCell < total) {
 		const dock = grid.cells[maximizedCell] ?? grid.cells[0]!;
-		const patchDock = (u: SetStateAction<PanelDockLayout>) => onPatchCell(maximizedCell, u);
 		return (
 			<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 				<WorkspaceGridCell
 					key={maximizedCell}
 					cellIndex={maximizedCell}
 					panelDock={dock}
-					patchDock={patchDock}
+					onPatchCell={onPatchCell}
 					isFocused
 					onActivate={() => onFocusCell(maximizedCell)}
 					onReportFocused={onFocusedReport}
@@ -566,6 +626,8 @@ export function TechnicalWorkspaceGrid({
 					onCrossCellTabMoveBetweenCells={onCrossCellTabMoveBetweenCells}
 					registerCellSave={registerCellSave}
 					breadcrumbWorkspaceLabel={breadcrumbWorkspaceLabel}
+					workspaceTreeNodes={workspaceTreeNodes}
+					refreshQuiet={refreshQuiet}
 				/>
 			</div>
 		);
@@ -601,7 +663,6 @@ export function TechnicalWorkspaceGrid({
 						{Array.from({ length: grid.cols }, (_, c) => {
 							const cellIndex = r * grid.cols + c;
 							const dock = grid.cells[cellIndex] ?? grid.cells[0]!;
-							const patchDock = (u: SetStateAction<PanelDockLayout>) => onPatchCell(cellIndex, u);
 							return (
 								<Fragment key={`wcell-${cellIndex}`}>
 									{c > 0 ? (
@@ -621,7 +682,7 @@ export function TechnicalWorkspaceGrid({
 										<WorkspaceGridCell
 											cellIndex={cellIndex}
 											panelDock={dock}
-											patchDock={patchDock}
+											onPatchCell={onPatchCell}
 											isFocused={focusedCell === cellIndex}
 											onActivate={() => onFocusCell(cellIndex)}
 											onReportFocused={onFocusedReport}
@@ -660,6 +721,8 @@ export function TechnicalWorkspaceGrid({
 											onCrossCellTabMoveBetweenCells={onCrossCellTabMoveBetweenCells}
 											registerCellSave={registerCellSave}
 											breadcrumbWorkspaceLabel={breadcrumbWorkspaceLabel}
+											workspaceTreeNodes={workspaceTreeNodes}
+											refreshQuiet={refreshQuiet}
 										/>
 									</div>
 								</Fragment>

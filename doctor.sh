@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Way of Pi — repo path doctor: find (and optionally fix) machine-specific paths
 # that break clones (stale .playground-from, absolute settings.json entries,
-# and stray /home/zerwiz examples in hub docs / agents).
+# and stray copies of this machine's HOME / USERPROFILE in hub docs / agents).
 #
 # Usage:
 #   ./doctor.sh              # report only (exit 1 if problems found)
@@ -252,9 +252,6 @@ FILES_REL = (
     ".pi/settings.json",
 )
 
-# Machine-specific example path that must not creep back into agents / hub docs.
-STALE_HOME_SNIPPET = "/home/zerwiz"
-
 TEXT_PATHS_FOR_STALE_SNIPPET = (
     "agent/AGENTS.md",
     "projects/README.md",
@@ -265,7 +262,41 @@ TEXT_PATHS_FOR_STALE_SNIPPET = (
 )
 
 
+def collect_stale_path_snippets() -> list[str]:
+    """
+    Substrings that must not appear in tracked hub/agent text (they imply a leaked
+    machine path). Built from this process env — no maintainer-specific literals in-repo.
+    Optional extra comma-separated fragments: WOP_PATH_DOCTOR_STALE_SNIPPETS.
+    """
+    skip_home = frozenset({"/", "/tmp", "/var/tmp", "/usr", "/etc", "/opt"})
+    raw: list[str] = []
+    extra = os.environ.get("WOP_PATH_DOCTOR_STALE_SNIPPETS", "").strip()
+    if extra:
+        raw.extend(p.strip() for p in extra.split(",") if p.strip())
+    home = os.environ.get("HOME", "").strip()
+    if len(home) > 3 and home not in skip_home and not home.startswith("/tmp/"):
+        raw.append(home)
+    prof = os.environ.get("USERPROFILE", "").strip()
+    if len(prof) > 3 and prof not in raw:
+        raw.append(prof)
+    seen: set[str] = set()
+    out: list[str] = []
+    for s in raw:
+        variants = {s}
+        if "\\" in s:
+            variants.add(s.replace("\\", "/"))
+        for v in variants:
+            if len(v) > 3 and v not in seen:
+                seen.add(v)
+                out.append(v)
+    return out
+
+
 def scan_stale_home_path_refs() -> None:
+    snippets = collect_stale_path_snippets()
+    if not snippets:
+        note("Stale path snippet scan skipped (no HOME/USERPROFILE and no WOP_PATH_DOCTOR_STALE_SNIPPETS)")
+        return
     for rel in TEXT_PATHS_FOR_STALE_SNIPPET:
         path = os.path.join(root, rel)
         if not os.path.isfile(path):
@@ -274,10 +305,12 @@ def scan_stale_home_path_refs() -> None:
             text = open(path, encoding="utf-8", errors="replace").read()
         except OSError:
             continue
-        if STALE_HOME_SNIPPET in text:
-            warn(
-                f"{rel}: contains {STALE_HOME_SNIPPET!r} — replace with repo-relative paths or placeholders."
-            )
+        for snip in snippets:
+            if snip in text:
+                warn(
+                    f"{rel}: contains machine path fragment {snip!r} — replace with repo-relative paths or placeholders."
+                )
+                break
     for path in sorted(glob.glob(os.path.join(root, ".pi", "agents", "*.md"))):
         if not os.path.isfile(path):
             continue
@@ -285,11 +318,13 @@ def scan_stale_home_path_refs() -> None:
             text = open(path, encoding="utf-8", errors="replace").read()
         except OSError:
             continue
-        if STALE_HOME_SNIPPET in text:
-            rel = os.path.relpath(path, root).replace("\\", "/")
-            warn(
-                f"{rel}: contains {STALE_HOME_SNIPPET!r} — use PLAYGROUND_ROOT / repo-relative docs, not a fixed home path."
-            )
+        for snip in snippets:
+            if snip in text:
+                rel = os.path.relpath(path, root).replace("\\", "/")
+                warn(
+                    f"{rel}: contains machine path fragment {snip!r} — use PLAYGROUND_ROOT / repo-relative docs, not a fixed home path."
+                )
+                break
 
 
 def run_repo_checks() -> None:

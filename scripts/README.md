@@ -166,7 +166,7 @@ just doctor
 just doctor --fix
 ```
 
-Also warns if a **stale dev-home path snippet** (see the constant in **`doctor.sh`**) reappears in **`.pi/agents/*.md`**, **`docs/REPO_INDEX.md`**, **`docs/PLAYGROUND.md`**, **`agent/AGENTS.md`**, **`projects/README.md`**, or selected **`.cursor/rules/*.mdc`** (manual edit — not auto-fixed).
+Also warns if text in **`.pi/agents/*.md`**, **`docs/REPO_INDEX.md`**, **`docs/PLAYGROUND.md`**, **`agent/AGENTS.md`**, **`projects/README.md`**, or selected **`.cursor/rules/*.mdc`** contains this machine’s **`HOME`** / **`USERPROFILE`** (or comma-separated **`WOP_PATH_DOCTOR_STALE_SNIPPETS`**) — those are never portable; fix manually (not auto-fixed). If neither `HOME` nor `USERPROFILE` is set and the env var is empty, that check is skipped.
 
 See **`scripts/enable-playground-in-project`** / **[docs/PLAYGROUND.md](../docs/PLAYGROUND.md)** for linking another project; **Help → Host doctor** in **Way of Pi** for the live server snapshot.
 

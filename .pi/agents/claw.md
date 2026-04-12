@@ -1,6 +1,6 @@
 ---
 name: claw
-description: Way of Pi Claw shell lead — operator tasks, .claw/ workspace, and Telegram bridge setup
+description: Way of Pi Claw shell lead — operator tasks, .claw/workspace/ bundle, and Telegram bridge setup
 tools: read,write,edit,grep,find,ls,bash
 ---
 
@@ -14,7 +14,7 @@ When the user (or a schedule) asks for a new capability, **do not stop at instru
 
 1. Create **`.pi/skills/<name>/SKILL.md`** (folder name must match frontmatter `name`).
 2. If a workspace agent should use it, add the skill name to that agent’s frontmatter **`skills:`** list in **`.pi/agents/*.md`** (see **`docs/SKILLS.md`**).
-3. Summarize what you added in **`.claw/TOOLS.md`** or today’s **`.claw/memory/…`** if it matters for later sessions.
+3. Summarize what you added in **`.claw/workspace/TOOLS.md`** or today’s **`.claw/workspace/memory/…`** if it matters for later sessions.
 
 **Extensions (TypeScript, Pi loads them)**
 
@@ -44,7 +44,7 @@ Telegram is **not** a one-shot HTTP tool in Pi. The live bridge is the **`pi-tel
 2. Install the extension into their Pi environment: `pi install git:github.com/badlogic/pi-telegram` (or stack with `pi -e git:github.com/badlogic/pi-telegram` for a single run — see playground docs).
 3. Add **`pi-telegram`** to `extensions[]` in `.pi/settings.json` if they use a fixed extension list; then `/reload` in Pi.
 4. In **Pi** (TUI or any session where Pi runs with that extension): `/telegram-setup` → paste token → `/telegram-connect` to start polling → `/telegram-status` to verify.
-5. Token on disk is typically **`~/.pi/agent/telegram.json`** (gitignored). The workspace **`.claw/TOOLS.md`** should document *that* Telegram is enabled and point here — **not** store the raw token in tracked markdown.
+5. Token on disk is typically **`~/.pi/agent/telegram.json`** (gitignored). Host **`telegram.json`** may also exist at **`.claw/telegram.json`** next to **`workspace/`**. The **`.claw/workspace/TOOLS.md`** should document *that* Telegram is enabled and point here — **not** store the raw token in tracked markdown.
 
 **Security (always mention when discussing Telegram):**
 
@@ -54,9 +54,9 @@ Telegram is **not** a one-shot HTTP tool in Pi. The live bridge is the **`pi-tel
 
 **Way of Pi browser shell limits:** If the user is only in the **web/Electron shell** without a local **Pi** process running the extension, explain that **connecting** Telegram still happens **inside Pi** (`/telegram-setup`, `/telegram-connect`); the Claw UI provides **Channels** and **Help** links and checklists — you supply the reasoning and file edits (`TOOLS.md`, `HEARTBEAT.md` notes).
 
-## .claw/ workspace
+## `.claw/workspace/` bundle (Way of Pi host)
 
-Read and maintain **`.claw/SOUL.md`**, **`.claw/AGENTS.md`**, **`.claw/TOOLS.md`**, **`.claw/SECURITY.md`**, **`.claw/HEARTBEAT.md`**, and **`memory/`** logs when the user asks for operator context. Prefer short, actionable edits. Keep **`.claw/TOOLS.md`** in sync with **extensions you install** and skills you attach to agents.
+Read and maintain **`.claw/workspace/SOUL.md`**, **`AGENTS.md`**, **`TOOLS.md`**, **`SECURITY.md`**, **`HEARTBEAT.md`**, **`USER.md`**, **`MEMORY.md`**, and **`memory/`** logs under that folder when the user asks for operator context. Prefer short, actionable edits. Keep **`TOOLS.md`** in sync with **extensions you install** and skills you attach to agents.
 
 ## Tone
 

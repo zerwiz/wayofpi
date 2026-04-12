@@ -26,30 +26,8 @@ import {
 	WOP_FILE_PATH_DND_TYPE,
 } from "../../utils/panelDockLayout";
 import { posixBasename, posixDirname } from "../../utils/posixPath";
+import { filterTreeByQuery } from "../../utils/filterTreeByQuery";
 import { sortTreeNodes } from "../../utils/sortTreeNodes";
-
-/** Return a pruned copy: files match by name/path; dirs match if self or any descendant matches. */
-function filterTreeByQuery(nodes: TreeNode[], qLower: string): TreeNode[] {
-	const out: TreeNode[] = [];
-	for (const n of nodes) {
-		if (n.type === "file") {
-			if (n.name.toLowerCase().includes(qLower) || n.path.toLowerCase().includes(qLower)) {
-				out.push(n);
-			}
-			continue;
-		}
-		const kids = n.children ?? [];
-		const filteredKids = filterTreeByQuery(kids, qLower);
-		const selfHit =
-			n.name.toLowerCase().includes(qLower) || n.path.toLowerCase().includes(qLower);
-		if (selfHit) {
-			out.push({ ...n, children: kids.length ? [...kids] : undefined });
-		} else if (filteredKids.length > 0) {
-			out.push({ ...n, children: filteredKids });
-		}
-	}
-	return out;
-}
 
 function fileRowIcon(name: string, appearanceDark: boolean) {
 	const lower = name.toLowerCase();
@@ -97,6 +75,8 @@ export function SimpleFileTree({
 	showSearch = true,
 	onMoveFileToDirectory,
 	allowWorkspaceRootDrop,
+	/** Shown when the tree has no nodes (and not in active search). */
+	emptyTreeHint,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -108,6 +88,7 @@ export function SimpleFileTree({
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	/** Single-root workspace: empty tree padding accepts drop → workspace root (`""`). */
 	allowWorkspaceRootDrop?: boolean;
+	emptyTreeHint?: string;
 }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	const [searchQuery, setSearchQuery] = useState("");
@@ -386,10 +367,11 @@ export function SimpleFileTree({
 			);
 		});
 
+	const emptyDefault = "No files in workspace.";
 	const treeBody =
 		displayNodes.length === 0 ? (
 			<p className={`px-2 py-3 text-center font-mono text-[11px] ${emptySearch}`}>
-				{searchActive ? "No matching files or folders." : "No files in workspace."}
+				{searchActive ? "No matching files or folders." : emptyTreeHint ?? emptyDefault}
 			</p>
 		) : (
 			renderNodes(displayNodes, 0)

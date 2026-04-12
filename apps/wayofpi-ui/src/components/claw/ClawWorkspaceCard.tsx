@@ -1,5 +1,5 @@
 /**
- * Claw Mission — `.claw/` workspace panel.
+ * Claw Mission — `.claw/workspace/` bundle panel.
  *
  * Shows scaffold file status (exists / missing), setup button,
  * Link to Channels (Telegram + future webhooks), and a shortcut to open the workspace folder.
@@ -25,12 +25,15 @@ export function ClawWorkspaceCard({
 	dark,
 	onOpenFile,
 	onOpenChannels,
+	hostClawDirAbs,
 }: {
 	ws: UseClawWorkspaceResult;
 	workspacePath: string;
 	dark: boolean;
 	onOpenFile: (path: string) => void;
 	onOpenChannels?: () => void;
+	/** Absolute host path for **`.claw/workspace/`** (Way of Pi checkout, not the opened project). */
+	hostClawDirAbs?: string | null;
 }) {
 	const [expanded, setExpanded] = useState(false);
 
@@ -74,7 +77,7 @@ export function ClawWorkspaceCard({
 				<div className="flex items-center gap-2">
 					<FolderOpen size={14} className={accentC} />
 					<span className={`text-[11px] font-bold uppercase tracking-wider ${mutedC}`}>
-						Claw Workspace
+						Claw workspace folder
 					</span>
 				</div>
 				<button
@@ -96,8 +99,13 @@ export function ClawWorkspaceCard({
 			>
 				{statusIcon}
 				<div className="flex min-w-0 flex-1 flex-col">
-					<span className={`text-[12px] font-semibold ${textC}`}>.claw/</span>
+					<span className={`text-[12px] font-semibold ${textC}`}>Workspace</span>
 					<span className={`text-[11px] ${mutedC}`}>{summaryText}</span>
+					{hostClawDirAbs ? (
+						<span className={`mt-0.5 break-all font-mono text-[9px] leading-snug ${mutedC} opacity-90`}>
+							{hostClawDirAbs}
+						</span>
+					) : null}
 				</div>
 				{expanded ? (
 					<ChevronDown size={14} className={mutedC} />
@@ -110,8 +118,9 @@ export function ClawWorkspaceCard({
 			{expanded ? (
 				<div className={`border-t ${borderC}`}>
 					<ul className="px-3 py-2">
-						{ws.files.map(({ file, status }) => {
+						{ws.files.map(({ file, status, resolvedReadPath }) => {
 							const exists = status === "exists";
+							const openPath = exists ? (resolvedReadPath ?? file.path) : file.path;
 							return (
 								<li key={file.path} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
 									{status === "checking" ? (
@@ -126,15 +135,28 @@ export function ClawWorkspaceCard({
 									<button
 										type="button"
 										disabled={!exists}
-										onClick={() => exists && onOpenFile(file.path)}
+										onClick={() => exists && onOpenFile(openPath)}
 										className={`min-w-0 flex-1 truncate text-left font-mono text-[10px] ${
 											exists
 												? `${accentC} hover:underline cursor-pointer`
 												: `${mutedC} opacity-50 cursor-default`
 										}`}
-										title={file.description}
+										title={
+											resolvedReadPath
+												? `${file.description} (on disk: ${resolvedReadPath})`
+												: file.description
+										}
 									>
-										{file.path}
+										{resolvedReadPath ? (
+											<span className="flex min-w-0 flex-col gap-0.5">
+												<span className="truncate">{file.path}</span>
+												<span className={`truncate text-[9px] font-normal ${mutedC}`}>
+													→ {resolvedReadPath}
+												</span>
+											</span>
+										) : (
+											file.path
+										)}
 									</button>
 									<span className={`truncate text-right text-[10px] ${mutedC}`}>{file.description}</span>
 								</li>
@@ -165,13 +187,13 @@ export function ClawWorkspaceCard({
 					{ws.scaffolding ? (
 						<>
 							<Loader size={13} className="shrink-0 animate-spin" />
-							<span>Creating {ws.missingCount} files…</span>
+							<span>Creating Claw workspace folder…</span>
 						</>
 					) : (
 						<>
 							<Plus size={13} className="shrink-0" />
 							<span className="min-w-0 break-words">
-								Set up .claw/ workspace ({ws.missingCount} missing files)
+								Create Claw workspace folder ({ws.missingCount} missing)
 							</span>
 						</>
 					)}

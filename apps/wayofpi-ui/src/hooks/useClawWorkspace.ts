@@ -6,15 +6,25 @@
  * action that creates any missing files via `PUT /api/file`.
  *
  * The hook does NOT auto-scaffold on mount — the user must trigger it.
+ * `scaffold()` creates **`.claw/workspace/`** if needed, then writes any missing files.
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { CLAW_WORKSPACE_FILES, type ClawWorkspaceFile } from "../utils/clawWorkspaceTemplates";
+import {
+	CLAW_WORKSPACE_FILES,
+	legacyFlatClawRelForWorkspaceFile,
+	type ClawWorkspaceFile,
+} from "../utils/clawWorkspaceTemplates";
 
 export type FileStatus = "unknown" | "checking" | "exists" | "missing" | "error";
 
 export interface ClawFileState {
 	file: ClawWorkspaceFile;
 	status: FileStatus;
+	/**
+	 * When the file exists only at the legacy flat path (e.g. `.claw/SOUL.md`), the UI should
+	 * open this path; otherwise use `file.path` (canonical `.claw/workspace/…`).
+	 */
+	resolvedReadPath?: string | null;
 }
 
 export interface UseClawWorkspaceResult {
@@ -36,7 +46,12 @@ export interface UseClawWorkspaceResult {
 
 type Action =
 	| { type: "check_start" }
-	| { type: "file_result"; path: string; status: "exists" | "missing" | "error" }
+	| {
+			type: "file_result";
+			path: string;
+			status: "exists" | "missing" | "error";
+			resolvedReadPath?: string | null;
+	  }
 	| { type: "check_done" }
 	| { type: "scaffold_start" }
 	| { type: "scaffold_done"; error: string | null }
@@ -52,7 +67,11 @@ interface State {
 
 function buildInitial(): State {
 	return {
-		files: CLAW_WORKSPACE_FILES.map((f) => ({ file: f, status: "unknown" })),
+		files: CLAW_WORKSPACE_FILES.map((f) => ({
+			file: f,
+			status: "unknown",
+			resolvedReadPath: null,
+		})),
 		checking: false,
 		scaffolding: false,
 		ready: false,
@@ -66,13 +85,22 @@ function reducer(state: State, action: Action): State {
 			return {
 				...state,
 				checking: true,
-				files: state.files.map((f) => ({ ...f, status: "checking" })),
+				files: state.files.map((f) => ({ ...f, status: "checking", resolvedReadPath: null })),
 			};
 		case "file_result":
 			return {
 				...state,
 				files: state.files.map((f) =>
-					f.file.path === action.path ? { ...f, status: action.status } : f,
+					f.file.path === action.path
+						? {
+								...f,
+								status: action.status,
+								resolvedReadPath:
+									action.status === "exists"
+										? (action.resolvedReadPath ?? null)
+										: null,
+							}
+						: f,
 				),
 			};
 		case "check_done":
@@ -85,7 +113,7 @@ function reducer(state: State, action: Action): State {
 			return {
 				...state,
 				files: state.files.map((f) =>
-					f.file.path === action.path ? { ...f, status: "exists" } : f,
+					f.file.path === action.path ? { ...f, status: "exists", resolvedReadPath: null } : f,
 				),
 			};
 		default:
@@ -100,6 +128,37 @@ async function checkFileExists(path: string, signal: AbortSignal): Promise<"exis
 		return res.ok ? "exists" : "missing";
 	} catch {
 		return "missing";
+	}
+}
+
+async function checkScaffoldFilePresence(
+	file: ClawWorkspaceFile,
+	signal: AbortSignal,
+): Promise<{ status: "exists" | "missing"; resolvedReadPath: string | null }> {
+	if (signal.aborted) return { status: "missing", resolvedReadPath: null };
+	const primary = await checkFileExists(file.path, signal);
+	if (primary === "exists") return { status: "exists", resolvedReadPath: null };
+	const leg = legacyFlatClawRelForWorkspaceFile(file.path);
+	if (!leg) return { status: "missing", resolvedReadPath: null };
+	if (signal.aborted) return { status: "missing", resolvedReadPath: null };
+	const legacy = await checkFileExists(leg, signal);
+	if (legacy === "exists") return { status: "exists", resolvedReadPath: leg };
+	return { status: "missing", resolvedReadPath: null };
+}
+
+/** Ensure **`.claw/workspace/`** exists (409 if it already exists — OK). */
+async function ensureClawDirectoryExists(): Promise<string | null> {
+	try {
+		const res = await fetch("/api/fs/entry", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ path: ".claw/workspace", kind: "dir" }),
+		});
+		if (res.ok || res.status === 409) return null;
+		const t = await res.text();
+		return `${res.status}: ${t}`;
+	} catch (e) {
+		return e instanceof Error ? e.message : String(e);
 	}
 }
 
@@ -140,9 +199,9 @@ export function useClawWorkspace(enabled: boolean): UseClawWorkspaceResult {
 			await Promise.all(
 				CLAW_WORKSPACE_FILES.map(async (f) => {
 					if (ctrl.signal.aborted) return;
-					const status = await checkFileExists(f.path, ctrl.signal);
+					const { status, resolvedReadPath } = await checkScaffoldFilePresence(f, ctrl.signal);
 					if (!ctrl.signal.aborted) {
-						dispatch({ type: "file_result", path: f.path, status });
+						dispatch({ type: "file_result", path: f.path, status, resolvedReadPath });
 					}
 				}),
 			);
@@ -154,6 +213,11 @@ export function useClawWorkspace(enabled: boolean): UseClawWorkspaceResult {
 
 	const scaffold = useCallback(async () => {
 		dispatch({ type: "scaffold_start" });
+		const dirErr = await ensureClawDirectoryExists();
+		if (dirErr) {
+			dispatch({ type: "scaffold_done", error: dirErr });
+			return;
+		}
 		const missing = state.files.filter((f) => f.status === "missing");
 		const errors: string[] = [];
 

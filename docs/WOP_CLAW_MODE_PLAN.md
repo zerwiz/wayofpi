@@ -29,22 +29,26 @@ Three UI modes share the same **workspace on disk** and the same **WebSocket / P
 | **Technical** | Developers | IDE grid, diffs, tool log, all workspace files. |
 | **Claw** | Autonomous-agent operators | Mission control, agent memory, schedules, sessions. |
 
-Mixing Claw's operational artifacts (`.claw/HEARTBEAT.md`, session logs, agent identity files) into the Technical file tree or Simple project view would confuse users in those modes. Mixing Technical workspace state (editor tabs, dock layout, active git diff) into Claw would confuse operators running long-horizon tasks.
+Mixing Claw's operational artifacts (`.claw/workspace/HEARTBEAT.md`, session logs, agent identity files) into the Technical file tree or Simple project view would confuse users in those modes. Mixing Technical workspace state (editor tabs, dock layout, active git diff) into Claw would confuse operators running long-horizon tasks.
 
 ### The `.claw/` folder is Claw's private workspace
 
+On disk under the **Way of Pi checkout** (host repo), not the opened `WOP_WORKSPACE` project:
+
 ```text
-<workspace-root>/
+<way-of-pi-repo>/
 ├── .claw/
-│   ├── SOUL.md          ← Claw agent identity and tone
-│   ├── AGENTS.md        ← Claw startup procedures and memory rules
-│   ├── USER.md          ← User context for Claw sessions
-│   ├── MEMORY.md        ← Long-term memory index (keep ≤ 2 KB)
-│   ├── HEARTBEAT.md     ← Proactive task checklist
-│   ├── TOOLS.md         ← Tool config (pi-telegram, extensions…)
-│   ├── SECURITY.md      ← File access and secret policy
-│   └── memory/
-│       └── YYYY-MM-DD.md  ← Daily session logs (auto-created by agent)
+│   ├── telegram.json    ← optional; Telegram bot token (gitignored)
+│   └── workspace/       ← Claw bundle (seven files + memory/)
+│       ├── SOUL.md          ← Claw agent identity and tone
+│       ├── AGENTS.md        ← Claw startup procedures and memory rules
+│       ├── USER.md          ← User context for Claw sessions
+│       ├── MEMORY.md        ← Long-term memory index (keep ≤ 2 KB)
+│       ├── HEARTBEAT.md     ← Proactive task checklist
+│       ├── TOOLS.md         ← Tool config (pi-telegram, extensions…)
+│       ├── SECURITY.md      ← File access and secret policy
+│       └── memory/
+│           └── YYYY-MM-DD.md  ← Daily session logs (auto-created by agent)
 ├── .pi/                 ← Pi runtime (agents, extensions, sessions)
 ├── plans/               ← Shared plan files (all modes can read)
 └── <your project files>
@@ -52,8 +56,8 @@ Mixing Claw's operational artifacts (`.claw/HEARTBEAT.md`, session logs, agent i
 
 **Rules:**
 
-- `.claw/` is created and managed by the **Claw UI** only. Simple and Technical modes do not show `.claw/` in their default panels or toolbars.
-- When Claw saves a session log, it goes to `.claw/memory/YYYY-MM-DD.md` — **not** to `.pi/agent-sessions/` (Pi CLI's own space) or to any Technical-mode workspace state.
+- `.claw/` (including `workspace/`) is created and managed by the **Claw UI** on the host checkout. Simple and Technical modes do not show `.claw/` in their default panels or toolbars.
+- When Claw saves a session log, it goes to `.claw/workspace/memory/YYYY-MM-DD.md` — **not** to `.pi/agent-sessions/` (Pi CLI's own space) or to any Technical-mode workspace state.
 - Simple and Technical modes may **read** `.claw/` files if the user explicitly navigates to them, but they never write to `.claw/` automatically.
 - Shared files (`plans/`, `.pi/agents/`, workspace code) remain accessible to all modes — Claw can reach any workspace file when its tasks require it.
 
@@ -63,10 +67,10 @@ Claw **can and should** use the full Pi tool set (read, write, grep, bash, dispa
 
 | Artifact | Where it lands | Visible to other modes |
 |----------|----------------|------------------------|
-| Agent memory / session log | `.claw/memory/YYYY-MM-DD.md` | No (Claw convention) |
+| Agent memory / session log | `.claw/workspace/memory/YYYY-MM-DD.md` | No (Claw convention) |
 | Code edits, task output | Target path in workspace (e.g. `src/`) | Yes — it's project content |
 | Pi session transcript | `.pi/agent-sessions/` (Pi runtime) | Pi CLI / Technical if same engine |
-| Claw agent identity | `.claw/SOUL.md`, `.claw/AGENTS.md` | No |
+| Claw agent identity | `.claw/workspace/SOUL.md`, `.claw/workspace/AGENTS.md` | No |
 | Plan files | `plans/PLAN-*.md` | Yes — intentionally shared |
 | Telegram config | `.claw/telegram.json` or `~/.pi/agent/telegram.json` | No — secret, gitignored |
 
@@ -75,12 +79,12 @@ Claw **can and should** use the full Pi tool set (read, write, grep, bash, dispa
 | Concern | Rule |
 |---------|------|
 | **Session tabs** | Claw has its own `ClawSessionStrip`. Switching to Technical or Simple does not expose or clear Claw sessions. |
-| **File tree defaults** | Claw's Files tab shows the workspace tree. Mission view defaults to `.claw/` context cards — not the full IDE tree. |
+| **File tree defaults** | Claw's Files tab shows the workspace tree. Mission view defaults to `.claw/workspace/` context cards — not the full IDE tree. |
 | **Layout / dock state** | Claw uses `clawTab` (React state, to be persisted under `wayofpi.claw.tab`); Technical uses `activity` + `panelDock`; Simple uses `simpleTab`. **Never share.** |
 | **Settings keys** | Claw shares `useSimplePreferences` (dark/light) but its own operational settings live under `wayofpi.claw.*` localStorage keys. |
-| **`.claw/` writes** | Only `ClawWorkspaceCard.scaffold()` and explicit user edits create `.claw/` files. No Technical or Simple code path writes to `.claw/`. |
-| **Mission view** | Claw-only. It reads `.claw/` file states and agent workspace health. Never shown in Technical or Simple. |
-| **`.gitignore`** | `.claw/telegram.json`, `.claw/memory/` (or the whole `.claw/` at operator discretion) should be listed in the project's `.gitignore`. Template should suggest this. |
+| **`.claw/` writes** | Only `ClawWorkspaceCard.scaffold()` and explicit user edits create files under **`.claw/workspace/`** (and optional `.claw/telegram.json`). No Technical or Simple code path writes there. |
+| **Mission view** | Claw-only. It reads `.claw/workspace/` file states and agent workspace health. Never shown in Technical or Simple. |
+| **`.gitignore`** | `.claw/telegram.json`, `.claw/workspace/` (or the whole `.claw/` at operator discretion) should be listed in the Way of Pi checkout `.gitignore`. Template should suggest this. |
 
 ### Future: `WOP_CLAW_HOME` for full path isolation (Phase C)
 
@@ -94,16 +98,16 @@ For multi-project use or stricter isolation, a `WOP_CLAW_HOME` env var can redir
 |------|--------|
 | **`UiMode`: `claw`** | Persisted in `wayofpi.uiMode`; toggle + Settings entry |
 | **Shell** | Dedicated `ClawApp` — separate from Technical + Simple; own nav rail + tab routing |
-| **Mission tab** | Health strip, quick actions (incl. New Plan → opens Files tab), agent roster, activity feed, `.claw/` workspace card |
-| **Chat tab** | `ClawSessionStrip` (tabs, new session, `.claw/` toggle), file panel with workspace tree + editor |
+| **Mission tab** | Health strip, quick actions (incl. New Plan → opens Files tab), agent roster, activity feed, `.claw/workspace/` bundle card |
+| **Chat tab** | `ClawSessionStrip` (tabs, new session, `.claw/workspace/` toggle), file panel with workspace tree + editor |
 | **Team tab** | `SimpleTeamView` (agent catalog) |
 | **Files tab** | Tree + `SimpleFilePanel` — Markdown opens in **Preview** mode by default; images, SVG, Mermaid also preview |
 | **Settings tab** | `SimpleSettingsView` + link to Technical mode |
-| **`.claw/` scaffold** | `ClawWorkspaceCard` — checks and creates all 7 template files on demand |
-| **Help modal** | `ClawHelpModal` — 7-section operator guide (Overview, Navigation, .claw/, Schedules, Channels, Files, Tips), triggered from `?` button in nav rail |
+| **`.claw/workspace/` scaffold** | `ClawWorkspaceCard` — checks and creates all 7 template files on demand |
+| **Help modal** | `ClawHelpModal` — 7-section operator guide (Overview, Navigation, `.claw/workspace/`, Schedules, Channels, Files, Tips), triggered from `?` button in nav rail |
 | **Telegram plan** | `docs/WOP_TELEGRAM_PLAN.md` — `pi-telegram` extension (Phase T-0) |
-| **Schedule tab** | `ClawSchedulesView` — define cron-triggered Pi turns; stored in `wayofpi.claw.schedules` localStorage; execution is Phase D |
-| **Channels tab** | `ClawChannelsView` — Telegram setup + **`GET /api/claw/telegram/status`** (read-only snapshot); Webhook / Email stubs; inbound webhook execution still Phase E |
+| **Schedule tab** | `ClawSchedulesView` — cron / once-off Pi turns; definitions under **`<host>/.claw/schedule/claw-schedules.v1.json`** (synced from UI); server runs them when **`WOP_CLAW_SCHEDULER=1`** and Pi drives chat |
+| **Channels tab** | `ClawChannelsView` — Telegram setup + **`GET /api/claw/telegram/status`**; **POST `/api/claw/inbound`** (Bearer secret; webhook secret file under **`WOP_WORKSPACE/.wayofpi/`** per **`claw-webhook-store`**) for headless Pi turns; Email still planned |
 | **New Plan** | `NewPlanFileModal` wired in Claw block; after creation stays in Claw and opens the plan in the Files tab |
 
 ---
@@ -116,7 +120,7 @@ Aligned with existing repo plans: **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKE
 
 - **`WOP_CHAT_ENGINE=pi` / `auto`** with resolved **`pi`**: every chat turn and persona runs **`pi --mode json`** so **skills**, **tools**, and **extensions[]** match the TUI. This is what gives Claw its tool capability — not a Bun-side reimplementation.
 - **Session continuity** — same session file semantics as Pi; UI surfaces **resume / fork** without inventing a second transcript format.
-- **`.claw/` as Pi context** — Phase A should load `.claw/SOUL.md`, `.claw/AGENTS.md`, and `.claw/MEMORY.md` as Pi context at session start (via `AGENTS.md`-style injection), so the agent knows its identity and memory without manual copy-paste.
+- **`.claw/workspace/` as Pi context** — Phase A should load `SOUL.md`, `AGENTS.md`, and `MEMORY.md` from that bundle as Pi context at session start (via `AGENTS.md`-style injection), so the agent knows its identity and memory without manual copy-paste.
 
 ### Phase B — Multi-agent and orchestration UI
 
@@ -126,15 +130,24 @@ Aligned with existing repo plans: **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKE
 
 ### Phase C — Persistence and memory (Claw-shaped)
 
-- **Long-horizon context** — workspace-visible memory artifacts under `.claw/memory/` (aligned with Pi **session-memory** / project docs), not hidden state in the web server alone.
+- **Long-horizon context** — workspace-visible memory artifacts under `.claw/workspace/memory/` (aligned with Pi **session-memory** / project docs), not hidden state in the web server alone.
 - **`WOP_CLAW_HOME`** env var (see isolation §above).
 - **Honcho (optional cross-session store)** — align **`HONCHO_WORKSPACE`** (and mirror defaults) with operator context; surface **health** and **transparency** in Claw (Mission / Channels), not a Bun-only Honcho client pretending to be the agent—backlog **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)**, stack notes **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §8–9.
 - **Optional vector / search** — only if Pi or an approved sidecar owns retrieval; avoid a Bun-only "mini RAG" that bypasses Pi policy.
 
-### Phase D — Autonomy controls (heartbeat / schedules)
+### Phase D — Autonomy controls (heartbeat / schedules) — **partially shipped**
 
-- **Scheduler** — cron-like or interval **wake** of a **Pi** turn with a fixed **system / skill** entry (e.g. triage, digest). Must be **opt-in**, **auditable**, and **scoped to workspace** (`WOP_WORKSPACE`). Heartbeat log goes to `.claw/memory/` not to general workspace files.
-- **Rate limits and kill switch** — global "pause Claw" and per-workspace caps; surface in Claw banner / settings when implemented.
+**Shipped in Way of Pi today**
+
+- **Schedule definitions + run metadata** — persisted on the **host checkout** under **`.claw/schedule/`** (not the opened `WOP_WORKSPACE` project). UI syncs via **`GET` / `PUT /api/claw/schedules`**; last-run fields merge from **`claw-schedule-runs.v1.json`**.
+- **Opt-in timer runner** — set **`WOP_CLAW_SCHEDULER=1`** (or `true` / `on`) on the Bun server. The process runs an interval tick (~45s), evaluates enabled **cron** and **one-shot** schedules, and invokes **headless `pi --mode json`** via **`executeClawAutomation`** when **Pi drives chat** (`WOP_CHAT_ENGINE=pi` or `auto` with **`pi`** resolving). Schedule output and memory follow existing Pi / Claw conventions (e.g. **`.claw/workspace/memory/`**).
+- **Lightweight mission log** — append-only events under **`.claw/mission-events/claw-mission-events.v1.json`** for Mission / diagnostics.
+
+**Still planned (remainder of Phase D)**
+
+- **Heartbeat-driven wakes** — explicit **HEARTBEAT.md**-driven runner beyond the current schedule form (may share the same executor).
+- **Rich audit UX** — dedicated per-schedule history UI (beyond last-run + mission log).
+- **Rate limits and kill switch** — global pause and caps; surface in Claw banner / settings.
 
 ### Phase E — Channels (inbound / outbound)
 
@@ -144,7 +157,7 @@ Aligned with existing repo plans: **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKE
 
 ### Phase F — Claw-specific UX
 
-- **Mission / queue panel** — standing tasks, last run, failures (backed by server + Pi logs, not React-only state). Data source: `.claw/memory/` + server queue API.
+- **Mission / queue panel** — standing tasks, last run, failures (backed by server + Pi logs, not React-only state). Data source: `.claw/workspace/memory/` + server queue API.
 - **Workflow library** — optional curated prompts or `plans/` templates; stored in `.claw/workflows/` or repo `plans/`.
 - **Layout and panels** — default dock preset, status strip, tool-card parity, non-goals: **[WOP_CLAW_UI_PLAN.md](WOP_CLAW_UI_PLAN.md)** sections 5–7.
 
@@ -178,4 +191,4 @@ Aligned with existing repo plans: **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKE
 - **Product capabilities:** **[WOP_PRODUCT_CAPABILITIES.md](WOP_PRODUCT_CAPABILITIES.md)**
 - **Namespace:** **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**
 
-**Last updated:** 2026-04-11 (Help modal, New Plan fix, layout overflow fixes)
+**Last updated:** 2026-04-12 (Phase D schedule runner shipped — doc + help copy aligned)

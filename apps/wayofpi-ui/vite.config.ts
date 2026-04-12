@@ -23,7 +23,12 @@ function wayofpiDevStartApiPlugin(): Plugin {
 
 			type HealthJson = {
 				ok?: boolean;
-				capabilities?: { workspaceProblems?: boolean; configRuntimePost?: boolean };
+				capabilities?: {
+					workspaceProblems?: boolean;
+					configRuntimePost?: boolean;
+					clawHostTreeGet?: boolean;
+					clawTelegramStatusGet?: boolean;
+				};
 			};
 			/** `fresh` = current Way of Pi API; `stale` = something on the port answered /api/health but is an older build. */
 			async function wayofpiBunApiState(): Promise<"absent" | "fresh" | "stale"> {
@@ -38,7 +43,14 @@ function wayofpiDevStartApiPlugin(): Plugin {
 					if (!r.ok) return "absent";
 					const j = (await r.json().catch(() => ({}))) as HealthJson;
 					const c = j?.capabilities;
-					if (c?.workspaceProblems === true && c?.configRuntimePost === true) return "fresh";
+					if (
+						c?.workspaceProblems === true &&
+						c?.configRuntimePost === true &&
+						c?.clawHostTreeGet === true &&
+						c?.clawTelegramStatusGet === true
+					) {
+						return "fresh";
+					}
 					return "stale";
 				} catch {
 					return "absent";
@@ -80,7 +92,7 @@ function wayofpiDevStartApiPlugin(): Plugin {
 							JSON.stringify({
 								ok: false,
 								staleServer: true,
-								message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems + configRuntimePost on /api/health — old Bun). Stop the old process (macOS: lsof -nP -iTCP:${port} | grep LISTEN; Linux: ss -tlnp | grep ${port}), then click Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
+								message: `Port ${port} responds to /api/health but not this app’s current API (missing capabilities.workspaceProblems, configRuntimePost, clawHostTreeGet, and/or clawTelegramStatusGet — old Bun). Stop the old process (macOS: lsof -nP -iTCP:${port} | grep LISTEN; Linux: ss -tlnp | grep ${port}), then click Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
 							}),
 						);
 						return;

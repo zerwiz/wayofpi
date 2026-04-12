@@ -4,10 +4,11 @@
  */
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, normalize } from "node:path";
 
 import type { ClawTelegramStatusV1 } from "../shared/claw-telegram-status.ts";
-import { getPrimaryWorkspacePath, listWorkspaceFolders } from "./workspace-state";
+import { getClawDotDirAbs, getClawHostRepoRoot } from "./claw-workspace-root";
+import { listWorkspaceFolders } from "./workspace-state";
 
 function fileHasTelegramTokenShape(abs: string): boolean {
 	try {
@@ -26,30 +27,39 @@ function fileHasTelegramTokenShape(abs: string): boolean {
 	}
 }
 
-function scanPiTelegramInSettings(): boolean {
-	for (const { path: root } of listWorkspaceFolders()) {
-		const p = join(root, ".pi", "settings.json");
-		if (!existsSync(p)) continue;
-		try {
-			const raw = readFileSync(p, "utf8");
-			const j = JSON.parse(raw) as { extensions?: unknown };
-			const ext = j.extensions;
-			if (!Array.isArray(ext)) continue;
-			for (const e of ext) {
-				const s = String(e ?? "").toLowerCase();
-				if (s.includes("pi-telegram") || s.includes("badlogic/pi-telegram")) return true;
-			}
-		} catch {
-			/* skip malformed */
+function settingsJsonListsPiTelegram(abs: string): boolean {
+	if (!existsSync(abs)) return false;
+	try {
+		const raw = readFileSync(abs, "utf8");
+		const j = JSON.parse(raw) as { extensions?: unknown };
+		const ext = j.extensions;
+		if (!Array.isArray(ext)) return false;
+		for (const e of ext) {
+			const s = String(e ?? "").toLowerCase();
+			if (s.includes("pi-telegram") || s.includes("badlogic/pi-telegram")) return true;
 		}
+		return false;
+	} catch {
+		return false;
+	}
+}
+
+/** Opened workspace folder(s) plus the Way of Pi host checkout (Claw extensions often live only on the host). */
+function scanPiTelegramInSettings(): boolean {
+	const seen = new Set<string>();
+	const roots = [getClawHostRepoRoot(), ...listWorkspaceFolders().map(({ path }) => path)];
+	for (const root of roots) {
+		const p = normalize(join(root, ".pi", "settings.json"));
+		if (seen.has(p)) continue;
+		seen.add(p);
+		if (settingsJsonListsPiTelegram(p)) return true;
 	}
 	return false;
 }
 
 export function getClawTelegramIntegrationStatus(): ClawTelegramStatusV1 {
-	const primary = getPrimaryWorkspacePath();
 	const globalPath = join(homedir(), ".pi", "agent", "telegram.json");
-	const workspaceTokenPath = join(primary, ".claw", "telegram.json");
+	const workspaceTokenPath = join(getClawDotDirAbs(), "telegram.json");
 
 	const globalTokenConfigured = fileHasTelegramTokenShape(globalPath);
 	const workspaceTokenConfigured = fileHasTelegramTokenShape(workspaceTokenPath);

@@ -1,9 +1,11 @@
-import { ChevronDown, ChevronRight, FilePlus, FolderPlus, SidebarClose } from "lucide-react";
-import { useCallback, useRef, useState, type DragEvent, type MouseEvent } from "react";
+import { ChevronDown, ChevronRight, FilePlus, FolderPlus, Search, SidebarClose } from "lucide-react";
+import { useCallback, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { FileTree } from "./FileTree";
 import type { TreeNode } from "../types/tree";
+import { filterTreeByQuery } from "../utils/filterTreeByQuery";
 import { isExplorerFilePathDrag, readDraggedExplorerFilePath } from "../utils/panelDockLayout";
 import { posixDirname } from "../utils/posixPath";
+import { sortTreeNodes } from "../utils/sortTreeNodes";
 
 export function ExplorerSidebar({
 	nodes,
@@ -55,8 +57,16 @@ export function ExplorerSidebar({
 	const [outlineOpen, setOutlineOpen] = useState(false);
 	const [timelineOpen, setTimelineOpen] = useState(false);
 	const [workspaceTreeOpen, setWorkspaceTreeOpen] = useState(true);
+	const [explorerSearchQuery, setExplorerSearchQuery] = useState("");
 	const [rootDropActive, setRootDropActive] = useState(false);
 	const explorerTreeHostRef = useRef<HTMLDivElement | null>(null);
+
+	const explorerSearchActive = explorerSearchQuery.trim().length > 0;
+	const sortedExplorerNodes = useMemo(() => sortTreeNodes(nodes), [nodes]);
+	const explorerDisplayNodes = useMemo(() => {
+		if (!explorerSearchActive) return sortedExplorerNodes;
+		return filterTreeByQuery(sortedExplorerNodes, explorerSearchQuery.trim().toLowerCase());
+	}, [sortedExplorerNodes, explorerSearchActive, explorerSearchQuery]);
 
 	const onRootDragOver = useCallback(
 		(e: DragEvent<HTMLDivElement>) => {
@@ -122,25 +132,53 @@ export function ExplorerSidebar({
 				) : null}
 			</div>
 			{workspaceTreeOpen ? (
-				<div className="flex shrink-0 items-center justify-end gap-0.5 border-b border-[#3c3c3c] bg-[#252526] px-1 py-0.5">
-					<button
-						type="button"
-						title="New file"
-						onClick={() => onNewFile?.()}
-						disabled={!onNewFile}
-						className="rounded p-1 text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
-					>
-						<FilePlus size={16} />
-					</button>
-					<button
-						type="button"
-						title="New folder"
-						onClick={() => onNewFolder?.()}
-						disabled={!onNewFolder}
-						className="rounded p-1 text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
-					>
-						<FolderPlus size={16} />
-					</button>
+				<div className="flex shrink-0 min-w-0 items-center gap-1 border-b border-[#3c3c3c] bg-[#252526] px-1 py-0.5">
+					<div className="relative min-w-0 flex-1">
+						<label htmlFor="wop-explorer-file-search" className="sr-only">
+							Search files in explorer
+						</label>
+						<Search
+							size={12}
+							className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-[#858585]"
+							aria-hidden
+						/>
+						<input
+							id="wop-explorer-file-search"
+							type="search"
+							value={explorerSearchQuery}
+							onChange={(e) => setExplorerSearchQuery(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Escape") {
+									e.preventDefault();
+									setExplorerSearchQuery("");
+								}
+							}}
+							placeholder="Search files…"
+							autoComplete="off"
+							spellCheck={false}
+							className="w-full min-w-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] py-1 pl-6 pr-1 font-mono text-[11px] text-[#cccccc] outline-none ring-0 placeholder:text-[#6f6f6f] focus:border-[#ea580c]/55 focus:ring-1 focus:ring-[#ea580c]/25"
+						/>
+					</div>
+					<div className="flex shrink-0 items-center gap-0.5">
+						<button
+							type="button"
+							title="New file"
+							onClick={() => onNewFile?.()}
+							disabled={!onNewFile}
+							className="rounded p-1 text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+						>
+							<FilePlus size={16} />
+						</button>
+						<button
+							type="button"
+							title="New folder"
+							onClick={() => onNewFolder?.()}
+							disabled={!onNewFolder}
+							className="rounded p-1 text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+						>
+							<FolderPlus size={16} />
+						</button>
+					</div>
 				</div>
 			) : null}
 			<div
@@ -153,10 +191,12 @@ export function ExplorerSidebar({
 					<div className="px-3 py-2 font-mono text-[12px] text-[#858585]">Loading tree…</div>
 				) : error ? (
 					<div className="px-3 py-2 font-mono text-[12px] text-[#f14c4c]">{error}</div>
+				) : explorerSearchActive && explorerDisplayNodes.length === 0 ? (
+					<div className="px-3 py-2 font-mono text-[12px] text-[#858585]">No matching files or folders.</div>
 				) : (
 					<div ref={explorerTreeHostRef} className="flex min-h-0 flex-1 flex-col">
 						<FileTree
-							nodes={nodes}
+							nodes={explorerDisplayNodes}
 							selectedPath={selectedPath}
 							secondarySelectedPath={secondarySelectedPath}
 							openInMainEditorPaths={openInMainEditorPaths}
@@ -170,6 +210,7 @@ export function ExplorerSidebar({
 							expandRevision={expandRevision}
 							pathsToExpand={pathsToExpand}
 							onExplorerGitMutated={onExplorerGitMutated}
+							searchFilterActive={explorerSearchActive}
 						/>
 					</div>
 				)}

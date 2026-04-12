@@ -1,0 +1,25 @@
+---
+description: Avoid hard-coded absolute file paths — use config, env, workspace roots, and path APIs
+alwaysApply: true
+---
+
+# No hard-coded file paths
+
+Do **not** embed **machine- or user-specific** absolute paths in code, docs, samples, tests, or rules (e.g. `/home/alice/...`, `/Users/bob/...`, `C:\Users\...`). They break other machines, CI, and collaborators.
+
+## Prefer
+
+- **Runtime roots:** `process.cwd()`, workspace APIs (**`listWorkspaceFolders()`**, **`WOP_WORKSPACE`**, **`WOP_HOME`** per **`docs/WOP_NAMESPACE.md`**), `import.meta.dir` / `import.meta.url` for module-relative files, **`path.join`** / **`path.resolve`** from **`node:path`** (see also **`.cursor/rules/wop-cross-platform.mdc`**).
+- **User-owned locations:** environment variables or documented placeholders (e.g. **`$HOME`**, **`%USERPROFILE%`**, **`~`** only in shell-oriented docs where that convention is explicit).
+- **Examples in markdown:** neutral placeholders like **`/path/to/your/repo`**, **`path/to/workspace`**, or **`$(pwd)`** — never a real home directory.
+
+## Avoid
+
+- Copy-pasting full paths from your laptop into source, **`.env`**, **`.env.sample`**, JSON defaults, or Cursor rules.
+- “Works on my machine” literals for repos, **`node_modules`**, interpreters, or toolchains unless behind **optional** local overrides that are clearly labeled and gitignored.
+
+## Tests and fixtures
+
+Use **temp dirs** (**`os.tmpdir()`**, **`mkdtemp`**), repo-relative paths from a **known fixture root**, or paths built from **`import.meta.dir`** — not hard-coded absolute paths to a developer’s filesystem.
+
+When a **single** absolute path is unavoidable (e.g. platform-specific system locations), **gate** it on **`process.platform`** / documented OS contracts and keep user data paths configurable.

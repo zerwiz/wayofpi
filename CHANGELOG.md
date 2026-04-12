@@ -10,6 +10,31 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Changed
 
+- **Claw help + product doc:** Schedule **Phase D** messaging updated — definitions and runs use host **`.claw/schedule/`**, **`WOP_CLAW_SCHEDULER=1`** runs headless Pi turns when Pi drives chat; help modal / **`docs/WOP_CLAW_MODE_PLAN.md`** no longer describe schedules as browser-only or “Phase D stub.”
+
+- **Claw Schedule tab UX:** **`GET/PUT /api/claw/schedules`** and **`GET /api/claw/mission-events`** are registered early in the Bun API router (fewer stale-route 404s). The tab shows **loading** until the first server sync, surfaces **sync errors**, and replaces the always-orange “Server execution” strip with **contextual** status (green when Pi + scheduler are on, blue info when only env/setup is missing). **`apps/wayofpi-ui/.env.sample`** comment for **`WOP_CLAW_SCHEDULER`** points at **`.claw/schedule/`**.
+
+### Fixed
+
+- **Claw Channels — Telegram integration hints:** **`GET /api/config`** / **`GET /api/claw/telegram/status`** now treat **`pi-telegram`** as present when it appears in the **Way of Pi host checkout** **`.pi/settings.json`**, not only in opened **`WOP_WORKSPACE`** roots (common when Claw runs against another project folder). Channels phase notice copy cleaned up.
+
+- **Claw Channels — Telegram UI:** when the Bun API is missing the Telegram snapshot (usually an old process on the dev port), the card shows **“Update Bun API”** and an amber explainer instead of **“Not configured”**, which implied Telegram itself was broken. Phase E banner copy now states what is already shipped vs later items.
+
+- **Way of Pi web UI — line-numbered code surfaces:** workspace file editing (`WorkspaceTextBuffer`), horizontal **strip** file preview, **Host Doctor** live snapshot + workspace JSON editors, and **My AI Brains** Pi JSON editors now share the same gutter/textarea typography (**`apps/wayofpi-ui/src/constants/workspaceEditorChrome.ts`**) so line numbers stay aligned with text. See **`docs/WOP_CODE_EDITOR_LINE_NUMBERS.md`**.
+
+### Changed
+
+- **`apps/wayofpi-ui`** — **Settings → Restart Way of Pi** opens **`RestartServerModal`**: non-technical wording (turn off / open again), optional **build from source** steps under **details**; operator text under **More information (for support or IT)**. Replaces **`window.alert`**.
+- **`POST /api/server/restart`** — **Settings → Restart server** is **on by default** when **`NODE_ENV` is not `production`** and **`WOP_ALLOW_SERVER_RESTART`** is unset; production still requires an explicit allow (**`1`** / **`true`** / **`yes`** / **`on`**). Set **`WOP_ALLOW_SERVER_RESTART`** to **`0`** / **`false`** / **`no`** / **`off`** to disable in dev. Docs: **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`apps/wayofpi-ui/README.md`**, **`.env.sample`**.
+
+- **Claw host paths:** the seven scaffold files and **`memory/`** live under **`.claw/workspace/`** on the Way of Pi checkout (default: repo root inferred from `apps/wayofpi-ui/server`), **not** under **`WOP_WORKSPACE`**. Optional **`telegram.json`** stays at **`.claw/telegram.json`**. **`GET /api/config`** exposes **`clawHostRepoRoot`**, **`clawDotDirAbs`**, and **`clawWorkspaceDirAbs`**; override with **`WOP_CLAW_HOST_ROOT`** or **`WOP_PLAYGROUND_ROOT`**. **`/api/file`** and **`/api/fs/*`** resolve `.claw/…` on that host tree.
+
+- **Claw schedules on disk:** schedule definitions and run metadata are stored under **`<host>/.claw/schedule/`** (`claw-schedules.v1.json`, `claw-schedule-runs.v1.json`) instead of **`WOP_WORKSPACE/.wayofpi/`**. On first read, if the new definitions file is missing but the legacy **`.wayofpi/`** files exist, the server copies them into **`.claw/schedule/`**.
+
+- **Claw host file tree / stale Bun:** **`GET /api/health`** and **`GET /api/config`** now advertise **`capabilities.clawHostTreeGet: true`**; Vite and Electron “fresh” API checks require it so an older Bun on **`WOP_SERVER_PORT`** is not treated as healthy. **`GET /api/claw/tree`** is registered early in the API router; **`GET /api/config?clawTree=1`** embeds **`clawHostTree`** as a fallback when the dedicated path returns **404**. **`OPTIONS`** under **`/api/*`** returns **204** with permissive CORS headers for strict browser setups.
+
+- **Claw automation + mission log on disk:** **`GET /api/config`** always includes **`clawAutomation`** (same payload as **`GET /api/claw/automation`**); the Claw automation hook falls back to config when the dedicated route returns **404**. **`GET /api/claw/automation`** is registered early with **`/api/claw/tree`**. Mission automation events are stored under **`<host>/.claw/mission-events/claw-mission-events.v1.json`** (with one-time copy from legacy **`WOP_WORKSPACE/.wayofpi/`**). Schedule tab copy updated accordingly.
+
 - **Root `README.md` — Installation:** expanded GitHub-facing steps (clone, bootstrap script table, **`bun install`**, **`npm install`** in **`apps/wayofpi-ui`**, API keys pointer, **`start-wayofpi-electron.sh`**, optional **`install-global`**); platform note for Linux / macOS / WSL vs Windows. Prerequisites now link to this section.
 
 ### Added
@@ -38,7 +63,7 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 - **Claw UI — Schedules tab (Phase D stub)**: new `ClawSchedulesView` component + `useClawSchedules` hook. Operators can define named cron-triggered Pi turns (stored in `wayofpi.claw.schedules` localStorage). Cards show name, cron + human-readable label, agent, prompt preview, enabled/disabled badge, and last-run. Inline create/edit form with preset frequency selector, agent, prompt textarea, and enabled toggle. Phase D notice explains execution is not yet wired.
 
-- **Claw UI — Channels tab (Phase E stub)**: new `ClawChannelsView` component with Telegram, Webhook, and Email channel cards. Telegram card includes full step-by-step setup guide (`@BotFather` → token → `.claw/TOOLS.md` → `pi-telegram` extension → `/reload`), "Open TOOLS.md" button, and link to `WOP_TELEGRAM_PLAN.md`. Webhook card has a disabled "Generate webhook URL" button labeled Phase E. Email card is labeled planned later.
+- **Claw UI — Channels tab (Phase E stub)**: new `ClawChannelsView` component with Telegram, Webhook, and Email channel cards. Telegram card includes full step-by-step setup guide (`@BotFather` → token → `.claw/workspace/TOOLS.md` → `pi-telegram` extension → `/reload`), "Open TOOLS.md" button, and link to `WOP_TELEGRAM_PLAN.md`. Webhook card has a disabled "Generate webhook URL" button labeled Phase E. Email card is labeled planned later.
 
 - **Claw UI — nav rail expanded**: `ClawNavRail` adds **Schedule** (`CalendarDays`) and **Channels** (`Radio`) tabs between Team and Files. `ClawTabId` type updated to include `"schedule" | "channels"`.
 

@@ -163,6 +163,7 @@ export type WorkspaceTextBufferProps = {
 	wordWrap?: boolean;
 	/** Row wrapper (scroll region): e.g. technical padded editor body */
 	scrollClassName: string;
+	/** Line-number column (font-size + line-height should match `textareaClassName` so rows stay aligned, especially with word wrap off). */
 	lineGutterClassName: string;
 	textareaClassName: string;
 	/** Optional find bar container (technical: border-t; simple: none) */
@@ -233,7 +234,8 @@ export const WorkspaceTextBuffer = forwardRef<WorkspaceEditorRef, WorkspaceTextB
 		);
 
 		const editable = Boolean(path && !loading && !error && !readOnly);
-		const fileKey = editable ? path : null;
+		/** Reset undo when the buffer identity changes — use `path` for read-only views too so tab/file switches clear history. */
+		const fileKey = path && !loading && !error ? path : null;
 		const { onUserChange, undo, redo, canUndo, canRedo, stackGen } = useDebouncedUndoRedo(
 			content,
 			onChange,

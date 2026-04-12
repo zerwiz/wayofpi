@@ -132,8 +132,8 @@ export type SettingsMenuHandlers = {
 	/** Open `.wayofpi/ui-views.json` in the Simple editor (optional). */
 	onEditWorkspaceViewsCatalog?: () => void;
 	/**
-	 * POST **`/api/server/restart`** when **`WOP_ALLOW_SERVER_RESTART=1`** (exits Bun); otherwise shows how to restart manually.
-	 * Always nudges the chat WebSocket to reconnect after.
+	 * Opens the **Restart Way of Pi** confirmation modal (**POST `/api/server/restart`** when the user confirms).
+	 * Reconnects the chat WebSocket when the process does not exit.
 	 */
 	onRestartServer: () => void | Promise<void>;
 };

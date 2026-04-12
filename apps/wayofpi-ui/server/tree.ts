@@ -1,6 +1,7 @@
-import { readdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { WorkspaceGitRootState, WorkspaceGitState } from "../src/types/tree";
+import { getClawDotDirAbs, getClawHostRepoRoot } from "./claw-workspace-root";
 import { gitStatusMap, gitWorktreeSnapshot } from "./git";
 import { shouldSkipDir } from "./paths";
 import { listWorkspaceFolders, type WorkspaceFolderEntry } from "./workspace-state";
@@ -132,4 +133,22 @@ export async function buildWorkspaceTree(): Promise<{
 	propagateGitDirMarkers(top);
 	const rootDisplay = list.map((x) => x.path).join(" | ");
 	return { root: rootDisplay, nodes: top, folders: list, git };
+}
+
+/**
+ * Tree for host **`.claw/`** (Way of Pi checkout), with paths relative to the host root
+ * (e.g. `.claw/workspace/SOUL.md`). Used by Claw mode Files tab — not `WOP_WORKSPACE`.
+ */
+export async function buildClawHostTree(): Promise<{
+	rootDisplay: string;
+	nodes: TreeNode[];
+}> {
+	const hostRoot = getClawHostRepoRoot();
+	const clawDot = getClawDotDirAbs();
+	await mkdir(clawDot, { recursive: true });
+	const gitMap: Record<string, string> = {};
+	const counter = { n: 0 };
+	const nodes = await readTreeRecursive(clawDot, hostRoot, gitMap, 0, counter);
+	propagateGitDirMarkers(nodes);
+	return { rootDisplay: clawDot, nodes };
 }

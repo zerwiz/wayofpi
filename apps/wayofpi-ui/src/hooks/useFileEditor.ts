@@ -44,8 +44,17 @@ function payloadToEditorState(r: FileGetResponse): {
 	return { text: r.content, persistEncoding: "utf8", mimeType: null };
 }
 
-export function useFileEditor(path: string | null, options?: { autoSave?: boolean }) {
+export function useFileEditor(
+	path: string | null,
+	options?: {
+		autoSave?: boolean;
+		/** When GET `/api/file` returns a different `path` (e.g. legacy `.claw/` fallback), sync selection. */
+		onDiskPathMismatch?: (actualPath: string) => void;
+	},
+) {
 	const autoSave = options?.autoSave ?? false;
+	const onDiskPathMismatchRef = useRef(options?.onDiskPathMismatch);
+	onDiskPathMismatchRef.current = options?.onDiskPathMismatch;
 	const [content, setContent] = useState("");
 	const [lastPersistedContent, setLastPersistedContent] = useState("");
 	const [persistEncoding, setPersistEncoding] = useState<FilePersistEncoding>("utf8");
@@ -62,6 +71,7 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 			setMimeType(null);
 			setDirty(false);
 			setError(null);
+			setLoading(false);
 			return;
 		}
 		let cancelled = false;
@@ -76,6 +86,9 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 					setPersistEncoding(enc);
 					setMimeType(mt);
 					setDirty(false);
+					if (typeof r.path === "string" && r.path !== path) {
+						onDiskPathMismatchRef.current?.(r.path);
+					}
 				}
 			})
 			.catch((e) => {
@@ -128,6 +141,9 @@ export function useFileEditor(path: string | null, options?: { autoSave?: boolea
 			setPersistEncoding(enc);
 			setMimeType(mt);
 			setDirty(false);
+			if (typeof r.path === "string" && r.path !== path) {
+				onDiskPathMismatchRef.current?.(r.path);
+			}
 		} catch (e) {
 			setError(e instanceof Error ? e.message : String(e));
 		} finally {

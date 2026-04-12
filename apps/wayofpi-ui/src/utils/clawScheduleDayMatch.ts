@@ -1,7 +1,7 @@
 /**
  * Whether a Claw schedule applies to a local calendar day (cron or one-time).
  */
-import type { ClawSchedule } from "../hooks/useClawSchedules";
+import type { ClawSchedule } from "../../shared/claw-schedules-types";
 import { fireTimesOnLocalDay, scheduleRunsOnLocalDay } from "./clawScheduleCronDay";
 import { pad2, sameLocalDay } from "./localCalendarDate";
 

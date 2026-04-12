@@ -93,7 +93,7 @@ Use **§3–§5** for route-level detail, **§6** for phased work, **`docs/WOP_O
 | GET | `/api/health` | Liveness JSON | Unchanged; use **`/api/diagnostics`** for probes |
 | GET | `/api/diagnostics` | Workspace + **`WOP_*`**, Ollama ping, **`WOP_PI_BINARY` / PATH `pi`** + `--version` | Extend toward full **doctor** (Pi subprocess, extension load, jail proofs) |
 | GET | `/api/upstream` | Read-only **`wop.upstream.lock.json`** + upstream **config** under playground repo root | Remote refresh: **`bun scripts/wop-pi-upstream.ts check`** (CLI; updates lock) |
-| POST | `/api/server/restart` | **`WOP_ALLOW_SERVER_RESTART=1`**: **200** then **`process.exit(0)`**; else **403** + hint | UI: **Settings → Restart server…**; production policy is opt-in only |
+| POST | `/api/server/restart` | Non-**`production`**: **200** then **`process.exit(0)`** when unset (dev default on); **`WOP_ALLOW_SERVER_RESTART=0`**…**`off`** disables. **`NODE_ENV=production`**: **200** only when **`WOP_ALLOW_SERVER_RESTART`** is **`1`**/**`true`**/**`yes`**/**`on`**; else **403** + hint | UI: **Settings → Restart server…** |
 | GET/POST | `/api/workspace` | In-memory multi-root folders | Keep; Pi child cwd must track **primary** (or defined) root |
 | GET | `/api/config` | Provider + **`chatEngine`** (`pi` / `auto` / provider) + **`piDrivesChat`** when **`pi`/`auto`** + CLI resolve + **`manifestUrl`** + models + `terminalEnabled` | Pi profile + runtime **`manifest`** merge when implemented |
 | GET | `/api/manifest` | **Static v1:** **`filesystem_static`** — per-root **`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**; empty **`tools`** / **`slashCommands`** | **Runtime** merge from headless Pi + static overlay (**[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**) |

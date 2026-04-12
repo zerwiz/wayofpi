@@ -52,6 +52,7 @@ export function SimpleApp({
 	treeLoading,
 	treeError,
 	refreshTree,
+	refreshTreeQuiet,
 	modelLabel,
 	config,
 	effectiveModel,
@@ -131,6 +132,8 @@ export function SimpleApp({
 	treeLoading: boolean;
 	treeError: string | null;
 	refreshTree: () => void;
+	/** Reload tree data without `treeLoading` — explorer Git stage uses this so badges update in place. */
+	refreshTreeQuiet: () => void | Promise<void>;
 	modelLabel: string;
 	config: ServerConfig | null;
 	effectiveModel: string | null;
@@ -502,7 +505,7 @@ export function SimpleApp({
 									onToggleChatWorkspaceLayout={
 										activeTab === "chat" ? toggleChatWorkspaceLayout : undefined
 									}
-									onExplorerGitMutated={() => void refreshTree()}
+									onExplorerGitMutated={() => void refreshTreeQuiet()}
 									onMoveFileToDirectory={onMoveFileToDirectory}
 									allowWorkspaceRootDrop={allowWorkspaceRootDrop}
 								/>

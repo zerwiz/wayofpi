@@ -1,36 +1,23 @@
 /**
- * Hook: Claw schedule management (Phase D stub).
- *
- * Schedules are stored in `localStorage` under `wayofpi.claw.schedules`.
- * They represent Pi turns the operator wants to trigger on a timer — no
- * backend execution yet. Backend wiring is tracked in docs/WOP_CLAW_MODE_PLAN.md §Phase D.
+ * Claw schedule management — definitions sync to **`<host>/.claw/schedule/claw-schedules.v1.json`**
+ * via **`PUT /api/claw/schedules`**; last-run metadata is server-owned. Cron execution runs when
+ * **`WOP_CLAW_SCHEDULER=1`** (see **`docs/WOP_CLAW_MODE_PLAN.md`** Phase D).
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+	ClawSchedule,
+	ScheduleLastResult,
+	ScheduleStatus,
+	ScheduleTriggerMode,
+} from "../../shared/claw-schedules-types";
+import { apiGet, apiPutJson } from "../api/client";
+import {
+	ensureDevWayOfPiApiFresh,
+	healthSupportsClawHostTree,
+	staleWayOfPiApiMessage,
+} from "../utils/wayofpiDevApiWarmup";
 
-export type ScheduleStatus = "enabled" | "disabled";
-export type ScheduleLastResult = "success" | "error" | null;
-export type ScheduleTriggerMode = "cron" | "once";
-
-export interface ClawSchedule {
-	id: string;
-	name: string;
-	description: string;
-	/** Recurring pattern when `triggerMode` is `cron` (5-field). Empty when one-time only. */
-	cron: string;
-	/** How the schedule selects a run time. */
-	triggerMode: ScheduleTriggerMode;
-	/** When `once`: ISO instant from local date+time. Otherwise null. */
-	runOnceAt: string | null;
-	/** Agent name from .pi/agents/ — null means default session agent */
-	agentName: string | null;
-	/** The prompt / task instruction sent as the turn */
-	prompt: string;
-	status: ScheduleStatus;
-	/** ISO date of last execution (stub — not yet executed) */
-	lastRun: string | null;
-	lastResult: ScheduleLastResult;
-	createdAt: string;
-}
+export type { ClawSchedule, ScheduleLastResult, ScheduleStatus, ScheduleTriggerMode };
 
 const STORAGE_KEY = "wayofpi.claw.schedules";
 
@@ -100,7 +87,7 @@ function loadSchedules(): ClawSchedule[] {
 	return [];
 }
 
-function saveSchedules(schedules: ClawSchedule[]): void {
+function saveSchedulesLocal(schedules: ClawSchedule[]): void {
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(schedules));
 	} catch {
@@ -112,12 +99,100 @@ function makeId(): string {
 	return `sched-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+type SchedulesApiGet = { version?: number; schedules?: ClawSchedule[] };
+type SchedulesApiPut = { ok?: boolean; schedules?: ClawSchedule[] };
+
+async function fetchSchedulesFromApi(): Promise<SchedulesApiGet> {
+	const caps = await ensureDevWayOfPiApiFresh();
+	if (caps !== null && !healthSupportsClawHostTree(caps)) {
+		throw new Error(staleWayOfPiApiMessage());
+	}
+	try {
+		return await apiGet<SchedulesApiGet>("/api/claw/schedules");
+	} catch (e1) {
+		const m1 = e1 instanceof Error ? e1.message : String(e1);
+		if (!/^404\b/.test(m1)) throw e1;
+		const cfg = await apiGet<{ clawSchedules?: SchedulesApiGet }>("/api/config?schedules=1");
+		const emb = cfg.clawSchedules;
+		if (emb?.version === 1 && Array.isArray(emb.schedules)) return emb;
+		throw new Error(
+			`${m1} Schedules need GET /api/claw/schedules or GET /api/config?schedules=1 with clawSchedules. ${staleWayOfPiApiMessage()}`,
+		);
+	}
+}
+
 export function useClawSchedules() {
 	const [schedules, setSchedules] = useState<ClawSchedule[]>(() => loadSchedules());
+	const [hydrated, setHydrated] = useState(false);
+	const [syncError, setSyncError] = useState<string | null>(null);
+	const skipNextPersist = useRef(true);
 
 	useEffect(() => {
-		saveSchedules(schedules);
-	}, [schedules]);
+		let cancelled = false;
+		(async () => {
+			try {
+				setSyncError(null);
+				const r = await fetchSchedulesFromApi();
+				if (cancelled) return;
+				const fromServer = Array.isArray(r.schedules) ? r.schedules : [];
+				if (fromServer.length === 0) {
+					const local = loadSchedules();
+					if (local.length) {
+						const migrated = await apiPutJson<SchedulesApiPut>("/api/claw/schedules", {
+							schedules: local,
+						});
+						setSchedules(Array.isArray(migrated.schedules) ? migrated.schedules : local);
+						saveSchedulesLocal(Array.isArray(migrated.schedules) ? migrated.schedules : local);
+					} else {
+						setSchedules([]);
+					}
+				} else {
+					setSchedules(fromServer);
+					saveSchedulesLocal(fromServer);
+				}
+			} catch (e) {
+				if (!cancelled) {
+					setSyncError(e instanceof Error ? e.message : String(e));
+					setSchedules(loadSchedules());
+				}
+			} finally {
+				if (!cancelled) {
+					skipNextPersist.current = true;
+					setHydrated(true);
+				}
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!hydrated) return;
+		if (skipNextPersist.current) {
+			skipNextPersist.current = false;
+			return;
+		}
+		saveSchedulesLocal(schedules);
+		const t = window.setTimeout(() => {
+			void (async () => {
+				try {
+					const out = await apiPutJson<SchedulesApiPut>("/api/claw/schedules", { schedules });
+					if (Array.isArray(out.schedules)) {
+						setSchedules(out.schedules);
+						setSyncError(null);
+					}
+				} catch (e) {
+					setSyncError(
+						e instanceof Error
+							? e.message
+							: "Could not save schedules to the server. Changes stay in this browser until the API works.",
+					);
+				}
+			})();
+		}, 500);
+		return () => window.clearTimeout(t);
+	}, [schedules, hydrated]);
 
 	const addSchedule = useCallback(
 		(partial: Omit<ClawSchedule, "id" | "createdAt" | "lastRun" | "lastResult">) => {
@@ -156,5 +231,31 @@ export function useClawSchedules() {
 		);
 	}, []);
 
-	return { schedules, addSchedule, updateSchedule, deleteSchedule, toggleSchedule };
+	const refreshFromServer = useCallback(async () => {
+		try {
+			const r = await fetchSchedulesFromApi();
+			const next = Array.isArray(r.schedules) ? r.schedules : [];
+			setSchedules(next);
+			saveSchedulesLocal(next);
+			setSyncError(null);
+		} catch {
+			/* keep showing last good list */
+		}
+	}, []);
+
+	useEffect(() => {
+		const id = window.setInterval(() => void refreshFromServer(), 60_000);
+		return () => window.clearInterval(id);
+	}, [refreshFromServer]);
+
+	return {
+		schedules,
+		hydrated,
+		syncError,
+		addSchedule,
+		updateSchedule,
+		deleteSchedule,
+		toggleSchedule,
+		refreshFromServer,
+	};
 }

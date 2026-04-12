@@ -224,7 +224,7 @@ export async function evalChatSlashCommand(
 				assistantText: [
 					"**`/reload` in Pi** reapplies `agent/settings.json` and project **`.pi/settings.json`** (extensions, etc.).",
 					"",
-					"**Way of Pi web chat** does not hot-reload the Bun server from here. After editing env or **`.pi/settings.json`**, restart the dev server (or use **Settings → Restart server** when enabled).",
+					"**Way of Pi web chat** does not hot-reload the Bun server from here. After editing env or **`.pi/settings.json`**, restart the dev server (or **Settings → Restart server** — allowed by default in dev).",
 				].join("\n"),
 			};
 		case "system":

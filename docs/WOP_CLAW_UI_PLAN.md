@@ -117,7 +117,7 @@ Claw is a **separate lane**. It shares the same Pi engine and the same workspace
 | **Mission view** | Claw nav rail tab only | Never rendered in Technical or Simple |
 | **Session tabs** | `ClawSessionStrip` | Separate from Technical activity/docks and Simple nav |
 | **`.claw/` documents** | `SOUL.md`, `AGENTS.md`, `MEMORY.md`, `HEARTBEAT.md`, etc. | Created only by Claw scaffold; not surfaced in Simple/Technical default panels |
-| **Daily memory logs** | `.claw/memory/YYYY-MM-DD.md` | Written by Claw agent; other modes don’t list automatically |
+| **Daily memory logs** | `.claw/workspace/memory/YYYY-MM-DD.md` | Written by Claw agent; other modes don’t list automatically |
 | **Operational settings** | `wayofpi.claw.*` localStorage keys | Claw reads/writes only |
 
 ### What Claw can reach (full Pi tool access)

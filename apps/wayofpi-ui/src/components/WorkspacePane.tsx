@@ -49,6 +49,11 @@ import { WorkspaceAgentTeamPane } from "./WorkspaceAgentTeamPane";
 import { MarkdownPreviewPane } from "./MarkdownPreviewPane";
 import { MermaidPreviewPane } from "./MermaidPreviewPane";
 import { WorkspaceSvgPreview } from "./WorkspaceSvgPreview";
+import {
+	WOP_WORKSPACE_EDITOR_GUTTER_DARK,
+	WOP_WORKSPACE_EDITOR_SCROLL_DARK,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_DARK,
+} from "../constants/workspaceEditorChrome";
 import { WorkspaceTextBuffer } from "./WorkspaceTextBuffer";
 import { firstMarkdownHeadingLine, workspacePathBreadcrumbSegments } from "../utils/workspaceEditorChrome";
 
@@ -172,6 +177,18 @@ export type WorkspacePaneProps = {
 	} | null;
 	/** First breadcrumb segment (e.g. workspace folder name); optional. */
 	breadcrumbWorkspaceLabel?: string | null;
+	/**
+	 * When set (single-pane technical workspace), the breadcrumb **File review** row uses Git-aware actions:
+	 * **Keep** → save if dirty, then `git add` this path; **Review next** → save if dirty, then open the next file with an explorer Git badge.
+	 */
+	gitFileReviewActions?: {
+		onSaveAndStage: () => void | Promise<void>;
+		onOpenNextGitReviewPath: () => void | Promise<void>;
+	} | null;
+	/** True when the tree reports at least one Git-marked file (shows the review row with only one tab open). */
+	gitReviewHasAnyMarked?: boolean;
+	/** True when `nextGitReviewFilePath` would move to a different file (enables **Review next**). */
+	gitReviewCanAdvanceNext?: boolean;
 };
 
 export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(function WorkspacePane(
@@ -221,6 +238,9 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 		workspaceGridPicker = null,
 		agentTeamPane = null,
 		breadcrumbWorkspaceLabel = null,
+		gitFileReviewActions = null,
+		gitReviewHasAnyMarked = false,
+		gitReviewCanAdvanceNext = false,
 	},
 	ref,
 ) {
@@ -480,6 +500,9 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 			? `${rawPosInFileTabs + 1} / ${fileReviewTotal}`
 			: "";
 	const canNextFileForReview = fileReviewTotal >= 2;
+	const showGitFileReviewChrome = Boolean(gitFileReviewActions) && gitReviewHasAnyMarked;
+	/** Tab-cycling review (2+ file tabs) or Git queue review (marked paths in workspace tree). */
+	const showFileReviewChrome = canNextFileForReview || showGitFileReviewChrome;
 	const showMdPreview = isMarkdownUtf8 && markdownViewMode === "preview";
 
 	return (
@@ -829,7 +852,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								<span className="font-mono text-[10px] text-[#858585]">Markdown</span>
 							</div>
 						) : null}
-						{canNextFileForReview ? (
+						{showFileReviewChrome ? (
 							<div
 								className="flex flex-wrap items-center gap-2 border-l border-[#3c3c3c] pl-2"
 								role="group"
@@ -838,21 +861,44 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 								<div className="flex flex-wrap items-center gap-1.5">
 									<button
 										type="button"
-										disabled={!dirty}
-										onClick={() => void onSave()}
+										disabled={
+											gitFileReviewActions
+												? !editorPath || loading || Boolean(error)
+												: !dirty
+										}
+										onClick={() =>
+											void (gitFileReviewActions
+												? gitFileReviewActions.onSaveAndStage()
+												: onSave())
+										}
 										className={reviewBtnPrimary}
-										title={dirty ? "Save this file (Ctrl+Enter)" : "No unsaved changes"}
+										title={
+											gitFileReviewActions
+												? "Save if needed, then stage this file for commit (git add)"
+												: dirty
+													? "Save this file (Ctrl+Enter)"
+													: "No unsaved changes"
+										}
 									>
 										Keep
 									</button>
 									<button
 										type="button"
-										onClick={() => void goAdjacentFileForReview(1, { saveFirst: true })}
+										disabled={gitFileReviewActions ? !gitReviewCanAdvanceNext : false}
+										onClick={() =>
+											void (gitFileReviewActions
+												? gitFileReviewActions.onOpenNextGitReviewPath()
+												: goAdjacentFileForReview(1, { saveFirst: true }))
+										}
 										className={reviewBtnGhost}
 										title={
-											dirty
-												? "Save this file, then open the next file tab in this pane"
-												: "Open the next file tab in this pane"
+											gitFileReviewActions
+												? dirty
+													? "Save if needed, then open the next file with a Git change in the workspace"
+													: "Open the next file with a Git change in the workspace"
+												: dirty
+													? "Save this file, then open the next file tab in this pane"
+													: "Open the next file tab in this pane"
 										}
 									>
 										Review next
@@ -895,7 +941,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 										Undo changes
 									</button>
 								) : null}
-								{canNextFileForReview ? null : (
+								{showFileReviewChrome ? null : (
 									<button
 										type="button"
 										onClick={() => void onSave()}
@@ -1017,9 +1063,9 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 							onCursor={onCursor}
 							wordWrap={wordWrap}
 							disableSyntaxHighlight={persistEncoding === "base64"}
-							scrollClassName="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono"
-							lineGutterClassName="w-9 py-1 pr-2 font-mono text-[12px] text-[#858585]"
-							textareaClassName="py-1 pr-2 text-[13px] leading-relaxed text-[#cccccc] selection:bg-[#9a3412]"
+							scrollClassName={`px-3 py-2 ${WOP_WORKSPACE_EDITOR_SCROLL_DARK}`}
+							lineGutterClassName={WOP_WORKSPACE_EDITOR_GUTTER_DARK}
+							textareaClassName={WOP_WORKSPACE_EDITOR_TEXTAREA_DARK}
 							findBarClassName="shrink-0 border-t border-[#2d2d2d]"
 							statusLoadingClassName="p-4 text-sm text-[#858585]"
 							statusErrorClassName="p-4 text-sm text-red-500"
@@ -1085,9 +1131,9 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 							onCursor={onCursor}
 							wordWrap={wordWrap}
 							disableSyntaxHighlight={persistEncoding === "base64"}
-							scrollClassName="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono"
-							lineGutterClassName="w-9 py-1 pr-2 font-mono text-[12px] text-[#858585]"
-							textareaClassName="py-1 pr-2 text-[13px] leading-relaxed text-[#cccccc] selection:bg-[#9a3412]"
+							scrollClassName={`px-3 py-2 ${WOP_WORKSPACE_EDITOR_SCROLL_DARK}`}
+							lineGutterClassName={WOP_WORKSPACE_EDITOR_GUTTER_DARK}
+							textareaClassName={WOP_WORKSPACE_EDITOR_TEXTAREA_DARK}
 							findBarClassName="shrink-0 border-t border-[#2d2d2d]"
 							statusLoadingClassName="p-4 text-sm text-[#858585]"
 							statusErrorClassName="p-4 text-sm text-red-500"

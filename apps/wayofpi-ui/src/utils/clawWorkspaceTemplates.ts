@@ -1,5 +1,6 @@
 /**
- * Template content for `.claw/` workspace scaffold files.
+ * Template content for Claw workspace scaffold files under **`.claw/workspace/`**
+ * on the Way of Pi host checkout (not under the opened project `WOP_WORKSPACE`).
  *
  * Inspired by the OpenClaw / BabyClaw workspace file convention:
  * SOUL.md · AGENTS.md · USER.md · MEMORY.md · HEARTBEAT.md · TOOLS.md
@@ -9,8 +10,25 @@
  * to reflect the actual project, identity, and preferences.
  */
 
+/** Host-relative root for the seven scaffold files + `memory/` (sibling: `.claw/telegram.json`). */
+export const CLAW_WORKSPACE_BUNDLE_REL = ".claw/workspace";
+
+/**
+ * Older installs kept the seven markdown files directly under **`.claw/`** instead of
+ * **`.claw/workspace/`**. Map a canonical bundle path to that legacy relative path when applicable.
+ */
+export function legacyFlatClawRelForWorkspaceFile(canonicalPath: string): string | null {
+	const rel = canonicalPath.trim().replace(/^[/\\]+/, "");
+	const prefix = `${CLAW_WORKSPACE_BUNDLE_REL}/`;
+	if (!rel.startsWith(prefix)) return null;
+	const rest = rel.slice(prefix.length);
+	if (!rest || rest.includes("/") || rest.includes("..")) return null;
+	if (rest === "memory") return null;
+	return `.claw/${rest}`;
+}
+
 export interface ClawWorkspaceFile {
-	/** Workspace-relative path, e.g. `.claw/SOUL.md` */
+	/** Host-mapped path, e.g. `.claw/workspace/SOUL.md` */
 	path: string;
 	/** One-line human description shown in the Claw UI */
 	description: string;
@@ -21,7 +39,7 @@ export interface ClawWorkspaceFile {
 /** Ordered list of files the Claw workspace scaffold creates. */
 export const CLAW_WORKSPACE_FILES: ClawWorkspaceFile[] = [
 	{
-		path: ".claw/SOUL.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/SOUL.md`,
 		description: "Agent identity, tone, and behavioural boundaries",
 		template: `# SOUL.md — Who this agent is
 
@@ -46,7 +64,7 @@ export const CLAW_WORKSPACE_FILES: ClawWorkspaceFile[] = [
 `,
 	},
 	{
-		path: ".claw/AGENTS.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/AGENTS.md`,
 		description: "Operating procedures — startup sequence, memory rules, workflows",
 		template: `# AGENTS.md — Operating manual
 
@@ -84,7 +102,7 @@ If the chat path has no Pi tool execution yet, still write the files; remind onc
 `,
 	},
 	{
-		path: ".claw/USER.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/USER.md`,
 		description: "Context about the user — preferences, projects, background",
 		template: `# USER.md — About the person I work with
 
@@ -109,7 +127,7 @@ If the chat path has no Pi tool execution yet, still write the files; remind onc
 `,
 	},
 	{
-		path: ".claw/MEMORY.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/MEMORY.md`,
 		description: "Long-term memory index — keep under 2 KB",
 		template: `# MEMORY.md — Long-term memory index
 
@@ -133,7 +151,7 @@ If the chat path has no Pi tool execution yet, still write the files; remind onc
 `,
 	},
 	{
-		path: ".claw/HEARTBEAT.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/HEARTBEAT.md`,
 		description: "Proactive task checklist — periodic checks the agent should run",
 		template: `# HEARTBEAT.md — Proactive tasks
 
@@ -157,7 +175,7 @@ Weekly:
 `,
 	},
 	{
-		path: ".claw/TOOLS.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/TOOLS.md`,
 		description: "Tool configuration notes for the agent",
 		template: `# TOOLS.md — Tool notes
 
@@ -194,7 +212,7 @@ Security:
 `,
 	},
 	{
-		path: ".claw/SECURITY.md",
+		path: `${CLAW_WORKSPACE_BUNDLE_REL}/SECURITY.md`,
 		description: "Security policy — what the agent may and may not do",
 		template: `# SECURITY.md — Security policy
 
@@ -220,13 +238,13 @@ Security:
 	},
 ];
 
-/** Returns the workspace-relative path for today's memory log: `.claw/memory/YYYY-MM-DD.md` */
+/** Returns the host-mapped path for today's memory log under the workspace bundle. */
 export function todayMemoryPath(): string {
 	const d = new Date();
 	const y = d.getFullYear();
 	const m = String(d.getMonth() + 1).padStart(2, "0");
 	const day = String(d.getDate()).padStart(2, "0");
-	return `.claw/memory/${y}-${m}-${day}.md`;
+	return `${CLAW_WORKSPACE_BUNDLE_REL}/memory/${y}-${m}-${day}.md`;
 }
 
 /** Template for today's session memory log. */

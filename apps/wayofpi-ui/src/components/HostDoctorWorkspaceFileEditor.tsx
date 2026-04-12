@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFileEditor } from "../hooks/useFileEditor";
+import {
+	WOP_WORKSPACE_EDITOR_FIND_BAR_INACTIVE,
+	WOP_WORKSPACE_EDITOR_GUTTER_DARK,
+	WOP_WORKSPACE_EDITOR_GUTTER_LIGHT,
+	WOP_WORKSPACE_EDITOR_SCROLL_DARK,
+	WOP_WORKSPACE_EDITOR_SCROLL_LIGHT,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_DARK,
+	WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT,
+} from "../constants/workspaceEditorChrome";
+import { WorkspaceTextBuffer } from "./WorkspaceTextBuffer";
 
 function validateEditableContent(path: string, text: string): { ok: true } | { ok: false; message: string } {
 	if (path.endsWith(".json")) {
@@ -60,9 +70,7 @@ export function HostDoctorWorkspaceFileEditor({
 
 	const border = appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]";
 	const sub = appearanceDark ? "text-[#858585]" : "text-[#616161]";
-	const ta = appearanceDark
-		? "border-[#3c3c3c] bg-[#1e1e1e] text-[#d4d4d4] placeholder:text-[#616161]"
-		: "border-[#e5e5e5] bg-white text-[#111] placeholder:text-[#999]";
+	const scroll = `${appearanceDark ? WOP_WORKSPACE_EDITOR_SCROLL_DARK : WOP_WORKSPACE_EDITOR_SCROLL_LIGHT} px-2 pb-2`;
 
 	return (
 		<div className={`flex min-h-[min(360px,45vh)] flex-col overflow-hidden rounded-lg border ${border}`}>
@@ -123,13 +131,26 @@ export function HostDoctorWorkspaceFileEditor({
 					Invalid JSON — fix before save: {parseCheck.message}
 				</div>
 			) : null}
-			<textarea
-				value={content}
-				onChange={(e) => setContent(e.target.value)}
-				spellCheck={false}
-				className={`m-2 min-h-[240px] flex-1 resize-y rounded border p-3 font-mono text-[12px] leading-relaxed outline-none focus:border-sky-600 ${ta}`}
-				aria-label={`Edit ${path}`}
-			/>
+			<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+				<WorkspaceTextBuffer
+					path={path}
+					content={content}
+					onChange={setContent}
+					loading={loading}
+					error={error}
+					wordWrap
+					scrollClassName={scroll}
+					lineGutterClassName={
+						appearanceDark ? WOP_WORKSPACE_EDITOR_GUTTER_DARK : WOP_WORKSPACE_EDITOR_GUTTER_LIGHT
+					}
+					textareaClassName={
+						appearanceDark ? WOP_WORKSPACE_EDITOR_TEXTAREA_DARK : WOP_WORKSPACE_EDITOR_TEXTAREA_LIGHT
+					}
+					findBarClassName={WOP_WORKSPACE_EDITOR_FIND_BAR_INACTIVE}
+					statusLoadingClassName="p-4 text-sm text-[#858585]"
+					statusErrorClassName="p-4 text-sm text-red-500"
+				/>
+			</div>
 		</div>
 	);
 }

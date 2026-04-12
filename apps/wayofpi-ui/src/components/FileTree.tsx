@@ -61,6 +61,8 @@ export function FileTree({
 	pathsToExpand,
 	onExplorerGitMutated,
 	allowWorkspaceRootDrop,
+	/** When true, directories with children render expanded (explorer search filter). */
+	searchFilterActive = false,
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -78,6 +80,7 @@ export function FileTree({
 	pathsToExpand?: string[];
 	/** After explorer Git actions (e.g. stage) — reload tree so SCM badges update. */
 	onExplorerGitMutated?: () => void;
+	searchFilterActive?: boolean;
 }) {
 	const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 	const sorted = useMemo(() => sortTreeNodes(nodes), [nodes]);
@@ -240,7 +243,11 @@ export function FileTree({
 	}, [onRenameNode, onDeleteNode, onCopyPath]);
 
 	const renderNodes = (list: TreeNode[], depth: number): ReactNode => {
-		return list.map((node) => (
+		return list.map((node) => {
+			const dirOpen =
+				node.type === "dir" &&
+				(searchFilterActive ? Boolean(node.children?.length) : expanded.has(node.path));
+			return (
 			<div key={node.path}>
 				<button
 					type="button"
@@ -312,7 +319,7 @@ export function FileTree({
 					<div className="flex w-full min-w-0 items-center gap-1.5">
 						{node.type === "dir" ? (
 							<>
-								{expanded.has(node.path) ? (
+								{dirOpen ? (
 									<ChevronDown size={14} className="shrink-0 text-[#cccccc]" />
 								) : (
 									<ChevronRight size={14} className="shrink-0 text-[#cccccc]" />
@@ -360,11 +367,10 @@ export function FileTree({
 						)}
 					</div>
 				</button>
-				{node.type === "dir" && expanded.has(node.path) && node.children
-					? renderNodes(node.children, depth + 1)
-					: null}
+				{node.type === "dir" && dirOpen && node.children ? renderNodes(node.children, depth + 1) : null}
 			</div>
-		));
+		);
+		});
 	};
 
 	const menuPortal =

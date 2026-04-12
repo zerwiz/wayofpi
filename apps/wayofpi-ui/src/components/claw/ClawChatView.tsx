@@ -1,18 +1,18 @@
 /**
- * Claw Chat tab — session-aware chat with an optional `.claw/` file panel.
+ * Claw Chat tab — session-aware chat with an optional file panel rooted at host **`.claw/`**.
  *
  * Layout:
  *   ┌────────────────────────────────────────────────────────────┐
  *   │ Active session + [New] [.claw/]                            │  ← ClawSessionStrip
  *   ├──────────────────────────┬──────────────┬────────────────┤
- *   │  SimpleChatView          │ Session list │ .claw/ files   │
+ *   │  SimpleChatView          │ Session list │ .claw/ tree    │
  *   │                          │ (sidebar)    │ (when open)    │
  *   └──────────────────────────┴──────────────┴────────────────┘
  *
- * The file panel shows the `.claw/` directory tree on the left and opens
- * any file in a read/edit view. The user can also open any workspace file
- * from here — Claw can reach other files when requested.
+ * The file panel lists the host checkout’s **`.claw/`** tree (not the opened
+ * `WOP_WORKSPACE` project). Paths are `.claw/…` for API read/write/move.
  */
+import { FilePlus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChatSessionTab, ChatSessionMode, ChatRow } from "../../hooks/useWayOfPiSession";
 import type { AgentMeta } from "../../hooks/useAgents";
@@ -67,9 +67,12 @@ export function ClawChatView({
 	onChatModeChange,
 	contextFillPct,
 	contextTitle,
-	// Files
-	nodes,
-	treeLoading,
+	// Files (Claw host `.claw/` tree — not `WOP_WORKSPACE` explorer)
+	filePanelNodes,
+	filePanelTreeLoading,
+	onRefreshFilePanelTree,
+	/** Host `.claw/` absolute path (from server config) — shown in file panel header. */
+	filePanelRootLabel,
 	selectedPath,
 	setSelectedPath,
 	content,
@@ -89,8 +92,11 @@ export function ClawChatView({
 	onReplaceInFiles,
 	onRefreshTree,
 	onMoveFileToDirectory,
-	allowWorkspaceRootDrop = false,
+	allowWorkspaceRootDrop: _allowWorkspaceRootDrop = false,
 	dark,
+	filePanelTreeError,
+	onAddClawMarkdownDocument,
+	addClawMarkdownDocumentBusy,
 }: {
 	chatTabs: ChatSessionTab[];
 	activeChatTabId: string;
@@ -124,8 +130,10 @@ export function ClawChatView({
 	onChatModeChange: (m: ChatSessionMode) => void;
 	contextFillPct: number | null;
 	contextTitle: string;
-	nodes: TreeNode[];
-	treeLoading: boolean;
+	filePanelNodes: TreeNode[];
+	filePanelTreeLoading: boolean;
+	onRefreshFilePanelTree: () => void | Promise<void>;
+	filePanelRootLabel?: string | null;
 	selectedPath: string | null;
 	setSelectedPath: (p: string | null) => void;
 	content: string;
@@ -147,6 +155,9 @@ export function ClawChatView({
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	allowWorkspaceRootDrop?: boolean;
 	dark: boolean;
+	filePanelTreeError?: string | null;
+	onAddClawMarkdownDocument?: () => Promise<void>;
+	addClawMarkdownDocumentBusy?: boolean;
 }) {
 	const clawAgentAvailable = agents.some((a) => a.name === "claw");
 	const [showFilePanel, setShowFilePanel] = useState(false);
@@ -172,6 +183,12 @@ export function ClawChatView({
 		},
 		[setSelectedPath],
 	);
+
+	const handleAddClawMarkdownDocument = useCallback(async () => {
+		if (!onAddClawMarkdownDocument) return;
+		await onAddClawMarkdownDocument();
+		setShowFilePanel(true);
+	}, [onAddClawMarkdownDocument]);
 
 	const splitHandleC = dark
 		? "hidden md:block"
@@ -255,8 +272,14 @@ export function ClawChatView({
 							style={{ width: filePanelWidth, minWidth: FILE_PANEL_MIN_PX, flexShrink: 0 }}
 						>
 							<ClawFilePanel
-								nodes={nodes}
-								treeLoading={treeLoading}
+								nodes={filePanelNodes}
+								treeLoading={filePanelTreeLoading}
+								filePanelRootLabel={filePanelRootLabel}
+								filePanelTreeError={filePanelTreeError}
+								onAddClawMarkdownDocument={
+									onAddClawMarkdownDocument ? handleAddClawMarkdownDocument : undefined
+								}
+								addClawMarkdownDocumentBusy={Boolean(addClawMarkdownDocumentBusy)}
 								selectedPath={selectedPath}
 								onSelectFile={handleOpenClawFile}
 								content={content}
@@ -268,7 +291,8 @@ export function ClawChatView({
 								dirty={dirty}
 								onSave={async () => {
 									await onSave();
-									onRefreshTree();
+									await onRefreshTree();
+									await onRefreshFilePanelTree();
 								}}
 								onDiscardUnsaved={onDiscardUnsaved}
 								onClose={() => setSelectedPath(null)}
@@ -279,7 +303,7 @@ export function ClawChatView({
 								onFindInFiles={onFindInFiles}
 								onReplaceInFiles={onReplaceInFiles}
 								onMoveFileToDirectory={onMoveFileToDirectory}
-								allowWorkspaceRootDrop={allowWorkspaceRootDrop}
+								allowWorkspaceRootDrop={false}
 								dark={dark}
 							/>
 						</div>
@@ -294,6 +318,10 @@ export function ClawChatView({
 function ClawFilePanel({
 	nodes,
 	treeLoading,
+	filePanelRootLabel,
+	filePanelTreeError,
+	onAddClawMarkdownDocument,
+	addClawMarkdownDocumentBusy,
 	selectedPath,
 	onSelectFile,
 	content,
@@ -318,6 +346,10 @@ function ClawFilePanel({
 }: {
 	nodes: TreeNode[];
 	treeLoading: boolean;
+	filePanelRootLabel?: string | null;
+	filePanelTreeError?: string | null;
+	onAddClawMarkdownDocument?: () => void | Promise<void>;
+	addClawMarkdownDocumentBusy?: boolean;
 	selectedPath: string | null;
 	onSelectFile: (path: string) => void;
 	content: string;
@@ -351,19 +383,64 @@ function ClawFilePanel({
 		setMarkdownMode("preview");
 	}, [selectedPath]);
 
+	const addBusy = Boolean(addClawMarkdownDocumentBusy);
+
 	return (
 		<div className={`flex min-h-0 flex-1 flex-col overflow-hidden border-l ${borderC}`}>
 			{/* Panel header */}
 			<div
-				className={`flex shrink-0 items-center justify-between border-b px-3 py-1.5 ${borderC} ${dark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]"}`}
+				className={`flex shrink-0 flex-col gap-1 border-b px-3 py-1.5 ${borderC} ${dark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]"}`}
 			>
-				<span className={`text-[10px] font-bold uppercase tracking-widest ${muted}`}>
-					Files
-				</span>
-				{selectedPath ? (
-					<span className={`truncate font-mono text-[10px] ${dark ? "text-[#858585]" : "text-[#888888]"} max-w-[160px]`}>
-						{selectedPath.replace(/^\.claw\//, "")}
-					</span>
+				<div className="flex min-w-0 items-start justify-between gap-2">
+					<div className="flex min-w-0 flex-1 flex-col gap-0.5">
+						<span className={`text-[10px] font-bold uppercase tracking-widest ${muted}`}>
+							Files · .claw
+						</span>
+						{filePanelRootLabel ? (
+							<span
+								className={`truncate font-mono text-[9px] ${dark ? "text-[#6f6f6f]" : "text-[#9ca3af]"}`}
+								title={filePanelRootLabel}
+							>
+								{filePanelRootLabel}
+							</span>
+						) : null}
+					</div>
+					<div className="flex shrink-0 items-center gap-2">
+						{onAddClawMarkdownDocument ? (
+							<button
+								type="button"
+								disabled={addBusy}
+								title="Create a new Markdown file in Workspace"
+								onClick={() => void onAddClawMarkdownDocument()}
+								className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium ${
+									dark
+										? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838] disabled:opacity-50"
+										: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
+								}`}
+							>
+								<FilePlus size={12} className="shrink-0 opacity-80" aria-hidden />
+								Add document
+							</button>
+						) : null}
+						{selectedPath ? (
+							<span
+								className={`hidden max-w-[120px] truncate font-mono text-[10px] sm:inline ${dark ? "text-[#858585]" : "text-[#888888]"}`}
+								title={selectedPath}
+							>
+								{selectedPath
+									.replace(/^\.claw\/workspace\//, "")
+									.replace(/^\.claw\//, "")}
+							</span>
+						) : null}
+					</div>
+				</div>
+				{filePanelTreeError ? (
+					<p
+						className={`font-mono text-[10px] leading-snug ${dark ? "text-red-400" : "text-red-600"}`}
+						title={filePanelTreeError}
+					>
+						{filePanelTreeError}
+					</p>
 				) : null}
 			</div>
 
@@ -381,6 +458,7 @@ function ClawFilePanel({
 						appearanceDark={dark}
 						onMoveFileToDirectory={onMoveFileToDirectory}
 						allowWorkspaceRootDrop={allowWorkspaceRootDrop}
+						emptyTreeHint="No files under host .claw/ yet. Use Mission → workspace setup, Add document, or create .claw/ on disk."
 					/>
 				)}
 			</div>
@@ -413,9 +491,9 @@ function ClawFilePanel({
 					/>
 				) : (
 					<div className={`flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center ${emptyHint}`}>
-						<span className="font-mono text-[11px]">.claw/</span>
-						<span className="text-[11px]">Select a file to view or edit it here.</span>
-						<span className="text-[10px] opacity-70">The agent can reach any workspace file when asked.</span>
+						<span className="text-[11px] font-semibold text-[#cccccc]">Workspace</span>
+						<span className="text-[11px]">Pick a file from the list on the left to view or edit it here.</span>
+						<span className="text-[10px] opacity-70">The assistant can still open files from your opened project when you ask.</span>
 					</div>
 				)}
 			</div>

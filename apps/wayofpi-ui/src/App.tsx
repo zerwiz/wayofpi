@@ -24,6 +24,7 @@ import { IndexingDocsModal } from "./components/IndexingDocsModal";
 import { InstallDebuggersModal } from "./components/InstallDebuggersModal";
 import { HowToUseModal } from "./components/HowToUseModal";
 import { MitLicenseModal } from "./components/MitLicenseModal";
+import { RestartServerModal } from "./components/RestartServerModal";
 import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
 import { NewPlanFileModal } from "./components/NewPlanFileModal";
 import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
@@ -87,7 +88,7 @@ import type {
 } from "./types/technicalShell";
 import type { UiViewCatalogEntry } from "./types/uiViewsCatalog";
 import { buildCodeWorkspacePayload } from "./utils/codeWorkspaceFile";
-import { flattenTreeFiles } from "./utils/flattenTree";
+import { flattenTreeFiles, gitMarkedFilePathsSorted, nextGitReviewFilePath } from "./utils/flattenTree";
 import { ancestorDirPaths, posixBasename, posixDirname } from "./utils/posixPath";
 import { injectIntoChatComposer } from "./utils/chatComposerInjectBus";
 import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "./utils/planModeComposerTemplates";
@@ -257,8 +258,21 @@ export default function App() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
 	/** IDE-style shell (Technical or Claw); Simple uses `SimpleApp`. */
 	const technical = uiMode !== "simple";
-	const { root, nodes, folders, git, switchAllowed, error: treeError, loading: treeLoading, refresh } =
-		useWorkspaceTree();
+	const {
+		root,
+		nodes,
+		folders,
+		git,
+		switchAllowed,
+		error: treeError,
+		loading: treeLoading,
+		refresh,
+		refreshQuiet,
+	} = useWorkspaceTree();
+	/** `refreshQuiet` returns tree JSON for callers like Git stage; Simple/Claw props expect `Promise<void>`. */
+	const refreshTreeQuietShell = useCallback(async () => {
+		await refreshQuiet();
+	}, [refreshQuiet]);
 	/** Server-backed workspace roots from `/api/tree` — not tied to the active editor tab (`selectedPath`). */
 	const workspaceOperational = useMemo(
 		() => !treeError && (folders.length > 0 || Boolean(root?.trim())),
@@ -368,7 +382,8 @@ export default function App() {
 	useLayoutEffect(() => {
 		techWsSnapshotRef.current = techWsSnapshot;
 	}, [techWsSnapshot]);
-	const isWsMulti = technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1);
+	/** Multi-cell editor grid exists only in Technical mode — Claw is `uiMode !== "simple"` too and must not reuse this path. */
+	const isWsMulti = uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1);
 	const panelDock =
 		workspaceGrid.cells[wsFocusedCell] ??
 		workspaceGrid.cells[0] ??
@@ -576,7 +591,11 @@ export default function App() {
 		save,
 		reload,
 		discardUnsavedChanges,
-	} = useFileEditor(isWsMulti ? null : selectedPath, { autoSave });
+	} = useFileEditor(isWsMulti ? null : selectedPath, {
+		autoSave,
+		/** e.g. GET `.claw/workspace/X` serves legacy `.claw/X` — keep editor path in sync */
+		onDiskPathMismatch: (p) => setSelectedPath(p),
+	});
 
 	const workspaceCenterFilePreview = useMemo(() => {
 		if (fileLoading) return null;
@@ -693,17 +712,19 @@ export default function App() {
 			const path = relPath.replace(/^[/\\]+/, "");
 			if (!path) return;
 			setExplorerContextDir(posixDirname(path));
-			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+			if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 				setWorkspaceOpenSignal((s) => ({ path, rev: (s?.rev ?? 0) + 1 }));
-			} else if (technical) {
+			} else {
 				setSelectedPath(path);
-				setPanelDock((prev) => applyAddFileTab(prev, path));
+				if (uiMode === "technical") {
+					setPanelDock((prev) => applyAddFileTab(prev, path));
+				}
 			}
 			queueMicrotask(() => {
 				workspaceEditorRef.current?.goToLineColumn(Math.max(1, line), Math.max(1, column));
 			});
 		},
-		[technical, workspaceGrid.cols, workspaceGrid.rows],
+		[uiMode, workspaceGrid.cols, workspaceGrid.rows],
 	);
 
 	const workspaceStaticAnalysisApi = useMemo(
@@ -781,16 +802,20 @@ export default function App() {
 
 	const openPiModelConfigInEditor = useCallback(
 		(path: PiModelConfigPath) => {
-			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+			if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 				setWorkspaceOpenSignal((s) => ({ path, rev: (s?.rev ?? 0) + 1 }));
 			} else {
 				setSelectedPath(path);
 			}
 			setExplorerContextDir(posixDirname(path));
-			setActivity("explorer");
-			persistLeftSidebar(true);
+			if (uiMode === "technical") {
+				setActivity("explorer");
+				persistLeftSidebar(true);
+			} else if (uiMode === "claw") {
+				setClawTab("files");
+			}
 		},
-		[persistLeftSidebar, technical, workspaceGrid.cols, workspaceGrid.rows],
+		[persistLeftSidebar, uiMode, workspaceGrid.cols, workspaceGrid.rows],
 	);
 
 	const openPiModelConfigInSimpleBrains = useCallback((path: PiModelConfigPath) => {
@@ -827,7 +852,13 @@ export default function App() {
 	const focusWorkspaceFileFromMenu = useCallback(
 		(rel: string) => {
 			setExplorerContextDir(posixDirname(rel));
-			if (technical) {
+			if (uiMode === "simple") {
+				setSelectedPath(rel);
+				setSimpleTab("chat");
+			} else if (uiMode === "claw") {
+				setSelectedPath(rel);
+				setClawTab("files");
+			} else {
 				if (workspaceGrid.cols > 1 || workspaceGrid.rows > 1) {
 					setWorkspaceOpenSignal((s) => ({ path: rel, rev: (s?.rev ?? 0) + 1 }));
 				} else {
@@ -835,12 +866,9 @@ export default function App() {
 				}
 				setActivity("explorer");
 				persistLeftSidebar(true);
-			} else {
-				setSelectedPath(rel);
-				setSimpleTab("chat");
 			}
 		},
-		[technical, workspaceGrid.cols, workspaceGrid.rows, persistLeftSidebar],
+		[uiMode, workspaceGrid.cols, workspaceGrid.rows, persistLeftSidebar],
 	);
 	focusAgentWrittenWorkspaceFileRef.current = focusWorkspaceFileFromMenu;
 
@@ -908,43 +936,11 @@ description:
 				setSelectedPath(rel);
 				setSimpleTab("chat");
 			},
-			onRestartServer: async () => {
-				const lines: string[] = [];
-				let serverChoseExit = false;
-				try {
-					const r = await apiPostJson<{
-						ok?: boolean;
-						exiting?: boolean;
-						message?: string;
-						hint?: string;
-					}>("/api/server/restart", {});
-					if (r.ok && r.exiting) serverChoseExit = true;
-					if (r.message) lines.push(r.message);
-					else if (r.ok && r.exiting) lines.push("Server process is exiting.");
-				} catch (e) {
-					const raw = e instanceof Error ? e.message : String(e);
-					const m = raw.match(/^403:\s*(.+)$/s);
-					if (m) {
-						try {
-							const j = JSON.parse(m[1]!.trim()) as { hint?: string; error?: string };
-							if (j.hint) lines.push(j.hint);
-							else if (j.error) lines.push(j.error);
-							else lines.push(raw);
-						} catch {
-							lines.push(raw);
-						}
-					} else {
-						lines.push(
-							"Could not reach /api/server/restart (server may already be down). After you restart Bun in the terminal, the chat socket will try to reconnect.",
-							raw,
-						);
-					}
-				}
-				if (!serverChoseExit) session.reconnectWebSocket();
-				window.alert(lines.filter(Boolean).join("\n\n"));
+			onRestartServer: () => {
+				setRestartServerModalOpen(true);
 			},
 		}),
-		[session.reconnectWebSocket, uiViewsCatalog.data?.catalogRelPath],
+		[uiViewsCatalog.data?.catalogRelPath],
 	);
 
 	const consumeSimpleProviderFocus = useCallback(() => {
@@ -1782,6 +1778,7 @@ description:
 	const [launchConfigAddOpen, setLaunchConfigAddOpen] = useState(false);
 	const [installDebuggersModalOpen, setInstallDebuggersModalOpen] = useState(false);
 	const [mitLicenseModalOpen, setMitLicenseModalOpen] = useState(false);
+	const [restartServerModalOpen, setRestartServerModalOpen] = useState(false);
 	const [howToUseModalOpen, setHowToUseModalOpen] = useState(false);
 	const [clawHelpOpen, setClawHelpOpen] = useState(false);
 	const [clawHelpDefaultSection, setClawHelpDefaultSection] = useState<ClawHelpSectionId | null>(null);
@@ -1853,7 +1850,7 @@ description:
 
 	const saveAndRefresh = useCallback(async () => {
 		let ok = true;
-		if (technical && workspaceGrid.cols * workspaceGrid.rows > 1) {
+		if (uiMode === "technical" && workspaceGrid.cols * workspaceGrid.rows > 1) {
 			const s = techWsSnapshotRef.current;
 			ok = s ? await s.save() : true;
 		} else {
@@ -1866,7 +1863,7 @@ description:
 			}
 		}
 	}, [
-		technical,
+		uiMode,
 		staticAnalysisEnabled,
 		workspaceGrid.cols,
 		workspaceGrid.rows,
@@ -1876,12 +1873,12 @@ description:
 	]);
 
 	const reloadFocusedOrMain = useCallback(async () => {
-		if (technical && workspaceGrid.cols * workspaceGrid.rows > 1) {
+		if (uiMode === "technical" && workspaceGrid.cols * workspaceGrid.rows > 1) {
 			await techWsSnapshotRef.current?.reload?.();
 		} else {
 			await reload();
 		}
-	}, [technical, workspaceGrid.cols, workspaceGrid.rows, reload]);
+	}, [uiMode, workspaceGrid.cols, workspaceGrid.rows, reload]);
 
 	const copyWorkspacePath = useCallback(() => {
 		const primary = folders[0]?.path ?? root;
@@ -1947,7 +1944,7 @@ description:
 			bumpRecent();
 			if (r.selectPath) {
 				setExplorerContextDir(posixDirname(r.selectPath));
-				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 					setWorkspaceOpenSignal((s) => ({
 						path: r.selectPath!,
 						rev: (s?.rev ?? 0) + 1,
@@ -1958,7 +1955,7 @@ description:
 			}
 			await refresh();
 		})();
-	}, [bumpRecent, pickAbsoluteServerPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
+	}, [bumpRecent, pickAbsoluteServerPath, refresh, uiMode, workspaceGrid.cols, workspaceGrid.rows]);
 
 	const handleAddFolderPrompt = useCallback(() => {
 		void (async () => {
@@ -2167,17 +2164,19 @@ description:
 				}
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
 				await refresh();
-				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 					setWorkspaceOpenSignal((s) => ({ path: rel, rev: (s?.rev ?? 0) + 1 }));
 				} else {
 					setSelectedPath(rel);
-					setPanelDock((prev) => applyAddFileTab(prev, rel));
+					if (uiMode === "technical") {
+						setPanelDock((prev) => applyAddFileTab(prev, rel));
+					}
 				}
 			} catch (e) {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
 		},
-		[refresh, technical, workspaceGrid.cols, workspaceGrid.rows],
+		[refresh, uiMode, workspaceGrid.cols, workspaceGrid.rows],
 	);
 
 	/** From the workspace + tab strip: path is relative to the workspace (primary root), not the explorer selection. */
@@ -2199,19 +2198,21 @@ description:
 			bumpRecent();
 			if (r.selectPath) {
 				setExplorerContextDir(posixDirname(r.selectPath));
-				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 					setWorkspaceOpenSignal((s) => ({
 						path: r.selectPath!,
 						rev: (s?.rev ?? 0) + 1,
 					}));
 				} else {
 					setSelectedPath(r.selectPath);
-					setPanelDock((prev) => applyAddFileTab(prev, r.selectPath!));
+					if (uiMode === "technical") {
+						setPanelDock((prev) => applyAddFileTab(prev, r.selectPath!));
+					}
 				}
 			}
 			await refresh();
 		})();
-	}, [bumpRecent, pickAbsoluteServerPath, refresh, technical, workspaceGrid.cols, workspaceGrid.rows]);
+	}, [bumpRecent, pickAbsoluteServerPath, refresh, uiMode, workspaceGrid.cols, workspaceGrid.rows]);
 
 	const workspaceDockFileActions = useMemo(
 		() => [
@@ -2278,7 +2279,7 @@ description:
 	);
 
 	const handleSaveAs = useCallback(() => {
-		const multi = technical && workspaceGrid.cols * workspaceGrid.rows > 1;
+		const multi = uiMode === "technical" && workspaceGrid.cols * workspaceGrid.rows > 1;
 		const snap = techWsSnapshotRef.current;
 		const path = multi ? (snap?.selectedPath ?? null) : selectedPath;
 		const fileContent = multi ? (snap?.content ?? "") : content;
@@ -2293,7 +2294,9 @@ description:
 					setWorkspaceOpenSignal((s) => ({ path: target, rev: (s?.rev ?? 0) + 1 }));
 				} else {
 					setSelectedPath(target);
-					setPanelDock((prev) => applyAddFileTab(prev, target));
+					if (uiMode === "technical") {
+						setPanelDock((prev) => applyAddFileTab(prev, target));
+					}
 				}
 				setExplorerContextDir(posixDirname(target));
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(target) });
@@ -2311,7 +2314,7 @@ description:
 		persistEncoding,
 		refresh,
 		resolveSaveAsTargetPath,
-		technical,
+		uiMode,
 		workspaceGrid.cols,
 		workspaceGrid.rows,
 		staticAnalysisEnabled,
@@ -2319,7 +2322,7 @@ description:
 	]);
 
 	const handleSaveAll = useCallback(async () => {
-		const multi = technical && workspaceGrid.cols * workspaceGrid.rows > 1;
+		const multi = uiMode === "technical" && workspaceGrid.cols * workspaceGrid.rows > 1;
 		if (multi) {
 			const api = multiCellSaveApiRef.current;
 			let ok = true;
@@ -2338,7 +2341,7 @@ description:
 		selectedPath,
 		saveAndRefresh,
 		refresh,
-		technical,
+		uiMode,
 		workspaceGrid.cols,
 		workspaceGrid.rows,
 		staticAnalysisEnabled,
@@ -2643,16 +2646,16 @@ description:
 			const p = workspaceRelativePath.replace(/^[/\\]+/, "");
 			if (!p) return;
 			setExplorerContextDir(posixDirname(p));
-			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+			if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 				setWorkspaceOpenSignal((s) => ({ path: p, rev: (s?.rev ?? 0) + 1 }));
 			} else {
 				setSelectedPath(p);
-				if (technical) {
+				if (uiMode === "technical") {
 					setPanelDock((prev) => applyAddFileTab(prev, p));
 				}
 			}
 		},
-		[technical, workspaceGrid.cols, workspaceGrid.rows, setPanelDock],
+		[uiMode, workspaceGrid.cols, workspaceGrid.rows, setPanelDock],
 	);
 
 	const workspaceEmbeddedChat = useCallback(
@@ -3168,7 +3171,7 @@ description:
 		() => ({
 			onOpenFile: handleOpenFilePrompt,
 			onShowAgentChat: (cellIndex: number) => {
-				if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+				if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 					setWsFocusedCell(cellIndex);
 					patchWorkspaceCellDock(cellIndex, (prev) => applyShowToolTab(prev, "agent_chat"));
 				} else {
@@ -3176,7 +3179,7 @@ description:
 				}
 			},
 		}),
-		[handleOpenFilePrompt, technical, workspaceGrid.cols, workspaceGrid.rows, patchWorkspaceCellDock],
+		[handleOpenFilePrompt, uiMode, workspaceGrid.cols, workspaceGrid.rows, patchWorkspaceCellDock],
 	);
 
 	const setWorkspaceActiveIndex = useCallback((index: number) => {
@@ -3200,17 +3203,55 @@ description:
 		setExplorerContextDir(posixDirname(path));
 	}, []);
 
+	const gitReviewHasAnyMarked = useMemo(
+		() => gitMarkedFilePathsSorted(nodes).length > 0,
+		[nodes],
+	);
+	const gitReviewCanAdvanceNext = useMemo(
+		() => nextGitReviewFilePath(selectedPath, nodes) != null,
+		[selectedPath, nodes],
+	);
+
+	const workspaceGitFileReviewActions = useMemo(() => {
+		if (isWsMulti || uiMode !== "technical") return null;
+		return {
+			onSaveAndStage: async () => {
+				if (!selectedPath) return;
+				if (dirty) {
+					const ok = await save();
+					if (!ok) return;
+				}
+				const r = await apiPostJson<{ ok?: boolean; error?: string }>("/api/git/stage", { path: selectedPath });
+				if (!r.ok) return;
+				await refreshQuiet();
+			},
+			onOpenNextGitReviewPath: async () => {
+				if (!selectedPath) return;
+				if (dirty) {
+					const ok = await save();
+					if (!ok) return;
+				}
+				const data = await refreshQuiet();
+				if (!data) return;
+				const next = nextGitReviewFilePath(selectedPath, data.nodes);
+				if (next) onSelectFileFromWorkspaceTab(next);
+			},
+		};
+	}, [isWsMulti, uiMode, selectedPath, dirty, save, refreshQuiet, onSelectFileFromWorkspaceTab]);
+
 	const onExplorerSelectFile = useCallback(
 		(p: string, _ev?: MouseEvent) => {
 			setExplorerContextDir(posixDirname(p));
-			if (technical && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
+			if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
 				setWorkspaceOpenSignal((s) => ({ path: p, rev: (s?.rev ?? 0) + 1 }));
 			} else {
 				setSelectedPath(p);
-				setPanelDock((prev) => applyAddFileTab(prev, p));
+				if (uiMode === "technical") {
+					setPanelDock((prev) => applyAddFileTab(prev, p));
+				}
 			}
 		},
-		[technical, workspaceGrid.cols, workspaceGrid.rows],
+		[uiMode, workspaceGrid.cols, workspaceGrid.rows],
 	);
 
 	/** Keep a tab row entry when code paths set `selectedPath` without going through the explorer.
@@ -3701,7 +3742,7 @@ description:
 				error={treeError}
 				expandRevision={treeExpand.rev}
 				pathsToExpand={treeExpand.paths}
-				onExplorerGitMutated={refresh}
+				onExplorerGitMutated={refreshQuiet}
 				onClosePrimarySidebar={() => persistLeftSidebar(false)}
 			/>
 		) : activity === "search" ? (
@@ -3814,6 +3855,7 @@ description:
 						viewSimple={viewSimpleMenu ?? undefined}
 					/>
 					<ClawApp
+						refreshTreeQuiet={refreshTreeQuietShell}
 						uiMode={uiMode}
 						setUiMode={setUiMode}
 						root={root || null}
@@ -3941,6 +3983,12 @@ description:
 				onDismiss={() => setMitLicenseModalOpen(false)}
 				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
 			/>
+			<RestartServerModal
+				open={restartServerModalOpen}
+				onClose={() => setRestartServerModalOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+				onReconnectIfStillUp={session.reconnectWebSocket}
+			/>
 			<ClawHelpModal
 				open={clawHelpOpen}
 				onDismiss={() => {
@@ -4028,6 +4076,7 @@ description:
 						treeLoading={treeLoading}
 						treeError={treeError}
 						refreshTree={refresh}
+						refreshTreeQuiet={refreshTreeQuietShell}
 						modelLabel={modelLabel}
 						config={config}
 						effectiveModel={session.effectiveModel}
@@ -4161,6 +4210,12 @@ description:
 					onDismiss={() => setMitLicenseModalOpen(false)}
 					repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
 				/>
+				<RestartServerModal
+					open={restartServerModalOpen}
+					onClose={() => setRestartServerModalOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					onReconnectIfStillUp={session.reconnectWebSocket}
+				/>
 				<HowToUseModal
 					open={howToUseModalOpen}
 					onDismiss={() => setHowToUseModalOpen(false)}
@@ -4209,6 +4264,8 @@ description:
 			onBindMultiCellSaveApi={onBindMultiCellSaveApi}
 			onMultiCellAnyDirtyChange={onMultiCellAnyDirtyChange}
 			breadcrumbWorkspaceLabel={rootLabel || null}
+			workspaceTreeNodes={nodes}
+			refreshQuiet={refreshQuiet}
 		/>
 	) : (
 		<WorkspaceCellDropSurface
@@ -4267,6 +4324,9 @@ description:
 				agentTeamPane={agentTeamWorkspacePane}
 				workspaceEmbeddedChat={workspaceEmbeddedChat}
 				breadcrumbWorkspaceLabel={rootLabel || null}
+				gitFileReviewActions={workspaceGitFileReviewActions}
+				gitReviewHasAnyMarked={gitReviewHasAnyMarked}
+				gitReviewCanAdvanceNext={gitReviewCanAdvanceNext}
 			/>
 		</WorkspaceCellDropSurface>
 	);
@@ -4424,6 +4484,12 @@ description:
 				open={mitLicenseModalOpen}
 				onDismiss={() => setMitLicenseModalOpen(false)}
 				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+			/>
+			<RestartServerModal
+				open={restartServerModalOpen}
+				onClose={() => setRestartServerModalOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+				onReconnectIfStillUp={session.reconnectWebSocket}
 			/>
 			<HowToUseModal
 				open={howToUseModalOpen}

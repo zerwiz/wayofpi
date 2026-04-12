@@ -66,7 +66,7 @@ Files sent from Telegram are downloaded to `~/.pi/agent/tmp/telegram/`.
 - Already handles streaming previews, voice transcription, file attach, stop/queue
 - Session hand-off (`/handoff` / `/handback`) aligns with TelePi
 
-**Next action:** Document setup in `.claw/TOOLS.md` and add a Claw UI status card (Phase UI-1 below).
+**Next action:** Document setup in `.claw/workspace/TOOLS.md` and add a Claw UI status card (Phase UI-1 below).
 
 ---
 
@@ -87,9 +87,9 @@ This is more work but gives better multi-project isolation. Build only if Path A
 
 | Phase | What ships | Blocked on |
 |-------|-----------|------------|
-| **T-0** (now) | This plan doc; `.claw/TOOLS.md` template mentions `pi-telegram`; Claw UI shows a "Telegram not connected" placeholder card | Nothing — UI stub only |
+| **T-0** (now) | This plan doc; `.claw/workspace/TOOLS.md` template mentions `pi-telegram`; Claw UI shows a "Telegram not connected" placeholder card | Nothing — UI stub only |
 | **T-1** | Claw **Channels** tab: full setup guide; Help section matches; token **never** exposed in the UI | Done |
-| **T-2** | **`GET /api/claw/telegram/status`** — read-only snapshot: token file present (`~/.pi/agent/telegram.json` and/or `.claw/telegram.json`), `pi-telegram` listed in workspace `.pi/settings.json` `extensions[]`. Claw UI polls every 30s. **Not included:** connected/last-message/bot-name (requires Pi session or Bot API call from a trusted process — still T-4 / Pi wiring) | Done (snapshot); live status → T-4 |
+| **T-2** | **`GET /api/claw/telegram/status`** (and **`GET /api/config`** → **`clawTelegramStatus`**) — read-only snapshot: token file present (`~/.pi/agent/telegram.json` and/or `.claw/telegram.json`), `pi-telegram` listed in **opened workspace(s)** or the **Way of Pi host checkout** `.pi/settings.json` `extensions[]`. Claw UI polls every 30s. **Not included:** connected/last-message/bot-name (requires Pi session or Bot API call from a trusted process — still T-4 / Pi wiring) | Done (snapshot); live status → T-4 |
 | **T-3** | Workspace-scoped bot config (`.claw/telegram.json`) instead of global `~/.pi/agent/telegram.json`; multi-workspace support | Way of Pi namespacing + Pi extension config override |
 | **T-4** | Full Claw Mission "Telegram" panel: chat preview, voice-note status, file transfers, queue size | Pi WS event forwarding (see `WOP_MULTI_AGENT_WEBSOCKET.md`) |
 
@@ -99,7 +99,7 @@ This is more work but gives better multi-project isolation. Build only if Path A
 
 - Bot token is a **secret**. Never log it, never send to client in API responses, never commit to git.
 - The first `/start` DM to the bot becomes the **only allowed user** (allowlist of one Telegram user ID).
-- Document in `.claw/SECURITY.md` template: token location, rotation steps, revoke with @BotFather.
+- Document in `.claw/workspace/SECURITY.md` template: token location, rotation steps, revoke with @BotFather.
 - Inform users: local Telegram bot = anyone who gets the token can send messages to your agent.
 
 ---
@@ -121,13 +121,13 @@ This is more work but gives better multi-project isolation. Build only if Path A
 | File | Role |
 |------|------|
 | `docs/WOP_TELEGRAM_PLAN.md` (this file) | Plan and decision record |
-| `.claw/TOOLS.md` template | Documents `pi-telegram` setup for the agent |
-| `.claw/HEARTBEAT.md` template | Placeholder for future Telegram heartbeat checks |
-| `apps/wayofpi-ui/src/components/claw/ClawWorkspaceCard.tsx` | UI card showing `.claw/` workspace status |
-| `apps/wayofpi-ui/src/hooks/useClawWorkspace.ts` | Hook: check which `.claw/` files exist + scaffold |
+| `.claw/workspace/TOOLS.md` template | Documents `pi-telegram` setup for the agent |
+| `.claw/workspace/HEARTBEAT.md` template | Placeholder for future Telegram heartbeat checks |
+| `apps/wayofpi-ui/src/components/claw/ClawWorkspaceCard.tsx` | UI card showing `.claw/workspace/` bundle status |
+| `apps/wayofpi-ui/src/hooks/useClawWorkspace.ts` | Hook: check which `.claw/workspace/` files exist + scaffold |
 | `apps/wayofpi-ui/server/claw-telegram-status.ts` | Server-only scan for Telegram integration hints (no secrets) |
 | `apps/wayofpi-ui/shared/claw-telegram-status.ts` | Shared **`ClawTelegramStatusV1`** type |
-| `apps/wayofpi-ui/src/hooks/useClawTelegramStatus.ts` | Client poll + refresh for **`/api/claw/telegram/status`** |
+| `apps/wayofpi-ui/src/hooks/useClawTelegramStatus.ts` | Client poll + refresh: **`GET /api/config`** → **`clawTelegramStatus`**, fallback **`GET /api/claw/telegram/status`** |
 | `apps/wayofpi-ui/src/components/claw/ClawChannelsView.tsx` | Channels tab: Telegram card wired to status API |
 
 ---

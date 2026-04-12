@@ -39,3 +39,27 @@ export function flattenTreeGitEntries(nodes: TreeNode[]): GitMarkedTreeEntry[] {
 export function flattenDirectGitStatusPaths(nodes: TreeNode[]): GitMarkedTreeEntry[] {
 	return flattenTreeGitEntries(nodes).filter((e) => e.type === "file" || e.status !== "*");
 }
+
+/** Sorted file paths that still carry an explorer Git badge (staged/unstaged/untracked). */
+export function gitMarkedFilePathsSorted(nodes: TreeNode[]): string[] {
+	return flattenDirectGitStatusPaths(nodes)
+		.filter((e) => e.type === "file")
+		.map((e) => e.path)
+		.sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Next file path in sorted Git-marked order after `current` (wrap). Used for “Review next” in the editor chrome.
+ * Returns `null` when there is nowhere to advance (no marks, or a single marked file that is already active).
+ */
+export function nextGitReviewFilePath(current: string | null, nodes: TreeNode[]): string | null {
+	const paths = gitMarkedFilePathsSorted(nodes);
+	if (paths.length === 0) return null;
+	if (paths.length === 1) {
+		const only = paths[0]!;
+		return only === current ? null : only;
+	}
+	const idx = current ? paths.indexOf(current) : -1;
+	const nextIdx = idx >= 0 ? (idx + 1) % paths.length : 0;
+	return paths[nextIdx] ?? null;
+}

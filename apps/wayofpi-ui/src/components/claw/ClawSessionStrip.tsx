@@ -57,10 +57,10 @@ export function ClawSessionStrip({
 				<button
 					type="button"
 					onClick={onToggleClawFiles}
-					title="Toggle .claw/ file panel"
+					title="Toggle Workspace file panel"
 					className={`${iconBtnC} ${showClawFiles ? filesBtnActive : ""}`}
 				>
-					<span className="font-mono">.claw/</span>
+					<span>Workspace</span>
 				</button>
 			</div>
 		</div>
