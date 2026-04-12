@@ -16,6 +16,7 @@ import {
 	healthSupportsClawHostTree,
 	staleWayOfPiApiMessage,
 } from "../utils/wayofpiDevApiWarmup";
+import { WAYOFPI_CLAW_SCHEDULES_SYNCED_EVENT } from "./useClawAutomationStatus";
 
 export type { ClawSchedule, ScheduleLastResult, ScheduleStatus, ScheduleTriggerMode };
 
@@ -181,6 +182,7 @@ export function useClawSchedules() {
 					if (Array.isArray(out.schedules)) {
 						setSchedules(out.schedules);
 						setSyncError(null);
+						window.dispatchEvent(new CustomEvent(WAYOFPI_CLAW_SCHEDULES_SYNCED_EVENT));
 					}
 				} catch (e) {
 					setSyncError(

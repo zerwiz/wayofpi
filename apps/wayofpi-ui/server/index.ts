@@ -1314,6 +1314,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		const piEngineLive = shouldUsePiJsonChat();
 		const piBackendRequested = engineMode === "pi" || engineMode === "auto";
 		const piBinaryResolved = resolvePiBinaryPath() != null;
+		const workspaceDotPiPresent = existsSync(join(getPrimaryWorkspacePath(), ".pi"));
 		const wantClawTree = url.searchParams.get("clawTree") === "1";
 		let clawHostTree: Awaited<ReturnType<typeof buildClawHostTree>> | undefined;
 		if (wantClawTree) {
@@ -1342,10 +1343,12 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			clawDotDirAbs: getClawDotDirAbs(),
 			/** Absolute path to **`.claw/workspace/`** (seven scaffold files + `memory/`). */
 			clawWorkspaceDirAbs: getClawWorkspaceBundleDirAbs(),
-			/** True when `WOP_CHAT_ENGINE` is **`pi`** or **`auto`** and the **`pi`** CLI resolves — all personas use `pi --mode json` (full Pi tools). */
+			/** True when headless **`pi --mode json`** is active (**`pi`**, **`auto`**, or unset default **`auto`**) and the **`pi`** CLI resolves — full Pi tools. */
 			piDrivesChat: piEngineLive,
 			/** Whether a **`pi`** executable was resolved (`WOP_PI_BINARY` or PATH); **on** still needs this for headless Pi turns. */
 			piBinaryResolved,
+			/** Open folder contains a **`.pi/`** directory (Pi-shaped **config**). Not the same as a resolvable **`pi`** binary. */
+			workspaceDotPiPresent,
 			piChatEngineRequested: piBackendRequested,
 			piChatEngineWired: piEngineLive,
 			/** Interim Bun tool loop only — superseded once Pi owns tools per `docs/WOP_PI_BACKEND_WIRING_PLAN.md`. */
@@ -2269,12 +2272,10 @@ const server = Bun.serve<ServerWsData>({
 	},
 });
 
-const _bootChatEngine =
-	(process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase() ||
-	(process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+const _bootEngineMode = wopChatEngineFromEnv();
 const _bootPiDrives = shouldUsePiJsonChat();
 console.log(
-	`Way of Pi server http://127.0.0.1:${server.port} workspace=${getWorkspaceRoot()} chatEngine=${_bootChatEngine} piDrivesChat=${_bootPiDrives} manifest=/api/manifest`,
+	`Way of Pi server http://127.0.0.1:${server.port} workspace=${getWorkspaceRoot()} chatEngine=${_bootEngineMode} piDrivesChat=${_bootPiDrives} manifest=/api/manifest`,
 );
 
 // Start the workspace-index auto-sync timer based on saved options.

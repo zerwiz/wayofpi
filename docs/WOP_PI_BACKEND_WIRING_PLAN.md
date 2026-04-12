@@ -13,7 +13,7 @@
 | **All agents** | **Orchestrator** and **every** workspace **`.md`** persona must eventually execute in **headless Pi** (`WOP_PI_BINARY`), not only as merged prompts in Bun. |
 | **All Pi surfaces** | **Extensions**, **`registerTool`**, **slash commands**, **`dispatch_agent`**, **skills**, **session JSONL**, and **model/provider** behavior must match the **Pi TUI** for the same workspace and **`.pi/settings.json`**. |
 | **No permanent “mini Pi”** | **`server/chat.ts`**, **`server/chat-orchestrator-tools.ts`**, and **`server/orchestrator-tools-exec.ts`** are **interim** bridges. **Do not** treat them as parity with Pi; **Phase 2** replaces chat; tool fan-out then comes from **Pi events**, not duplicate Bun handlers. |
-| **Gate** | **`WOP_CHAT_ENGINE=pi`** or **`auto`**: **`pi --mode json`** when the CLI resolves (all personas); **`pi`** alone rejects if CLI missing; **`auto`** falls back to Bun. Long-lived Pi process + **`/ws`** tunnel remains Phase 2+. |
+| **Gate** | **`WOP_CHAT_ENGINE=pi`**, **`auto`**, or **unset** (unset = **`auto`**): **`pi --mode json`** when the CLI resolves (all personas); **`pi`** rejects if CLI missing; **`auto`** / unset fall back to Bun when **`pi`** is missing. **`bundled`** / **`bun`** forces Bun-only. Long-lived Pi process + **`/ws`** tunnel remains Phase 2+. |
 | **Rules** | **`.cursor/rules/wop-ui-pi-backend-parity.mdc`** (always on) and **`.cursor/rules/wop-ui-workspace-agents.mdc`** (UI/agent edits). |
 | **Ownership** | Way of Pi **does not** own the agent/orchestration/tool **system** — **Pi’s coding-agent** does. The server’s job is **wiring and host I/O**, not a second productized agent engine inside Bun. |
 
@@ -59,7 +59,7 @@
 
 | Area | Hits Pi process? | What runs today | Change lever (toward Pi) |
 |------|------------------|-----------------|---------------------------|
-| **Chat** (`/ws` → `chat` → **`runPiChatTurn`** / **`streamChatCompletion`** / **`runOrchestratorToolLoop`**) | **Partial** — **Yes** per turn when **`WOP_CHAT_ENGINE`** is **`pi`** or **`auto`** and **`pi`** resolves (**`pi --mode json`**); else **No** | With **`pi`/`auto`**: Pi subprocess (full tools + extensions). Else: HTTP to **Ollama** / **OpenRouter**; optional Bun shim when **`WOP_ORCHESTRATOR_TOOLS`**. **§6 Phase 2** — long-lived Pi + **`/ws`** tunnel; shrink Bun shim |
+| **Chat** (`/ws` → `chat` → **`runPiChatTurn`** / **`streamChatCompletion`** / **`runOrchestratorToolLoop`**) | **Partial** — **Yes** per turn when **`WOP_CHAT_ENGINE`** is **`pi`**, **`auto`**, or **unset** (default **`auto`**) and **`pi`** resolves (**`pi --mode json`**); else **No** | With headless Pi: full tools + extensions. **`bundled`/`bun`**: HTTP to **Ollama** / **OpenRouter**; optional Bun shim when **`WOP_ORCHESTRATOR_TOOLS`**. **§6 Phase 2** — long-lived Pi + **`/ws`** tunnel; shrink Bun shim |
 | **`set_model` / `set_chat_mode` / `set_agent`** | **No** | In-memory WS state + **`applyLeadSystem`** (disk-read prompts) | After Pi owns chat: model/mode/agent become Pi session config |
 | **`GET /api/agents`** | **No** (filesystem parity) | **`loadWorkspaceAgents()`** — scan **`agents/`**, **`.claude/`**, **`.pi/agents/`**, **`.cursor/`** + **`teams.yaml`** | Keep catalog; **dispatch** = Pi (**§6 Phase 4**) |
 | **`GET /api/llm/models`** | **No** | Ollama **`/api/tags`** or OpenRouter placeholder | When engine is Pi: expose Pi/provider list (**§3** row) |
@@ -75,12 +75,12 @@
 
 ### Pi-shaped prompts vs Pi subprocess
 
-- **`session-prompts.ts`** — Same *sources* as TUI personas for system text. **Bundled** engine: personas are prompt-only for tools. **`WOP_CHAT_ENGINE=pi`/`auto`** (CLI present): **`runPiChatTurn`** runs **`pi --mode json`** so **`registerTool`**, **`dispatch_agent`**, and extensions execute **inside Pi**.
+- **`session-prompts.ts`** — Same *sources* as TUI personas for system text. **Bun-only** path (**`WOP_CHAT_ENGINE=bundled`/`bun`**, or **`auto`/unset without a resolvable `pi`**): personas are prompt-only for Pi extension tools. **`pi`**, **`auto`**, or **unset** with **`pi`** on **`PATH`** / **`WOP_PI_BINARY`**: **`runPiChatTurn`** runs **`pi --mode json`** so **`registerTool`**, **`dispatch_agent`**, and extensions execute **inside Pi**.
 - **`pi-ollama-env.ts`** — **`OLLAMA_HOST`** / **`OLLAMA_BASE_URL`**, **`OLLAMA_MODEL`**, **`agent/settings.json`**: matches how **Pi** is started from repo **`.env`**; does not invoke Pi for inference.
 
 ### Largest gap (single sentence)
 
-> **Bundled-engine** replies (**`WOP_CHAT_ENGINE`** unset) still bypass Pi (`chat.ts` → Ollama/OpenRouter). **`pi`** / **`auto`** routes through **`pi --mode json`** when the CLI resolves; long-lived Pi + **`/ws`** remains the main follow-up.
+> **Bun-only** replies (**`WOP_CHAT_ENGINE=bundled`/`bun`**, or **`auto`/unset when `pi` does not resolve**) bypass Pi (`chat.ts` → Ollama/OpenRouter). **`pi`**, **`auto`**, or **unset** with a resolvable **`pi`** routes through **`pi --mode json`**; long-lived Pi + **`/ws`** remains the main follow-up.
 
 Use **§3–§5** for route-level detail, **§6** for phased work, **`docs/WOP_OPEN_TODOS.md`** for backlog ticks.
 
@@ -193,7 +193,7 @@ Rows follow the **sitemap** in **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_
 - **Spawn** (or attach) Pi with workspace cwd, loaded **`.pi/settings.json`** / profile equivalent.
 - Pipe **one** conversation through Pi; map stream to existing **`assistant_delta`** / **`done`** / **`error`**.
 - **Tool events:** forward to Tool log + optional approval gate before executing **host** actions.
-- **Feature flag:** `WOP_CHAT_ENGINE=pi` | `auto` | unset (bundled → **`WOP_LLM_PROVIDER`**) — use **`WOP_*`** only.
+- **Feature flag:** `WOP_CHAT_ENGINE=pi` | `auto` | unset or unknown (= **`auto`**) | `bundled` | `bun` — use **`WOP_*`** only. (Legacy mistake **`=ollama`** is normalized to **`auto`**, not Bun-only.)
 
 ### Phase 3 — Sessions and persistence
 

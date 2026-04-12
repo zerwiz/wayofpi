@@ -68,7 +68,7 @@ interface PanelDockLayout {
 | **Claw UI** | `src/App.tsx` when `useUiMode().mode === "claw"` | Same **IDE shell** as Technical (`uiMode !== "simple"`); **banner** + roadmap in **`docs/WOP_CLAW_MODE_PLAN.md`**; interface plan **`docs/WOP_CLAW_UI_PLAN.md`**. |
 | **Simple UI** | `src/components/simple/SimpleApp.tsx` | Chat-forward layout; shares hooks and tree/file/session state with `App`. **`App.tsx`** owns **`simpleTab`** and **`CommandPalette`** for Simple mode. Not detailed further here. |
 
-**Simple** vs **IDE shell** (**Technical** and **Claw**) share **`useWorkspaceTree`**, **`useFileEditor`**, **`useWayOfPiSession`**, and **`useServerConfig`** instantiated in `App.tsx`.
+**Simple** vs **IDE shell** (**Technical** and **Claw**) share **`useWorkspaceTree`**, **`useFileEditor`**, **`useWayOfPiSession`** (one hook in `App.tsx` with **per-shell** chat tabs / transcript / persisted mode+agent via `surfaceId`), and **`useServerConfig`** instantiated in `App.tsx`.
 
 ## Splitter pointer parity (`DockSplitHandle`)
 

@@ -6,8 +6,8 @@
 # Usage: from repo root: ./start-wayofpi-ui.sh
 set -euo pipefail
 
-# GUI .desktop launches often have a minimal PATH — include common locations for bun / npm / node.
-export PATH="${HOME}/.bun/bin:${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+# GUI .desktop launches often have a minimal PATH — include common locations for bun / npm / pi / cargo.
+export PATH="${HOME}/.bun/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UI_DIR="$ROOT/apps/wayofpi-ui"

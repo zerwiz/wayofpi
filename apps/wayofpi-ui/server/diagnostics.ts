@@ -4,7 +4,7 @@ import { join, normalize } from "node:path";
 import { fetchOllamaTags, ollamaTagsIncludeRequestedModel } from "./llm-models";
 import { orchestratorBashEnabled, orchestratorToolsEnabled } from "./orchestrator-tools-exec";
 import { getWayOfPiBundleRepoRoot, resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
-import { resolvePiBinaryPath } from "./pi-binary";
+import { expandedWopPiBinaryFromEnv, resolvePiBinaryPath } from "./pi-binary";
 import { piAgentRuntimeBlockedReason, shouldUsePiJsonChat, wopChatEngineFromEnv } from "./pi-agent-runtime";
 import { collectStaticWebManifest } from "./web-manifest";
 import {
@@ -81,40 +81,42 @@ async function probePiVersion(bin: string, ms: number): Promise<{ version: strin
 
 export async function probePiBinary(): Promise<{
 	resolvedPath: string | null;
-	source: "WOP_PI_BINARY" | "PATH" | null;
+	source: "WOP_PI_BINARY" | "PATH" | "resolved" | null;
 	exists: boolean;
 	version: string | null;
 	versionError: string | null;
 }> {
-	const configured = process.env.WOP_PI_BINARY?.trim();
-	if (configured) {
-		const exists = existsSync(configured);
+	const expanded = expandedWopPiBinaryFromEnv();
+	if (expanded) {
+		const exists = existsSync(expanded);
 		if (!exists) {
 			return {
-				resolvedPath: configured,
+				resolvedPath: expanded,
 				source: "WOP_PI_BINARY",
 				exists: false,
 				version: null,
 				versionError: "file missing",
 			};
 		}
-		const v = await probePiVersion(configured, 4000);
+		const v = await probePiVersion(expanded, 4000);
 		return {
-			resolvedPath: configured,
+			resolvedPath: expanded,
 			source: "WOP_PI_BINARY",
 			exists: true,
 			version: v.version,
 			versionError: v.error,
 		};
 	}
-	const which = Bun.which("pi");
-	if (!which) {
+	const resolved = resolvePiBinaryPath();
+	if (!resolved) {
 		return { resolvedPath: null, source: null, exists: false, version: null, versionError: null };
 	}
-	const v = await probePiVersion(which, 4000);
+	const v = await probePiVersion(resolved, 4000);
+	const plainWhich = Bun.which("pi");
+	const source: "PATH" | "resolved" = plainWhich === resolved ? "PATH" : "resolved";
 	return {
-		resolvedPath: which,
-		source: "PATH",
+		resolvedPath: resolved,
+		source,
 		exists: true,
 		version: v.version,
 		versionError: v.error,
@@ -325,7 +327,7 @@ function buildDoctorChecks(options: {
 			id: "pi_engine",
 			title: "Pi chat engine",
 			status: "skip",
-			summary: "Bundled interim provider (WOP_CHAT_ENGINE unset or bundled)",
+			summary: "Bundled interim provider (WOP_CHAT_ENGINE=bundled or bun — Bun-only, no headless Pi)",
 		});
 	}
 

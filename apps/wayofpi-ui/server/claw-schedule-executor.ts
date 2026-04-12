@@ -1,6 +1,9 @@
 /**
- * Run one Claw automation (schedule or inbound webhook) as a single headless Pi
- * turn — same contract as chat (`pi --mode json`, workspace cwd).
+ * Run one Claw automation (schedule or inbound webhook) as a single headless Pi turn.
+ *
+ * **Same runtime as Chat:** imports **`shouldUsePiJsonChat`** and **`runPiChatTurn`** from
+ * **`pi-agent-runtime.ts`** (not a fork). Binary resolution is **`resolvePiBinaryPath()`** in
+ * **`pi-binary.ts`**; engine gates match **`GET /api/config`** `piDrivesChat` / Mission → Engine.
  */
 import { appendFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -46,8 +49,7 @@ export async function executeClawAutomation(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
 	const cwd = getPrimaryWorkspacePath();
 	if (!shouldUsePiJsonChat()) {
-		const err =
-			"Claw automation requires headless Pi — set **`WOP_CHAT_ENGINE=auto`** or **`pi`** and install the **`pi`** CLI (**`WOP_PI_BINARY`** or PATH).";
+		const err = "Skipped — this server is not in the mode required for this automatic run.";
 		void appendClawMissionEvent({
 			at: new Date().toISOString(),
 			kind: payload.source,

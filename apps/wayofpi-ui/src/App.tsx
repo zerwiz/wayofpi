@@ -63,7 +63,11 @@ import {
 	useSimplePreferences,
 	writeSimpleChatStreamUiEnabled,
 } from "./hooks/useSimplePreferences";
-import { useWayOfPiSession, type ChatSessionMode } from "./hooks/useWayOfPiSession";
+import {
+	useWayOfPiSession,
+	type ChatSessionMode,
+	type ChatSessionSurfaceId,
+} from "./hooks/useWayOfPiSession";
 import { useWorkspaceTree } from "./hooks/useWorkspaceTree";
 import { useWorkspaceStaticAnalysis } from "./hooks/useWorkspaceStaticAnalysis";
 import type { PiModelConfigPath } from "./constants/piModelConfigPaths";
@@ -291,7 +295,14 @@ export default function App() {
 		agentsApi.reload();
 	}, [agentsApi.reload]);
 	const focusAgentWrittenWorkspaceFileRef = useRef<(rel: string) => void>(() => {});
+	/**
+	 * Chat is one hook, three **surfaces** (`simple` | `technical` | `claw`): each keeps its own tabs, transcript,
+	 * queue UI, plan/build + agent prefs, and server JSONL key prefix (`wireSessionKeyForSurface`). Switching
+	 * `uiMode` swaps the active slice and re-`activate_session`s the socket for that surface.
+	 */
+	const chatSurfaceId: ChatSessionSurfaceId = uiMode;
 	const session = useWayOfPiSession(
+		chatSurfaceId,
 		refresh,
 		bufferAssistantDeltasRef,
 		reloadAgentsCatalog,
@@ -347,7 +358,8 @@ export default function App() {
 					? `ollama/${trimmed}`
 					: `${p}/${trimmed}`;
 		if (config.piDrivesChat) return `Pi · ${stackLabel}`;
-		return stackLabel;
+		/** Interim Bun path — avoid implying the Pi CLI is driving turns when Mission/`piDrivesChat` say otherwise. */
+		return `Bun · ${stackLabel}`;
 	}, [config, session.effectiveModel, session.llmProviderFromSocket]);
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
 	const [explorerContextDir, setExplorerContextDir] = useState("");
@@ -1238,10 +1250,9 @@ description:
 	latestShellForPlanRef.current = { activity, leftSidebarVisible };
 
 	useEffect(() => {
-		if (!technical) {
-			prevTechnicalChatModeRef.current = session.chatMode;
-			return;
-		}
+		if (!technical) return;
+		/** Plan sidebar layout is Technical-only; Claw has its own chat `surfaceId` and must not drive this ref. */
+		if (uiMode !== "technical") return;
 		const prev = prevTechnicalChatModeRef.current;
 		const mode = session.chatMode;
 		prevTechnicalChatModeRef.current = mode;
@@ -1266,7 +1277,7 @@ description:
 			shellBeforePlanRef.current = null;
 		}
 		// `latestShellForPlanRef` is updated each render; do not list `activity` / `leftSidebarVisible` here or the effect would fire on every sidebar change while in Plan.
-	}, [persistLeftSidebar, session.chatMode, technical]);
+	}, [persistLeftSidebar, session.chatMode, technical, uiMode]);
 
 	const openWorkspaceSearch = useCallback(() => {
 		setUiMode("technical");
@@ -1783,9 +1794,9 @@ description:
 	const [clawHelpOpen, setClawHelpOpen] = useState(false);
 	const [clawHelpDefaultSection, setClawHelpDefaultSection] = useState<ClawHelpSectionId | null>(null);
 	/**
-	 * Simple and Claw share one persisted `chatAgentName` — align defaults per shell so Simple stays
-	 * orchestrator (null) and Claw prefers the `claw` workspace agent when present (including after
-	 * `/api/agents` loads).
+	 * Per-shell session agent (see **`useWayOfPiSession`** `surfaceId`): Simple + Technical use orchestrator
+	 * (null); Claw defaults to **`claw`** once per Claw visit (including after `/api/agents` loads), without
+	 * overriding a deliberate orchestrator choice on Claw.
 	 */
 	const chatAgentShellPrevRef = useRef<UiMode | null>(null);
 	useEffect(() => {
@@ -1793,15 +1804,33 @@ description:
 		const to = uiMode;
 		const hasClaw = (agentsApi.data?.agents ?? []).some((a) => a.name.trim().toLowerCase() === "claw");
 
-		if (to === "simple") {
-			if (from !== "simple") session.setChatAgent(null);
-		} else if (to === "claw") {
-			if (hasClaw && (from !== "claw" || session.chatAgentName == null)) {
+		if (from != null && from !== to) {
+			if (to === "simple" || to === "technical") {
+				session.setChatAgent(null);
+			} else if (to === "claw" && hasClaw && session.chatAgentName == null) {
 				session.setChatAgent("claw");
 			}
 		}
 
 		chatAgentShellPrevRef.current = to;
+	}, [uiMode, session.chatAgentName, session.setChatAgent, agentsApi.data?.agents]);
+
+	/** First time on Claw (or when catalog loads) pick **`claw`** if still unset; do not override null after user chose orchestrator (`ref` stays true once `claw` was active). */
+	const clawAutoAgentAppliedRef = useRef(false);
+	useEffect(() => {
+		if (uiMode !== "claw") {
+			clawAutoAgentAppliedRef.current = false;
+			return;
+		}
+		const n = session.chatAgentName?.trim().toLowerCase() ?? null;
+		if (n === "claw") {
+			clawAutoAgentAppliedRef.current = true;
+			return;
+		}
+		const hasClaw = (agentsApi.data?.agents ?? []).some((a) => a.name.trim().toLowerCase() === "claw");
+		if (!hasClaw || session.chatAgentName != null || clawAutoAgentAppliedRef.current) return;
+		session.setChatAgent("claw");
+		clawAutoAgentAppliedRef.current = true;
 	}, [uiMode, session.chatAgentName, session.setChatAgent, agentsApi.data?.agents]);
 	const [newWorkspaceFileDraft, setNewWorkspaceFileDraft] = useState<{
 		defaultPath: string;

@@ -112,10 +112,12 @@ function EngineChip({ config, dark }: { config: ServerConfig | null; dark: boole
 	if (!config) return <span className={`text-[11px] ${dark ? "text-[#858585]" : "text-[#888888]"}`}>…</span>;
 	const ispi = config.piDrivesChat;
 	const piRequested = config.piChatEngineRequested === true;
-	const piMissing = piRequested && config.piBinaryResolved !== true;
+	const strictPi = (config.chatEngine || "").toLowerCase() === "pi";
+	const piMissingStrict = piRequested && config.piBinaryResolved !== true && strictPi;
+	const piSoftNoCli = piRequested && config.piBinaryResolved !== true && !strictPi;
 	const piRequestedButNotDriving = piRequested && config.piBinaryResolved === true && !ispi;
 	const bunProductionOk = !piRequested && !ispi;
-	const chipOk = ispi || bunProductionOk;
+	const chipOk = ispi || bunProductionOk || piSoftNoCli;
 	return (
 		<span
 			className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -128,13 +130,15 @@ function EngineChip({ config, dark }: { config: ServerConfig | null; dark: boole
 						: "bg-[#ea580c]/12 text-[#c2410c]"
 			}`}
 			title={
-				piMissing
-					? "WOP_CHAT_ENGINE requests Pi but no pi CLI was resolved — install pi or set WOP_PI_BINARY."
-					: piRequestedButNotDriving
-						? "Pi CLI resolves but chat is not in Pi JSON mode — check WOP_CHAT_ENGINE and server logs."
-						: bunProductionOk
-							? "Chat uses the Bun provider path; Pi is not required for this server configuration."
-							: undefined
+				piMissingStrict
+					? "WOP_CHAT_ENGINE=pi requires the Pi CLI — set WOP_PI_BINARY or fix PATH (Host Doctor)."
+					: piSoftNoCli
+						? "Built-in assistant — chat is running on this setup."
+						: piRequestedButNotDriving
+							? "Pi CLI resolves but chat is not in Pi JSON mode — check orchestration override and restart."
+							: bunProductionOk
+								? "Bun-only engine (bundled/bun). Pi is off until you change WOP_CHAT_ENGINE."
+								: undefined
 			}
 		>
 			<span
@@ -142,13 +146,15 @@ function EngineChip({ config, dark }: { config: ServerConfig | null; dark: boole
 			/>
 			{ispi
 				? "Pi engine"
-				: piMissing
-					? "Pi requested (missing CLI)"
+				: piMissingStrict
+					? "Pi required (no CLI)"
 					: piRequestedButNotDriving
 						? "Pi idle (Bun chat)"
-						: config.chatEngine === "auto"
-							? "auto (Bun)"
-							: `Bun · ${config.provider ?? "ollama"}`}
+						: piSoftNoCli
+							? `Bun · ${config.provider ?? "ollama"}`
+							: config.chatEngine === "auto"
+								? "auto (Bun)"
+								: `Bun · ${config.provider ?? "ollama"}`}
 		</span>
 	);
 }
@@ -219,84 +225,171 @@ export function ClawMissionView({
 		if (config.piDrivesChat) {
 			return {
 				icon: CheckCircle2,
-				value: "Pi engine — workspace agents, extensions, and tools match the Pi TUI",
+				value: "Full Pi assistant is on — same stack as the Pi terminal app",
 				ok: true,
 				planned: false,
 			};
 		}
 		if (config.piChatEngineRequested && !config.piBinaryResolved) {
+			const strictPi = (config.chatEngine || "").toLowerCase() === "pi";
+			if (strictPi) {
+				return {
+					icon: AlertTriangle,
+					value: "Pi-only mode is on, but the Pi program was not found",
+					ok: false,
+					planned: false,
+					detail:
+						"Install the Pi coding agent, or ask a technical person to fix it. Host Doctor shows paths. Restart the app after changes.",
+				};
+			}
 			return {
-				icon: AlertTriangle,
-				value: "Pi requested (WOP_CHAT_ENGINE=auto|pi) but the pi CLI was not found",
-				ok: false,
+				icon: CheckCircle2,
+				value: "Built-in assistant is on",
+				ok: true,
 				planned: false,
-				detail:
-					"Install the Pi coding-agent CLI on the server PATH, or set WOP_PI_BINARY to the absolute pi executable, then restart the Way of Pi API (apps/wayofpi-ui).",
 			};
 		}
 		if (config.piChatEngineRequested && config.piBinaryResolved) {
 			return {
 				icon: AlertTriangle,
-				value: "Pi is installed but this process is still on the interim Bun chat path",
+				value: "Pi is installed, but chat is still using the built-in path",
 				ok: false,
 				planned: false,
 				detail:
-					"Technical mode → Extensions → Orchestration: ensure Pi JSON is on (or clear a false POST /api/config override), then restart the server. Check server logs if this persists.",
+					"Technical → Extensions → turn on “Pi drives chat”, or restart the app. Host Doctor can help.",
 			};
 		}
 		return {
 			icon: AlertTriangle,
-			value: `Interim Bun chat only (${config.chatEngine}) — no Pi extensions or dispatch_agent`,
+			value: "Built-in-only mode — advanced Pi features are off",
 			ok: false,
 			planned: false,
 			detail:
-				"Claw uses the same session as Simple/Technical. For full Pi agents and tools: set WOP_CHAT_ENGINE=auto (or pi) in apps/wayofpi-ui/.env, ensure pi resolves (PATH or WOP_PI_BINARY), restart the API. See docs/WOP_PI_BACKEND_WIRING_PLAN.md.",
+				"A technical person can switch the chat engine in the app settings or .env file, then restart the server.",
+		};
+	}, [config]);
+
+	const statusStripClass = useMemo(() => {
+		if (!connected) {
+			return dark
+				? "border-[#f14c4c]/30 bg-[#f14c4c]/08"
+				: "border-[#fecaca] bg-[#fef2f2]";
+		}
+		const engineBad = !engineStatusLine.ok && !engineStatusLine.planned;
+		if (engineBad) {
+			return dark
+				? "border-[#ea580c]/20 bg-[#ea580c]/5"
+				: "border-[#ea580c]/15 bg-[#ea580c]/5";
+		}
+		return dark
+			? "border-[#2a7a68]/22 bg-[#4ec9b0]/07"
+			: "border-[#bbf7d0] bg-[#f0fdf4]";
+	}, [connected, dark, engineStatusLine.ok, engineStatusLine.planned]);
+
+	const orchestratorStatusLine = useMemo(() => {
+		if (!config) {
+			return {
+				icon: AlertTriangle,
+				value: "Loading server config…",
+				ok: false,
+				planned: true,
+				detail: undefined as string | undefined,
+			};
+		}
+		if (config.piDrivesChat) {
+			return {
+				icon: CheckCircle2,
+				value: "Tools run inside Pi",
+				ok: true,
+				planned: false,
+				detail: undefined as string | undefined,
+			};
+		}
+		if (config.orchestratorTools) {
+			return {
+				icon: CheckCircle2,
+				value: "On — assistant can read, search, and edit files during chat",
+				ok: true,
+				planned: false,
+				detail: undefined as string | undefined,
+			};
+		}
+		return {
+			icon: CheckCircle2,
+			value: "Off — assistant does not get file helpers during chat",
+			ok: true,
+			planned: false,
+			detail: "Turn on in Technical → Extensions if you want read/search/write in chat.",
 		};
 	}, [config]);
 
 	const schedulesChannelsLine = useMemo(() => {
-		if (!clawAutoLoaded && !clawAuto) {
-			return { icon: AlertTriangle, value: "Loading…", ok: false, planned: true };
+		const embedded =
+			config?.clawAutomation?.version === 1 ? config.clawAutomation : null;
+		const auto = embedded ?? clawAuto;
+		const automationDataLoaded = clawAutoLoaded || embedded != null;
+		/** Same gate as Chat + Claw executor: trust Engine (`piDrivesChat`) so Mission rows cannot disagree. */
+		const piReadyForAutomations =
+			config?.piDrivesChat === true || auto?.piAutomationReady === true;
+
+		if (!automationDataLoaded && !auto) {
+			return { icon: AlertTriangle, value: "Loading schedule info…", ok: false, planned: true };
 		}
-		if (clawAutoError && !clawAuto) {
+		if (clawAutoError && !auto) {
 			const short =
 				clawAutoError.length > 140 ? `${clawAutoError.slice(0, 137)}…` : clawAutoError;
 			return { icon: AlertTriangle, value: short, ok: false, planned: true };
 		}
-		if (!clawAuto) {
-			return { icon: AlertTriangle, value: "Automation status unavailable.", ok: false, planned: true };
+		if (!auto) {
+			return {
+				icon: AlertTriangle,
+				value: "Could not load schedule info — chat still works",
+				ok: false,
+				planned: true,
+			};
 		}
 
-		const queue =
-			missionEvents.length > 0 ? ` · Mission log: ${missionEvents.length} recent` : "";
+		const logNote =
+			missionEvents.length > 0 ? ` · ${missionEvents.length} recent events in the log` : "";
 
-		if (!clawAuto.piAutomationReady) {
-			const disk = clawAuto.schedulesOnDisk ? "schedule definitions on disk" : "no schedule file yet";
+		/** Stale **`GET /api/config`** embed can lag; **`/api/claw/automation`** updates right after a save. */
+		const schedulesOnDiskMerged =
+			embedded?.schedulesOnDisk === true || clawAuto?.schedulesOnDisk === true;
+
+		if (!piReadyForAutomations) {
+			const disk = schedulesOnDiskMerged ? "schedules saved" : "no schedules saved yet";
 			return {
 				icon: CheckCircle2,
-				value: `Claw storage + API ready (${disk})${queue} — timed / inbound automation uses Pi when WOP_CHAT_ENGINE=auto|pi and pi resolves`,
+				value: `Claw is ready (${disk})${logNote}`,
 				ok: true,
 				planned: false,
 			};
 		}
 
-		const sch = clawAuto.schedulerRunning
-			? "Scheduler running"
-			: clawAuto.schedulerEnvEnabled
-				? "Scheduler enabled"
-				: "Scheduler idle (set WOP_CLAW_SCHEDULER=1 for cron runs)";
-		const wh = clawAuto.webhookInboundEnabled
-			? "Inbound webhook on"
-			: clawAuto.webhookSecretConfigured
-				? "Webhook secret set (enable inbound env to accept POSTs)"
-				: "Webhook optional";
+		const sch = auto.schedulerRunning
+			? "Timer is running"
+			: auto.schedulerEnvEnabled
+				? "Timer is on"
+				: "Timer is off (optional)";
+		const wh = auto.webhookInboundEnabled
+			? "Outside messages: on"
+			: auto.webhookSecretConfigured
+				? "Outside messages: partly set up"
+				: "Outside messages: off (optional)";
 		return {
 			icon: CheckCircle2,
-			value: `${sch} · ${wh}${queue}`,
+			value: `Claw: ${sch} · ${wh}${logNote}`,
 			ok: true,
 			planned: false,
 		};
-	}, [clawAuto, clawAutoError, clawAutoLoaded, missionEvents.length]);
+	}, [
+		clawAuto,
+		clawAutoError,
+		clawAutoLoaded,
+		config?.clawAutomation,
+		config?.piDrivesChat,
+		missionEvents.length,
+	]);
 
 	const activitySelectClass = `cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium outline-none ${
 		dark
@@ -307,11 +400,7 @@ export function ClawMissionView({
 	return (
 		<div className={`flex min-h-0 min-w-0 w-full flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-4 ${bg} ${text}`}>
 			{/* ── Status strip ── */}
-			<div
-				className={`flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 ${
-					dark ? "border-[#ea580c]/20 bg-[#ea580c]/5" : "border-[#ea580c]/15 bg-[#ea580c]/5"
-				}`}
-			>
+			<div className={`flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 ${statusStripClass}`}>
 				<div className="flex items-center gap-2">
 					<StatusDot ok={connected} dark={dark} />
 					<span className={`text-[12px] font-medium ${connected ? (dark ? "text-[#4ec9b0]" : "text-[#0a7a68]") : (dark ? "text-[#f14c4c]" : "text-[#cd3131]")}`}>
@@ -413,10 +502,12 @@ export function ClawMissionView({
 								dark={dark}
 							/>
 							<StatusRow
-								icon={config?.orchestratorTools ? CheckCircle2 : AlertTriangle}
-								label="Orchestrator tools"
-								value={config?.orchestratorTools ? "Enabled" : "Disabled"}
-								ok={!!config?.orchestratorTools}
+								icon={orchestratorStatusLine.icon}
+								label="Chat file helpers"
+								value={orchestratorStatusLine.value}
+								ok={orchestratorStatusLine.ok}
+								planned={orchestratorStatusLine.planned}
+								detail={orchestratorStatusLine.detail}
 								dark={dark}
 							/>
 							<StatusRow

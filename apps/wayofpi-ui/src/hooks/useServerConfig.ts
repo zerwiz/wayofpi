@@ -19,14 +19,16 @@ export interface ServerConfig {
 	capabilities?: WayofpiApiCapabilities;
 	/** Effective chat backend label: **`pi`**, **`auto`**, or provider id when bundled. */
 	chatEngine: string;
-	/** True when **`WOP_CHAT_ENGINE`** is **`pi`** or **`auto`** and **`pi`** resolves — all personas use `pi --mode json` (full Pi tools). */
+	/** True when **`pi`** resolves and headless Pi JSON is active — all personas use `pi --mode json` (full Pi tools). */
 	piDrivesChat: boolean;
-	/** True when **`WOP_CHAT_ENGINE`** is **`pi`** or **`auto`** (Pi backend requested; **`auto`** falls back to Bun if **`pi`** is missing). */
+	/** True when engine mode is **`pi`** or **`auto`** (includes **unset**, which defaults to **`auto`**). */
 	piChatEngineRequested?: boolean;
 	/** Same as **`piDrivesChat`** today: Pi binary found for JSON-mode turns. */
 	piChatEngineWired?: boolean;
 	/** **`pi`** executable resolved on the server (PATH or **`WOP_PI_BINARY`**). */
 	piBinaryResolved?: boolean;
+	/** Open workspace folder contains **`.pi/`** (settings tree — not the Pi CLI). */
+	workspaceDotPiPresent?: boolean;
 	/** Pi-shaped workspace tools on orchestrator turns (read/grep/…); not full Pi extensions. */
 	orchestratorTools?: boolean;
 	orchestratorBash?: boolean;
@@ -58,6 +60,24 @@ export interface ServerConfig {
 	clawTelegramStatus?: ClawTelegramStatusV1;
 }
 
+/**
+ * Older APIs omitted **`piChatEngineRequested`** (undefined → was wrongly read as false).
+ * Legacy servers also sent **`piChatEngineRequested: false`** with **`chatEngine: ollama`** when **`WOP_CHAT_ENGINE=ollama`**
+ * was misinterpreted as Bun-only — treat that as Pi/auto intent for Mission / diagnostics copy.
+ */
+function normalizePiChatEngineRequested(raw: ServerConfig): boolean {
+	const explicit = raw.piChatEngineRequested;
+	const ce = String(raw.chatEngine ?? "").trim().toLowerCase();
+	if (explicit === true) return true;
+	if (explicit === false) {
+		if (ce === "bundled" || ce === "bun") return false;
+		if (ce === "ollama" || ce === "openrouter") return true;
+		return false;
+	}
+	if (ce === "bundled" || ce === "bun") return false;
+	return true;
+}
+
 function normalizeServerConfig(raw: ServerConfig): ServerConfig {
 	const cap = raw.capabilities;
 	return {
@@ -72,9 +92,10 @@ function normalizeServerConfig(raw: ServerConfig): ServerConfig {
 			: undefined,
 		chatEngine: raw.chatEngine ?? raw.provider ?? "ollama",
 		piDrivesChat: raw.piDrivesChat ?? false,
-		piChatEngineRequested: raw.piChatEngineRequested ?? false,
+		piChatEngineRequested: normalizePiChatEngineRequested(raw),
 		piChatEngineWired: raw.piChatEngineWired ?? false,
 		piBinaryResolved: raw.piBinaryResolved ?? false,
+		workspaceDotPiPresent: raw.workspaceDotPiPresent === true,
 		orchestratorTools: raw.orchestratorTools ?? false,
 		orchestratorBash: raw.orchestratorBash ?? false,
 		clawHostRepoRoot: typeof raw.clawHostRepoRoot === "string" ? raw.clawHostRepoRoot : undefined,

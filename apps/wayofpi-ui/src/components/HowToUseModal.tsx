@@ -129,9 +129,9 @@ function SectionWelcome() {
 
 			<DevBox>
 				Way of Pi runs a <Chip>Bun</Chip> server (<Chip>apps/wayofpi-ui/server/</Chip>) and a Vite+React
-				frontend. Chat uses <Chip>WOP_CHAT_ENGINE</Chip> to route turns: <Chip>pi</Chip> runs headless{" "}
-				<Chip>pi --mode json</Chip> for real extensions and tools; <Chip>auto</Chip> falls back to direct
-				Ollama/OpenRouter when the Pi CLI isn't found. See{" "}
+				frontend. Chat uses <Chip>WOP_CHAT_ENGINE</Chip> to route turns: when unset or <Chip>auto</Chip>, the
+				server uses headless <Chip>pi --mode json</Chip> when the Pi CLI resolves, otherwise direct
+				Ollama/OpenRouter; <Chip>pi</Chip> requires Pi; <Chip>bundled</Chip>/<Chip>bun</Chip> forces Bun-only. See{" "}
 				<Chip>docs/WOP_PI_BACKEND_WIRING_PLAN.md</Chip> for the wiring map.
 			</DevBox>
 		</>
@@ -621,8 +621,8 @@ function SectionForDevelopers() {
 				full power — real tools, extensions, <Chip>dispatch_agent</Chip>, slash commands — set:
 			</P>
 			<div className="mb-4 overflow-hidden rounded-xl border border-[#3c3c3c] bg-[#1a1a1a]">
-				<Row label={<Chip>WOP_CHAT_ENGINE</Chip>} value={<><Chip>pi</Chip> — always use Pi CLI · <Chip>auto</Chip> — Pi when available, Ollama/OpenRouter fallback · <em>unset</em> — direct provider only</>} />
-				<Row label={<Chip>WOP_PI_BINARY</Chip>} value="Path to the pi CLI binary (default: resolves from PATH)" />
+				<Row label={<Chip>WOP_CHAT_ENGINE</Chip>} value={<><Chip>pi</Chip> — require Pi CLI · <Chip>auto</Chip> or <em>unset</em> — Pi JSON when <Chip>pi</Chip> resolves, else provider · <Chip>bundled</Chip>/<Chip>bun</Chip> — Bun-only</>} />
+				<Row label={<Chip>WOP_PI_BINARY</Chip>} value="Absolute path to the pi CLI; leading ~/ is expanded. If unset, the server uses PATH (Bun.which)." />
 				<Row label={<Chip>WOP_HOME</Chip>} value="Isolates Pi's ~/.pi equivalent — useful for multi-project setups" />
 				<Row label={<Chip>WOP_WORKSPACE</Chip>} value="Pre-set the workspace folder at server boot" />
 				<Row label={<Chip>WOP_LLM_PROVIDER</Chip>} value={<><Chip>ollama</Chip> or <Chip>openrouter</Chip></>} />

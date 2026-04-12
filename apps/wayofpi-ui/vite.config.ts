@@ -151,9 +151,19 @@ function wayofpiDevStartApiPlugin(): Plugin {
 	};
 }
 
+/** Dev server bind: `local` = loopback only; anything else = passed to Vite `server.host` (`true` = all interfaces, LAN-friendly). */
+const viteHostEnv = String(process.env.WOP_VITE_HOST ?? "").trim().toLowerCase();
+const viteServerHost =
+	viteHostEnv === "" || viteHostEnv === "lan" || viteHostEnv === "all"
+		? true
+		: viteHostEnv === "local" || viteHostEnv === "localhost" || viteHostEnv === "loopback"
+			? "127.0.0.1"
+			: process.env.WOP_VITE_HOST?.trim() || true;
+
 export default defineConfig({
 	plugins: [wayofpiDevStartApiPlugin(), react()],
 	server: {
+		host: viteServerHost,
 		proxy: {
 			"/api": { target: "http://127.0.0.1:3333", changeOrigin: true },
 			// Longer path first so `/ws` does not steal terminal upgrades.

@@ -12,14 +12,21 @@ import { streamPiJsonChatTurn } from "./pi-json-mode-chat";
 
 export { resolvePiBinaryPath } from "./pi-binary";
 
-/** Normalized `WOP_CHAT_ENGINE`: **`pi`** (require Pi), **`auto`** (Pi if CLI resolves), else **bundled** (Bun → provider). */
+/**
+ * Normalized `WOP_CHAT_ENGINE`:
+ * - **`pi`** — require Pi (error if CLI missing).
+ * - **`auto`** — Pi JSON when `pi` resolves, else Bun → provider.
+ * - **`bundled`** / **`bun`** — force interim Bun path (no headless Pi), even if `pi` is on PATH.
+ * - **Unset** or **any other value** (e.g. legacy **`ollama`** / **`openrouter`** mistaken for the LLM provider) — treated as **`auto`**, so headless Pi is used when the **`pi`** CLI resolves.
+ */
 export type WopChatEngineMode = "pi" | "auto" | "bundled";
 
 export function wopChatEngineFromEnv(): WopChatEngineMode {
 	const v = (process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase();
 	if (v === "pi") return "pi";
 	if (v === "auto") return "auto";
-	return "bundled";
+	if (v === "bundled" || v === "bun") return "bundled";
+	return "auto";
 }
 
 let piJsonChatRuntimeOverride: boolean | undefined;

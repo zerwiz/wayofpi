@@ -14,6 +14,28 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const preloadPath = path.join(__dirname, "preload.mjs");
 
+/** Match **`start-wayofpi-ui.sh`** so spawned Bun can **`which pi`** like a login-ish shell. */
+function wayofpiEnrichedPath(base) {
+	const sep = process.platform === "win32" ? ";" : ":";
+	const home = process.env.HOME || process.env.USERPROFILE || "";
+	const parts = [];
+	if (home) {
+		parts.push(
+			path.join(home, ".bun", "bin"),
+			path.join(home, ".local", "bin"),
+			path.join(home, ".cargo", "bin"),
+			path.join(home, ".nix-profile", "bin"),
+		);
+	}
+	if (process.platform === "darwin") {
+		parts.push("/opt/homebrew/bin", "/usr/local/bin");
+	}
+	parts.push("/usr/local/bin", "/usr/bin", "/bin");
+	const head = parts.filter(Boolean).join(sep);
+	const tail = String(base ?? "").trim();
+	return tail ? `${head}${sep}${tail}` : head;
+}
+
 // Prefer overlay-style scrollbars where Chromium still exposes them (Windows Electron vs Chrome).
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar");
 
@@ -238,7 +260,11 @@ function registerWopShellIpc() {
 				cwd: wayofpiUiRoot,
 				detached: true,
 				stdio: "ignore",
-				env: { ...process.env, NODE_ENV: "development" },
+				env: {
+					...process.env,
+					NODE_ENV: "development",
+					PATH: wayofpiEnrichedPath(process.env.PATH),
+				},
 			});
 			child.on("error", (err) => {
 				console.error("[wayofpi] failed to spawn Bun server:", err);

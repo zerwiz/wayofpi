@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Way of Pi → upstream Pi: load playground **`.env`** (same idea as **`ppi`** / **`just pi`**),
+# then **`exec pi`** with the **current working directory unchanged** (Bun sets cwd to the opened workspace for **`pi --mode json`**).
+set -euo pipefail
+_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
+if [[ -f "$_ROOT/.env" ]]; then
+	set -a
+	# shellcheck source=/dev/null
+	source "$_ROOT/.env"
+	set +a
+fi
+if ! command -v pi >/dev/null 2>&1; then
+	echo "wop-headless-pi: no 'pi' on PATH after sourcing $_ROOT/.env (install Pi CLI or extend PATH in .env)" >&2
+	exit 127
+fi
+exec pi "$@"

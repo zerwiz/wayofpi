@@ -1,5 +1,6 @@
 /**
- * Claw Phase D — opt-in timer that reads workspace schedules and runs headless Pi turns.
+ * Claw Phase D — opt-in timer that reads workspace schedules and runs automations via
+ * **`executeClawAutomation`** → **`runPiChatTurn`** (**`pi-agent-runtime`**, same as Chat).
  * Enable with **`WOP_CLAW_SCHEDULER=1`** (or **`true`** / **`on`**).
  */
 import { cronMatchesInstant } from "../shared/claw-schedule-cron.ts";

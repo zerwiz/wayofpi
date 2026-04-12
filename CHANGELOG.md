@@ -10,11 +10,37 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Changed
 
+- **Way of Pi UI — per-shell chat:** **Simple**, **Technical**, and **Claw** each keep separate session tabs, transcripts, persisted plan/build + agent picks, and **`activate_session`** / JSONL keys (**`useWayOfPiSession`** `surfaceId` + **`wireSessionKeyForSurface`**). Technical defaults to orchestrator; only Claw auto-selects the **`claw`** agent when present.
+
+- **Chat engine default:** when **`WOP_CHAT_ENGINE`** is **unset**, the Way of Pi Bun server now behaves like **`auto`** (headless **`pi --mode json`** when the **`pi`** CLI resolves, otherwise the interim Bun provider). Set **`WOP_CHAT_ENGINE=bundled`** or **`bun`** to force Bun-only. **Non-keyword values** (e.g. mistaken **`WOP_CHAT_ENGINE=ollama`**) are treated as **`auto`**, not Bun-only — use **`WOP_LLM_PROVIDER`** for ollama vs openrouter. Docs and Mission copy updated (**`server/pi-agent-runtime.ts`**, **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`**, **`apps/wayofpi-ui/README.md`**, **`.env.sample`**).
+
 - **Claw help + product doc:** Schedule **Phase D** messaging updated — definitions and runs use host **`.claw/schedule/`**, **`WOP_CLAW_SCHEDULER=1`** runs headless Pi turns when Pi drives chat; help modal / **`docs/WOP_CLAW_MODE_PLAN.md`** no longer describe schedules as browser-only or “Phase D stub.”
 
 - **Claw Schedule tab UX:** **`GET/PUT /api/claw/schedules`** and **`GET /api/claw/mission-events`** are registered early in the Bun API router (fewer stale-route 404s). The tab shows **loading** until the first server sync, surfaces **sync errors**, and replaces the always-orange “Server execution” strip with **contextual** status (green when Pi + scheduler are on, blue info when only env/setup is missing). **`apps/wayofpi-ui/.env.sample`** comment for **`WOP_CLAW_SCHEDULER`** points at **`.claw/schedule/`**.
 
+### Changed
+
+- **Claw Mission → Engine status:** With **`WOP_CHAT_ENGINE=auto`** or **unset**, missing **`pi`** is shown as a **neutral / OK** “Bun chat — Pi optional” row (expected fallback), not an error. **Orange** remains for **`WOP_CHAT_ENGINE=pi`** without a CLI, Bun-only **`bundled`/`bun`**, or Pi installed but JSON off.
+
+- **Claw Mission — overall “healthy” chrome:** the top status strip is **red** when disconnected, **orange** only when the engine row is a real problem (not loading / not planned OK), and **subtle green** when connected and the engine is OK or planned. **Orchestrator tools** uses a warning icon only while config loads; with **`piDrivesChat`** it states Pi-owned tools; with interim Bun chat and tools off it is **OK + planned** (plain completions) instead of an error.
+
+### Changed
+
+- **`GET /api/config`** adds **`workspaceDotPiPresent`** when the opened workspace contains a **`.pi/`** directory (config only). Claw Mission uses it to explain that **`.pi/`** is not the Pi **executable**.
+
+- **Engine messaging (Mission + status model label):** Clarifies that Technical **Orchestrator** + streamed **thinking** can run on **Bun → LLM** while Mission’s “Pi” row refers to resolving the **`pi`** CLI for **`pi --mode json`**. Model strip shows **`Bun · …`** when not **`piDrivesChat`** so it is not mistaken for the Pi engine.
+
 ### Fixed
+
+- **Pi resolution + playground `.env` (ppi-style):** when bare **`pi`** is not on the Bun process PATH but is exported from the repo **`.env`**, **`resolvePiBinaryPath()`** can fall back to **`scripts/wop-headless-pi`** (sources playground `.env`, preserves workspace cwd, **`exec pi`**). Same “load `.env` then Pi” idea as **`ppi` → `just pi`**, without **`cd`** to the playground root.
+
+- **Claw Mission vs Chat Pi:** Schedules / channels row now prefers **`clawAutomation` embedded in the same `GET /api/config` as Engine**, and treats **`config.piDrivesChat`** as Pi-ready for Claw so the UI cannot show “Pi not ready for automations” while Engine already shows Pi driving chat.
+
+- **Pi CLI resolution under thin PATH:** **`resolvePiBinaryPath()`** now checks common install locations after **`Bun.which("pi")`** (**`~/.local/bin`**, **`~/.cargo/bin`**, **`/opt/homebrew/bin`** on macOS, **`/usr/local/bin`**). Electron dev’s **“Start service”** Bun spawn prepends the same PATH prefixes as **`start-wayofpi-ui.sh`**, so headless Pi is found more often without **`WOP_PI_BINARY`**.
+
+- **`WOP_PI_BINARY` tilde:** **`~/…`** (and lone **`~`**) in **`WOP_PI_BINARY`** is expanded to the server user’s home directory before **`existsSync`** / spawns, matching shell expectations (**`server/pi-binary.ts`**, **`server/diagnostics.ts`** probe).
+
+- **`GET /api/config` client normalization:** **`piChatEngineRequested`** is no longer forced to **`false`** when the server omits the field (undefined). Legacy payloads that paired **`piChatEngineRequested: false`** with **`chatEngine: ollama`** / **`openrouter`** (old mis-mapping of provider into **`WOP_CHAT_ENGINE`**) are treated as Pi/auto intent so Mission does not show the misleading “bundled or bun” engine row.
 
 - **Claw Channels — Telegram integration hints:** **`GET /api/config`** / **`GET /api/claw/telegram/status`** now treat **`pi-telegram`** as present when it appears in the **Way of Pi host checkout** **`.pi/settings.json`**, not only in opened **`WOP_WORKSPACE`** roots (common when Claw runs against another project folder). Channels phase notice copy cleaned up.
 

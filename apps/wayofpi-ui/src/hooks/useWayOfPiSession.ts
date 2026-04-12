@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import {
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+	type MutableRefObject,
+	type SetStateAction,
+} from "react";
 import { reconcileQueuedTranscript, type ChatQueueItem } from "../utils/chatQueueTranscript";
 import { contextMeterBlocks, fmtTok } from "../utils/tokenMeterFormat";
 
@@ -70,16 +77,86 @@ function scrubLegacyStoredOllamaModel(): void {
 const CHAT_MODE_STORAGE_KEY = "wayofpi.chatMode";
 const CHAT_AGENT_STORAGE_KEY = "wayofpi.chatAgent";
 
+/** UI shell surface: each gets its own chat tabs, transcript, JSONL session key prefix, and persisted mode/agent. */
+export type ChatSessionSurfaceId = "simple" | "technical" | "claw";
+
 export type ChatSessionMode = "build" | "plan";
 
-function readStoredChatMode(): ChatSessionMode {
+function chatModeScopedKey(surface: ChatSessionSurfaceId): string {
+	return `wayofpi.chatMode.${surface}`;
+}
+
+function chatAgentScopedKey(surface: ChatSessionSurfaceId): string {
+	return `wayofpi.chatAgent.${surface}`;
+}
+
+/** Match server **`sanitizeSessionKey`** (`server/wop-session-jsonl.ts`) for `session_transcript` correlation. */
+function clientSanitizeSessionKey(raw: string): string {
+	const t = raw.trim().slice(0, 200).replace(/[^a-zA-Z0-9._-]/g, "_");
+	return t.length > 0 ? t : "session";
+}
+
+export function wireSessionKeyForSurface(surface: ChatSessionSurfaceId, tabId: string): string {
+	return `${surface}.${tabId}`;
+}
+
+function readStoredChatModeForSurface(surface: ChatSessionSurfaceId): ChatSessionMode {
 	try {
-		const v = localStorage.getItem(CHAT_MODE_STORAGE_KEY);
-		if (v === "plan" || v === "build") return v;
+		if (typeof window === "undefined") return "build";
+		const scoped = window.localStorage.getItem(chatModeScopedKey(surface));
+		if (scoped === "plan" || scoped === "build") return scoped;
+		if (surface === "technical") {
+			const legacy = window.localStorage.getItem(CHAT_MODE_STORAGE_KEY);
+			if (legacy === "plan" || legacy === "build") return legacy;
+		}
 	} catch {
 		/* ignore */
 	}
 	return "build";
+}
+
+function writeStoredChatModeForSurface(surface: ChatSessionSurfaceId, mode: ChatSessionMode): void {
+	try {
+		window.localStorage.setItem(chatModeScopedKey(surface), mode);
+		if (surface === "technical") window.localStorage.setItem(CHAT_MODE_STORAGE_KEY, mode);
+	} catch {
+		/* ignore */
+	}
+}
+
+function readStoredChatAgentForSurface(surface: ChatSessionSurfaceId): string | null {
+	try {
+		if (typeof window === "undefined") return null;
+		const scoped = window.localStorage.getItem(chatAgentScopedKey(surface))?.trim();
+		if (scoped) {
+			if (surface !== "claw" && scoped.toLowerCase() === "claw") return null;
+			return scoped;
+		}
+		if (surface === "technical") {
+			const legacy = window.localStorage.getItem(CHAT_AGENT_STORAGE_KEY)?.trim();
+			if (!legacy || legacy.toLowerCase() === "claw") return null;
+			return legacy;
+		}
+	} catch {
+		/* ignore */
+	}
+	return null;
+}
+
+function writeStoredChatAgentForSurface(surface: ChatSessionSurfaceId, name: string | null): void {
+	try {
+		const store =
+			name && !(surface !== "claw" && name.trim().toLowerCase() === "claw") ? name.trim() : null;
+		if (store) {
+			window.localStorage.setItem(chatAgentScopedKey(surface), store);
+			if (surface === "technical") window.localStorage.setItem(CHAT_AGENT_STORAGE_KEY, store);
+		} else {
+			window.localStorage.removeItem(chatAgentScopedKey(surface));
+			if (surface === "technical") window.localStorage.removeItem(CHAT_AGENT_STORAGE_KEY);
+		}
+	} catch {
+		/* ignore */
+	}
 }
 
 const TOKEN_METER_EMPTY = {
@@ -134,16 +211,6 @@ type TokenMeterState = {
 	tokensTitle: string;
 };
 
-function readStoredChatAgent(): string | null {
-	try {
-		const v = localStorage.getItem(CHAT_AGENT_STORAGE_KEY)?.trim();
-		return v || null;
-	} catch {
-		/* ignore */
-	}
-	return null;
-}
-
 export interface ChatRow {
 	id: string;
 	role: "user" | "assistant";
@@ -194,12 +261,38 @@ function manualTabLabel(raw: string): string {
 	return `${single.slice(0, TAB_TITLE_MAX_CHARS - 1)}…`;
 }
 
+type SurfaceSlice = {
+	chatTabs: ChatSessionTab[];
+	activeChatTabId: string;
+	rowsByTab: Record<string, ChatRow[]>;
+	chatMode: ChatSessionMode;
+	chatAgentName: string | null;
+};
+
+function createInitialSurface(surface: ChatSessionSurfaceId, salt: string): SurfaceSlice {
+	const tid = `t-${Date.now()}-${salt}-${Math.random().toString(36).slice(2, 9)}`;
+	return {
+		chatTabs: [{ id: tid, label: "New Chat" }],
+		activeChatTabId: tid,
+		rowsByTab: { [tid]: [] },
+		chatMode: typeof window !== "undefined" ? readStoredChatModeForSurface(surface) : "build",
+		chatAgentName: typeof window !== "undefined" ? readStoredChatAgentForSurface(surface) : null,
+	};
+}
+
 function wsUrl(): string {
 	const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
 	return `${proto}//${window.location.host}/ws`;
 }
 
+/**
+ * Single WebSocket, **three** in-memory chat surfaces (`simple`, `technical`, `claw`): separate tab stacks,
+ * row maps, persisted mode/agent keys, and `activate_session` keys so server JSONL never collides across shells.
+ * Pass the current shell as `surfaceId` (in `App.tsx`, the active `uiMode`).
+ */
 export function useWayOfPiSession(
+	/** Active UI shell — must match `App` `uiMode` so Simple / Technical / Claw never share one transcript. */
+	surfaceId: ChatSessionSurfaceId,
 	onTreeRefresh?: () => void,
 	/** When ref is true, assistant deltas are buffered and applied once on `done` (Simple UI “streaming off”). */
 	bufferAssistantDeltasRef?: MutableRefObject<boolean>,
@@ -208,22 +301,22 @@ export function useWayOfPiSession(
 	/** Open/focus a workspace-relative path after orchestrator **`write`** (new file or overwrite). */
 	onFocusWorkspaceFile?: (path: string) => void,
 ) {
-	const initialTabIdRef = useRef<string | null>(null);
-	if (initialTabIdRef.current == null) {
-		initialTabIdRef.current = `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-	}
-	const initialTabId = initialTabIdRef.current;
+	const surfaceIdRef = useRef(surfaceId);
+	surfaceIdRef.current = surfaceId;
 
-	const [connected, setConnected] = useState(false);
-	const [chatTabs, setChatTabs] = useState<ChatSessionTab[]>([
-		{ id: initialTabId, label: "New Chat" },
-	]);
-	const [activeChatTabId, setActiveChatTabId] = useState(initialTabId);
-	const [rowsByTab, setRowsByTab] = useState<Record<string, ChatRow[]>>(() => ({
-		[initialTabId]: [],
+	const [surfaces, setSurfaces] = useState<Record<ChatSessionSurfaceId, SurfaceSlice>>(() => ({
+		simple: createInitialSurface("simple", "s"),
+		technical: createInitialSurface("technical", "t"),
+		claw: createInitialSurface("claw", "c"),
 	}));
+	const surfacesRef = useRef(surfaces);
+	surfacesRef.current = surfaces;
+
+	const slice = surfaces[surfaceId];
+	const { chatTabs, activeChatTabId, rowsByTab, chatMode, chatAgentName } = slice;
 	const rows = rowsByTab[activeChatTabId] ?? [];
 
+	const [connected, setConnected] = useState(false);
 	const [logs, setLogs] = useState<LogRow[]>([]);
 	const [streaming, setStreaming] = useState(false);
 	/** Server-side count of user messages waiting after the in-flight assistant turn. */
@@ -236,12 +329,6 @@ export function useWayOfPiSession(
 	const [effectiveModel, setEffectiveModel] = useState<string | null>(() => readStoredLlmModelId());
 	/** From **`ready`** / **`model_set`** — same source as the Bun chat session (not only `/api/config`). */
 	const [llmProviderFromSocket, setLlmProviderFromSocket] = useState<string | null>(null);
-	const [chatMode, setChatModeState] = useState<ChatSessionMode>(() =>
-		typeof window !== "undefined" ? readStoredChatMode() : "build",
-	);
-	const [chatAgentName, setChatAgentNameState] = useState<string | null>(() =>
-		typeof window !== "undefined" ? readStoredChatAgent() : null,
-	);
 	/** Phrase-dispatch specialist for this assistant turn only (picker / `agent` unchanged). */
 	const [dispatchTurnAgent, setDispatchTurnAgent] = useState<string | null>(null);
 	const [tokenMeter, setTokenMeter] = useState<TokenMeterState>(() => ({ ...TOKEN_METER_EMPTY }));
@@ -264,36 +351,60 @@ export function useWayOfPiSession(
 	const chatTabsRef = useRef(chatTabs);
 
 	useEffect(() => {
-		activeChatTabIdRef.current = activeChatTabId;
-	}, [activeChatTabId]);
-	useEffect(() => {
-		rowsByTabRef.current = rowsByTab;
-	}, [rowsByTab]);
-	useEffect(() => {
-		chatTabsRef.current = chatTabs;
-	}, [chatTabs]);
-	useEffect(() => {
-		chatAgentNameRef.current = chatAgentName;
-	}, [chatAgentName]);
+		activeChatTabIdRef.current = slice.activeChatTabId;
+		rowsByTabRef.current = slice.rowsByTab;
+		chatTabsRef.current = slice.chatTabs;
+		chatAgentNameRef.current = slice.chatAgentName;
+	}, [slice.activeChatTabId, slice.rowsByTab, slice.chatTabs, slice.chatAgentName]);
 	useEffect(() => {
 		dispatchTurnAgentRef.current = dispatchTurnAgent;
 	}, [dispatchTurnAgent]);
 
 	/** Empty tabs show **New Chat**; normalize legacy **Session Chat** / **New chat** when there are no user rows yet. */
 	useEffect(() => {
-		setChatTabs((tabs) => {
-			const next = tabs.map((t) => {
-				const r = rowsByTab[t.id] ?? [];
-				const hasUser = r.some((row) => row.role === "user");
-				if (hasUser) return t;
-				if (t.label === "Session Chat" || t.label === "New chat") return { ...t, label: "New Chat" };
-				return t;
-			});
-			return next.some((t, i) => t !== tabs[i]) ? next : tabs;
+		setSurfaces((prev) => {
+			let any = false;
+			const next: Record<ChatSessionSurfaceId, SurfaceSlice> = { ...prev };
+			for (const sid of ["simple", "technical", "claw"] as const) {
+				const s = next[sid];
+				const mapped = s.chatTabs.map((t) => {
+					const r = s.rowsByTab[t.id] ?? [];
+					const hasUser = r.some((row) => row.role === "user");
+					if (hasUser) return t;
+					if (t.label === "Session Chat" || t.label === "New chat") return { ...t, label: "New Chat" };
+					return t;
+				});
+				if (mapped.some((t, i) => t !== s.chatTabs[i])) {
+					next[sid] = { ...s, chatTabs: mapped };
+					any = true;
+				}
+			}
+			if (!any) return prev;
+			surfacesRef.current = next;
+			return next;
 		});
-	}, [rowsByTab]);
+	}, [surfaces]);
 
 	const shouldBufferDeltas = () => bufferAssistantDeltasRef?.current === true;
+
+	const patchActiveSurface = useCallback((fn: (s: SurfaceSlice) => SurfaceSlice) => {
+		setSurfaces((prev) => {
+			const sid = surfaceIdRef.current;
+			const next = { ...prev, [sid]: fn(prev[sid]) };
+			surfacesRef.current = next;
+			return next;
+		});
+	}, []);
+
+	const setRowsByTab = useCallback(
+		(updater: SetStateAction<Record<string, ChatRow[]>>) => {
+			patchActiveSurface((cur) => ({
+				...cur,
+				rowsByTab: typeof updater === "function" ? (updater as (p: Record<string, ChatRow[]>) => Record<string, ChatRow[]>)(cur.rowsByTab) : updater,
+			}));
+		},
+		[patchActiveSurface],
+	);
 
 	const WS_ERROR_HINT =
 		"Chat WebSocket unreachable — start the Bun server on port 3333 (from apps/wayofpi-ui: npm run dev, or: bun run server/index.ts). Vite-only (npm run dev:ui) does not include the server.";
@@ -328,10 +439,14 @@ export function useWayOfPiSession(
 			if (prior.some((r) => r.role === "user")) return;
 			const title = tabTitleFromUserMessage(userContent);
 			if (!title) return;
-			setChatTabs((tabs) => {
-				const next = tabs.map((t) => (t.id === tabId ? { ...t, label: title } : t));
-				chatTabsRef.current = next;
-				return next;
+			const sid = surfaceIdRef.current;
+			setSurfaces((prev) => {
+				const cur = prev[sid];
+				const nextTabs = cur.chatTabs.map((t) => (t.id === tabId ? { ...t, label: title } : t));
+				if (nextTabs.every((t, i) => t === cur.chatTabs[i])) return prev;
+				const out = { ...prev, [sid]: { ...cur, chatTabs: nextTabs } };
+				surfacesRef.current = out;
+				return out;
 			});
 		};
 
@@ -357,12 +472,13 @@ export function useWayOfPiSession(
 				queueMicrotask(() => {
 					const w = wsRef.current;
 					if (!w || w.readyState !== WebSocket.OPEN) return;
+					const sid = surfaceIdRef.current;
 					const id = activeChatTabIdRef.current;
 					const tabRows = rowsByTabRef.current[id] ?? [];
 					w.send(
 						JSON.stringify({
 							type: "activate_session",
-							sessionKey: id,
+							sessionKey: wireSessionKeyForSurface(sid, id),
 							transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
 						}),
 					);
@@ -404,16 +520,16 @@ export function useWayOfPiSession(
 						const displayId = saved && saved !== eff ? saved : eff || saved;
 						if (displayId) setEffectiveModel(displayId);
 						const srvMode = data.chatMode === "plan" || data.chatMode === "build" ? data.chatMode : "build";
-						const want = readStoredChatMode();
-						setChatModeState(want);
+						const sidReady = surfaceIdRef.current;
+						const curSlice = surfacesRef.current[sidReady];
+						const want = curSlice.chatMode;
+						const wantAgent = curSlice.chatAgentName;
+						chatAgentNameRef.current = wantAgent;
 						if (want !== srvMode && ws.readyState === WebSocket.OPEN) {
 							ws.send(JSON.stringify({ type: "set_chat_mode", mode: want }));
 						}
 						const srvAgent =
 							data.agentName === null || typeof data.agentName === "string" ? data.agentName : null;
-						const wantAgent = readStoredChatAgent();
-						chatAgentNameRef.current = wantAgent;
-						setChatAgentNameState(wantAgent);
 						if (wantAgent !== srvAgent && ws.readyState === WebSocket.OPEN) {
 							ws.send(JSON.stringify({ type: "set_agent", agent: wantAgent }));
 						}
@@ -437,24 +553,29 @@ export function useWayOfPiSession(
 					}
 				if (type === "chat_mode") {
 					const m = data.mode === "plan" || data.mode === "build" ? data.mode : "build";
-					setChatModeState(m);
-					try {
-						localStorage.setItem(CHAT_MODE_STORAGE_KEY, m);
-					} catch {
-						/* ignore */
-					}
+					const sidCm = surfaceIdRef.current;
+					writeStoredChatModeForSurface(sidCm, m);
+					setSurfaces((prev) => {
+						const cur = prev[sidCm];
+						if (cur.chatMode === m) return prev;
+						const out = { ...prev, [sidCm]: { ...cur, chatMode: m } };
+						surfacesRef.current = out;
+						return out;
+					});
 					return;
 				}
 				if (type === "agent") {
 					const n = data.name === null || typeof data.name === "string" ? data.name : null;
 					chatAgentNameRef.current = n;
-					setChatAgentNameState(n);
-					try {
-						if (n) localStorage.setItem(CHAT_AGENT_STORAGE_KEY, n);
-						else localStorage.removeItem(CHAT_AGENT_STORAGE_KEY);
-					} catch {
-						/* ignore */
-					}
+					const sidAg = surfaceIdRef.current;
+					writeStoredChatAgentForSurface(sidAg, n);
+					setSurfaces((prev) => {
+						const cur = prev[sidAg];
+						if (cur.chatAgentName === n) return prev;
+						const out = { ...prev, [sidAg]: { ...cur, chatAgentName: n } };
+						surfacesRef.current = out;
+						return out;
+					});
 					return;
 				}
 				if (type === "model_set") {
@@ -724,11 +845,14 @@ export function useWayOfPiSession(
 				if (type === "session_transcript") {
 					const sk = String(data.sessionKey ?? "");
 					const turns = Array.isArray(data.turns) ? data.turns : [];
-					if (!sk || sk !== activeChatTabIdRef.current) return;
+					const sidTr = surfaceIdRef.current;
+					const tabIdTr = activeChatTabIdRef.current;
+					const expectSk = clientSanitizeSessionKey(wireSessionKeyForSurface(sidTr, tabIdTr));
+					if (!sk || sk !== expectSk) return;
 					const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
 					setRowsByTab((prev) => ({
 						...prev,
-						[sk]: turns.map((row: unknown, i: number) => {
+						[tabIdTr]: turns.map((row: unknown, i: number) => {
 							const r = row as { role?: string; content?: string };
 							const role = r.role === "assistant" ? "assistant" : "user";
 							return {
@@ -835,7 +959,49 @@ export function useWayOfPiSession(
 			}
 		};
 		// bufferAssistantDeltasRef is read via .current inside handlers; omit from deps to avoid reconnecting the socket.
-	}, [onTreeRefresh]);
+	}, [onTreeRefresh, setRowsByTab]);
+
+	const prevSurfaceSwitchRef = useRef<ChatSessionSurfaceId | null>(null);
+	useEffect(() => {
+		const prev = prevSurfaceSwitchRef.current;
+		if (prev === surfaceId) return;
+		prevSurfaceSwitchRef.current = surfaceId;
+		if (prev === null) return;
+
+		const sid = surfaceId;
+		const s = surfacesRef.current[sid];
+		const tabId = s.activeChatTabId;
+		const tabRows = s.rowsByTab[tabId] ?? [];
+		activeChatTabIdRef.current = tabId;
+		rowsByTabRef.current = s.rowsByTab;
+		chatTabsRef.current = s.chatTabs;
+		chatAgentNameRef.current = s.chatAgentName;
+		prevQueueSnapshotRef.current = [];
+		setChatQueueItems([]);
+		setChatQueuePending(0);
+		setTokenMeter({ ...TOKEN_METER_EMPTY });
+		setChatPulseMeters(null);
+		dispatchTurnAgentRef.current = null;
+		setDispatchTurnAgent(null);
+		setStreaming(false);
+		assistantIdRef.current = null;
+		bufferThisTurnRef.current = false;
+		bufferedAssistantRef.current = "";
+		bufferedReasoningRef.current = "";
+
+		const ws = wsRef.current;
+		if (ws && ws.readyState === WebSocket.OPEN) {
+			ws.send(
+				JSON.stringify({
+					type: "activate_session",
+					sessionKey: wireSessionKeyForSurface(sid, tabId),
+					transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
+				}),
+			);
+			ws.send(JSON.stringify({ type: "set_chat_mode", mode: s.chatMode }));
+			ws.send(JSON.stringify({ type: "set_agent", agent: s.chatAgentName }));
+		}
+	}, [surfaceId]);
 
 	const sendChat = useCallback((text: string) => {
 		const t = text.trim();
@@ -876,33 +1042,27 @@ export function useWayOfPiSession(
 	);
 
 	const setChatMode = useCallback((mode: ChatSessionMode) => {
-		setChatModeState(mode);
-		try {
-			localStorage.setItem(CHAT_MODE_STORAGE_KEY, mode);
-		} catch {
-			/* ignore */
-		}
+		const sid = surfaceIdRef.current;
+		writeStoredChatModeForSurface(sid, mode);
+		patchActiveSurface((cur) => (cur.chatMode === mode ? cur : { ...cur, chatMode: mode }));
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({ type: "set_chat_mode", mode }));
 		}
-	}, []);
+	}, [patchActiveSurface]);
 
 	const setChatAgent = useCallback((name: string | null) => {
-		const next = name?.trim() || null;
+		let next = name?.trim() || null;
+		const sid = surfaceIdRef.current;
+		if (sid !== "claw" && next?.toLowerCase() === "claw") next = null;
 		chatAgentNameRef.current = next;
-		setChatAgentNameState(next);
-		try {
-			if (next) localStorage.setItem(CHAT_AGENT_STORAGE_KEY, next);
-			else localStorage.removeItem(CHAT_AGENT_STORAGE_KEY);
-		} catch {
-			/* ignore */
-		}
+		writeStoredChatAgentForSurface(sid, next);
+		patchActiveSurface((cur) => (cur.chatAgentName === next ? cur : { ...cur, chatAgentName: next }));
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({ type: "set_agent", agent: next }));
 		}
-	}, []);
+	}, [patchActiveSurface]);
 
 	const setLlmModel = useCallback((modelId: string) => {
 		const id = modelId.trim();
@@ -940,12 +1100,19 @@ export function useWayOfPiSession(
 
 	const startNewSession = useCallback(() => {
 		const newId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-		setChatTabs((tabs) => [...tabs, { id: newId, label: "New Chat" }]);
-		setActiveChatTabId(newId);
-		activeChatTabIdRef.current = newId;
+		const sid = surfaceIdRef.current;
+		patchActiveSurface((cur) => ({
+			...cur,
+			chatTabs: [...cur.chatTabs, { id: newId, label: "New Chat" }],
+			activeChatTabId: newId,
+			rowsByTab: { ...cur.rowsByTab, [newId]: [] },
+		}));
+		const s = surfacesRef.current[sid];
+		activeChatTabIdRef.current = s.activeChatTabId;
+		rowsByTabRef.current = s.rowsByTab;
+		chatTabsRef.current = s.chatTabs;
 		prevQueueSnapshotRef.current = [];
 		setChatQueueItems([]);
-		setRowsByTab((prev) => ({ ...prev, [newId]: [] }));
 		setTokenMeter({ ...TOKEN_METER_EMPTY });
 		setChatPulseMeters(null);
 		dispatchTurnAgentRef.current = null;
@@ -961,50 +1128,54 @@ export function useWayOfPiSession(
 			ws.send(
 				JSON.stringify({
 					type: "activate_session",
-					sessionKey: newId,
+					sessionKey: wireSessionKeyForSurface(sid, newId),
 					transcript: [],
 				}),
 			);
 		}
-	}, []);
+	}, [patchActiveSurface]);
 
 	const selectChatTab = useCallback((id: string) => {
 		if (id === activeChatTabIdRef.current) return;
-		activeChatTabIdRef.current = id;
-		setActiveChatTabId(id);
+		const sid = surfaceIdRef.current;
+		patchActiveSurface((cur) => ({ ...cur, activeChatTabId: id }));
+		const s = surfacesRef.current[sid];
+		activeChatTabIdRef.current = s.activeChatTabId;
+		rowsByTabRef.current = s.rowsByTab;
+		chatTabsRef.current = s.chatTabs;
 		prevQueueSnapshotRef.current = [];
 		setChatQueueItems([]);
 		setTokenMeter({ ...TOKEN_METER_EMPTY });
 		setChatPulseMeters(null);
 		dispatchTurnAgentRef.current = null;
 		setDispatchTurnAgent(null);
-		const tabRows = rowsByTabRef.current[id] ?? [];
+		const tabRows = s.rowsByTab[id] ?? [];
 		const ws = wsRef.current;
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(
 				JSON.stringify({
 					type: "activate_session",
-					sessionKey: id,
+					sessionKey: wireSessionKeyForSurface(sid, id),
 					transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
 				}),
 			);
 		}
-	}, []);
+	}, [patchActiveSurface]);
 
 	const renameChatTab = useCallback((id: string, rawLabel: string) => {
 		const label = manualTabLabel(rawLabel);
-		setChatTabs((tabs) => {
-			const next = tabs.map((t) =>
-				t.id === id ? { ...t, label, labelUserSet: true } : t,
-			);
-			chatTabsRef.current = next;
-			return next;
-		});
-	}, []);
+		const sid = surfaceIdRef.current;
+		patchActiveSurface((cur) => ({
+			...cur,
+			chatTabs: cur.chatTabs.map((t) => (t.id === id ? { ...t, label, labelUserSet: true } : t)),
+		}));
+		chatTabsRef.current = surfacesRef.current[sid].chatTabs;
+	}, [patchActiveSurface]);
 
 	const closeChatTab = useCallback(
 		(id: string) => {
 			if (streaming && activeChatTabIdRef.current === id) return;
+			const sid = surfaceIdRef.current;
 			const tabs = chatTabsRef.current;
 
 			/** Last tab cannot be removed; replace with a fresh session (same server contract as **New session**). */
@@ -1013,13 +1184,19 @@ export function useWayOfPiSession(
 				if (!only || only.id !== id) return;
 				const newId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 				const nextTabs = [{ id: newId, label: "New Chat" }];
-				chatTabsRef.current = nextTabs;
-				setChatTabs(nextTabs);
-				activeChatTabIdRef.current = newId;
-				setActiveChatTabId(newId);
+				patchActiveSurface((cur) => ({
+					chatTabs: nextTabs,
+					activeChatTabId: newId,
+					rowsByTab: { [newId]: [] },
+					chatMode: cur.chatMode,
+					chatAgentName: cur.chatAgentName,
+				}));
+				const s = surfacesRef.current[sid];
+				chatTabsRef.current = s.chatTabs;
+				activeChatTabIdRef.current = s.activeChatTabId;
+				rowsByTabRef.current = s.rowsByTab;
 				prevQueueSnapshotRef.current = [];
 				setChatQueueItems([]);
-				setRowsByTab({ [newId]: [] });
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				setChatPulseMeters(null);
 				dispatchTurnAgentRef.current = null;
@@ -1036,7 +1213,7 @@ export function useWayOfPiSession(
 					ws.send(
 						JSON.stringify({
 							type: "activate_session",
-							sessionKey: newId,
+							sessionKey: wireSessionKeyForSurface(sid, newId),
 							transcript: [],
 						}),
 					);
@@ -1054,37 +1231,41 @@ export function useWayOfPiSession(
 				: activeChatTabIdRef.current;
 			if (wasActive && !nextActiveId) return;
 
-			chatTabsRef.current = nextTabs;
-			setChatTabs(nextTabs);
-			setRowsByTab((prev) => {
-				const n = { ...prev };
+			patchActiveSurface((cur) => {
+				const n = { ...cur.rowsByTab };
 				delete n[id];
-				return n;
+				return {
+					...cur,
+					chatTabs: nextTabs,
+					rowsByTab: n,
+					...(wasActive && nextActiveId ? { activeChatTabId: nextActiveId } : {}),
+				};
 			});
-
+			const s2 = surfacesRef.current[sid];
+			chatTabsRef.current = s2.chatTabs;
+			rowsByTabRef.current = s2.rowsByTab;
 			if (wasActive && nextActiveId) {
 				activeChatTabIdRef.current = nextActiveId;
-				setActiveChatTabId(nextActiveId);
 				prevQueueSnapshotRef.current = [];
 				setChatQueueItems([]);
 				setTokenMeter({ ...TOKEN_METER_EMPTY });
 				setChatPulseMeters(null);
 				dispatchTurnAgentRef.current = null;
 				setDispatchTurnAgent(null);
-				const tabRows = rowsByTabRef.current[nextActiveId] ?? [];
+				const tabRows = s2.rowsByTab[nextActiveId] ?? [];
 				const ws = wsRef.current;
 				if (ws && ws.readyState === WebSocket.OPEN) {
 					ws.send(
 						JSON.stringify({
 							type: "activate_session",
-							sessionKey: nextActiveId,
+							sessionKey: wireSessionKeyForSurface(sid, nextActiveId),
 							transcript: tabRows.map((r) => ({ role: r.role, content: r.content })),
 						}),
 					);
 				}
 			}
 		},
-		[streaming],
+		[streaming, patchActiveSurface],
 	);
 
 	return {

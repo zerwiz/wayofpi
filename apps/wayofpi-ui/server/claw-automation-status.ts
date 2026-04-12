@@ -1,3 +1,8 @@
+/**
+ * **`piAutomationReady`** is **`shouldUsePiJsonChat()`** from **`pi-agent-runtime`** — identical
+ * to whether the Chat WebSocket would run **`pi --mode json`**. Claw schedules/webhooks reuse
+ * that gate; there is no separate Claw Pi binary or env flag.
+ */
 import { clawSchedulerEnabledFromEnv } from "./claw-scheduler";
 import {
 	clawSchedulesFilesExist,

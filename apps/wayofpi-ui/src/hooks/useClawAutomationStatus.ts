@@ -6,6 +6,9 @@ import {
 	staleWayOfPiApiMessage,
 } from "../utils/wayofpiDevApiWarmup";
 
+/** Fired after **`PUT /api/claw/schedules`** succeeds so Mission / automation UI can refresh without waiting for the poll interval. */
+export const WAYOFPI_CLAW_SCHEDULES_SYNCED_EVENT = "wayofpi:claw-schedules-synced";
+
 export type ClawAutomationStatus = {
 	version: 1;
 	piAutomationReady: boolean;
@@ -64,6 +67,14 @@ export function useClawAutomationStatus(pollMs = 20_000) {
 		const id = window.setInterval(() => void refresh(), pollMs);
 		return () => window.clearInterval(id);
 	}, [pollMs, refresh]);
+
+	useEffect(() => {
+		const on = () => {
+			void refresh();
+		};
+		window.addEventListener(WAYOFPI_CLAW_SCHEDULES_SYNCED_EVENT, on);
+		return () => window.removeEventListener(WAYOFPI_CLAW_SCHEDULES_SYNCED_EVENT, on);
+	}, [refresh]);
 
 	return { status, error, refresh, loaded };
 }

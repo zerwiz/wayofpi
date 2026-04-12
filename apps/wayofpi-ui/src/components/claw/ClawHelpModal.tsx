@@ -332,7 +332,7 @@ function SectionTabs() {
 		{
 			icon: CalendarDays,
 			name: "Schedule",
-			desc: "Define timed Pi turns — cron or one-shot — saved on the Way of Pi host under .claw/schedule/. When WOP_CLAW_SCHEDULER=1 and Pi drives chat, the Bun server runs them as headless Pi turns.",
+			desc: "Define timed Pi turns — cron or one-shot — saved on the Way of Pi host under .claw/schedule/. When WOP_CLAW_SCHEDULER=1 and the same Pi engine as Chat is active, the Bun server runs them as headless Pi turns (shared pi-agent-runtime, not a separate stack).",
 		},
 		{
 			icon: Radio,
@@ -455,9 +455,10 @@ function SectionSchedules() {
 			<Note tone="success">
 				<strong className="text-[#cccccc]">Phase D (core) is shipped:</strong> definitions and last-run
 				state live in <Code>.claw/schedule/</Code> on the host checkout (synced via the API). With{" "}
-				<Code>WOP_CLAW_SCHEDULER=1</Code> and Pi driving chat (<Code>WOP_CHAT_ENGINE=auto</Code> or{" "}
-				<Code>pi</Code> with a working <Code>pi</Code> CLI), the server timer runs enabled schedules as
-				headless Pi turns. The browser may still mirror drafts in localStorage until the server responds.
+				<Code>WOP_CLAW_SCHEDULER=1</Code> and the same headless Pi path as the Chat tab (Mission → Engine
+				shows Pi driving chat: <Code>WOP_CHAT_ENGINE</Code> auto/unset or <Code>pi</Code>,{" "}
+				<Code>pi</Code> CLI resolved, not bundled/bun), the server timer runs enabled schedules as one{" "}
+				<Code>pi --mode json</Code> turn per fire — identical runtime to a manual chat message. The browser may still mirror drafts in localStorage until the server responds.
 			</Note>
 
 			<P>
@@ -664,17 +665,17 @@ function SectionTips() {
 		{
 			icon: CalendarDays,
 			title: "Schedules on the server",
-			body: "Define automations in the Schedule tab — they persist under .claw/schedule/ on the host checkout. Set WOP_CLAW_SCHEDULER=1 and use Pi for chat so the timer can run them automatically.",
+			body: "Define automations in the Schedule tab — they persist under .claw/schedule/ on the host checkout. Set WOP_CLAW_SCHEDULER=1 and fix Mission → Engine so Pi drives chat (same runtime as sending a message); then the timer runs them automatically.",
 		},
 		{
 			icon: Zap,
 			title: "Switching modes",
-			body: "Click the mode toggle in the top-left of the menu bar to switch between Simple, Technical, and Claw. Your sessions and workspace files are unaffected.",
+			body: "Click the mode toggle in the top-left of the menu bar to switch between Simple, Technical, and Claw. Each shell keeps its own chat sessions and history; workspace files on disk are unchanged.",
 		},
 		{
 			icon: Cpu,
 			title: "Pi engine check",
-			body: "Mission → Claw status: Engine is green when Pi drives chat, or when this server is intentionally on Bun-backed chat (Pi not requested). Orange means Pi was requested (WOP_CHAT_ENGINE) but the CLI is missing or not active. Schedules / channels is green when automation data loaded; Pi is only required for timed and inbound webhook runs.",
+			body: "Mission → Claw status: Engine reflects the shared chat runtime. Schedules and inbound webhooks call the same headless Pi turn as Chat (not a fork) — when Mission shows Bun-only or Pi idle, automations that need Pi will skip until that row is green for Pi.",
 		},
 	];
 
