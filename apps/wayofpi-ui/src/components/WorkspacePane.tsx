@@ -14,6 +14,7 @@ import {
 	GripVertical,
 	Maximize2,
 	MessageSquare,
+	MoreVertical,
 	ScrollText,
 	TerminalSquare,
 	Users,
@@ -254,6 +255,25 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 	const [visualMediaMode, setVisualMediaMode] = useState<"preview" | "source">("preview");
 	/** Markdown `.md` UTF-8: rendered preview vs source editor. */
 	const [markdownViewMode, setMarkdownViewMode] = useState<"preview" | "source">("source");
+	const [mobilePaneToolsOpen, setMobilePaneToolsOpen] = useState(false);
+	const mobilePaneToolsRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!mobilePaneToolsOpen) return;
+		const onDown = (e: MouseEvent) => {
+			if (mobilePaneToolsRef.current?.contains(e.target as Node)) return;
+			setMobilePaneToolsOpen(false);
+		};
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setMobilePaneToolsOpen(false);
+		};
+		document.addEventListener("mousedown", onDown);
+		window.addEventListener("keydown", onKey);
+		return () => {
+			document.removeEventListener("mousedown", onDown);
+			window.removeEventListener("keydown", onKey);
+		};
+	}, [mobilePaneToolsOpen]);
 
 	const syncDropHint = (h: DropHint | null) => {
 		dropHintRef.current = h;
@@ -523,7 +543,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 				onDrop={onBarDrop}
 				title="Workspace — one tab stack for files and tools (Zed-style)"
 			>
-				<div className="flex h-9 shrink-0 items-center gap-0.5 border-r border-[#2d2d2d] px-1">
+				<div className="scrollbar-hide flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto overflow-y-hidden border-r border-[#2d2d2d] px-1">
 					{workspacePaneReorderCellIndex != null ? (
 						<button
 							type="button"
@@ -546,7 +566,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 						type="button"
 						disabled={!canHistBack}
 						onClick={goHistoryBack}
-						className={`rounded p-1.5 ${
+						className={`hidden rounded p-1.5 md:inline-flex ${
 							canHistBack
 								? "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
 								: "cursor-not-allowed text-[#555]"
@@ -560,7 +580,7 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 						type="button"
 						disabled={!canHistForward}
 						onClick={goHistoryForward}
-						className={`rounded p-1.5 ${
+						className={`hidden rounded p-1.5 md:inline-flex ${
 							canHistForward
 								? "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
 								: "cursor-not-allowed text-[#555]"
@@ -577,14 +597,16 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 						rootClassName="relative flex h-9 shrink-0 items-center px-0.5"
 					/>
 					{workspaceGridPicker ? (
-						<WorkspaceGridLayoutPicker
-							cols={workspaceGridPicker.cols}
-							rows={workspaceGridPicker.rows}
-							maxCols={workspaceGridPicker.maxCols}
-							maxRows={workspaceGridPicker.maxRows}
-							onSelect={workspaceGridPicker.onSelect}
-							rootClassName="relative flex h-9 shrink-0 items-center border-l border-[#2d2d2d] px-0.5"
-						/>
+						<div className="hidden h-9 shrink-0 items-center border-l border-[#2d2d2d] px-0.5 md:flex">
+							<WorkspaceGridLayoutPicker
+								cols={workspaceGridPicker.cols}
+								rows={workspaceGridPicker.rows}
+								maxCols={workspaceGridPicker.maxCols}
+								maxRows={workspaceGridPicker.maxRows}
+								onSelect={workspaceGridPicker.onSelect}
+								rootClassName="relative flex h-9 shrink-0 items-center px-0.5"
+							/>
+						</div>
 					) : null}
 				</div>
 				<div
@@ -702,87 +724,236 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
 					/>
 					</div>
 				</div>
-				<div className="flex h-9 shrink-0 items-center gap-0.5 border-l border-[#2d2d2d] px-1">
-					{workspaceDockActions ? (
-						<>
-							<button
-								type="button"
-								title="Open file"
-								aria-label="Open file"
-								onClick={workspaceDockActions.onOpenFile}
-								className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-							>
-								<FolderOpen size={14} strokeWidth={2} />
-							</button>
-							<button
-								type="button"
-								title="Agent chat in this pane"
-								aria-label="Agent chat in this pane"
-								onClick={() => workspaceDockActions.onShowAgentChat(dndSourceCellIndex ?? 0)}
-								className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-							>
-								<MessageSquare size={14} strokeWidth={2} />
-							</button>
-						</>
-					) : null}
-					<button
-						type="button"
-						disabled={splitEditorDisabled || !onSplitEditorRight}
-						onClick={() => onSplitEditorRight?.()}
-						className={`rounded p-1.5 ${
-							splitEditorDisabled || !onSplitEditorRight
-								? "cursor-not-allowed text-[#555]"
-								: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-						}`}
-						title={splitEditorDisabled ? "Maximum columns reached" : "Split editor right (add column)"}
-						aria-label="Split editor right"
-					>
-						<Columns2 size={14} strokeWidth={2} />
-					</button>
-					<button
-						type="button"
-						disabled={workspaceMaximizeDisabled || !onToggleWorkspaceMaximize}
-						onClick={() => onToggleWorkspaceMaximize?.()}
-						className={`rounded p-1.5 ${
-							workspaceMaximizeDisabled || !onToggleWorkspaceMaximize
-								? "cursor-not-allowed text-[#555]"
-								: workspaceMaximizeActive
-									? "bg-[#3c3c3c] text-[#ea580c]"
-									: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-						}`}
-						title={
-							workspaceMaximizeDisabled
-								? "Maximize (needs multi-cell grid)"
-								: workspaceMaximizeActive
-									? "Exit maximized cell"
-									: "Maximize this editor cell"
-						}
-						aria-label="Maximize workspace cell"
-					>
-						<Maximize2 size={14} strokeWidth={2} />
-					</button>
-					{onCloseWorkspacePane ? (
+				<div className="relative flex h-9 shrink-0 items-center border-l border-[#2d2d2d] px-1">
+					<div className="hidden h-full items-center gap-0.5 md:flex">
+						{workspaceDockActions ? (
+							<>
+								<button
+									type="button"
+									title="Open file"
+									aria-label="Open file"
+									onClick={workspaceDockActions.onOpenFile}
+									className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+								>
+									<FolderOpen size={14} strokeWidth={2} />
+								</button>
+								<button
+									type="button"
+									title="Agent chat in this pane"
+									aria-label="Agent chat in this pane"
+									onClick={() => workspaceDockActions.onShowAgentChat(dndSourceCellIndex ?? 0)}
+									className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+								>
+									<MessageSquare size={14} strokeWidth={2} />
+								</button>
+							</>
+						) : null}
 						<button
 							type="button"
-							disabled={closeWorkspacePaneDisabled}
-							onClick={() => onCloseWorkspacePane()}
+							disabled={splitEditorDisabled || !onSplitEditorRight}
+							onClick={() => onSplitEditorRight?.()}
 							className={`rounded p-1.5 ${
-								closeWorkspacePaneDisabled
+								splitEditorDisabled || !onSplitEditorRight
 									? "cursor-not-allowed text-[#555]"
 									: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
 							}`}
-							title={
-								workspaceMaximizeActive
-									? "Exit maximized view"
-									: "Remove this editor cell (shrink grid)"
-							}
-							aria-label={
-								workspaceMaximizeActive ? "Exit maximized workspace view" : "Close workspace cell"
-							}
+							title={splitEditorDisabled ? "Maximum columns reached" : "Split editor right (add column)"}
+							aria-label="Split editor right"
 						>
-							<X size={14} strokeWidth={2} />
+							<Columns2 size={14} strokeWidth={2} />
 						</button>
-					) : null}
+						<button
+							type="button"
+							disabled={workspaceMaximizeDisabled || !onToggleWorkspaceMaximize}
+							onClick={() => onToggleWorkspaceMaximize?.()}
+							className={`rounded p-1.5 ${
+								workspaceMaximizeDisabled || !onToggleWorkspaceMaximize
+									? "cursor-not-allowed text-[#555]"
+									: workspaceMaximizeActive
+										? "bg-[#3c3c3c] text-[#ea580c]"
+										: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+							}`}
+							title={
+								workspaceMaximizeDisabled
+									? "Maximize (needs multi-cell grid)"
+									: workspaceMaximizeActive
+										? "Exit maximized cell"
+										: "Maximize this editor cell"
+							}
+							aria-label="Maximize workspace cell"
+						>
+							<Maximize2 size={14} strokeWidth={2} />
+						</button>
+						{onCloseWorkspacePane ? (
+							<button
+								type="button"
+								disabled={closeWorkspacePaneDisabled}
+								onClick={() => onCloseWorkspacePane()}
+								className={`rounded p-1.5 ${
+									closeWorkspacePaneDisabled
+										? "cursor-not-allowed text-[#555]"
+										: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+								}`}
+								title={
+									workspaceMaximizeActive
+										? "Exit maximized view"
+										: "Remove this editor cell (shrink grid)"
+								}
+								aria-label={
+									workspaceMaximizeActive ? "Exit maximized workspace view" : "Close workspace cell"
+								}
+							>
+								<X size={14} strokeWidth={2} />
+							</button>
+						) : null}
+					</div>
+					<div ref={mobilePaneToolsRef} className="relative flex h-full items-center md:hidden">
+						<button
+							type="button"
+							className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+							aria-expanded={mobilePaneToolsOpen}
+							aria-haspopup="menu"
+							title="Pane actions"
+							onClick={() => setMobilePaneToolsOpen((o) => !o)}
+						>
+							<MoreVertical size={16} strokeWidth={2} aria-hidden />
+						</button>
+						{mobilePaneToolsOpen ? (
+							<ul
+								className="absolute right-0 top-full z-[8000] mt-0.5 min-w-[11rem] list-none rounded border border-[#454545] bg-[#252526] py-1 shadow-xl"
+								role="menu"
+								aria-label="Tab history and pane actions"
+							>
+								<li role="none">
+									<button
+										type="button"
+										role="menuitem"
+										disabled={!canHistBack}
+										className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+										onClick={() => {
+											if (!canHistBack) return;
+											setMobilePaneToolsOpen(false);
+											goHistoryBack();
+										}}
+									>
+										<ChevronLeft size={14} className="shrink-0 text-[#858585]" aria-hidden />
+										Back — previous tab
+									</button>
+								</li>
+								<li role="none" className="mb-1 border-b border-[#3c3c3c] pb-1">
+									<button
+										type="button"
+										role="menuitem"
+										disabled={!canHistForward}
+										className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+										onClick={() => {
+											if (!canHistForward) return;
+											setMobilePaneToolsOpen(false);
+											goHistoryForward();
+										}}
+									>
+										<ChevronRight size={14} className="shrink-0 text-[#858585]" aria-hidden />
+										Forward — next tab
+									</button>
+								</li>
+								{workspaceGridPicker ? (
+									<li role="none" className="mb-1 border-b border-[#3c3c3c] pb-1">
+										<WorkspaceGridLayoutPicker
+											variant="menu"
+											cols={workspaceGridPicker.cols}
+											rows={workspaceGridPicker.rows}
+											maxCols={workspaceGridPicker.maxCols}
+											maxRows={workspaceGridPicker.maxRows}
+											onSelect={workspaceGridPicker.onSelect}
+											rootClassName="relative w-full px-0.5 py-0.5"
+										/>
+									</li>
+								) : null}
+								{workspaceDockActions ? (
+									<>
+										<li role="none">
+											<button
+												type="button"
+												role="menuitem"
+												className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
+												onClick={() => {
+													setMobilePaneToolsOpen(false);
+													workspaceDockActions.onOpenFile();
+												}}
+											>
+												<FolderOpen size={14} className="shrink-0 text-[#858585]" aria-hidden />
+												Open file
+											</button>
+										</li>
+										<li role="none">
+											<button
+												type="button"
+												role="menuitem"
+												className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
+												onClick={() => {
+													setMobilePaneToolsOpen(false);
+													workspaceDockActions.onShowAgentChat(dndSourceCellIndex ?? 0);
+												}}
+											>
+												<MessageSquare size={14} className="shrink-0 text-[#858585]" aria-hidden />
+												Agent chat in this pane
+											</button>
+										</li>
+									</>
+								) : null}
+								<li role="none">
+									<button
+										type="button"
+										role="menuitem"
+										disabled={splitEditorDisabled || !onSplitEditorRight}
+										className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+										onClick={() => {
+											if (splitEditorDisabled || !onSplitEditorRight) return;
+											setMobilePaneToolsOpen(false);
+											onSplitEditorRight();
+										}}
+									>
+										<Columns2 size={14} className="shrink-0 text-[#858585]" aria-hidden />
+										Split editor right
+									</button>
+								</li>
+								<li role="none">
+									<button
+										type="button"
+										role="menuitem"
+										disabled={workspaceMaximizeDisabled || !onToggleWorkspaceMaximize}
+										className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+										onClick={() => {
+											if (workspaceMaximizeDisabled || !onToggleWorkspaceMaximize) return;
+											setMobilePaneToolsOpen(false);
+											onToggleWorkspaceMaximize();
+										}}
+									>
+										<Maximize2 size={14} className="shrink-0 text-[#858585]" aria-hidden />
+										{workspaceMaximizeActive ? "Exit maximized cell" : "Maximize this cell"}
+									</button>
+								</li>
+								{onCloseWorkspacePane ? (
+									<li role="none">
+										<button
+											type="button"
+											role="menuitem"
+											disabled={closeWorkspacePaneDisabled}
+											className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+											onClick={() => {
+												if (closeWorkspacePaneDisabled) return;
+												setMobilePaneToolsOpen(false);
+												onCloseWorkspacePane();
+											}}
+										>
+											<X size={14} className="shrink-0 text-[#858585]" aria-hidden />
+											{workspaceMaximizeActive ? "Exit maximized view" : "Close workspace cell"}
+										</button>
+									</li>
+								) : null}
+							</ul>
+						) : null}
+					</div>
 				</div>
 			</div>
 

@@ -50,7 +50,8 @@ Final spelling (`wop` vs `wayofpi`) is a product decision; this repo uses **`wop
 
 | Variable | Purpose |
 |----------|---------|
-| **`WOP_HOME`** | Way of Pi data: logs, backups, packaged playground clone path (default e.g. `~/.wayofpi`). |
+| **`WOP_HOME`** | Way of Pi data: logs, backups, packaged playground clone path (default e.g. `~/.wayofpi`). Optional **tunnel-gate.v1.json** (HTTP Basic Auth when the request `Host` / `X-Forwarded-Host` looks like a public tunnel — e.g. ngrok) is read by the Bun server and Vite dev; configure from **Settings → ngrok → Tunnel login**. |
+| **`WOP_TUNNEL_GATE_HOST_MARKERS`** | Optional comma-separated substrings (case-insensitive). If the effective hostname contains any marker, tunnel login may apply when enabled — in addition to hostnames containing **`ngrok`**. |
 | **`WOP_WORKSPACE`** | Active project root the web UI / server may read and write (jailed I/O). Used by **[apps/wayofpi-ui](../apps/wayofpi-ui/)** server today. |
 | **`WOP_SERVER_PORT`** | HTTP + WebSocket port (default `3333` in wayofpi-ui). |
 | **`WOP_PI_BINARY`** | Absolute path to **Pi** executable used **only inside** Way of Pi’s child processes. |

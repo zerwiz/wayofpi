@@ -1,0 +1,133 @@
+#!/usr/bin/make -f
+
+# Debhelper compatibility level
+export DH_MAJOR_VERSION = 13
+export DEBHELPER=0
+
+include /usr/share/devscripts/dit/rpms/debhelper.mk
+
+# Build dependencies needed for packaging
+build-depends += debhelper (>= 13), dh-nodejs, dh-pack, just
+
+package = wayofpi
+binary-package = wayofpi, wayofpi-dev
+
+# Ensure compatibility with Debian policies
+package = wayofpi
+priority = optional
+section = x11
+standard = optional
+maintainer = Zero <zerwiz@proton.me>
+build_depends = debhelper (>= 13), dh-nodejs, dh-python
+standards_level = 4.7.0
+
+package = wayofpi-dev
+section = devel
+standard = optional
+maintainer = Zero <zerwiz@proton.me>
+build_depends = debhelper (>= 13), dh-nodejs, dh-python, git
+depends = wayofpi, pi-coding-agent
+standard = optional
+priority = optional
+
+override_dh_auto_configure:
+	# Nothing special to do, configure is handled by start scripts
+
+override_dh_auto_install:
+	# Install from the source tree to debian/tmp
+	-$(rm -rf) $(CURDIR)/debian/tmp/
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)
+	@cp -a . $(CURDIR)/debian/tmp/$(package)/
+	@cp -a $(PACKAGE_PATHS_TO_INSTALL) $(CURDIR)/debian/tmp/$(package)/
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/applications
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/icons/hicolor/scalable/apps
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/icons/hicolor/256x256/apps
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/icons/hicolor/128x128/apps
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/icons/hicolor/48x48/apps
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/metainfo
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/share/applications/wopi/
+	@mkdir -p $(CURDIR)/debian/tmp/$(package)/usr/share/doc/wayofpi-examples/
+	@cp doc/* $(CURDIR)/debian/tmp/$(package)/share/doc/wayofpi-examples/ 2>/dev/null || true
+
+# Override build to use the source from the source directory
+override_dh_build:
+	# Nothing special to do; just use the source from debian/source
+
+override_dh_clean:
+	# Nothing special to do; just clean using the standard
+
+override_dh_install:
+	# Nothing special to do, use standard install
+
+override_dh_auto_test:
+	# Nothing special to do, tests not yet set up
+
+override_dh_installdocs:
+	install -p -d debian/$(package)/usr/share/doc/$(package)
+	install -p -m 644 debian/copyright debian/$(package)/usr/share/doc/$(package)/copyright
+
+override_dh_installchangelogs:
+	install -p -m 644 debian/changelog debian/$(package)/usr/share/doc/$(package)
+
+override_dh_perl: # override_dh_perl:
+	# Nothing special to do
+
+override_dh_gnome_build:
+	# Nothing special to do
+
+override_dh_auto_install:
+	# Copy the project files to the package root
+	@rm -rf $(CURDIR)/debian/$(package)/usr/share/wayofpi
+	@rm -rf $(CURDIR)/debian/$(package)/usr/lib/
+	@rm -rf $(CURDIR)/debian/$(package)/usr/bin/
+	@mkdir -p $(CURDIR)/debian/$(package)/usr/share/wayofpi
+	@rsync -a $(CURVE_SOURCE)/ $(CURVE_PATHS_TO_INSTALL)/
+	@echo "Copy project files to debian/tmp"
+	@mkdir -p $(CURVE_SOURCE)
+	@mkdir -p $(CURVE_PATHS_TO_INSTALL)
+
+override_dh_fixperms:
+	# Set proper permissions
+
+override_dh_shlibdeps:
+	# Nothing special to do
+
+override_dh_installdebconf:
+	# Nothing special to do
+
+override_dh_installdocs:
+	# Nothing special to do
+
+override_dh_makeshlibs:
+	# Nothing special to do
+
+override_dh_strip:
+	# Nothing special to do
+
+override_dh_fixperms:
+	# Nothing special to do
+
+override_dh_control:
+	# Nothing special to do
+
+override_dh_install:
+	# Nothing special to do
+
+override_dh_installdocs:
+	# Nothing special to do
+
+override_dh_md5sums:
+	# Nothing special to do
+
+override_dh_gensymbols:
+	# Nothing special to do
+
+override_dh_fixperms:
+	chmod -R a+rX debian/*/usr/share
+
+override_dh_gencontrol:
+	dh_gencontrol
+
+override_dh_builddeb:
+	dh_builddeb
+

@@ -3,10 +3,10 @@
 
 full:
   - scout
-  - planner
+  - ralph
   - documenter
   - reviewer
-  - ralph
+  - bowser
   - builder
 
 hermes:

@@ -1,7 +1,7 @@
-import { ClipboardList, Files, GitBranch, LayoutTemplate, Search, Settings } from "lucide-react";
+import { ClipboardList, Files, GitBranch, LayoutTemplate, Search, Settings, type LucideIcon } from "lucide-react";
 import type { TechnicalActivity } from "../types/technicalShell";
 
-const ITEMS: { id: TechnicalActivity; icon: typeof Files; label: string }[] = [
+export const ACTIVITY_BAR_ITEMS: readonly { id: TechnicalActivity; icon: LucideIcon; label: string }[] = [
 	{ id: "explorer", icon: Files, label: "Explorer" },
 	{ id: "search", icon: Search, label: "Search" },
 	{ id: "scm", icon: GitBranch, label: "Source control" },
@@ -19,7 +19,7 @@ export function ActivityBar({
 }) {
 	return (
 		<div className="z-10 flex w-12 shrink-0 flex-col items-center gap-1 border-r border-[#252526] bg-[#333333] py-2">
-			{ITEMS.map(({ id, icon: Icon, label }) => {
+			{ACTIVITY_BAR_ITEMS.map(({ id, icon: Icon, label }) => {
 				const isActive = active === id;
 				return (
 					<button

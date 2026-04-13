@@ -58,6 +58,8 @@ export function SimpleChatView({
 	planHandoffWorkspaceKey = "",
 	sessionLeadFallbackLabel,
 	clawAgentAvailable = false,
+	/** Small screens (`?shell=mobile`, narrow Simple): tighter transcript + composer chrome. */
+	compactChrome = false,
 }: {
 	rows: ChatRow[];
 	streaming: boolean;
@@ -96,6 +98,7 @@ export function SimpleChatView({
 	sessionLeadFallbackLabel?: string;
 	/** When true with Claw chrome, the picker prefers the **claw** workspace agent (see `.pi/agents/claw.md`). */
 	clawAgentAvailable?: boolean;
+	compactChrome?: boolean;
 }) {
 	const [queueModalOpen, setQueueModalOpen] = useState(false);
 	const [input, setInput] = useState("");
@@ -178,6 +181,24 @@ export function SimpleChatView({
 	const composerBg = appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-white";
 	const composerOuter = appearanceDark ? "bg-[#1e1e1e]" : "bg-[#f3f3f3]";
 	const canSend = !!(input.trim() || attachment) && connected;
+	const cx = compactChrome;
+	const transcriptPad = cx ? "p-2" : "p-4 md:p-8";
+	const transcriptGap = cx ? "gap-3 pb-2" : "gap-6 pb-4";
+	const transcriptMax = cx ? "max-w-full" : "max-w-3xl";
+	const composerPad = cx ? "p-2 pt-1.5" : "p-4 md:p-6";
+	const toolBarPt = cx ? "pt-2" : "pt-4 md:pt-5";
+	const toolLbl = cx
+		? `text-[10px] font-semibold uppercase tracking-wide ${subC}`
+		: `text-xs font-semibold uppercase tracking-wide ${subC}`;
+	const segShell = cx
+		? `inline-flex rounded border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`
+		: `flex rounded-lg border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`;
+	const segBtn = cx
+		? `rounded px-1.5 py-0.5 text-[10px] font-bold uppercase disabled:opacity-40`
+		: `rounded-md px-3 py-1.5 text-xs font-bold uppercase disabled:opacity-40`;
+	const agentSelectCls = cx
+		? `w-full rounded border px-2 py-1 text-xs font-normal normal-case ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#d4d4d4] bg-white text-[#333333]"}`
+		: `rounded-lg border px-3 py-2 text-sm font-normal normal-case ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#d4d4d4] bg-white text-[#333333]"}`;
 
 	const slashMenu = useMemo(() => slashMenuAtCursor(input, caretPos), [input, caretPos]);
 	const slashMenuKey = slashMenu ? slashMenu.filtered.map((c) => c.id).join("|") : "";
@@ -254,25 +275,40 @@ export function SimpleChatView({
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col overflow-hidden" data-wop-chat-root>
-			<div className={`flex flex-1 justify-center overflow-y-auto p-4 md:p-8 ${appearanceDark ? "" : "bg-[#f3f3f3]"}`}>
-				<div className="flex w-full max-w-3xl flex-col gap-6 pb-4">
-					<div className={`mb-2 flex flex-col gap-4 border-b pb-4 ${borderHero}`}>
-						<div className="flex items-center gap-4">
-							<div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#ea580c]/30 bg-[#ea580c]/20 shadow-sm">
-								<Brain className="text-[#fb923c]" size={28} />
-							</div>
-							<div>
-								<h1 className={`text-2xl font-extrabold tracking-tight ${titleC}`}>
-									Chat with {assistantTitle}
-								</h1>
-								<p className={`text-sm font-medium ${subC}`}>{assistantSubtitle}</p>
-								{phraseDispatchNote ? (
-									<p className={`mt-1 max-w-xl text-xs leading-snug ${subC}`}>{phraseDispatchNote}</p>
-								) : null}
-							</div>
+			{cx ? (
+				<div
+					className={`flex shrink-0 items-center gap-2 border-b px-2 py-1.5 ${borderHero} ${appearanceDark ? "bg-[#1e1e1e]" : "bg-[#f3f3f3]"}`}
+				>
+					<Brain className="shrink-0 text-[#fb923c]" size={18} aria-hidden />
+					<div className="min-w-0 flex-1">
+						<div className={`truncate text-sm font-bold ${titleC}`}>{assistantTitle}</div>
+						<div className={`truncate text-[10px] ${subC}`}>{assistantSubtitle}</div>
+					</div>
+				</div>
+			) : (
+				<div
+					className={`shrink-0 border-b px-4 py-3 md:px-8 md:py-4 ${borderHero} ${appearanceDark ? "bg-[#1e1e1e]" : "bg-[#f3f3f3]"}`}
+				>
+					<div className="mx-auto flex w-full max-w-3xl items-center gap-4">
+						<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#ea580c]/30 bg-[#ea580c]/20 shadow-sm">
+							<Brain className="text-[#fb923c]" size={28} />
+						</div>
+						<div className="min-w-0 flex-1">
+							<h1 className={`text-2xl font-extrabold tracking-tight ${titleC}`}>
+								Chat with {assistantTitle}
+							</h1>
+							<p className={`text-sm font-medium ${subC}`}>{assistantSubtitle}</p>
+							{phraseDispatchNote ? (
+								<p className={`mt-1 max-w-xl text-xs leading-snug ${subC}`}>{phraseDispatchNote}</p>
+							) : null}
 						</div>
 					</div>
-
+				</div>
+			)}
+			<div
+				className={`flex min-h-0 flex-1 justify-center overflow-y-auto overflow-x-hidden ${transcriptPad} ${appearanceDark ? "" : "bg-[#f3f3f3]"}`}
+			>
+				<div className={`flex w-full ${transcriptMax} flex-col ${transcriptGap}`}>
 					{!connected ? (
 						<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
 							Connecting to server…
@@ -472,11 +508,11 @@ export function SimpleChatView({
 				</div>
 			</div>
 
-			<div className={`z-20 p-4 md:p-6 ${composerOuter}`}>
+			<div className={`z-20 shrink-0 ${composerPad} ${composerOuter}`}>
 				<div
-					className={`mx-auto mb-3 flex w-full max-w-3xl flex-wrap items-end gap-3 border-t pt-4 md:pt-5 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
+					className={`mx-auto flex w-full ${transcriptMax} border-t ${toolBarPt} ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"} ${cx ? "mb-2 flex-col gap-2" : "mb-3 flex-wrap items-end gap-3"}`}
 				>
-					<label className={`flex min-w-[200px] flex-1 flex-col gap-1 text-xs font-semibold uppercase tracking-wide ${subC}`}>
+					<label className={`flex ${cx ? "w-full min-w-0" : "min-w-[200px] flex-1"} flex-col gap-0.5 ${toolLbl}`}>
 						Workspace agent
 						<select
 							value={chatAgentName ?? ""}
@@ -486,7 +522,7 @@ export function SimpleChatView({
 								const v = e.target.value;
 								onChatAgentChange(v === "" ? null : v);
 							}}
-							className={`rounded-lg border px-3 py-2 text-sm font-normal normal-case ${appearanceDark ? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]" : "border-[#d4d4d4] bg-white text-[#333333]"}`}
+							className={agentSelectCls}
 						>
 							<option value="">{sessionLeadFallback} (session lead)</option>
 							{pickerAgents.map((a) => (
@@ -506,23 +542,24 @@ export function SimpleChatView({
 							))}
 						</select>
 					</label>
-					<div className="flex min-w-0 flex-col gap-1">
-						<span className={`text-xs font-semibold uppercase tracking-wide ${subC}`}>Mode</span>
+					<div className={cx ? "flex min-w-0 flex-wrap items-end gap-x-2 gap-y-1" : "contents"}>
+					<div className={`flex min-w-0 flex-col ${cx ? "gap-0" : "gap-1"}`}>
+						<span className={toolLbl}>Mode</span>
 						<div
-							className={`flex rounded-lg border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`}
+							className={segShell}
 							title="Shift+Tab in the message box toggles Plan/Build when slash completion is closed"
 						>
 							<button
 								type="button"
 								disabled={streaming}
 								onClick={() => onChatModeChange("build")}
-								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+								className={`${segBtn} ${
 									chatMode === "build"
 										? "bg-[#ea580c] text-white"
 										: appearanceDark
 											? "text-[#858585]"
 											: "text-[#616161]"
-								} disabled:opacity-40`}
+								}`}
 							>
 								Build
 							</button>
@@ -530,40 +567,35 @@ export function SimpleChatView({
 								type="button"
 								disabled={streaming}
 								onClick={() => onChatModeChange("plan")}
-								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+								className={`${segBtn} ${
 									chatMode === "plan"
 										? "bg-[#c586c0]/90 text-white"
 										: appearanceDark
 											? "text-[#858585]"
 											: "text-[#616161]"
-								} disabled:opacity-40`}
+								}`}
 							>
 								Plan
 							</button>
 						</div>
 					</div>
-					<div className="flex flex-col gap-1">
-						<span
-							className={`text-xs font-semibold uppercase tracking-wide ${subC}`}
-							title="Live stream shows tokens as they arrive; off waits for the full reply"
-						>
+					<div className={`flex flex-col ${cx ? "gap-0" : "gap-1"}`}>
+						<span className={toolLbl} title="Live stream shows tokens as they arrive; off waits for the full reply">
 							Stream
 						</span>
-						<div
-							className={`flex rounded-lg border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`}
-						>
+						<div className={segShell}>
 							<button
 								type="button"
 								disabled={streaming}
 								aria-pressed={chatStreamUiEnabled}
 								onClick={() => onChatStreamUiEnabledChange(true)}
-								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+								className={`${segBtn} ${
 									chatStreamUiEnabled
 										? "bg-[#ea580c] text-white"
 										: appearanceDark
 											? "text-[#858585]"
 											: "text-[#616161]"
-								} disabled:opacity-40`}
+								}`}
 								title="Show the reply as it streams (token by token)"
 							>
 								On
@@ -573,29 +605,27 @@ export function SimpleChatView({
 								disabled={streaming}
 								aria-pressed={!chatStreamUiEnabled}
 								onClick={() => onChatStreamUiEnabledChange(false)}
-								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+								className={`${segBtn} ${
 									!chatStreamUiEnabled
 										? "bg-[#ea580c] text-white"
 										: appearanceDark
 											? "text-[#858585]"
 											: "text-[#616161]"
-								} disabled:opacity-40`}
+								}`}
 								title="Hide streaming; show the full message when the model finishes"
 							>
 								Off
 							</button>
 						</div>
 					</div>
-					<div className="flex flex-col gap-1">
+					<div className={`flex flex-col ${cx ? "gap-0" : "gap-1"}`}>
 						<span
-							className={`text-xs font-semibold uppercase tracking-wide ${subC}`}
+							className={toolLbl}
 							title="When the model streams separate reasoning (Pi JSON, OpenRouter, etc.), show it above each reply"
 						>
 							Thinking
 						</span>
-						<div
-							className={`flex rounded-lg border p-0.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#d4d4d4] bg-[#ececec]"}`}
-						>
+						<div className={segShell}>
 							<button
 								type="button"
 								aria-pressed={showModelThinking}
@@ -603,7 +633,7 @@ export function SimpleChatView({
 									setShowModelThinking(true);
 									writeShowModelThinking(true);
 								}}
-								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+								className={`${segBtn} ${
 									showModelThinking
 										? appearanceDark
 											? "bg-[#312e81]/80 text-[#c7d2fe]"
@@ -623,7 +653,7 @@ export function SimpleChatView({
 									setShowModelThinking(false);
 									writeShowModelThinking(false);
 								}}
-								className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase ${
+								className={`${segBtn} ${
 									!showModelThinking
 										? appearanceDark
 											? "bg-[#3c3c3c] text-[#cccccc]"
@@ -638,8 +668,11 @@ export function SimpleChatView({
 							</button>
 						</div>
 					</div>
+					</div>
 					{chatMode === "plan" ? (
-						<div className={`flex w-full basis-full flex-wrap items-center gap-3 border-t pt-3 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}>
+						<div
+							className={`flex w-full basis-full flex-wrap items-center border-t ${cx ? "gap-1.5 pt-2" : "gap-3 pt-3"} ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
+						>
 							{planCatalogReady && planFiles.length > 0 ? (
 								<select
 									disabled={streaming}
@@ -771,7 +804,7 @@ export function SimpleChatView({
 				) : null}
 				<form
 					onSubmit={submit}
-					className={`relative mx-auto flex max-w-3xl flex-col gap-0 rounded-2xl border p-2.5 shadow-md transition-all focus-within:border-[#ea580c] focus-within:ring-1 focus-within:ring-[#ea580c]/40 ${composerBg}`}
+					className={`relative mx-auto flex ${transcriptMax} flex-col gap-0 rounded-2xl border shadow-md transition-all focus-within:border-[#ea580c] focus-within:ring-1 focus-within:ring-[#ea580c]/40 ${composerBg} ${cx ? "p-1.5" : "p-2.5"}`}
 				>
 					<input
 						ref={fileRef}
@@ -785,10 +818,10 @@ export function SimpleChatView({
 						type="button"
 						onClick={() => fileRef.current?.click()}
 						disabled={!connected}
-						className={`rounded-xl p-3 transition-colors disabled:opacity-40 ${appearanceDark ? "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]" : "text-[#616161] hover:bg-[#e5e5e5] hover:text-[#333333]"}`}
+						className={`rounded-xl transition-colors disabled:opacity-40 ${cx ? "p-2" : "p-3"} ${appearanceDark ? "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]" : "text-[#616161] hover:bg-[#e5e5e5] hover:text-[#333333]"}`}
 						title="Attach a text file (appended to your message)"
 					>
-						<Paperclip size={22} />
+						<Paperclip size={cx ? 18 : 22} />
 					</button>
 					<div className="relative min-w-0 flex-1">
 						{slashMenu && slashMenu.filtered.length > 0 ? (
@@ -871,7 +904,7 @@ export function SimpleChatView({
 									: `Tell ${assistantTitle} what to do next…`
 							}
 							rows={1}
-							className={`max-h-40 min-h-[48px] w-full resize-none border-none bg-transparent py-3 pl-2 pr-10 pb-9 text-[15px] font-medium outline-none ring-0 placeholder:text-[#858585] ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
+							className={`max-h-40 w-full resize-none border-none bg-transparent pl-2 pr-10 font-medium outline-none ring-0 placeholder:text-[#858585] ${cx ? "min-h-[40px] py-2 pb-8 text-[14px]" : "min-h-[48px] py-3 pb-9 text-[15px]"} ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
 						/>
 						<div
 							className={`pointer-events-none absolute bottom-1.5 right-1.5 z-30 flex items-center justify-center rounded-full p-0.5 shadow-sm ring-1 ring-[#555]/50 ${
@@ -882,7 +915,7 @@ export function SimpleChatView({
 								contextFillPct={contextFillPct}
 								title={contextTitle}
 								appearanceDark={appearanceDark}
-								sizePx={22}
+								sizePx={cx ? 18 : 22}
 								className="pointer-events-auto opacity-95"
 							/>
 						</div>
@@ -893,20 +926,20 @@ export function SimpleChatView({
 								type="button"
 								onClick={onStop}
 								aria-label="Stop generation"
-								className="flex items-center gap-2 rounded-sm border border-[#ef4444] bg-[#450a0a] px-6 py-3 text-sm font-bold uppercase tracking-wide text-[#fecaca] shadow-sm transition-colors hover:bg-[#7f1d1d] active:scale-95"
+								className={`flex items-center gap-1.5 rounded-sm border border-[#ef4444] bg-[#450a0a] font-bold uppercase tracking-wide text-[#fecaca] shadow-sm transition-colors hover:bg-[#7f1d1d] active:scale-95 ${cx ? "px-3 py-2 text-[11px]" : "gap-2 px-6 py-3 text-sm"}`}
 							>
-								<Square size={14} className="shrink-0" fill="currentColor" />
-								<span className="hidden sm:inline">Stop</span>
+								<Square size={cx ? 12 : 14} className="shrink-0" fill="currentColor" />
+								<span className={cx ? "inline" : "hidden sm:inline"}>Stop</span>
 							</button>
 						) : (
 							<button
 								type="submit"
 								disabled={!canSend}
 								aria-label="Send message"
-								className="flex items-center gap-2 rounded-sm bg-[#c2410c] px-6 py-3 text-sm font-bold uppercase tracking-wide text-[#d4d4d4] shadow-sm transition-colors hover:bg-[#9a3412] disabled:bg-[#3c3c3c] disabled:text-[#858585] active:scale-95"
+								className={`flex items-center gap-1.5 rounded-sm bg-[#c2410c] font-bold uppercase tracking-wide text-[#d4d4d4] shadow-sm transition-colors hover:bg-[#9a3412] disabled:bg-[#3c3c3c] disabled:text-[#858585] active:scale-95 ${cx ? "px-3 py-2 text-[11px]" : "gap-2 px-6 py-3 text-sm"}`}
 							>
-								<Send size={18} className="shrink-0 text-[#d4d4d4]" />
-								<span className="hidden sm:inline">Send</span>
+								<Send size={cx ? 16 : 18} className="shrink-0 text-[#d4d4d4]" />
+								<span className={cx ? "inline" : "hidden sm:inline"}>Send</span>
 							</button>
 						)}
 					</div>

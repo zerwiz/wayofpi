@@ -1,0 +1,8 @@
+wayof-pi (1.0.1~ds-1) unstable; urgency=medium
+
+  * Initial release of Way of Pi desktop shell
+  * Bun-based Electron desktop application for Pi Coding Agent
+  * Supports Ollama, OpenRouter, and other AI models
+  * Full desktop UI with file explorer, chat, and code editor
+
+ -- Zero <zerwiz@proton.me>  $(date)

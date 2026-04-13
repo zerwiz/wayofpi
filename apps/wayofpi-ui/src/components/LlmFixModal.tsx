@@ -126,10 +126,16 @@ export function LlmFixModal({
 							</>
 						)}
 					</div>
-					{uiMode !== "simple" ? (
+					{uiMode === "technical" ? (
 						<p className={`mt-3 text-xs ${muted}`}>
 							Status bar (bottom): model menu lists the active id; workspace provider files match Pi{" "}
 							<span className="font-mono text-[10px]">/models</span>.
+						</p>
+					) : uiMode === "claw" ? (
+						<p className={`mt-3 text-xs ${muted}`}>
+							In Claw, open <strong className={appearanceDark ? "text-[#d4d4d4]" : "text-[#111]"}>Settings</strong> for
+							models and workspace provider files, or use the model strip; they mirror the active session id and Pi{" "}
+							<span className="font-mono text-[10px]">/models</span> where applicable.
 						</p>
 					) : null}
 				</div>

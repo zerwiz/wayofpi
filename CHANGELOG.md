@@ -8,7 +8,70 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Added
+
+- **Settings → ngrok:** **Terminal** column inject chips call **`sendTerminalInput`** (`terminalInputBridge`) to paste **`ngrok config add-authtoken `**, **`ngrok http <port>`**, run **http** / **version**, or **`cd apps/wayofpi-ui && bun run server/index.ts`** into the modal terminal.
+
+- **Settings → ngrok:** **Terminal** column mounts the same **`EmbeddedTerminal`** as the bottom-dock **Terminal** (`/ws/terminal`, workspace cwd) on the **right** so instructions stay **scrollable** on the left (stacks below on narrow viewports).
+
+- **Root [README.md](README.md):** **Way of Pi web UI** subsection **Public HTTPS URL (ngrok, optional)** plus **Documentation** tables link to **[docs/WOP_NGROK.md](docs/WOP_NGROK.md)**; **[docs/README.md](docs/README.md)** indexes **WOP_NGROK**.
+
+- **`docs/WOP_NGROK.md`** — ngrok with Way of Pi: Settings flow, ports, env vars, HTTP APIs, tunnel login, security; linked from **`docs/WAY_OF_PI_INTRODUCTION.md`**, **`docs/REPO_INDEX.md`**, **`apps/wayofpi-ui/README.md`**.
+
+- **Settings → ngrok:** **`POST /api/dev/ngrok-tunnel`** **`action: "install-bundled"`** runs **`bun install`** or **`npm install`** in **`apps/wayofpi-ui`** so the optional **`ngrok`** package can download the agent; UI primary **Install ngrok into this app** + **Start tunnel now** instead of terminal-first copy. **`GET /api/dev/ngrok-tunnel`** adds **`installBundledAllowed`**.
+
+- **Tunnel login (ngrok-style hosts):** HTTP **Basic Auth** when **`Host`** / **`X-Forwarded-Host`** looks like a public tunnel (hostname contains **`ngrok`**, or **`WOP_TUNNEL_GATE_HOST_MARKERS`**). Credentials stored as **`tunnel-gate.v1.json`** under **`WOP_HOME`** (scrypt password hash). **Bun** (`server/index.ts`) and **Vite dev** (`vite.config.ts` middleware + **`X-Forwarded-Host`** on `/api` / `/ws` proxy) share the same file. **Settings → ngrok → section 4** + **`GET`/`POST /api/dev/tunnel-gate`**.
+- **`scripts/install-ngrok-optional.sh`** (+ **`just install-ngrok-optional`**) — optional ngrok agent: prints official **apt** / **Homebrew** install lines; **`--install`** runs **Debian/Ubuntu** **`sudo apt`** when requested. **Bootstrap** probe lists **ngrok** and hints when missing.
+- **Settings → ngrok:** **`GET /api/dev/share-url-hints`** (Bun) — best-effort **LAN** URL for same-Wi‑Fi phones and **public** `https://…` from the ngrok local inspector when an ngrok agent is running. **`apps/wayofpi-ui/server/share-url-hints.ts`**, **`apps/wayofpi-ui/server/ngrok-inspector.ts`**.
+- **Settings → ngrok:** **`GET` / `POST /api/dev/ngrok-tunnel`** (Bun) — CLI resolution **`WOP_NGROK_BINARY`** → PATH → bundled **`node_modules/ngrok/bin`** from **optionalDependency** **`ngrok`** (**`apps/wayofpi-ui/package.json`** — skip with **`npm install --omit=optional`**); **`POST`** **`set-authtoken`** / **`start`** / **`stop`** (**`WOP_ALLOW_NGROK_SPAWN`** gates **`start`**/**`stop`** only). **`apps/wayofpi-ui/server/ngrok-binary.ts`**, **`ngrok-tunnel-manager.ts`**. **Stop** only kills the process this server started.
+
+- **Way of Pi UI — mobile shell (Track 0 + Claw mobile + Simple mobile):** **`?shell=mobile`**, **`/m`**, **`localStorage`** **`wayofpi.shell.mobile`**, **`MobileChrome`**, **`ClawMobileTabBar`**, **`SimpleMobileTabBar`**. **Claw chat** stacks the transcript column; **Sessions** bottom sheet + **Workspace** full-screen overlay; **Files** tab stacks tree over editor; **`ClawHelpModal`** **`layout="mobile"`** (**`100dvh`**, horizontal section chips, safe-area). **Simple** uses **`SimpleApp`** **`layoutVariant="mobile"`** (file sheet, editor overlay, bottom tabs) with **`MobileChrome`** instead of a separate placeholder shell. **Technical** remains a stub (**`MobileTechnicalShell`**). Mobile-only code lives under **`apps/wayofpi-ui/src/components/mobile/`**; **`App.tsx`** imports **`./components/mobile`**. **`apps/wayofpi-ui/src/components/mobile/README.md`** — tree map. **[docs/WOP_MOBILE_UI_PLAN.md](docs/WOP_MOBILE_UI_PLAN.md)**.
+
 ### Changed
+
+- **Electron dev (`ELECTRON_DEV=1`):** **`app.whenReady`** runs the same **Bun API** bootstrap as **Start service** (spawn **`bun run server/index.ts`** from **`apps/wayofpi-ui`** when **`/api/health`** is absent or stale). Opt out with **`WOP_ELECTRON_SKIP_BUN_AUTOSTART=1`**. **`electron/electron-main.mjs`**, **`apps/wayofpi-ui/README.md`**, **`apps/wayofpi-ui/.env.sample`**.
+
+- **Settings → ngrok:** When **`GET /api/dev/ngrok-tunnel`** fails (**404** / no Bun), the dialog now explains why the **authtoken** field and **tunnel switch** are missing and gives **Bun + Vite** fix steps plus a **CLI-only** fallback (`ngrok config` + `ngrok http`).
+
+- **Settings → ngrok:** Managed **`start`** refuses to run until **TCP accepts** on **`127.0.0.1:`** + tunnel port (default Vite **5173**); **`GET /api/dev/ngrok-tunnel`** adds **`backendListening`**, **`inspectorUrl`**, and optional **`WOP_NGROK_WEB_ADDR`** (inspector **`/api/tunnels`** + **`--web-addr`** when spawning). UI warns on **ERR_NGROK_3200** / stale URLs. **`docs/WOP_NGROK.md`**, **`apps/wayofpi-ui/.env.sample`**.
+
+- **Settings → ngrok:** **`/api/dev/ngrok-tunnel`**, **`/api/dev/share-url-hints`**, and **`/api/dev/tunnel-gate`** are served in **`NODE_ENV=production`** the same as in development (no **404** from Way of Pi for that reason). **`install-bundled`**, **`set-authtoken`**, and managed **`start`**/**`stop`** no longer depend on **`NODE_ENV`**; **`WOP_ALLOW_NGROK_SPAWN`** remains the opt-out for managed spawn/stop only.
+
+- **Settings → ngrok:** **`POST set-authtoken`** is **not** gated on **`WOP_ALLOW_NGROK_SPAWN`** (spawn/start/stop remain gated by that flag). **`GET /api/dev/ngrok-tunnel`** includes **`authtokenSaveAllowed`**. Inspector **`fetchNgrokPublicUrl`** default timeout **3s**, filters **HTTP/HTTPS** tunnels only, **`share-url-hints`** / status use longer reads; managed start polls up to **~20s**.
+
+- **Menu bar — Electron:** closing menus on **`document`** now listens for **`click`** instead of **`mousedown`**, so the same gesture that opens **File** / **Edit** / … is not dismissed before React commits **`openMenu`** (which could hide dropdowns in Electron).
+
+- **Menu bar — Electron / desktop chrome:** **File** … **Settings**, **command palette**, **model** strip, **sidebar** toggle, and **mobile** menu controls run their toggle on **primary `pointerdown`** and skip the following **`click`** (dedupe ref) so **`document`** **`mousedown`** dismiss layers elsewhere in the shell cannot eat the gesture before **`click`** fires. **`UiModeToggle`** uses the same pattern for **Simple** / **Technical** / **Claw**.
+
+- **Menu bar — layout / hit-testing:** the bar is rendered with **`createPortal(..., document.body)`** and **`position: fixed`** (**`z-[95]`**) so it is not covered by nested workspace stacking (**`zoom`**, overflow, high **`z-index`** panes). A **`h-8`** in-flow spacer (**`data-wop-menu-bar-layout-spacer`**) keeps the shell layout unchanged. **`CommandPalette`** overlay **`z-index`** is raised to **`z-[200]`** so it still stacks above the portaled menu.
+
+- **Menu bar — desktop dropdowns:** **`overflow-x-auto`** on the same row as **`absolute top-full`** menus forced the used **`overflow-y`** to clip, so **File** / **Edit** / … could show the open state with no visible panel. Horizontal scroll now wraps **only** the wordmark strip; **nav**, **mobile activity**, **hamburger**, and **UiModeToggle** sit in an **`overflow-x-visible`** sibling so dropdowns paint below the bar.
+
+- **Menu bar — alignment:** the wordmark scroll strip no longer uses **`flex-1`**, which had stretched that strip across the whole left region and pushed **File … Settings** and **UiModeToggle** to the right; it is **`shrink-0`** again so menus sit directly after the logo cluster.
+
+- **Way of Pi UI — mobile header:** **`MenuBar`** hides the **WAY OF PI** wordmark below the **`md`** breakpoint (keeps the blue terminal icon; group has **`title="Way of Pi"`**). **`SimpleNavRail`** hides the same label on small viewports so the narrow nav drawer stays compact.
+
+- **Technical UI — narrow panels (`md` and below):** **`WorkspacePane`** stacks **Open file**, **Agent chat**, **Split**, **Maximize**, and **Close cell** behind a **⋯** menu instead of a crowded icon row; **`ChatPanel`** does the same for **dock side**, **thinking** toggle, and **New chat**. Tab-strip right padding is smaller on small screens so session tabs stay in view. The workspace tab-strip **left** chrome (back/forward, add, grid picker) can scroll horizontally when needed.
+
+- **Technical UI — mobile tab history:** **`WorkspacePane`** hides **Back** / **Forward** chevrons below **`md`** and exposes the same actions at the top of the **⋯** pane menu.
+
+- **Technical UI — editor grid in pane menu:** **`WorkspaceGridLayoutPicker`** is **`md:flex`** in the tab strip only; below **`md`** the **LayoutGrid** control lives in the same **⋯** menu (after Back / Forward) via a **`menu`** variant so narrow layouts do not overflow.
+
+- **Technical UI — activity bar on narrow viewports:** the vertical **ActivityBar** is hidden below the **`md`** breakpoint (**App** wraps it with **`md:contents`**). **MenuBar** adds a **`md:hidden`** **panel** control that opens the same six views (**Explorer**, **Search**, **Source control**, **Run and extensions**, **Plan mode**, **Settings**), driven by **`technicalActivity`** from **App**.
+
+- **Menu bar — narrow viewports:** the **File** … **Settings** strip is **desktop-only** (**`md:flex`** on **nav**). Below **`md`**, a **hamburger** (**`Menu`**) opens a sheet: pick a menu name, then the same submenu as desktop (**`renderMenuPanels`**); **Back** returns to the name list. **`FileMenuContent`** supports **`embed`** for in-sheet layout. Outside clicks and **`closeMenus`** dismiss the sheet like other menu surfaces.
+
+- **Menu bar — model strip on narrow viewports:** the server **model** control keeps only the **green status dot** and **chevron** in the header below **`md`**; the monospaced label shows again from **`md`** upward and remains in the model **dropdown** panel. **`title`** and **`aria-label`** include the full label when the text is header-collapsed.
+
+- **Menu bar — command palette on narrow viewports:** the **Search** control is always visible; below **`md`** it is **icon-only** (magnifying glass), with placeholder copy and **⌘K** from **`md`** up. **`title`** / **`aria-label`** carry the shortcut when the label is collapsed.
+
+- **Technical UI — footer + composer overflow:** **`StatusBar`** uses **`w-full min-w-0`**, **`flex-1`**, and **horizontal scroll** on the primary (left) cluster with **`ml-auto`** on the right meta column so the orange strip does not push off-screen. **`ChatPanel`** composer uses **`min-w-0`**, a **scrollable** control row, **shorter agent picker** on small widths, **“Pane”** vs **“Pane team”** label, **full-width** alignment for **Build/Plan + Send** when wrapped, and **`flex-wrap`** on the plan handoff row.
+
+- **Status bar — narrow viewports:** the **footer** uses **`overflow-x-auto`** (with **hidden scrollbar** + **`touch-pan-x`**) instead of clipping, **`md:justify-between`** keeps the wide layout, Zed / tool clusters use **`shrink-0 flex-nowrap`**, and the **language** / **workspace path** controls use **`whitespace-nowrap`** (tighter **`max-w`** on the path on small screens) so icons and text do not stack on top of each other.
+
+- **Chat panel — narrow Technical / embedded layouts:** the session header row no longer uses **`overflow-hidden`**, so the **⋯** actions menu is not clipped. Below **`md`**, **Expand chat over workspace** in that menu (when docked or embedded in the grid) fixes the panel under the menu bar (**`top: 32px`**) with a dim backdrop (**`Escape`** or backdrop tap exits); **`document.body`** overflow locks while expanded.
+
+- **Claw workspace file navigation (`App.tsx`):** duplicated **Chat + `clawMenuFileFocusRev` bump** vs **Files** tab logic is centralized in **`focusClawTabAfterWorkspaceFileSelect`** (same behavior as before; easier to keep menu, palette, history, and save flows aligned).
 
 - **Way of Pi UI — per-shell chat:** **Simple**, **Technical**, and **Claw** each keep separate session tabs, transcripts, persisted plan/build + agent picks, and **`activate_session`** / JSONL keys (**`useWayOfPiSession`** `surfaceId` + **`wireSessionKeyForSurface`**). Technical defaults to orchestrator; only Claw auto-selects the **`claw`** agent when present.
 
@@ -31,6 +94,52 @@ Earlier work is not backfilled; entries start from when this file was added.
 - **Engine messaging (Mission + status model label):** Clarifies that Technical **Orchestrator** + streamed **thinking** can run on **Bun → LLM** while Mission’s “Pi” row refers to resolving the **`pi`** CLI for **`pi --mode json`**. Model strip shows **`Bun · …`** when not **`piDrivesChat`** so it is not mistaken for the Pi engine.
 
 ### Fixed
+
+- **Simple / Claw — MIT license modal in light Appearance:** **`MitLicenseModal`** accepts **`appearanceDark`** (default unchanged); **App** passes **`llmFixModalAppearanceDark`** so **Help → View License** matches other modals in **light** Simple and Claw.
+
+- **Simple / Claw — workspace + Run modals in light Appearance:** **`NewWorkspaceFileModal`**, **`LaunchConfigAddModal`**, and **`InstallDebuggersModal`** accept **`appearanceDark`** (default unchanged). **App** passes **`llmFixModalAppearanceDark`** so **light** Simple and Claw match **`NewPlanFileModal`** / **`LlmFixModal`** instead of always using the dark VS Code–style panel.
+
+- **Simple — New plan document:** **`NewPlanFileModal`** was never mounted in the **Simple** shell, so **File → New plan markdown** (and **`handleNewPlanFile`**) opened state with **no dialog**. The modal is now rendered next to **`NewWorkspaceFileModal`**. **`NewPlanFileModal`** accepts **`appearanceDark`** (defaults unchanged) so **Simple / Claw / Technical** can match **`llmFixModalAppearanceDark`** / light **Appearance** like other modals.
+
+- **Claw — Run / workspace modals:** **`NewWorkspaceFileModal`**, **`LaunchConfigAddModal`**, and **`InstallDebuggersModal`** are now mounted in the **Claw** shell (same **`MenuBar`** **`runMenu`** / shared state as Simple and Technical). Previously **Run → Add Configuration** / **Install Additional Debuggers** could flip **`open`** with **no dialog** in Claw.
+
+- **Claw — StatusBar:** footer no longer treats **`uiMode === "claw"`** as the Technical IDE — **Zed** strip, **tool dock**, and ESLint/tsc **Problems** counts stay **Technical-only**; Claw keeps **Connected** / **Offline** (not **live** / **offline**). The **Problems** control is **omitted** in Claw (no Technical Problems panel); Simple and Technical keep their previous behavior. **`ChatPanel`** dock width / embedded split / plan-handoff wiring use **`uiMode === "technical"`** so a future Claw embed cannot inherit Technical dock layout by mistake.
+
+- **Claw — chrome copy:** **`MenuBar`** primary-sidebar chevron only shows in **`uiMode === "technical"`** (not merely non-Simple). **`LlmFixModal`** footer hint for non-Simple is split: Technical keeps the status-bar note; Claw gets a **Settings / model strip** pointer instead of implying a Technical-only footer.
+
+- **Claw — LLM fix modal theme:** **`LlmFixModal`** **`appearanceDark`** no longer follows **`uiMode !== "simple"`** (which forced a dark modal in **light** Claw). It now uses **`simpleIsDark`** for Simple and Claw (shared **`useSimplePreferences`** with **`ClawApp`**) and stays dark-only when **`uiMode === "technical"`**.
+
+- **Claw — Pi model / provider files from global chrome:** **`openPiModelConfigInEditor`** now matches **`focusWorkspaceFileFromMenu`** on narrow / **`?shell=mobile`**: **Chat** + **`clawMenuFileFocusRev`** bump so the **`.claw/`** file sheet opens; wide Claw still jumps to the **Files** tab.
+
+- **Claw — wide desktop workspace file opens:** **`handleOpenFilePrompt`**, **`handleNewTextFile`**, **`performCreateNewWorkspaceFile`**, **`handleOpenFileInDock`**, **`handleSaveAs`**, **`openPlanFileForReview`**, command palette **Open: …**, **View** catalog **openFile**, and **Go → Back / Forward** now use the same rule as **`focusWorkspaceFileFromMenu`**: **Chat** + file-focus bump only when **`shouldBumpClawMenuFileFocus`**; otherwise **Files** (workspace tree + editor) instead of leaving a wide layout on **Chat** without the editor surface.
+
+- **Claw — Agent / team menu:** **Agent setup** (**`openAgentSetupFromMenu`**) now opens **Claw → Team** instead of forcing **Simple**. **Workspace grid** picker and **Team pulse → agent dock** only attach in **`uiMode === "technical"`** (no stray dock updates in Claw).
+
+- **Claw — View / Settings menus:** **View → workspace views catalog** (and catalog/schema file actions) now works in **Claw** (`viewSimpleMenu` when **`uiMode === "claw"`**, with **`setClawTab`**, **`focusWorkspaceFileFromMenu`**, and narrow/mobile file-focus bumps). **Settings → Simple app settings / AI Brains / Projects** stays on Claw (**Settings** / **Files** tabs) instead of forcing **Simple** mode. **New plan file** after save no longer treats Claw as “technical” for the post-create navigation branch.
+
+- **Simple UI — headers in view:** chat **“Chat with …”** hero is **outside** the transcript scroll (same idea as compact chrome), so session titles stay visible while messages scroll. Simple shell uses **`100dvh` + `min-h-0`** instead of **`h-screen`** so the column height matches the dynamic viewport. Side-by-side chat column drops a **`min(36vh,280px)`** floor that could squeeze chrome on short viewports. **Claw** shell and **Technical** root column use the same **`100dvh` / `min-h-0`** pattern for consistent viewport fitting.
+
+- **`handleSaveAs` (Simple):** dependency list now tracks **`shouldBumpSimpleMenuFileFocus`** (not **`shellMobile`**) so **Save as** on a **narrow** Simple viewport still runs the file-focus bump and opens the **narrow editor** sheet when appropriate.
+
+- **Simple — narrow phone browser (≤767px, no `?shell=mobile`):** primary nav defaults **closed** with a **left drawer** (backdrop, **Escape**); **StatusBar** hidden until **`md`**. Chat avoids **`side_by_side`** on narrow (no empty **“edit here”** column under the transcript). **Project files** strip under the secondary toolbar opens the tree as a **right-edge sheet**; **`rightOpen`** defaults **closed** on narrow; opening a file does not force **`side_by_side`**. With a file open, the editor is a **left slide-over** over the chat (**Open file** / tree pick / agent file / plan review), not a second in-flow column. **`simpleMobileMenuFileFocusRev`** from **App** (menu, palette, history, new file, views catalog, etc.) now bumps on narrow Simple as well as **`?shell=mobile`**, so those opens raise the **narrow editor** sheet automatically.
+
+- **Mobile shell — headers vs viewport:** **Simple** project-file and editor sheets and **Claw** session / workspace sheets are **`absolute`** inside the chat column (not **`fixed`** + **`100dvh`**) so sheet headers sit in the app column below **`MobileChrome`** instead of aligning to the browser viewport top. **`SimpleChatView`** **`compactChrome`** title row is **outside** the transcript scroll so it stays visible.
+
+- **Claw — narrow desktop browser (≤767px):** same pattern as Simple — **Claw** nav defaults **closed**, **Claw menu** strip opens a **left drawer** (backdrop, **Escape**), **StatusBar** hidden until **`md`**.
+
+- **Chat mobile UX:** **`SimpleChatView`** **`compactChrome`** — smaller **Mode / Stream / Thinking** controls, compact composer, slim header on **`?shell=mobile`** and **narrow Simple**; **Project files** opens as a **right-edge sheet**; **file editor** opens as a **left-edge sheet** over the chat column (dimmed backdrop) so the transcript stays usable. **Claw** workspace file panel uses a **right-edge sheet** on mobile; **ClawSessionStrip** touch targets tightened.
+
+- **Claw mobile Files tab:** **Hide tree** / **Show .claw tree** toggles the upper **`.claw/`** file tree so the document panel can use **full height** when the tree is collapsed.
+
+- **Simple mobile — file from global chrome:** opening a workspace file via **menu** (**Teams YAML**, **Edit workspace views catalog**), **View** catalog actions, or command palette **Open:** now raises **`simpleMobileMenuFileFocusRev`** so **`SimpleApp`** opens the **editor overlay** (same as in-app tree picks), not only the chat strip with **Open file**. Same **`setSimpleTab("chat")` + bump** for **`openPlanFileForReview`** (plan review / compose), **Save as** to a new path, **back/forward** navigation, **New file**, **Create workspace file** / **Open file** prompts, **Open file in workspace** from the dock, **new plan** creation, and **Pi model config** opened as a file in Simple.
+
+- **Claw — narrow / mobile menu file opens:** **`clawMenuFileFocusRev`** from **App** on **`?shell=mobile`** or **Claw** at **≤767px** (same **`setClawTab("chat")` + bump** paths as workspace file focus elsewhere). **`ClawChatView`** **`menuFileFocusRev`** opens the **`.claw/`** file panel and closes the **Sessions** sheet on mobile, matching **Simple** global-open behavior.
+
+- **Claw — command palette:** **Insert Build / review prompt from latest plan** now switches to **`setClawTab("chat")`** in Claw (was only **`setSimpleTab("chat")`**, which did nothing visible). **Simple: Chat / Team / …** jumpers use **Claw** tab ids and labels when **`uiMode === "claw"`**.
+
+- **Claw — global chrome was flipping to Simple by mistake:** **`technical`** is **`uiMode !== "simple"`**, so Claw was lumped with Technical. **Pi model** menu/palette (**`openPiModelConfigInSimpleBrains`**) and **LLM fix → AI Brains** (**`openLlmFixSimpleBrains`**) now branch on **`uiMode === "claw"`** (Claw **Files** / **Settings** respectively). **Settings → Edit workspace views catalog** in Claw uses **`focusWorkspaceFileFromMenu`** instead of forcing Simple.
+
+- **Claw vs Technical (shared `technical` flag):** workspace **static analysis**, **StatusBar** diagnostics strip, **Edit/Selection** menu **`canEdit`**, **Go to line** / **breakpoints** (F9, Run menu), **Go → problems**, and **Technical-only** keyboard shortcuts (sidebar, Zen, dock, terminal, etc.) now key off **`uiMode === "technical"`** or a dedicated **`clawWorkspaceEditorSurface`** (Claw **Chat** / **Files** only). Claw no longer runs the Technical static-analysis hook, and the menu bar enables cut/copy when the Claw workspace editor is actually mounted.
 
 - **Pi resolution + playground `.env` (ppi-style):** when bare **`pi`** is not on the Bun process PATH but is exported from the repo **`.env`**, **`resolvePiBinaryPath()`** can fall back to **`scripts/wop-headless-pi`** (sources playground `.env`, preserves workspace cwd, **`exec pi`**). Same “load `.env` then Pi” idea as **`ppi` → `just pi`**, without **`cd`** to the playground root.
 

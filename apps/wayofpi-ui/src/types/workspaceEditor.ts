@@ -129,6 +129,8 @@ export type SettingsMenuHandlers = {
 	onOpenIndexingDocs: () => void;
 	/** Settings → Honcho (memory API): env vars, mirror extension, doc links. */
 	onOpenHonchoSettings: () => void;
+	/** Settings → ngrok: tunnel localhost for demos / remote access (operator docs). */
+	onOpenNgrokSettings: () => void;
 	/** Open `.wayofpi/ui-views.json` in the Simple editor (optional). */
 	onEditWorkspaceViewsCatalog?: () => void;
 	/**

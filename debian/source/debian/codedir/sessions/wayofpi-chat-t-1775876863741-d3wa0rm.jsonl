@@ -1,0 +1,3 @@
+{"type":"session","kind":"wayofpi-web","id":"t-1775876863741-d3wa0rm","workspace":"/home/zerwiz/CodeP/Way of pi","createdAt":"2026-04-11T03:07:57.894Z","engine":"wayofpi-bun-chat"}
+{"type":"message","message":{"role":"user","content":"hello","createdAt":"2026-04-11T03:07:57.894Z"}}
+{"type":"message","message":{"role":"assistant","content":"Hello! I'm your Way of Pi **orchestrator** for this session. 🤖\n\nI'll help you:\n- Plan work steps\n- Coordinate workspace agents (`.pi/agents/…`)\n- Handle file ops with tools (`read`, `bash`, `grep`, etc.)\n- Coordinate shell handoffs to agents like `scout`\n\nWhat shall we tackle today?","createdAt":"2026-04-11T03:07:57.894Z"}}

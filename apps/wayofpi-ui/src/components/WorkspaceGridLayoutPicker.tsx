@@ -19,7 +19,12 @@ export function WorkspaceGridLayoutPicker({
 	maxRows,
 	onSelect,
 	rootClassName,
-}: WorkspaceGridPickerConfig & { rootClassName?: string }) {
+	/** `menu` = full-width row + label for embedding in **`WorkspacePane`** mobile overflow menu. */
+	variant = "toolbar",
+}: WorkspaceGridPickerConfig & {
+	rootClassName?: string;
+	variant?: "toolbar" | "menu";
+}) {
 	const [open, setOpen] = useState(false);
 	const [hover, setHover] = useState<{ ci: number; ri: number } | null>(null);
 	const rootRef = useRef<HTMLDivElement>(null);
@@ -37,6 +42,8 @@ export function WorkspaceGridLayoutPicker({
 		if (!open) setHover(null);
 	}, [open]);
 
+	const isMenu = variant === "menu";
+
 	return (
 		<div ref={rootRef} className={rootClassName ?? "relative flex h-9 shrink-0 items-center px-0.5"}>
 			<button
@@ -44,14 +51,29 @@ export function WorkspaceGridLayoutPicker({
 				title={`Editor grid: ${cols}×${rows} — click to change (max ${maxCols}×${maxRows})`}
 				aria-label="Editor grid layout"
 				aria-expanded={open}
+				role={isMenu ? "menuitem" : undefined}
 				onClick={() => setOpen((v) => !v)}
-				className="flex h-8 w-8 items-center justify-center rounded border border-transparent text-[#858585] hover:border-[#3c3c3c] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+				className={
+					isMenu
+						? "flex w-full items-center gap-2 rounded px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
+						: "flex h-8 w-8 items-center justify-center rounded border border-transparent text-[#858585] hover:border-[#3c3c3c] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+				}
 			>
-				<LayoutGrid size={16} strokeWidth={2} />
+				<LayoutGrid size={isMenu ? 14 : 16} strokeWidth={2} className={isMenu ? "shrink-0 text-[#858585]" : undefined} />
+				{isMenu ? (
+					<span className="min-w-0 flex-1">
+						Editor grid{" "}
+						<span className="font-mono text-[10px] text-[#858585]">
+							({cols}×{rows})
+						</span>
+					</span>
+				) : null}
 			</button>
 			{open ? (
 				<div
-					className="absolute left-0 top-full z-[8000] mt-0.5 min-w-[200px] rounded border border-[#454545] bg-[#252526] p-2 shadow-xl"
+					className={`absolute top-full z-[8050] mt-0.5 rounded border border-[#454545] bg-[#252526] p-2 shadow-xl ${
+						isMenu ? "left-0 right-0 min-w-0" : "left-0 min-w-[200px]"
+					}`}
 					role="dialog"
 					aria-label="Choose workspace grid size"
 				>

@@ -1,0 +1,116 @@
+# Way of Pi Debian Package
+
+## Building the .deb Package
+
+### Requirements
+
+To build the .deb package, you need:
+- Debian/Ubuntu/Linux distribution
+- `apt` package manager
+- Build dependencies installed
+
+### Build Instructions
+
+```bash
+# From the repository root
+cd '/home/zerwiz/CodeP/Way of pi'
+
+# Build the package
+cd debian/source
+debuild -us -uc
+
+# This will create .deb files in debian/source/
+```
+
+### Installing from .deb
+
+```bash
+# Install the package
+sudo dpkg -i ../wayof-pi_{VERSION}_amd64.deb
+sudo apt-get install -f  # Fix dependencies
+
+# Or with wget/curl from GitHub release:
+wget https://github.com/zerwiz/wayofpi/releases/download/v{VERSION}/wayof-pi_{VERSION}_amd64.deb
+sudo dpkg -i wayof-pi_{VERSION}_amd64.deb
+```
+
+## Package Structure
+
+The package installs to:
+- `/opt/wayofpi/` - The application binary and files
+- `~/.local/bin/` - User scripts and aliases
+- `~/.pi/` - Pi configuration directory
+
+## Dependencies
+
+Required system packages:
+- `nodejs` (npm)
+- `bun` (>= 1.3.2)
+- `just`
+- `build-essential`
+- `dh-nodejs`
+
+## Usage
+
+After installation:
+
+```bash
+# Run the app
+wayofpi
+
+# Or with Electron (recommended)
+./start-wayofpi-electron.sh
+
+# Use just commands
+just wayofpi-electron
+
+# List available commands
+pipx run wayofpi
+```
+
+## Configuration
+
+### API Keys
+
+Create `~/.pi/.env` with your API keys before first use:
+
+```bash
+cp ~/.pi/.env.sample ~/.pi/.env
+# Edit ~/.pi/.env and add your keys
+```
+
+### Extensions
+
+Extensions are located at:
+- `~/.pi/agent/extensions/` - User extensions
+- `~/.pi/settings.json` - Settings file
+
+### Settings
+
+Edit `~/.pi/settings.json` to:
+- Enable/disable extensions
+- Configure theme
+- Set up prompt templates
+- Configure agent teams
+
+## Uninstall
+
+```bash
+sudo dpkg -r wayof-pi
+# Don't forget to remove:
+rm -rf ~/.pi/.wayofpi-cache ~/.pi/.wayofpi-session
+```
+
+## Support
+
+- [GitHub Issues](https://github.com/zerwiz/wayofpi/issues)
+- [GitHub Repo](https://github.com/zerwiz/wayofpi)
+- [Pi Docs](https://github.com/mariozechner/pi-coding-agent)
+
+## License
+
+- App code: MIT
+- Extensions: MIT
+- Documentation: CC-BY-SA
+- AI prompts: CC-BY-SA
+- User files: Your choice

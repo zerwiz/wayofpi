@@ -132,12 +132,16 @@ export function StatusBar({
 	chatMode?: ChatSessionMode;
 	chatAgentName?: string | null;
 }) {
-	const technical = uiMode !== "simple";
-	const simpleLight = !technical && simpleAppearanceDark === false;
+	const isSimple = uiMode === "simple";
+	/** Zed strip, tool dock, ESLint/tsc Problems integration — Technical IDE only (not Claw). */
+	const isTechnicalIde = uiMode === "technical";
+	/** Denser footer (line/col/context) for Claw + Technical; Simple stays light strip. */
+	const nonSimpleChrome = !isSimple;
+	const simpleLight = isSimple && simpleAppearanceDark === false;
 
 	const barClass = simpleLight
 		? "border-t border-[#e5e5e5] bg-[#ececec] text-[#333333] h-[26px] font-sans text-[12px]"
-		: `bg-[#ea580c] text-white ${technical ? "h-[24px] font-mono text-[11px]" : "h-[26px] font-sans text-[12px]"}`;
+		: `bg-[#ea580c] text-white ${nonSimpleChrome ? "h-[24px] font-mono text-[11px]" : "h-[26px] font-sans text-[12px]"}`;
 
 	const toolIcon = (id: BottomPanelTab) => {
 		switch (id) {
@@ -186,17 +190,19 @@ export function StatusBar({
 	const diagClean = zed != null && diagCount === 0;
 
 	return (
-		<footer className={`z-20 flex shrink-0 select-none items-center justify-between px-2 ${barClass}`}>
-			<div className="flex h-full min-w-0 items-center gap-1 sm:gap-2">
-				{technical && zed ? (
+		<footer
+			className={`z-20 flex w-full min-w-0 max-w-full shrink-0 touch-pan-x select-none items-center gap-2 overflow-x-auto overflow-y-hidden px-2 [-ms-overflow-style:none] [scrollbar-width:none] md:justify-between [&::-webkit-scrollbar]:hidden ${barClass}`}
+		>
+			<div className="scrollbar-hide flex h-full min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto overflow-y-hidden sm:gap-2">
+				{isTechnicalIde && zed ? (
 					<div
-						className={`flex h-full items-center gap-0.5 ${technical ? "border-r border-white/25 pr-2" : "border-r border-zinc-300 pr-2"}`}
+						className={`flex h-full shrink-0 flex-nowrap items-center gap-0.5 ${isTechnicalIde ? "border-r border-white/25 pr-2" : "border-r border-zinc-300 pr-2"}`}
 					>
 						<button
 							type="button"
 							title="Project panel — toggle Explorer / primary sidebar (Zed: project panel)"
 							onClick={() => zed.onToggleLeftSidebar()}
-							className={zedBtn(zed.leftSidebarVisible, technical)}
+							className={zedBtn(zed.leftSidebarVisible, isTechnicalIde)}
 						>
 							<PanelLeft size={13} strokeWidth={2} />
 						</button>
@@ -204,7 +210,7 @@ export function StatusBar({
 							type="button"
 							title="Terminal — show integrated terminal tab (Zed: terminal)"
 							onClick={() => zed.onFocusTerminal()}
-							className={zedBtn(zed.terminalDockedVisible, technical)}
+							className={zedBtn(zed.terminalDockedVisible, isTechnicalIde)}
 						>
 							<TerminalSquare size={13} strokeWidth={2} />
 						</button>
@@ -212,7 +218,7 @@ export function StatusBar({
 							type="button"
 							title="Plan / Build — workspace planning activity (Zed: collaboration panel analogue)"
 							onClick={() => zed.onFocusPlanning()}
-							className={zedBtn(zed.planningActive, technical)}
+							className={zedBtn(zed.planningActive, isTechnicalIde)}
 						>
 							<Users size={13} strokeWidth={2} />
 						</button>
@@ -220,19 +226,19 @@ export function StatusBar({
 							type="button"
 							title="Session chat — toggle agent / chat panel (Ctrl+Alt+B, macOS: Cmd+Alt+B)"
 							onClick={() => zed.onToggleAgent()}
-							className={zedBtn(zed.agentVisible, technical)}
+							className={zedBtn(zed.agentVisible, isTechnicalIde)}
 						>
 							<MessageSquare size={13} strokeWidth={2} />
 						</button>
 						<div
-							className={`mx-0.5 h-4 w-px shrink-0 ${technical ? "bg-white/30" : "bg-zinc-400/60"}`}
+							className={`mx-0.5 h-4 w-px shrink-0 ${isTechnicalIde ? "bg-white/30" : "bg-zinc-400/60"}`}
 							aria-hidden
 						/>
 						<button
 							type="button"
 							title="Search — find in workspace (Zed: search)"
 							onClick={() => zed.onFocusSearch()}
-							className={zedBtn(zed.searchActive, technical)}
+							className={zedBtn(zed.searchActive, isTechnicalIde)}
 						>
 							<Search size={13} strokeWidth={2} />
 						</button>
@@ -240,7 +246,7 @@ export function StatusBar({
 							type="button"
 							title="Source control — Git / SCM sidebar (Zed: git panel)"
 							onClick={() => zed.onFocusScm()}
-							className={zedBtn(zed.scmActive, technical)}
+							className={zedBtn(zed.scmActive, isTechnicalIde)}
 						>
 							<GitBranch size={13} strokeWidth={2} />
 						</button>
@@ -248,7 +254,7 @@ export function StatusBar({
 							type="button"
 							title="Diagnostics — Problems panel (Zed: diagnostics)"
 							onClick={() => zed.onFocusDiagnostics()}
-							className={zedBtn(zed.problemsVisible, technical)}
+							className={zedBtn(zed.problemsVisible, isTechnicalIde)}
 						>
 							<Zap size={13} strokeWidth={2} />
 						</button>
@@ -264,8 +270,8 @@ export function StatusBar({
 						</span>
 					</div>
 				) : null}
-				{technical && technicalToolDock ? (
-					<div className="flex h-full items-center gap-0.5 border-r border-white/25 pr-2">
+				{isTechnicalIde && technicalToolDock ? (
+					<div className="flex h-full shrink-0 flex-nowrap items-center gap-0.5 border-r border-white/25 pr-2">
 						{HORIZONTAL_TOOL_DOCK_SLOTS.map((slot) => {
 							const row = technicalToolDock.horizontalDockStrip?.[slot];
 							if (!row?.hasStrip) return null;
@@ -308,57 +314,59 @@ export function StatusBar({
 				<button
 					type="button"
 					title={connected ? "WebSocket connected" : "Disconnected"}
-					className={`flex h-full cursor-default items-center gap-1.5 px-1 transition-colors ${simpleLight ? "hover:bg-zinc-200/80" : "hover:bg-white/20"}`}
+					className={`flex h-full shrink-0 cursor-default items-center gap-1.5 whitespace-nowrap px-1 transition-colors ${simpleLight ? "hover:bg-zinc-200/80" : "hover:bg-white/20"}`}
 				>
-					<Activity size={12} className={connected && technical ? "text-[#89d185]" : undefined} />
-					{connected ? (technical ? "live" : "Connected") : technical ? "offline" : "Offline"}
+					<Activity size={12} className={connected && nonSimpleChrome ? "text-[#89d185]" : undefined} />
+					{connected ? (isTechnicalIde ? "live" : "Connected") : isTechnicalIde ? "offline" : "Offline"}
 				</button>
-				<button
-					type="button"
-					title={
-						technical && diagnosticsSummary
-							? diagCount > 0
-								? `${diagnosticsSummary.errors} errors, ${diagnosticsSummary.warnings} warnings — open Problems`
-								: "No errors or warnings — open Problems to run or refresh ESLint / TypeScript"
-							: "Problems from workspace static analysis"
-					}
-					onClick={() => {
-						if (technical && diagnosticsSummary) diagnosticsSummary.onOpenProblems();
-					}}
-					disabled={!technical || !diagnosticsSummary}
-					className={`flex h-full max-w-[40vw] items-center gap-1.5 truncate px-1 transition-colors ${
-						technical && diagnosticsSummary
-							? simpleLight
-								? "cursor-pointer hover:bg-zinc-200/80"
-								: "cursor-pointer hover:bg-white/20"
-							: simpleLight
-								? "cursor-default hover:bg-zinc-200/80"
-								: "cursor-default hover:bg-white/20"
-					}`}
-				>
-					<AlertCircle size={12} className={diagCount > 0 ? "text-[#fbbf24]" : undefined} />
-					{technical && diagnosticsSummary ? (
-						<span className="font-mono tabular-nums">
-							{diagnosticsSummary.errors > 0 ? (
-								<span className="text-[#fecaca]">{diagnosticsSummary.errors}</span>
-							) : null}
-							{diagnosticsSummary.errors > 0 && diagnosticsSummary.warnings > 0 ? (
-								<span className="text-white/50"> · </span>
-							) : null}
-							{diagnosticsSummary.warnings > 0 ? (
-								<span className="text-[#fef08a]">{diagnosticsSummary.warnings}</span>
-							) : null}
-							{diagnosticsSummary.errors === 0 && diagnosticsSummary.warnings === 0 ? (
-								<span className="text-white/90">0</span>
-							) : null}
-						</span>
-					) : technical ? (
-						String(diagCount)
-					) : (
-						"No issues"
-					)}
-				</button>
-				{technical && chatMode ? (
+				{isSimple || isTechnicalIde ? (
+					<button
+						type="button"
+						title={
+							isTechnicalIde && diagnosticsSummary
+								? diagCount > 0
+									? `${diagnosticsSummary.errors} errors, ${diagnosticsSummary.warnings} warnings — open Problems`
+									: "No errors or warnings — open Problems to run or refresh ESLint / TypeScript"
+								: "Problems from workspace static analysis"
+						}
+						onClick={() => {
+							if (isTechnicalIde && diagnosticsSummary) diagnosticsSummary.onOpenProblems();
+						}}
+						disabled={!isTechnicalIde || !diagnosticsSummary}
+						className={`flex h-full max-w-[40vw] shrink-0 items-center gap-1.5 truncate whitespace-nowrap px-1 transition-colors ${
+							isTechnicalIde && diagnosticsSummary
+								? simpleLight
+									? "cursor-pointer hover:bg-zinc-200/80"
+									: "cursor-pointer hover:bg-white/20"
+								: simpleLight
+									? "cursor-default hover:bg-zinc-200/80"
+									: "cursor-default hover:bg-white/20"
+						}`}
+					>
+						<AlertCircle size={12} className={diagCount > 0 ? "text-[#fbbf24]" : undefined} />
+						{isTechnicalIde && diagnosticsSummary ? (
+							<span className="font-mono tabular-nums">
+								{diagnosticsSummary.errors > 0 ? (
+									<span className="text-[#fecaca]">{diagnosticsSummary.errors}</span>
+								) : null}
+								{diagnosticsSummary.errors > 0 && diagnosticsSummary.warnings > 0 ? (
+									<span className="text-white/50"> · </span>
+								) : null}
+								{diagnosticsSummary.warnings > 0 ? (
+									<span className="text-[#fef08a]">{diagnosticsSummary.warnings}</span>
+								) : null}
+								{diagnosticsSummary.errors === 0 && diagnosticsSummary.warnings === 0 ? (
+									<span className="text-white/90">0</span>
+								) : null}
+							</span>
+						) : isTechnicalIde ? (
+							String(diagCount)
+						) : (
+							"No issues"
+						)}
+					</button>
+				) : null}
+				{nonSimpleChrome && chatMode ? (
 					<span
 						className="hidden h-full cursor-default items-center px-1 font-mono text-[10px] font-bold uppercase tracking-wide text-white/95 hover:bg-white/20 sm:flex"
 						title={chatMode === "plan" ? "Plan mode (structured planning)" : "Build mode"}
@@ -366,7 +374,7 @@ export function StatusBar({
 						{chatMode}
 					</span>
 				) : null}
-				{technical ? (
+				{nonSimpleChrome ? (
 					<span
 						className="hidden max-w-[28vw] cursor-default truncate px-1 font-mono text-[10px] text-white/90 hover:bg-white/20 lg:inline"
 						title="Agent persona from workspace .md (see chat panel)"
@@ -379,16 +387,16 @@ export function StatusBar({
 					title={onCopyWorkspacePath ? "Click to copy workspace path" : undefined}
 					onClick={() => onCopyWorkspacePath?.()}
 					disabled={!onCopyWorkspacePath}
-					className={`flex h-full max-w-[28vw] items-center truncate px-1 transition-colors sm:max-w-[30vw] ${
+					className={`flex h-full max-w-[min(52vw,14rem)] shrink-0 items-center truncate px-1 transition-colors sm:max-w-[30vw] md:max-w-[28vw] ${
 						simpleLight ? "hover:bg-zinc-200/80" : "hover:bg-white/20"
 					} ${onCopyWorkspacePath ? "cursor-pointer" : "cursor-default"}`}
 				>
 					{workspaceRoot}
 				</button>
 			</div>
-			{technical ? (
-				<div className="flex h-full shrink-0 items-center gap-1 sm:gap-2">
-					{zed ? (
+			{nonSimpleChrome ? (
+				<div className="flex h-full shrink-0 flex-nowrap items-center gap-1 sm:gap-2 md:ml-auto">
+					{isTechnicalIde && zed ? (
 						<>
 							<span
 								className="hidden cursor-default items-center gap-1 px-1 font-mono text-[10px] tabular-nums text-white/90 sm:flex"
@@ -406,7 +414,7 @@ export function StatusBar({
 								type="button"
 								title="Settings — preferences (Zed: settings)"
 								onClick={() => zed.onOpenSettings()}
-								className="flex h-full max-h-[22px] items-center rounded px-1.5 text-white/90 transition-colors hover:bg-white/20"
+								className="flex h-full max-h-[22px] shrink-0 items-center rounded px-1.5 text-white/90 transition-colors hover:bg-white/20"
 							>
 								<Settings size={14} strokeWidth={2} />
 							</button>
@@ -414,7 +422,7 @@ export function StatusBar({
 								type="button"
 								title="Agent — show session chat (Zed: agent / AI sparkle)"
 								onClick={() => zed.onToggleAgent()}
-								className={`flex h-full max-h-[22px] items-center rounded px-1.5 transition-colors hover:bg-white/20 ${
+								className={`flex h-full max-h-[22px] shrink-0 items-center rounded px-1.5 transition-colors hover:bg-white/20 ${
 									zed.agentVisible ? "bg-white/20 text-white" : "text-sky-200"
 								}`}
 							>
@@ -440,7 +448,7 @@ export function StatusBar({
 					<button
 						type="button"
 						title="Language / grammar for open file (Zed: active language)"
-						className="flex h-full cursor-default items-center px-1 hover:bg-white/20"
+						className="flex h-full shrink-0 cursor-default items-center whitespace-nowrap px-1 hover:bg-white/20"
 					>
 						{language}
 					</button>
@@ -460,7 +468,7 @@ export function StatusBar({
 					</button>
 				</div>
 			) : (
-				<div className={`flex h-full items-center gap-3 ${simpleLight ? "text-zinc-700" : "text-white/90"}`}>
+				<div className={`ml-auto flex h-full shrink-0 items-center gap-3 ${simpleLight ? "text-zinc-700" : "text-white/90"}`}>
 					<span className="hidden sm:inline" title="Editor language when a file is open">
 						{language}
 					</span>

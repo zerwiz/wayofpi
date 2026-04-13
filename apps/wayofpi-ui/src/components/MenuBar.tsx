@@ -4,10 +4,20 @@ import {
 	ChevronRight,
 	CircleDot,
 	Info,
+	Menu,
+	PanelLeft,
 	Search,
 	TerminalSquare,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+	useEffect,
+	useRef,
+	useState,
+	type MutableRefObject,
+	type PointerEvent as ReactPointerEvent,
+	type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import type { PiModelConfigPath } from "../constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
 import type { ServerConfig } from "../hooks/useServerConfig";
@@ -34,6 +44,7 @@ import {
 	type ChatDockRegion,
 	type HorizontalToolDockSlot,
 } from "../utils/technicalLayoutStorage";
+import { ACTIVITY_BAR_ITEMS } from "./ActivityBar";
 import { FileMenuContent } from "./FileMenuContent";
 import { UiModeToggle } from "./UiModeToggle";
 
@@ -53,6 +64,36 @@ function viewFlyoutClass() {
 	return "absolute left-full top-0 z-[70] ml-0.5 min-w-[272px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl";
 }
 
+/**
+ * Electron + some `document` `mousedown` dismiss layers can make `click` on header buttons unreliable.
+ * Run the action on primary **pointerdown** (before those bubble-phase handlers) and skip the following
+ * synthetic **click** so we do not double-toggle. Keyboard / AT still use **click** only.
+ */
+function createPrimaryPointerHandlers(
+	dedupeRef: MutableRefObject<string | null>,
+	key: string,
+	action: () => void,
+): {
+	onPointerDown: (e: ReactPointerEvent<HTMLButtonElement>) => void;
+	onClick: () => void;
+} {
+	return {
+		onPointerDown: (e) => {
+			if (!e.isPrimary || e.button !== 0) return;
+			dedupeRef.current = key;
+			action();
+		},
+		onClick: () => {
+			if (dedupeRef.current === key) {
+				dedupeRef.current = null;
+				return;
+			}
+			dedupeRef.current = null;
+			action();
+		},
+	};
+}
+
 export function MenuBar({
 	modelLabel,
 	uiMode,
@@ -66,7 +107,7 @@ export function MenuBar({
 	onRefreshWorkspace,
 	onCopyWorkspacePath,
 	onSelectActivity,
-	/** Unified horizontal tool docks (upper + lower bands); omit in Simple mode. */
+	technicalActivity,
 	horizontalToolDockToggles,
 	onFocusBottomTab,
 	leftSidebarVisible,
@@ -110,6 +151,8 @@ export function MenuBar({
 	onRefreshWorkspace: () => void | Promise<void>;
 	onCopyWorkspacePath: () => void;
 	onSelectActivity: (a: TechnicalActivity) => void;
+	/** Technical only: current Explorer / Search / … activity for the narrow-viewport activity menu. */
+	technicalActivity?: TechnicalActivity;
 	horizontalToolDockToggles?: Partial<
 		Record<
 			HorizontalToolDockSlot,
@@ -198,8 +241,13 @@ export function MenuBar({
 	const [debugHelpOpen, setDebugHelpOpen] = useState(false);
 	/** Settings → View: hover flyout (chrome / layout toggles). */
 	const [settingsViewFlyout, setSettingsViewFlyout] = useState(false);
+	const [mobileActivityOpen, setMobileActivityOpen] = useState(false);
+	const [mobileAppMenuOpen, setMobileAppMenuOpen] = useState(false);
 	const navRef = useRef<HTMLDivElement>(null);
 	const modelRef = useRef<HTMLDivElement>(null);
+	const mobileActivityRef = useRef<HTMLDivElement>(null);
+	const mobileAppMenuRef = useRef<HTMLDivElement>(null);
+	const headerPrimaryPointerDedupeRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		if (openMenu !== "View") {
@@ -214,69 +262,38 @@ export function MenuBar({
 		}
 	}, [openMenu]);
 
+	/** Use `click` (bubble), not `mousedown`: Electron can deliver `mousedown` on `document` before React commits `openMenu`, so an outside-dismiss handler would clear the menu in the same gesture that opened it. */
 	useEffect(() => {
-		if (!openMenu && !modelOpen) return;
-		const onDown = (e: MouseEvent) => {
+		if (!openMenu && !modelOpen && !mobileActivityOpen && !mobileAppMenuOpen) return;
+		const onDocClick = (e: MouseEvent) => {
 			const t = e.target;
 			if (!(t instanceof Node)) return;
 			if (navRef.current?.contains(t)) return;
 			if (modelRef.current?.contains(t)) return;
+			if (mobileActivityRef.current?.contains(t)) return;
+			if (mobileAppMenuRef.current?.contains(t)) return;
 			setOpenMenu(null);
 			setModelOpen(false);
+			setMobileActivityOpen(false);
+			setMobileAppMenuOpen(false);
 		};
-		document.addEventListener("mousedown", onDown);
-		return () => document.removeEventListener("mousedown", onDown);
-	}, [openMenu, modelOpen]);
+		document.addEventListener("click", onDocClick);
+		return () => document.removeEventListener("click", onDocClick);
+	}, [openMenu, modelOpen, mobileActivityOpen, mobileAppMenuOpen]);
 
-	const closeMenus = () => setOpenMenu(null);
+	const closeMenus = () => {
+		setOpenMenu(null);
+		setMobileActivityOpen(false);
+		setMobileAppMenuOpen(false);
+	};
 
-	return (
-		<header className="relative z-[60] flex h-8 shrink-0 select-none items-center justify-between border-b border-[#252526] bg-[#323233] px-3">
-			<div className="flex min-w-0 items-center gap-4">
-				<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
-					<TerminalSquare size={14} className="text-[#007acc]" />
-					WAY OF PI
-					{uiMode !== "simple" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
-						<button
-							type="button"
-							title={
-								leftSidebarVisible
-									? "Hide primary sidebar (Ctrl+B)"
-									: "Show primary sidebar (Ctrl+B)"
-							}
-							aria-label={
-								leftSidebarVisible ? "Hide primary sidebar" : "Show primary sidebar"
-							}
-							aria-pressed={leftSidebarVisible}
-							onClick={() => onToggleLeftSidebar()}
-							className="-ml-0.5 flex shrink-0 items-center rounded p-0.5 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
-						>
-							{leftSidebarVisible ? (
-								<ChevronLeft size={14} strokeWidth={2} aria-hidden />
-							) : (
-								<ChevronRight size={14} strokeWidth={2} aria-hidden />
-							)}
-						</button>
-					) : null}
-				</div>
-				<UiModeToggle uiMode={uiMode} onUiModeChange={onUiModeChange} />
-				<nav ref={navRef} className="relative flex min-w-0 gap-1 text-[13px] text-[#cccccc]">
-					{menuLabels.map((label) => (
-						<div key={label} className="relative shrink-0">
-							<button
-								type="button"
-								className={`rounded px-2 py-0.5 hover:bg-[#474747] hover:text-white ${
-									openMenu === label ? "bg-[#474747] text-white" : ""
-								}`}
-								onClick={() => setOpenMenu(openMenu === label ? null : label)}
-							>
-								{label}
-							</button>
-							{openMenu === "File" && label === "File" ? (
+	const renderMenuPanels = (mobileMenuPanelEmbed: boolean, label: string): ReactNode => (
+		<>
+{openMenu === "File" && (label === "File" || mobileMenuPanelEmbed) ? (
 								fileMenu ? (
-									<FileMenuContent fm={fileMenu} closeMenus={closeMenus} />
+									<FileMenuContent fm={fileMenu} closeMenus={closeMenus} embed={mobileMenuPanelEmbed} />
 								) : (
-									<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[240px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+									<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[240px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 										<li>
 											<button
 												type="button"
@@ -330,8 +347,8 @@ export function MenuBar({
 									</ul>
 								)
 							) : null}
-							{openMenu === "Edit" && label === "Edit" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[280px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Edit" && (label === "Edit" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[280px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{editMenu ? (
 										<>
 											<li>
@@ -509,8 +526,8 @@ export function MenuBar({
 									</li>
 								</ul>
 							) : null}
-							{openMenu === "Selection" && label === "Selection" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Selection" && (label === "Selection" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{selectionMenu ? (
 										<>
 											<li>
@@ -739,8 +756,8 @@ export function MenuBar({
 									)}
 								</ul>
 							) : null}
-							{openMenu === "View" && label === "View" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[280px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "View" && (label === "View" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[280px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									<li>
 										<button
 											type="button"
@@ -1239,6 +1256,11 @@ export function MenuBar({
 															</button>
 														</li>
 														<li>
+															<button type="button" disabled className={menuBtnClass(true)}>
+																Themes <span className="text-[#555]">(coming soon)</span>
+															</button>
+														</li>
+														<li>
 															<button
 																type="button"
 																className={menuBtnClass()}
@@ -1674,8 +1696,8 @@ export function MenuBar({
 									) : null}
 								</ul>
 							) : null}
-							{openMenu === "Go" && label === "Go" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[340px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Go" && (label === "Go" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[340px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{goMenu ? (
 										<>
 											<li>
@@ -2131,8 +2153,8 @@ export function MenuBar({
 									)}
 								</ul>
 							) : null}
-							{openMenu === "Run" && label === "Run" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Run" && (label === "Run" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{runMenu ? (
 										<>
 											<li>
@@ -2542,8 +2564,8 @@ export function MenuBar({
 									)}
 								</ul>
 							) : null}
-							{openMenu === "Terminal" && label === "Terminal" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[300px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Terminal" && (label === "Terminal" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[300px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{terminalMenu ? (
 										<>
 											<li>
@@ -2724,8 +2746,8 @@ export function MenuBar({
 									)}
 								</ul>
 							) : null}
-							{openMenu === "Help" && label === "Help" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[300px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Help" && (label === "Help" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[300px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{helpMenu ? (
 										<>
 											<li>
@@ -2931,8 +2953,8 @@ export function MenuBar({
 									)}
 								</ul>
 							) : null}
-							{openMenu === "Agents" && label === "Agents" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Agents" && (label === "Agents" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[320px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									<li>
 										<button
 											type="button"
@@ -3004,8 +3026,8 @@ export function MenuBar({
 									</li>
 								</ul>
 							) : null}
-							{openMenu === "Settings" && label === "Settings" ? (
-								<ul className="absolute left-0 top-full z-50 mt-0.5 min-w-[min(340px,92vw)] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl">
+							{openMenu === "Settings" && (label === "Settings" || mobileMenuPanelEmbed) ? (
+								<ul className={mobileMenuPanelEmbed ? "relative z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none" : "absolute left-0 top-full z-50 mt-0.5 min-w-[min(340px,92vw)] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"}>
 									{settingsMenu ? (
 										<>
 											<li>
@@ -3071,6 +3093,19 @@ export function MenuBar({
 													}}
 												>
 													Honcho (memory API)…
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													className={menuBtnClass()}
+													title="Open Way of Pi from another network (e.g. work) while Bun + Vite run at home — ngrok public URL; install CLI, authtoken, tunnel Vite or Bun port."
+													onClick={() => {
+														settingsMenu.onOpenNgrokSettings();
+														closeMenus();
+													}}
+												>
+													ngrok (public URL)…
 												</button>
 											</li>
 											{settingsMenu.onEditWorkspaceViewsCatalog ? (
@@ -3381,35 +3416,245 @@ export function MenuBar({
 									) : null}
 								</ul>
 							) : null}
+	
+		</>
+	);
+
+	const menuBarHeader = (
+		<header className="pointer-events-auto fixed left-0 right-0 top-0 z-[95] flex h-8 w-full min-w-0 max-w-full select-none items-center gap-2 border-b border-[#252526] bg-[#323233] px-2 sm:px-3">
+			{/*
+			 * Never put `overflow-x-auto` on an ancestor of `absolute top-full` menus: per CSS overflow,
+			 * non-visible X forces Y to compute as non-visible too, so dropdowns clip to zero height.
+			 * Horizontally scroll only the wordmark strip; keep nav + mobile flyouts outside that box.
+			 */}
+			<div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-visible sm:gap-4">
+				{/* No `flex-1` here — it would grow this strip and push nav / mode toggle to the right. */}
+				<div className="scrollbar-hide flex shrink-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+					<div
+						className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white"
+						title="Way of Pi"
+					>
+						<TerminalSquare size={14} className="shrink-0 text-[#007acc]" aria-hidden />
+						<span className="hidden md:inline">WAY OF PI</span>
+						{uiMode === "technical" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
+							<button
+								type="button"
+								title={
+									leftSidebarVisible
+										? "Hide primary sidebar (Ctrl+B)"
+										: "Show primary sidebar (Ctrl+B)"
+								}
+								aria-label={
+									leftSidebarVisible ? "Hide primary sidebar" : "Show primary sidebar"
+								}
+								aria-pressed={leftSidebarVisible}
+								{...createPrimaryPointerHandlers(
+									headerPrimaryPointerDedupeRef,
+									"toggle-left-sidebar",
+									() => onToggleLeftSidebar(),
+								)}
+								className="-ml-0.5 flex shrink-0 items-center rounded p-0.5 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
+							>
+								{leftSidebarVisible ? (
+									<ChevronLeft size={14} strokeWidth={2} aria-hidden />
+								) : (
+									<ChevronRight size={14} strokeWidth={2} aria-hidden />
+								)}
+							</button>
+						) : null}
+					</div>
+				</div>
+				{uiMode === "technical" && technicalActivity != null ? (
+					<div ref={mobileActivityRef} className="relative shrink-0 md:hidden">
+						<button
+							type="button"
+							title="Primary sidebar views — Explorer, Search, Source control, …"
+							aria-label="Activity views"
+							aria-expanded={mobileActivityOpen}
+							aria-haspopup="menu"
+							{...createPrimaryPointerHandlers(
+								headerPrimaryPointerDedupeRef,
+								"mobile-activity",
+								() => {
+									setOpenMenu(null);
+									setModelOpen(false);
+									setMobileActivityOpen((o) => !o);
+								},
+							)}
+							className="-ml-0.5 flex shrink-0 items-center rounded p-1 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
+						>
+							<PanelLeft size={16} strokeWidth={2} aria-hidden />
+						</button>
+						{mobileActivityOpen ? (
+							<ul
+								className="absolute left-0 top-full z-[70] mt-0.5 min-w-[220px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"
+								role="menu"
+								aria-label="Activity views"
+							>
+								{ACTIVITY_BAR_ITEMS.map(({ id, icon: Icon, label }) => (
+									<li key={id} role="none">
+										<button
+											type="button"
+											role="menuitem"
+											className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] hover:bg-[#007acc]/30 hover:text-white ${
+												technicalActivity === id ? "bg-[#37373d] text-white" : "text-[#cccccc]"
+											}`}
+											onClick={() => {
+												onSelectActivity(id);
+												setMobileActivityOpen(false);
+											}}
+										>
+											<Icon size={16} strokeWidth={1.5} className="shrink-0 text-[#858585]" aria-hidden />
+											<span className="min-w-0 flex-1">{label}</span>
+											{technicalActivity === id ? (
+												<span className="shrink-0 font-mono text-[10px] text-[#89d185]">✓</span>
+											) : null}
+										</button>
+									</li>
+								))}
+							</ul>
+						) : null}
+					</div>
+				) : null}
+				<UiModeToggle uiMode={uiMode} onUiModeChange={onUiModeChange} />
+				<div ref={mobileAppMenuRef} className="relative z-[71] shrink-0 md:hidden">
+					<button
+						type="button"
+						title="App menus (File, Edit, View, …)"
+						aria-label="Open menus"
+						aria-expanded={mobileAppMenuOpen}
+						aria-haspopup="menu"
+						{...createPrimaryPointerHandlers(
+							headerPrimaryPointerDedupeRef,
+							"mobile-app-menu",
+							() => {
+								setMobileActivityOpen(false);
+								setModelOpen(false);
+								setMobileAppMenuOpen((o) => {
+									const next = !o;
+									if (next) setOpenMenu(null);
+									return next;
+								});
+							},
+						)}
+						className="flex shrink-0 items-center rounded p-1 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
+					>
+						<Menu size={16} strokeWidth={2} aria-hidden />
+					</button>
+					{mobileAppMenuOpen ? (
+						<div
+							className="absolute left-0 top-full z-[75] mt-0.5 flex max-h-[min(86dvh,640px)] w-[min(calc(100vw-0.75rem),360px)] flex-col overflow-hidden rounded border border-[#454545] bg-[#252526] shadow-xl"
+							role="menu"
+						>
+							{!openMenu ? (
+								<ul className="max-h-[min(40dvh,320px)] list-none overflow-y-auto py-1" role="none">
+									{menuLabels.map((l) => (
+										<li key={l} role="none">
+											<button
+												type="button"
+												role="menuitem"
+												className={menuBtnClass()}
+												onClick={() => {
+													setOpenMenu(l);
+												}}
+											>
+												{l}
+											</button>
+										</li>
+									))}
+								</ul>
+							) : (
+								<>
+									<button
+										type="button"
+										className="sticky top-0 z-[1] flex w-full shrink-0 items-center gap-2 border-b border-[#3c3c3c] bg-[#323233] px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
+										onClick={() => setOpenMenu(null)}
+									>
+										<ChevronLeft size={14} aria-hidden />
+										All menus
+									</button>
+									<div className="min-h-0 flex-1 overflow-y-auto">
+										{openMenu
+											? renderMenuPanels(true, openMenu as (typeof menuLabels)[number])
+											: null}
+									</div>
+								</>
+							)}
+						</div>
+					) : null}
+				</div>
+				<nav
+					ref={navRef}
+					className="relative hidden min-w-0 gap-1 text-[13px] text-[#cccccc] md:flex"
+				>
+					{menuLabels.map((label) => (
+						<div key={label} className="relative shrink-0">
+							<button
+								type="button"
+								className={`rounded px-2 py-0.5 hover:bg-[#474747] hover:text-white ${
+									openMenu === label ? "bg-[#474747] text-white" : ""
+								}`}
+								{...createPrimaryPointerHandlers(
+									headerPrimaryPointerDedupeRef,
+									`top-menu:${label}`,
+									() => {
+										setMobileActivityOpen(false);
+										setMobileAppMenuOpen(false);
+										setOpenMenu((m) => (m === label ? null : label));
+									},
+								)}
+							>
+								{label}
+							</button>
+							{renderMenuPanels(false, label)}
 						</div>
 					))}
 				</nav>
 			</div>
 
-			<div className="flex shrink-0 items-center gap-2 sm:gap-4">
+			<div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-4">
 				<button
 					type="button"
-					onClick={onOpenCommandPalette}
-					className="hidden cursor-pointer items-center gap-2 rounded border border-[#454545] bg-[#3c3c3c] px-2 py-1 transition-colors hover:bg-[#4d4d4d] sm:flex"
-					title="Command palette (Ctrl+K)"
+					{...createPrimaryPointerHandlers(
+						headerPrimaryPointerDedupeRef,
+						"command-palette",
+						() => {
+							setMobileActivityOpen(false);
+							setMobileAppMenuOpen(false);
+							onOpenCommandPalette();
+						},
+					)}
+					className="flex cursor-pointer items-center gap-1 rounded border border-[#454545] bg-[#3c3c3c] px-1.5 py-1 transition-colors hover:bg-[#4d4d4d] md:gap-2 md:px-2 md:py-1"
+					title="Command palette (Ctrl+K) — Search or command… · ⌘K / Ctrl+K"
+					aria-label="Open command palette. Shortcut: Ctrl+K or ⌘K."
 				>
-					<Search size={12} className="text-[#cccccc]" />
-					<span className="text-[12px] text-[#cccccc]">Search or command…</span>
-					<span className="ml-1 font-mono text-[10px] font-bold text-[#969696]">⌘K</span>
+					<Search size={12} className="shrink-0 text-[#cccccc]" aria-hidden />
+					<span className="hidden text-[12px] text-[#cccccc] md:inline">Search or command…</span>
+					<span className="hidden font-mono text-[10px] font-bold text-[#969696] md:ml-1 md:inline">⌘K</span>
 				</button>
 
 				<div className="relative" ref={modelRef}>
 					<button
 						type="button"
-						onClick={() => setModelOpen(!modelOpen)}
-						className="flex max-w-[min(200px,28vw)] cursor-pointer items-center gap-2 rounded border border-[#3c3c3c] bg-[#2d2d2d] px-2 py-1 text-[12px] hover:bg-[#3a3a3a]"
-						title="Server LLM config"
+						{...createPrimaryPointerHandlers(
+							headerPrimaryPointerDedupeRef,
+							"model-picker",
+							() => {
+								setOpenMenu(null);
+								setMobileActivityOpen(false);
+								setMobileAppMenuOpen(false);
+								setModelOpen((o) => !o);
+							},
+						)}
+						className="flex max-w-none cursor-pointer items-center gap-1 rounded border border-[#3c3c3c] bg-[#2d2d2d] px-1 py-1 text-[11px] hover:bg-[#3a3a3a] md:min-w-0 md:max-w-[min(200px,28vw)] md:gap-1.5 md:px-2 md:text-[12px]"
+						title={`Server LLM config — ${modelLabel}`}
+						aria-label={`Active model: ${modelLabel}`}
 					>
-						<CircleDot size={10} className="shrink-0 text-[#89d185]" />
-						<span className="truncate font-mono" title={modelLabel}>
+						<CircleDot size={10} className="shrink-0 text-[#89d185]" aria-hidden />
+						<span className="hidden min-w-0 truncate font-mono md:block" title={modelLabel}>
 							{modelLabel}
 						</span>
-						<ChevronDown size={12} className="shrink-0 text-[#858585]" />
+						<ChevronDown size={12} className="shrink-0 text-[#858585]" aria-hidden />
 					</button>
 					{modelOpen ? (
 						<div className="absolute right-0 top-full z-50 mt-1 w-[min(320px,85vw)] border border-[#454545] bg-[#252526] p-3 shadow-xl">
@@ -3619,5 +3864,11 @@ export function MenuBar({
 				</div>
 			) : null}
 		</header>
+	);
+
+	return (
+		<div className="h-8 w-full shrink-0" data-wop-menu-bar-layout-spacer>
+			{createPortal(menuBarHeader, document.body)}
+		</div>
 	);
 }

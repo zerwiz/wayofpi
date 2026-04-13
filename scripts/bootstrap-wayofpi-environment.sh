@@ -231,6 +231,16 @@ print_row just just
 print_row pi pi
 print_row rg rg
 print_row ollama ollama "$OLLAMA_NOTE"
+NGROK_STATE="missing"
+NGROK_NOTE="-"
+if have_cmd ngrok; then
+	NGROK_STATE="ok"
+	NGROK_NOTE="$(ngrok version 2>/dev/null | head -n1 | tr -d '\r' || echo "?")"
+elif [[ -x "$UI_DIR/node_modules/ngrok/bin/ngrok" ]]; then
+	NGROK_STATE="ok"
+	NGROK_NOTE="$("$UI_DIR/node_modules/ngrok/bin/ngrok" version 2>/dev/null | head -n1 | tr -d '\r' || echo "?") (npm optionalDep)"
+fi
+printf "%-12s %-8s %s\n" "ngrok" "$NGROK_STATE" "$NGROK_NOTE"
 echo ""
 
 # --- version gates ---
@@ -294,6 +304,13 @@ if ! have_cmd pi; then
 fi
 if ! have_cmd ollama && ! ollama_reachable; then
 	echo "* LLM: Ollama (https://ollama.com) or OPENROUTER_API_KEY in .env"
+	echo ""
+fi
+if ! have_cmd ngrok && [[ ! -x "$UI_DIR/node_modules/ngrok/bin/ngrok" ]]; then
+	echo "* ngrok (optional — Settings → ngrok for public https URL to this dev machine):"
+	echo "  ./scripts/install-ngrok-optional.sh          # copy-paste apt + brew"
+	echo "  (cd apps/wayofpi-ui && npm install)         # bundled optional npm agent"
+	echo "  just install-ngrok-optional && ./scripts/install-ngrok-optional.sh --install -y   # advanced: apt via sudo"
 	echo ""
 fi
 
@@ -378,4 +395,5 @@ echo "Next steps:"
 echo "  1. Ensure .env exists: cp .env.sample .env && edit (or: $0 --init-env)"
 echo "  2. Start desktop shell: ./start-wayofpi-electron.sh"
 echo "  3. Optional global ppi symlinks: ./scripts/install-ppi-global.sh"
+echo "  4. Optional tunnels: ./scripts/install-ngrok-optional.sh → Way of Pi → Settings → ngrok"
 echo ""

@@ -1,0 +1,19 @@
+#!/bin/sh
+# postinst script for wayof-pi package
+set -e
+
+status=$1
+case "$status" in
+  configure|startup)
+    # Create necessary directories
+    mkdir -p ~/.local/bin ~/.pi
+    # Setup .env if it doesn't exist
+    if [ ! -f ~/.pi/.env ]; then
+      cp /usr/share/doc/wayof-pi/copyright ~/.pi/.env.sample 2>/dev/null || true
+      echo "Please create ~/.pi/.env with your API keys before first use."
+    fi
+    ;;
+  abort-upgrade|abort-remove|abort-deprecated)
+    # Nothing to do
+    ;;
+esac

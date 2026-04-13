@@ -4,6 +4,7 @@ import {
 	Brain,
 	Code2,
 	Database,
+	Globe,
 	FolderOpen,
 	LayoutDashboard,
 	Rocket,
@@ -12,7 +13,7 @@ import {
 	X,
 	Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 // ─── tiny shared prose helpers ───────────────────────────────────────────────
@@ -779,6 +780,87 @@ function SectionHoncho() {
 	);
 }
 
+function SectionNgrok() {
+	return (
+		<>
+			<P>
+				<strong className="text-white">ngrok</strong> is a small helper program (from{" "}
+				<a
+					href="https://ngrok.com/"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-[#4fc3f7] underline hover:text-[#81d4fa]"
+				>
+					ngrok.com
+				</a>
+				) that creates a <strong className="text-white">temporary public web link</strong> pointing at Way of Pi
+				while it runs on your computer. Think of it like forwarding a mobile number to your landline: people use
+				the new number; the call still lands on your machine.
+			</P>
+
+			<P>
+				<strong className="text-white">Optional for Way of Pi.</strong> You never have to install or run ngrok unless you want that public link.
+				Local editing, chat, and the rest of the shell work the same without it.
+			</P>
+
+			<InfoBox>
+				<strong className="text-white">Why would I care?</strong> Normally you only open Way of Pi on the machine
+				where Bun + Vite run (for example your home PC). With ngrok, you can open that <strong className="text-white">same</strong> setup
+				from <strong className="text-white">work, a café, or another network</strong> — the stack stays on the host; your browser uses the
+				public link. Same idea for a teammate demo or a cloud webhook test — <em>only while Way of Pi and ngrok both run on the host</em>.
+			</InfoBox>
+
+			<H>Everyday uses</H>
+			<UL>
+				<li>
+					<strong className="text-white">Reach home (or your dev box) from elsewhere</strong> — leave Way of Pi + ngrok running on that
+					machine; at work or on travel, paste the ngrok <code className="text-[#ce9178]">https://…</code> link in your browser.
+				</li>
+				<li>
+					<strong className="text-white">Show someone your screen without screen-sharing software</strong> — you
+					send them a link; they see the app in their browser. Good for quick demos or “does this look right?”
+				</li>
+				<li>
+					<strong className="text-white">Use your phone or tablet</strong> — open the ngrok link on another
+					device while the real project and AI stay on your computer.
+				</li>
+				<li>
+					<strong className="text-white">Testing hooks from the internet</strong> — some cloud tools need to
+					“phone home” to your app once. ngrok gives them a reachable address for that experiment.
+				</li>
+			</UL>
+
+			<H>What to watch out for</H>
+			<UL>
+				<li>
+					Anyone who has the link can try to use your app while the tunnel is up — treat it like a{" "}
+					<strong className="text-white">guest key</strong>, not a public billboard. Close the tunnel when you are
+					done.
+				</li>
+				<li>
+					In <strong className="text-white">dev</strong>, <strong className="text-white">Settings → ngrok (public URL)…</strong> can{" "}
+					<strong className="text-white">install the ngrok agent into this app</strong> (one button: runs <code className="text-[#ce9178]">bun install</code> or{" "}
+					<code className="text-[#ce9178]">npm install</code> in <code className="text-[#ce9178]">apps/wayofpi-ui</code>), save your dashboard{" "}
+					<strong className="text-white">authtoken</strong> on the host, and start/stop a managed <code className="text-[#ce9178]">ngrok http</code> for the usual Vite port. Production builds do not expose those APIs.
+				</li>
+			</UL>
+
+			<DevBox>
+				Concrete commands and ports (Vite vs Bun only) live in that Settings dialog. Official help from the vendor:{" "}
+				<a
+					href="https://ngrok.com/docs"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-[#4fc3f7] underline hover:text-[#81d4fa]"
+				>
+					ngrok.com/docs
+				</a>
+				.
+			</DevBox>
+		</>
+	);
+}
+
 function SectionCapabilities() {
 	return (
 		<>
@@ -875,10 +957,13 @@ const SECTIONS = [
 	{ id: "workspace", label: "Workspace", icon: FolderOpen, component: SectionWorkspace },
 	{ id: "devs", label: "For Developers", icon: Code2, component: SectionForDevelopers },
 	{ id: "honcho", label: "Honcho & memory", icon: Database, component: SectionHoncho },
+	{ id: "ngrok", label: "Share with ngrok", icon: Globe, component: SectionNgrok },
 	{ id: "capabilities", label: "Capabilities", icon: Settings2, component: SectionCapabilities },
 ] as const;
 
-type SectionId = (typeof SECTIONS)[number]["id"];
+export type HowToUseSectionId = (typeof SECTIONS)[number]["id"];
+
+type SectionId = HowToUseSectionId;
 
 // ─── main modal ──────────────────────────────────────────────────────────────
 
@@ -886,13 +971,22 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 export function HowToUseModal({
 	open,
 	onDismiss,
+	/** When set as the modal opens, selects this sidebar section (e.g. from Settings → ngrok). Cleared by parent on dismiss. */
+	initialSectionId = null,
 }: {
 	open: boolean;
 	onDismiss: () => void;
 	/** kept for API compat but not used — content is now all inline */
 	repoBlobBase?: string;
+	initialSectionId?: HowToUseSectionId | null;
 }) {
 	const [activeId, setActiveId] = useState<SectionId>("welcome");
+
+	useEffect(() => {
+		if (!open) return;
+		if (initialSectionId != null) setActiveId(initialSectionId);
+		else setActiveId("welcome");
+	}, [open, initialSectionId]);
 
 	if (!open) return null;
 	const portalTarget = typeof document !== "undefined" ? document.body : null;

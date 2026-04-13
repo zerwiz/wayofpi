@@ -2,79 +2,95 @@
 
 > Way of Pi turns a "command-line" robot into a "point-and-click" superpower for anyone building software.
 
+This page is a **short, plain-language** intro. For install commands, ports, and the full doc list, start at the repo **[README.md](../README.md)** and **[docs/README.md](./README.md)**.
+
 ---
 
 ## What is Way of Pi?
 
-Imagine you have a super-smart robot named Pi that is amazing at writing computer code. Usually, to talk to this robot, you have to type commands into a boring black box with green text (the "Terminal").
+Imagine you have a super-smart robot named **Pi** that is amazing at writing computer code. Usually, to talk to this robot, you have to type commands into a boring black box with green text (the "Terminal").
 
-**Way of Pi is like giving that robot a cool-looking control center** with buttons, windows, and a file browser so it's much easier to work with.
-
----
-
-## The Two Main Parts
-
-Think of Way of Pi like a Video Game Console:
-
-1. **The Brains (Pi Agent):** This is the part that does the actual thinking. It knows how to code, fix errors, and follow instructions.
-
-2. **The Screen (Way of Pi Shell):** This is the app you actually see on your computer. It has a chat window, a place to look at your folders, and buttons to change how the robot behaves.
+**Way of Pi is like giving that robot a control center** with buttons, windows, and a file browser so it is easier to work with.
 
 ---
 
-## What Can You Do With It?
+## The two main parts
 
-### Build "Superpowers" for your AI
+Think of Way of Pi like a video game console:
 
-If you were playing Minecraft, you might install "mods" to get new items. In Way of Pi, you can write "Extensions." These are like mods for your AI helper that teach it how to use new tools or understand new languages.
+1. **The brains (Pi):** The part that does the thinking. It can read your questions, look at files when allowed, and follow instructions.
+2. **The screen (Way of Pi shell):** The app you see: chat, folders, editor, and settings. A small **server** in the shell also serves the **folder you opened** safely to the UI.
 
-### Hire a "Team" of Bots
+When people say **headless Pi**, they mean Pi running **without** the old full-screen terminal UI — still the real Pi program, driven by the Way of Pi app.
 
-Instead of just one AI, you can set up a "Team." You might have one bot that is an expert at finding bugs and another bot that is an expert at designing how a website looks. You can watch them work together in your workspace.
+---
 
-### A Better Way to Code
+## What can you do with it?
 
-Usually, if you want an AI to help you, you have to copy and paste your code into a website like ChatGPT. With Way of Pi, the AI is already "inside" your folders. It can see all your files at once, so it doesn't get confused about how things fit together.
+### Build "superpowers" for your AI
+
+If you were playing Minecraft, you might install "mods" for new items. In Way of Pi, you can add **extensions** — like mods that teach your helper new tools or behaviors.
+
+### Hire a "team" of bots
+
+You can set up a **team**: one persona for finding bugs, another for design, and so on. They work against the **workspace** you opened.
+
+### A better way to code
+
+Instead of copying code into a random website, the AI stays **inside the project folder** you chose, so it sees how files fit together.
 
 ---
 
 ## When the AI can change files (workspace tools)
 
-Sometimes the assistant only **answers in chat**. Other times it can use **tools** to **read**, **search**, or **edit files** in the **folder you opened** — for example when your setup uses **orchestrator tools** in the Way of Pi server, or when chat runs through the real **Pi** program so Pi’s normal tools apply. Think of it like a **robot arm that only reaches inside the toy box you put on the table**: it should not wander the rest of your computer unless you chose a risky folder or turned on powerful features. Always read warnings and use a **project folder** you trust.
+Sometimes the assistant only **answers in chat**. Other times it can use **tools** to **read**, **search**, or **edit files** in the **folder you opened** — for example when your setup uses **orchestrator tools** in the Way of Pi server, or when chat runs through the real **Pi** program so Pi's normal tools apply. Think of it like a **robot arm that only reaches inside the toy box you put on the table**: it should not wander the rest of your computer unless you chose a risky folder or turned on powerful features. Always read warnings and use a **project folder** you trust.
 
 ---
 
-## Keeping Track of Everything (Documentation)
+## Keeping track of everything (documentation)
 
-Way of Pi isn't just for writing code; it's also a great way to keep notes and explain how things work.
+Way of Pi is not only for writing code; it is also a good place to keep notes and explain how things work.
 
-**For You (User Docs):** It helps you keep track of your "Effort Docs." This is like a diary for your project where you can write down what you did, what you need to do next, and how your custom AI tools work.
+**For you:** **Effort docs** under **`projects/`** in the repo (see **[projects/README.md](../projects/README.md)**) — a diary for a task or codebase the team is working on.
 
-**For Big Teams (Company Docs):** When a whole company uses this, they can share a "Playground." This means everyone on the team uses the same rules, the same AI "Team" setups, and the same guides so that nobody gets lost when working on a big project together.
-
----
-
-## Who Uses This?
-
-- **The Creators:** People who want to build the "next big thing" in AI and need a place to experiment.
-- **The Builders:** People making apps or websites who want a smart helper that understands their whole project.
-- **The Tech Wizards:** People who love customizing their computer setup to be as fast and powerful as possible.
+**For teams:** Everyone can share the same **playground** rules, **agent** setups, and guides in git so nobody gets lost on a big project.
 
 ---
 
-## Why is it Helpful?
+## Who uses this?
 
-- **It's Easier to See:** Instead of just reading text, you can see your files and your chat side-by-side.
-- **It's Fast:** It runs on your computer, so it can talk to your files instantly.
-- **It's Private:** You can use "Local Models," which means the AI lives on your hard drive and doesn't have to send your secrets to the internet.
+- **Creators** experimenting with the next idea in AI-assisted development.
+- **Builders** making apps or sites who want a helper that understands the whole repo.
+- **Power users** who like a fast, customizable desktop or browser workflow.
 
 ---
 
-## Next Steps
+## Why is it helpful?
 
-- Read the [Product Capabilities](./WOP_PRODUCT_CAPABILITIES.md) for a detailed feature matrix
-- Check the [Product Overview](./WOP_PRODUCT_OVERVIEW.md) for onboarding narratives
-- Explore the [Repo Index](../REPO_INDEX.md) to understand the workspace structure
+- **Easier to see:** Files and chat side by side instead of a tiny terminal-only view.
+- **Fast:** Runs on your machine, so file access is local.
+- **Private when you want it:** You can use **local models** (for example via **Ollama**) so chat does not have to leave your computer.
+
+---
+
+## Optional: open Way of Pi from the internet (ngrok)
+
+Sometimes you want a **temporary public `https` link** to the computer where Way of Pi is running — for example from another network, on cellular, or to show someone a quick demo. **[ngrok](https://ngrok.com/)** is a common way to do that. It is **not** required for normal local use.
+
+**In the app:** open **Settings → ngrok (optional)**. From there you can install the ngrok agent into the app, save your **[dashboard authtoken](https://dashboard.ngrok.com/get-started/your-authtoken)**, turn the managed tunnel on or off, and optionally set **tunnel login** (username and password) so strangers with the link cannot use your dev server without logging in.
+
+**Details:** ports (Vite vs Bun), environment variables, HTTP APIs on the Bun server, security, and optional system-wide install — **[WOP_NGROK.md](./WOP_NGROK.md)**. The repo **[README.md](../README.md)** also has a short **Public HTTPS URL (ngrok)** section under **Way of Pi web UI**.
+
+---
+
+## Next steps
+
+- **[README.md](../README.md)** — clone, prerequisites, run **Electron** or browser dev (`./start-wayofpi-electron.sh`, `./start-wayofpi-ui.sh`).
+- **[WOP_PRODUCT_CAPABILITIES.md](./WOP_PRODUCT_CAPABILITIES.md)** — what is shipped vs still being wired.
+- **[WOP_PRODUCT_OVERVIEW.md](./WOP_PRODUCT_OVERVIEW.md)** — product story and onboarding narratives.
+- **[WOP_NGROK.md](./WOP_NGROK.md)** — public dev links with ngrok (optional).
+- **[REPO_INDEX.md](./REPO_INDEX.md)** — folder map for this playground.
+- **[docs/README.md](./README.md)** — full list of guides under **`docs/`**.
 
 ---
 

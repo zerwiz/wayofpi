@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { X } from "lucide-react";
+import { useMaxWidthMediaQuery } from "../../hooks/useMaxWidthMediaQuery";
 import { StatusBar } from "../StatusBar";
 import { DockSplitHandle } from "../DockSplitHandle";
 import type { ServerConfig } from "../../hooks/useServerConfig";
@@ -23,6 +25,7 @@ import { SimpleRightPanel } from "./SimpleRightPanel";
 import { SimpleSecondaryToolbar } from "./SimpleSecondaryToolbar";
 import { SimpleSettingsView } from "./SimpleSettingsView";
 import { SimpleTeamView } from "./SimpleTeamView";
+import { SimpleMobileTabBar } from "../mobile/simple/SimpleMobileTabBar";
 
 function languageFromPath(path: string | null): string {
 	if (!path) return "Plain Text";
@@ -123,6 +126,8 @@ export function SimpleApp({
 	planHandoffWorkspaceKey = "",
 	onMoveFileToDirectory,
 	allowWorkspaceRootDrop = false,
+	layoutVariant = "desktop",
+	simpleMobileMenuFileFocusRev,
 }: {
 	uiMode: UiMode;
 	setUiMode: (m: UiMode) => void;
@@ -207,9 +212,24 @@ export function SimpleApp({
 	planHandoffWorkspaceKey?: string;
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	allowWorkspaceRootDrop?: boolean;
+	/** `mobile` = bottom tab bar, no nav rail / status bar; chat uses file sheet + editor overlay. */
+	layoutVariant?: "desktop" | "mobile";
+	/** When present and increments, open the file editor overlay (mobile shell or narrow ≤767px Simple); path set from App menu / palette. */
+	simpleMobileMenuFileFocusRev?: number;
 }) {
-	const [leftOpen, setLeftOpen] = useState(true);
-	const [rightOpen, setRightOpen] = useState(true);
+	const isMobile = layoutVariant === "mobile";
+	/** Desktop Simple on viewports ≤767px: nav rail is a drawer, not a permanent column (matches Tailwind `md`). */
+	const narrowDesktop = useMaxWidthMediaQuery(767) && !isMobile;
+	const [mobileFilesOpen, setMobileFilesOpen] = useState(false);
+	const [mobileEditorOpen, setMobileEditorOpen] = useState(false);
+	const [leftOpen, setLeftOpen] = useState(() =>
+		typeof window !== "undefined" ? window.innerWidth >= 768 : true,
+	);
+	const [rightOpen, setRightOpen] = useState(() =>
+		typeof window !== "undefined" ? window.innerWidth >= 768 : true,
+	);
+	/** Narrow desktop (≤767px): file editor as left slide-over over chat (same idea as mobile shell). */
+	const [narrowEditorOpen, setNarrowEditorOpen] = useState(false);
 	const {
 		approvalQueue,
 		setApprovalQueue,
@@ -228,6 +248,60 @@ export function SimpleApp({
 	} = useSimpleChatWorkspaceLayout();
 	const agentsApi = useAgents();
 
+	useEffect(() => {
+		if (isMobile) return;
+		if (narrowDesktop) setLeftOpen(false);
+	}, [isMobile, narrowDesktop]);
+
+	useEffect(() => {
+		if (!narrowDesktop || !leftOpen || isMobile) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setLeftOpen(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [narrowDesktop, leftOpen, isMobile]);
+
+	useEffect(() => {
+		if (!isMobile) return;
+		if (activeTab !== "chat") {
+			setMobileFilesOpen(false);
+			setMobileEditorOpen(false);
+		}
+	}, [isMobile, activeTab]);
+
+	useEffect(() => {
+		if (!isMobile) return;
+		if (selectedPath == null) setMobileEditorOpen(false);
+	}, [isMobile, selectedPath]);
+
+	const prevSimpleMobileMenuFocusRev = useRef<number | null>(null);
+	useEffect(() => {
+		if (simpleMobileMenuFileFocusRev === undefined) {
+			prevSimpleMobileMenuFocusRev.current = null;
+			return;
+		}
+		if (!isMobile && !narrowDesktop) {
+			prevSimpleMobileMenuFocusRev.current = null;
+			return;
+		}
+		const rev = simpleMobileMenuFileFocusRev;
+		if (prevSimpleMobileMenuFocusRev.current === null) {
+			prevSimpleMobileMenuFocusRev.current = rev;
+			return;
+		}
+		if (rev !== prevSimpleMobileMenuFocusRev.current) {
+			prevSimpleMobileMenuFocusRev.current = rev;
+			if (isMobile) {
+				setMobileEditorOpen(true);
+				setMobileFilesOpen(false);
+			} else {
+				setNarrowEditorOpen(true);
+				setRightOpen(false);
+			}
+		}
+	}, [isMobile, narrowDesktop, simpleMobileMenuFileFocusRev]);
+
 	const prevChatPathRef = useRef<string | null>(selectedPath);
 	const prevSimpleTabRef = useRef<SimpleTabId>(activeTab);
 	useEffect(() => {
@@ -238,9 +312,43 @@ export function SimpleApp({
 		prevSimpleTabRef.current = activeTab;
 		if (activeTab !== "chat" || !selectedPath) return;
 		if (pathJustOpened || switchedToChatWithFile) {
-			setChatWorkspaceLayout("side_by_side");
+			// Below `md`, two-column side-by-side stacks vertically and leaves a huge empty editor slot.
+			if (!narrowDesktop) setChatWorkspaceLayout("side_by_side");
 		}
-	}, [selectedPath, activeTab, setChatWorkspaceLayout]);
+	}, [selectedPath, activeTab, setChatWorkspaceLayout, narrowDesktop]);
+
+	useEffect(() => {
+		if (!narrowDesktop || isMobile) return;
+		if (activeTab !== "chat") setRightOpen(false);
+	}, [narrowDesktop, isMobile, activeTab]);
+
+	useEffect(() => {
+		if (!narrowDesktop || isMobile || !rightOpen) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setRightOpen(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [narrowDesktop, isMobile, rightOpen]);
+
+	useEffect(() => {
+		if (!narrowDesktop || isMobile) return;
+		if (selectedPath == null) setNarrowEditorOpen(false);
+	}, [narrowDesktop, isMobile, selectedPath]);
+
+	useEffect(() => {
+		if (!narrowDesktop || isMobile) return;
+		if (activeTab !== "chat") setNarrowEditorOpen(false);
+	}, [narrowDesktop, isMobile, activeTab]);
+
+	useEffect(() => {
+		if (!narrowDesktop || isMobile || !narrowEditorOpen) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setNarrowEditorOpen(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [narrowDesktop, isMobile, narrowEditorOpen]);
 
 	const workspacePath = root ?? "—";
 	const appearanceDark = isDark;
@@ -254,8 +362,15 @@ export function SimpleApp({
 		(relativePath: string) => {
 			setSelectedPath(relativePath);
 			onTabChange("chat");
+			if (layoutVariant === "mobile") {
+				setMobileEditorOpen(true);
+				setMobileFilesOpen(false);
+			} else if (narrowDesktop) {
+				setNarrowEditorOpen(true);
+				setRightOpen(false);
+			}
 		},
-		[setSelectedPath, onTabChange],
+		[setSelectedPath, onTabChange, layoutVariant, narrowDesktop],
 	);
 
 	const rootShell = appearanceDark
@@ -270,12 +385,20 @@ export function SimpleApp({
 		(rel: string) => {
 			setSelectedPath(rel);
 			onTabChange("chat");
+			if (layoutVariant === "mobile") {
+				setMobileEditorOpen(true);
+				setMobileFilesOpen(false);
+			} else if (narrowDesktop) {
+				setNarrowEditorOpen(true);
+				setRightOpen(false);
+			}
 		},
-		[setSelectedPath, onTabChange],
+		[setSelectedPath, onTabChange, layoutVariant, narrowDesktop],
 	);
 
 	const chatViewEl = (
 		<SimpleChatView
+			compactChrome={isMobile || narrowDesktop}
 			rows={rows}
 			streaming={streaming}
 			chatStreamUiEnabled={chatStreamUiEnabled}
@@ -308,18 +431,268 @@ export function SimpleApp({
 		/>
 	);
 
+	const handleMobileTreeSelect = useCallback(
+		(path: string) => {
+			setSelectedPath(path);
+			setMobileFilesOpen(false);
+			setMobileEditorOpen(true);
+		},
+		[setSelectedPath],
+	);
+
+	const handleNarrowTreeSelect = useCallback(
+		(path: string) => {
+			setSelectedPath(path);
+			setRightOpen(false);
+			setNarrowEditorOpen(true);
+		},
+		[setSelectedPath],
+	);
+
+	const handleNavTab = useCallback(
+		(id: SimpleTabId) => {
+			onTabChange(id);
+			if (narrowDesktop) setLeftOpen(false);
+		},
+		[onTabChange, narrowDesktop],
+	);
+
+	const handleNavHelp = useCallback(() => {
+		onHelp?.();
+		if (narrowDesktop) setLeftOpen(false);
+	}, [onHelp, narrowDesktop]);
+
+	const navRailEl = (
+		<SimpleNavRail
+			activeTab={activeTab}
+			onTab={handleNavTab}
+			onHelp={onHelp ? handleNavHelp : undefined}
+			appearanceDark={appearanceDark}
+		/>
+	);
+
 	const emptyEditorHint = appearanceDark ? "text-[#858585]" : "text-[#616161]";
 	const showPlanWorkspace = chatMode === "plan" && !selectedPath;
+
+	const mobileStripBg = appearanceDark ? "border-[#252526] bg-[#252526]" : "border-[#e5e5e5] bg-[#f0f0f0]";
+	const mobileSheetShell = appearanceDark
+		? "border-[#3c3c3c] bg-[#252526] text-[#cccccc]"
+		: "border-[#e5e5e5] bg-white text-[#333333]";
+	const mobileBtn = appearanceDark
+		? "min-h-9 rounded-md border border-[#3c3c3c] bg-[#1e1e1e] px-2.5 py-1.5 text-[11px] font-semibold text-[#cccccc] hover:bg-[#2a2a2a]"
+		: "min-h-9 rounded-md border border-[#d4d4d4] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#333333] hover:bg-[#f5f5f5]";
 
 	return (
 		<div
 			data-simple-theme={appearanceDark ? "dark" : "light"}
 			className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden font-sans ${rootShell}`}
 		>
+			{isMobile ? (
+				<>
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+						<div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${mainCol}`}>
+							{activeTab === "chat" ? (
+								<>
+									<div className={`flex shrink-0 flex-wrap items-center gap-2 border-b px-2 py-1.5 ${mobileStripBg}`}>
+										<button type="button" className={mobileBtn} onClick={() => setMobileFilesOpen(true)}>
+											Project files
+										</button>
+										{selectedPath ? (
+											<button type="button" className={mobileBtn} onClick={() => setMobileEditorOpen(true)}>
+												Open file
+											</button>
+										) : null}
+									</div>
+									<div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+										{chatViewEl}
+										{mobileFilesOpen ? (
+										<div
+											className="absolute inset-0 z-[70] flex flex-row"
+											role="dialog"
+											aria-modal="true"
+											aria-label="Project files"
+										>
+											<button
+												type="button"
+												className="min-h-0 min-w-0 flex-1 bg-black/45"
+												aria-label="Dismiss file list"
+												onClick={() => setMobileFilesOpen(false)}
+											/>
+											<div
+												className={`flex h-full max-h-full w-[min(100%,400px)] max-w-[94vw] shrink-0 flex-col overflow-hidden border-l shadow-2xl ${mobileSheetShell}`}
+												style={{
+													paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+												}}
+											>
+												<div
+													className={`flex min-h-10 shrink-0 items-center justify-between border-b px-2 py-1.5 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
+												>
+													<span className="text-[12px] font-semibold">Project files</span>
+													<button
+														type="button"
+														onClick={() => setMobileFilesOpen(false)}
+														className={`min-h-9 min-w-9 rounded-lg text-[11px] font-semibold ${appearanceDark ? "text-[#858585] hover:bg-[#1e1e1e]" : "text-[#666666] hover:bg-[#eeeeee]"}`}
+													>
+														Done
+													</button>
+												</div>
+												<div className="min-h-0 flex-1 overflow-hidden">
+													<SimpleRightPanel
+														presentation="sheet"
+														nodes={nodes}
+														selectedPath={selectedPath}
+														onSelectFile={handleMobileTreeSelect}
+														loading={treeLoading}
+														error={treeError}
+														logs={logs}
+														streaming={streaming}
+														appearanceDark={appearanceDark}
+														onExplorerGitMutated={() => void refreshTreeQuiet()}
+														onMoveFileToDirectory={onMoveFileToDirectory}
+														allowWorkspaceRootDrop={allowWorkspaceRootDrop}
+													/>
+												</div>
+											</div>
+										</div>
+									) : null}
+										{selectedPath && mobileEditorOpen ? (
+										<div className="absolute inset-0 z-[80] flex flex-row" role="dialog" aria-modal="true" aria-label="File editor">
+											<div
+												className={`flex h-full max-h-full w-[min(100%,480px)] max-w-[96vw] shrink-0 flex-col overflow-hidden border-r shadow-2xl ${appearanceDark ? "border-[#3c3c3c] bg-[#1e1e1e]" : "border-[#e5e5e5] bg-[#f3f3f3]"}`}
+												style={{
+													paddingBottom: "max(0px, env(safe-area-inset-bottom))",
+												}}
+											>
+												<div
+													className={`flex min-h-10 shrink-0 items-center justify-between border-b px-2 py-1.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-[#f5f5f5]"}`}
+												>
+													<span
+														className={`min-w-0 truncate font-mono text-[11px] font-semibold ${appearanceDark ? "text-[#e5e5e5]" : "text-[#222222]"}`}
+														title={selectedPath ?? undefined}
+													>
+														{selectedPath}
+													</span>
+													<button
+														type="button"
+														onClick={() => setMobileEditorOpen(false)}
+														className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg ${appearanceDark ? "text-[#cccccc] hover:bg-[#1e1e1e]" : "text-[#333333] hover:bg-[#eeeeee]"}`}
+														aria-label="Close editor"
+													>
+														<X size={18} aria-hidden />
+													</button>
+												</div>
+												<div className={`min-h-0 flex-1 overflow-hidden ${appearanceDark ? "bg-[#1e1e1e]" : "bg-white"}`}>
+													<SimpleFilePanel
+													ref={workspaceEditorRef}
+													path={selectedPath}
+													content={content}
+													onChange={setContent}
+													persistEncoding={persistEncoding}
+													fileMimeType={fileMimeType}
+													loading={fileLoading}
+													error={fileError}
+													dirty={dirty}
+													onDiscardUnsaved={discardUnsavedChanges}
+													onSave={async () => {
+														await save();
+														await refreshTree();
+													}}
+													onClose={() => {
+														setSelectedPath(null);
+														setMobileEditorOpen(false);
+													}}
+													onCursor={onCursor}
+													appearanceDark={appearanceDark}
+													onUndoRedoStackChange={onUndoRedoStackChange}
+													onSelectionPrefsChange={onSelectionPrefsChange}
+													onFindInFiles={onFindInFiles}
+													onReplaceInFiles={onReplaceInFiles}
+													columnLayout="besideChat"
+													markdownPaneMode={markdownPaneMode}
+													onMarkdownPaneModeChange={setMarkdownPaneMode}
+													/>
+												</div>
+											</div>
+											<button
+												type="button"
+												className="min-h-0 min-w-0 flex-1 bg-black/45"
+												aria-label="Close editor"
+												onClick={() => setMobileEditorOpen(false)}
+											/>
+										</div>
+									) : null}
+									</div>
+								</>
+							) : activeTab === "team" ? (
+								<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2">
+									<SimpleTeamView
+										modelLabel={modelLabel}
+										agents={agentsApi.data?.agents ?? []}
+										teams={agentsApi.data?.teams ?? {}}
+										teamsPath={agentsApi.data?.teamsPath ?? null}
+										teamsYamlWritePath={teamsYamlWritePath}
+										workspaceReady={workspaceReady}
+										loading={agentsApi.loading}
+										error={agentsApi.error}
+										onReload={agentsApi.reload}
+										onOpenAgentFile={openAgentFile}
+										onOpenTeamsYaml={onOpenTeamsYaml}
+										onCreateAgentDefinition={onCreateAgentDefinition}
+										appearanceDark={appearanceDark}
+									/>
+								</div>
+							) : activeTab === "models" ? (
+								<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2">
+									<SimpleModelsView
+										config={config}
+										workspaceRoot={root}
+										appearanceDark={appearanceDark}
+										effectiveModel={effectiveModel}
+										onSelectModel={onSelectLlmModel}
+										providerConfigInitialPath={providerConfigInitialPath}
+										providerConfigInitialNonce={providerConfigInitialNonce}
+										onConsumeProviderConfigFocus={onConsumeProviderConfigFocus}
+									/>
+								</div>
+							) : activeTab === "projects" ? (
+								<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2">
+									<SimpleProjectsView
+										rootLabel={rootLabel}
+										rootPath={workspacePath}
+										onRefresh={() => void refreshTree()}
+										onOpenFolder={onOpenFolder}
+										onOpenRecentFolder={onOpenRecentFolder}
+										recentFolders={recentFolders}
+										appearanceDark={appearanceDark}
+									/>
+								</div>
+							) : activeTab === "settings" ? (
+								<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2">
+									<SimpleSettingsView
+										colorMode={colorMode}
+										onColorMode={setColorMode}
+										approvalQueue={approvalQueue}
+										onApprovalQueue={setApprovalQueue}
+										onSwitchToTechnical={() => setUiMode("technical")}
+										onOpenIndexingDocs={onOpenIndexingDocs}
+										serverConfig={config}
+										onConfigRefresh={onConfigRefresh}
+									/>
+								</div>
+							) : null}
+						</div>
+						<SimpleMobileTabBar
+							activeTab={activeTab}
+							onTab={onTabChange}
+							onHelp={onHelp}
+							appearanceDark={appearanceDark}
+						/>
+					</div>
+				</>
+			) : (
+				<>
 			<div className="flex min-h-0 flex-1 overflow-hidden">
-				{leftOpen ? (
-					<SimpleNavRail activeTab={activeTab} onTab={onTabChange} onHelp={onHelp} appearanceDark={appearanceDark} />
-				) : null}
+				{leftOpen && !narrowDesktop ? navRailEl : null}
 
 				<div className={`flex min-w-0 flex-1 flex-col ${mainCol}`}>
 					<SimpleSecondaryToolbar
@@ -333,11 +706,31 @@ export function SimpleApp({
 
 					<div className="flex min-h-0 flex-1 overflow-hidden">
 						<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+							{narrowDesktop && activeTab === "chat" ? (
+								<div className={`flex shrink-0 flex-wrap items-center gap-2 border-b px-2 py-1.5 ${mobileStripBg}`}>
+									<button type="button" className={mobileBtn} onClick={() => setRightOpen(true)}>
+										Project files
+									</button>
+									{selectedPath ? (
+										<button type="button" className={mobileBtn} onClick={() => setNarrowEditorOpen(true)}>
+											Open file
+										</button>
+									) : null}
+									{selectedPath ? (
+										<span
+											className={`min-w-0 flex-1 basis-full truncate text-left font-mono text-[11px] font-medium sm:basis-auto ${emptyEditorHint}`}
+											title={selectedPath}
+										>
+											{selectedPath}
+										</span>
+									) : null}
+								</div>
+							) : null}
 							{activeTab === "chat" ? (
-								chatWorkspaceLayout === "side_by_side" ? (
+								!narrowDesktop && chatWorkspaceLayout === "side_by_side" ? (
 									<div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
 										<div
-											className="flex min-h-[min(36vh,280px)] min-w-0 w-full flex-1 flex-col md:min-h-0 md:min-w-[260px] md:max-w-[min(94vw,1600px)] md:flex-none md:[width:var(--wop-simple-chat-col)]"
+											className="flex min-h-0 min-w-0 w-full flex-1 flex-col md:min-w-[260px] md:max-w-[min(94vw,1600px)] md:flex-none md:[width:var(--wop-simple-chat-col)]"
 											style={
 												{ ["--wop-simple-chat-col" as string]: `${chatColumnWidthPx}px` } as CSSProperties
 											}
@@ -397,7 +790,7 @@ export function SimpleApp({
 									</div>
 								) : (
 									<>
-										{selectedPath ? (
+										{selectedPath && !narrowDesktop ? (
 											<SimpleFilePanel
 												ref={workspaceEditorRef}
 												path={selectedPath}
@@ -432,7 +825,80 @@ export function SimpleApp({
 												onNewPlanFile={onNewPlanFile}
 											/>
 										) : null}
-										<div className="flex min-h-0 flex-1 flex-col overflow-hidden">{chatViewEl}</div>
+										<div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+											{chatViewEl}
+											{narrowDesktop && selectedPath && narrowEditorOpen ? (
+												<div
+													className="absolute inset-0 z-[62] flex flex-row"
+													role="dialog"
+													aria-modal="true"
+													aria-label="File editor"
+												>
+													<div
+														className={`flex h-full max-h-full w-[min(100%,480px)] max-w-[96vw] shrink-0 flex-col overflow-hidden border-r shadow-2xl ${appearanceDark ? "border-[#3c3c3c] bg-[#1e1e1e]" : "border-[#e5e5e5] bg-[#f3f3f3]"}`}
+														style={{
+															paddingBottom: "max(0px, env(safe-area-inset-bottom))",
+														}}
+													>
+														<div
+															className={`flex min-h-10 shrink-0 items-center justify-between border-b px-2 py-1.5 ${appearanceDark ? "border-[#3c3c3c] bg-[#252526]" : "border-[#e5e5e5] bg-[#f5f5f5]"}`}
+														>
+															<span
+																className={`min-w-0 truncate font-mono text-[11px] font-semibold ${appearanceDark ? "text-[#e5e5e5]" : "text-[#222222]"}`}
+																title={selectedPath ?? undefined}
+															>
+																{selectedPath}
+															</span>
+															<button
+																type="button"
+																onClick={() => setNarrowEditorOpen(false)}
+																className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg ${appearanceDark ? "text-[#cccccc] hover:bg-[#1e1e1e]" : "text-[#333333] hover:bg-[#eeeeee]"}`}
+																aria-label="Close editor"
+															>
+																<X size={18} aria-hidden />
+															</button>
+														</div>
+														<div className={`min-h-0 flex-1 overflow-hidden ${appearanceDark ? "bg-[#1e1e1e]" : "bg-white"}`}>
+															<SimpleFilePanel
+																ref={workspaceEditorRef}
+																path={selectedPath}
+																content={content}
+																onChange={setContent}
+																persistEncoding={persistEncoding}
+																fileMimeType={fileMimeType}
+																loading={fileLoading}
+																error={fileError}
+																dirty={dirty}
+																onDiscardUnsaved={discardUnsavedChanges}
+																onSave={async () => {
+																	await save();
+																	await refreshTree();
+																}}
+																onClose={() => {
+																	setSelectedPath(null);
+																	setNarrowEditorOpen(false);
+																}}
+																onCursor={onCursor}
+																appearanceDark={appearanceDark}
+																onUndoRedoStackChange={onUndoRedoStackChange}
+																onSelectionPrefsChange={onSelectionPrefsChange}
+																onFindInFiles={onFindInFiles}
+																onReplaceInFiles={onReplaceInFiles}
+																columnLayout="besideChat"
+																markdownPaneMode={markdownPaneMode}
+																onMarkdownPaneModeChange={setMarkdownPaneMode}
+															/>
+														</div>
+													</div>
+													<button
+														type="button"
+														className="min-h-0 min-w-0 flex-1 bg-black/45"
+														aria-label="Close editor"
+														onClick={() => setNarrowEditorOpen(false)}
+													/>
+												</div>
+											) : null}
+										</div>
 									</>
 								)
 							) : null}
@@ -490,7 +956,7 @@ export function SimpleApp({
 							) : null}
 						</div>
 
-						{rightOpen ? (
+						{rightOpen && !narrowDesktop ? (
 							<div className="hidden h-full shrink-0 md:flex">
 								<SimpleRightPanel
 									nodes={nodes}
@@ -515,21 +981,106 @@ export function SimpleApp({
 				</div>
 			</div>
 
-			<StatusBar
-				uiMode={uiMode}
-				workspaceRoot={workspacePath}
-				connected={connected}
-				line={line}
-				col={col}
-				language={languageFromPath(selectedPath)}
-				contextPct={contextPct}
-				tokensDown={tokensDown}
-				tokensUp={tokensUp}
-				contextTitle={contextTitle}
-				tokensTitle={tokensTitle}
-				onCopyWorkspacePath={copyWorkspacePath}
-				simpleAppearanceDark={appearanceDark}
-			/>
+			{narrowDesktop && rightOpen ? (
+				<div
+					className="fixed inset-0 z-[58] flex flex-row"
+					role="dialog"
+					aria-modal="true"
+					aria-label="Project files"
+				>
+					<button
+						type="button"
+						className="min-h-0 min-w-0 flex-1 bg-black/45"
+						aria-label="Dismiss file list"
+						onClick={() => setRightOpen(false)}
+					/>
+					<div
+						className={`flex h-[100dvh] max-h-screen w-[min(100vw,400px)] max-w-[94vw] shrink-0 flex-col overflow-hidden border-l shadow-2xl ${mobileSheetShell}`}
+						style={{
+							paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+							paddingTop: "max(0px, env(safe-area-inset-top))",
+						}}
+					>
+						<div
+							className={`flex min-h-10 shrink-0 items-center justify-between border-b px-2 py-1.5 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
+						>
+							<span className="text-[12px] font-semibold">Project files</span>
+							<button
+								type="button"
+								onClick={() => setRightOpen(false)}
+								className={`min-h-9 min-w-9 rounded-lg text-[11px] font-semibold ${appearanceDark ? "text-[#858585] hover:bg-[#1e1e1e]" : "text-[#666666] hover:bg-[#eeeeee]"}`}
+							>
+								Done
+							</button>
+						</div>
+						<div className="min-h-0 flex-1 overflow-hidden">
+							<SimpleRightPanel
+								presentation="sheet"
+								nodes={nodes}
+								selectedPath={selectedPath}
+								onSelectFile={handleNarrowTreeSelect}
+								loading={treeLoading}
+								error={treeError}
+								logs={logs}
+								streaming={streaming}
+								appearanceDark={appearanceDark}
+								onExplorerGitMutated={() => void refreshTreeQuiet()}
+								onMoveFileToDirectory={onMoveFileToDirectory}
+								allowWorkspaceRootDrop={allowWorkspaceRootDrop}
+							/>
+						</div>
+					</div>
+				</div>
+			) : null}
+
+			{narrowDesktop && leftOpen ? (
+				<div
+					className="fixed inset-0 z-[55] flex"
+					role="dialog"
+					aria-modal="true"
+					aria-label="Way of Pi navigation"
+				>
+					<div
+						className={`flex h-[100dvh] max-h-screen shrink-0 flex-col shadow-2xl ${
+							appearanceDark ? "bg-[#333333]" : "bg-white"
+						}`}
+						style={{
+							paddingTop: "max(0px, env(safe-area-inset-top))",
+							paddingBottom: "max(0px, env(safe-area-inset-bottom))",
+						}}
+					>
+						{navRailEl}
+					</div>
+					<button
+						type="button"
+						className="min-h-0 min-w-0 flex-1 cursor-default border-0 bg-black/50 p-0"
+						aria-label="Close navigation"
+						onClick={() => setLeftOpen(false)}
+					/>
+				</div>
+			) : null}
+				</>
+			)}
+
+			{!isMobile ? (
+				<div className={narrowDesktop ? "hidden md:block" : undefined}>
+					<StatusBar
+						uiMode={uiMode}
+						workspaceRoot={workspacePath}
+						connected={connected}
+						line={line}
+						col={col}
+						language={languageFromPath(selectedPath)}
+						contextPct={contextPct}
+						tokensDown={tokensDown}
+						tokensUp={tokensUp}
+						contextTitle={contextTitle}
+						tokensTitle={tokensTitle}
+						onCopyWorkspacePath={copyWorkspacePath}
+						simpleAppearanceDark={appearanceDark}
+					/>
+				</div>
+			) : null}
 		</div>
 	);
 }

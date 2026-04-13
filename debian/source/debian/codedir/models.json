@@ -1,0 +1,60 @@
+{
+  "providers": {
+    "ollama": {
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "baseUrl": "http://localhost:11434/v1",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "qwen3.5:9b-32k",
+          "name": "Qwen 3.5 9B (32K ctx)"
+        },
+        {
+          "id": "qwen3.5:9b",
+          "name": "Qwen 3.5 9B"
+        },
+        {
+          "id": "qwen2.5-coder:14b-instruct",
+          "name": "Qwen 2.5 Coder 14B Instruct"
+        },
+        {
+          "id": "unsloth-qwen3-30b:latest",
+          "name": "Unsloth Qwen3 30B"
+        },
+        {
+          "id": "qwen2.5-coder:latest",
+          "name": "Qwen 2.5 Coder"
+        },
+        {
+          "id": "llama3.1:latest",
+          "name": "Llama 3.1"
+        },
+        {
+          "id": "qwen-7b-gpu:latest",
+          "name": "Qwen 7B (GPU)"
+        },
+        {
+          "id": "nemotron-3-nano:4b",
+          "name": "Nemotron 3 Nano 4B"
+        },
+        {
+          "id": "unsloth-r1-8b:latest",
+          "name": "Unsloth R1 8B"
+        },
+        {
+          "id": "ds-r1-8b:latest",
+          "name": "DeepSeek R1 8B"
+        }
+      ]
+    },
+    "openrouter": {
+      "api": "openai-completions",
+      "apiKey": "OPENROUTER_API_KEY",
+      "baseUrl": "https://openrouter.ai/api/v1"
+    }
+  }
+}

@@ -8,6 +8,7 @@
 import { FilePlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
 import { apiPostJson } from "../../api/client";
+import { useMaxWidthMediaQuery } from "../../hooks/useMaxWidthMediaQuery";
 import { useClawHostFileTree } from "../../hooks/useClawHostFileTree";
 import { useClawWorkspace } from "../../hooks/useClawWorkspace";
 import {
@@ -32,6 +33,7 @@ import { SimpleFilePanel } from "../simple/SimpleFilePanel";
 import { SimpleFileTree } from "../simple/SimpleFileTree";
 import { getClawUiModule, isClawBuiltinTab } from "../../claw/clawUiModules";
 import { ClawNavRail, type ClawTabId } from "./ClawNavRail";
+import { ClawMobileTabBar } from "../mobile";
 import type { ClawHelpSectionId } from "./ClawHelpModal";
 import { ClawMissionView } from "./ClawMissionView";
 import { ClawChatView } from "./ClawChatView";
@@ -148,6 +150,10 @@ export type ClawAppProps = {
 	tokensTitle: string;
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	allowWorkspaceRootDrop?: boolean;
+	/** `mobile` = bottom tab bar, no left rail (used with `?shell=mobile`). */
+	layoutVariant?: "desktop" | "mobile";
+	/** When present and increments, open the chat `.claw/` file panel (mobile shell or narrow ≤767px desktop) from App menu / palette. */
+	clawMenuFileFocusRev?: number;
 };
 
 export function ClawApp({
@@ -232,6 +238,8 @@ export function ClawApp({
 	tokensTitle,
 	onMoveFileToDirectory,
 	allowWorkspaceRootDrop = false,
+	layoutVariant = "desktop",
+	clawMenuFileFocusRev,
 }: ClawAppProps) {
 	const {
 		isDark,
@@ -241,6 +249,30 @@ export function ClawApp({
 		setApprovalQueue,
 	} = useSimplePreferences();
 	const agentsApi = useAgents();
+	const maxWidthNarrow = useMaxWidthMediaQuery(767);
+	const narrowClawDesktop = layoutVariant === "desktop" && maxWidthNarrow;
+	const [clawNavOpen, setClawNavOpen] = useState(() =>
+		typeof window !== "undefined" ? window.innerWidth >= 768 : true,
+	);
+
+	useEffect(() => {
+		if (layoutVariant !== "desktop") return;
+		if (narrowClawDesktop) setClawNavOpen(false);
+	}, [layoutVariant, narrowClawDesktop]);
+
+	useEffect(() => {
+		if (layoutVariant !== "desktop" || narrowClawDesktop) return;
+		setClawNavOpen(true);
+	}, [layoutVariant, narrowClawDesktop]);
+
+	useEffect(() => {
+		if (!narrowClawDesktop || !clawNavOpen || layoutVariant !== "desktop") return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setClawNavOpen(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [narrowClawDesktop, clawNavOpen, layoutVariant]);
 
 	const workspacePath = root ?? "—";
 	/** Host **`.claw/workspace/`** path from server — onboarding + settings key (not the opened project root). */
@@ -423,12 +455,48 @@ export function ClawApp({
 	}, [selectedPath]);
 
 	const [filesTreeWidthPx, setFilesTreeWidthPx] = useState(FILES_TREE_DEFAULT_PX);
+	/** Mobile Files tab: user can hide the `.claw/` tree strip so the editor uses full height. */
+	const [mobileClawFilesTreeOpen, setMobileClawFilesTreeOpen] = useState(true);
 	const [addClawMarkdownDocumentBusy, setAddClawMarkdownDocumentBusy] = useState(false);
-	const filesSplitHandleClass = isDark
-		? "hidden md:block"
-		: "hidden md:block !bg-[#ececec] hover:!bg-[#007acc]/35 active:!bg-[#007acc]/55";
+
+	useEffect(() => {
+		if (layoutVariant !== "mobile") setMobileClawFilesTreeOpen(true);
+	}, [layoutVariant]);
+	const filesSplitHandleClass =
+		layoutVariant === "mobile"
+			? "hidden"
+			: isDark
+				? "hidden md:block"
+				: "hidden md:block !bg-[#ececec] hover:!bg-[#007acc]/35 active:!bg-[#007acc]/55";
 
 	const bg = isDark ? "bg-[#1e1e1e] text-[#cccccc] selection:bg-[#264f78]" : "bg-[#f3f3f3] text-[#333333] selection:bg-[#add6ff]/60";
+
+	const bodyRowClass =
+		layoutVariant === "mobile"
+			? "flex min-h-0 flex-1 flex-col overflow-hidden"
+			: "flex min-h-0 flex-1 flex-row overflow-hidden";
+
+	const handleClawNavTab = useCallback(
+		(id: ClawTabId) => {
+			onTabChange(id);
+			if (narrowClawDesktop) setClawNavOpen(false);
+		},
+		[onTabChange, narrowClawDesktop],
+	);
+
+	const handleClawNavHelp = useCallback(() => {
+		onHelp?.();
+		if (narrowClawDesktop) setClawNavOpen(false);
+	}, [onHelp, narrowClawDesktop]);
+
+	const clawNavEl = (
+		<ClawNavRail
+			activeTab={activeTab}
+			onTab={handleClawNavTab}
+			onHelp={onHelp ? handleClawNavHelp : undefined}
+			appearanceDark={isDark}
+		/>
+	);
 
 	return (
 		<div
@@ -436,12 +504,30 @@ export function ClawApp({
 			className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden font-sans ${bg}`}
 		>
 			{/* ── Body ── */}
-			<div className="flex min-h-0 flex-1 overflow-hidden">
-				{/* Nav rail */}
-				<ClawNavRail activeTab={activeTab} onTab={onTabChange} onHelp={onHelp} appearanceDark={isDark} />
+			<div className={bodyRowClass}>
+				{layoutVariant === "desktop" && clawNavOpen && !narrowClawDesktop ? clawNavEl : null}
 
 				{/* Main panel */}
 				<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+					{narrowClawDesktop && !clawNavOpen ? (
+						<div
+							className={`flex h-10 shrink-0 items-center border-b px-2 ${
+								isDark ? "border-[#252526] bg-[#1a1a1a]" : "border-[#e5e5e5] bg-[#f9fafb]"
+							}`}
+						>
+							<button
+								type="button"
+								onClick={() => setClawNavOpen(true)}
+								className={`min-h-9 rounded-lg border px-3 text-xs font-semibold ${
+									isDark
+										? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:bg-[#2d2d2d]"
+										: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f3f4f6]"
+								}`}
+							>
+								Claw menu
+							</button>
+						</div>
+					) : null}
 					{activeTab === "mission" ? (
 						<ClawMissionView
 							config={config}
@@ -524,6 +610,8 @@ export function ClawApp({
 						filePanelTreeError={clawHostFileTree.error}
 						onAddClawMarkdownDocument={addClawMarkdownDocument}
 						addClawMarkdownDocumentBusy={addClawMarkdownDocumentBusy}
+						layoutVariant={layoutVariant}
+						menuFileFocusRev={clawMenuFileFocusRev}
 					/>
 					) : activeTab === "team" ? (
 						<SimpleTeamView
@@ -546,24 +634,64 @@ export function ClawApp({
 					) : activeTab === "channels" ? (
 						<ClawChannelsView dark={isDark} onOpenFile={openFile} onOpenClawHelp={onHelp} />
 					) : activeTab === "files" ? (
-						<div className="flex min-h-0 flex-1 overflow-hidden">
+						<div
+							className={`flex min-h-0 flex-1 overflow-hidden ${layoutVariant === "mobile" ? "flex-col" : "flex-row"}`}
+						>
+							{layoutVariant === "mobile" && !mobileClawFilesTreeOpen ? (
+								<div
+									className={`flex shrink-0 flex-wrap items-center gap-2 border-b px-2 py-2 ${
+										isDark ? "border-[#3c3c3c] bg-[#1a1a1a]" : "border-[#e5e5e5] bg-[#f9fafb]"
+									}`}
+								>
+									<button
+										type="button"
+										onClick={() => setMobileClawFilesTreeOpen(true)}
+										className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-semibold ${
+											isDark
+												? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838]"
+												: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb]"
+										}`}
+									>
+										Show .claw tree
+									</button>
+									<button
+										type="button"
+										disabled={addClawMarkdownDocumentBusy}
+										title="Create a new Markdown file in Workspace"
+										onClick={() => void addClawMarkdownDocument()}
+										className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border px-3 py-2 text-xs font-semibold ${
+											isDark
+												? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838] disabled:opacity-50"
+												: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
+										}`}
+									>
+										<FilePlus size={14} className="shrink-0 opacity-80" aria-hidden />
+										Add document
+									</button>
+								</div>
+							) : null}
 							{/* File tree: host checkout `.claw/` (not opened WOP_WORKSPACE) */}
+							{layoutVariant !== "mobile" || mobileClawFilesTreeOpen ? (
 							<div
 								className={`flex min-h-0 shrink-0 flex-col overflow-hidden ${
 									isDark ? "bg-[#1a1a1a]" : "bg-white"
-								}`}
-								style={{
-									width: filesTreeWidthPx,
-									minWidth: FILES_TREE_MIN_PX,
-									maxWidth: FILES_TREE_MAX_PX,
-								}}
+								} ${layoutVariant === "mobile" ? "max-h-[40vh] w-full min-h-[120px]" : ""}`}
+								style={
+									layoutVariant === "mobile"
+										? undefined
+										: {
+												width: filesTreeWidthPx,
+												minWidth: FILES_TREE_MIN_PX,
+												maxWidth: FILES_TREE_MAX_PX,
+											}
+								}
 							>
 								<div
 									className={`shrink-0 border-b px-2 py-1.5 ${
 										isDark ? "border-[#3c3c3c] bg-[#1a1a1a]" : "border-[#e5e5e5] bg-[#f9fafb]"
 									}`}
 								>
-									<div className="flex items-start justify-between gap-2">
+									<div className="flex flex-wrap items-start justify-between gap-2">
 										<div className="min-w-0 flex-1">
 											<div
 												className={`text-[10px] font-bold uppercase tracking-widest ${
@@ -583,6 +711,20 @@ export function ClawApp({
 												</div>
 											) : null}
 										</div>
+										<div className="flex shrink-0 flex-wrap items-center gap-2">
+											{layoutVariant === "mobile" ? (
+												<button
+													type="button"
+													onClick={() => setMobileClawFilesTreeOpen(false)}
+													className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-semibold ${
+														isDark
+															? "border-[#3c3c3c] bg-[#252526] text-[#cccccc] hover:bg-[#2d2d2d]"
+															: "border-[#d1d5db] bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]"
+													}`}
+												>
+													Hide tree
+												</button>
+											) : null}
 										<button
 											type="button"
 											disabled={addClawMarkdownDocumentBusy}
@@ -592,11 +734,12 @@ export function ClawApp({
 												isDark
 													? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838] disabled:opacity-50"
 													: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
-											}`}
+											} ${layoutVariant === "mobile" ? "min-h-11 rounded-lg px-3 py-2 text-xs font-semibold" : ""}`}
 										>
-											<FilePlus size={12} className="shrink-0 opacity-80" aria-hidden />
+											<FilePlus size={layoutVariant === "mobile" ? 14 : 12} className="shrink-0 opacity-80" aria-hidden />
 											Add document
 										</button>
+										</div>
 									</div>
 									{clawHostFileTree.error ? (
 										<div
@@ -631,6 +774,7 @@ export function ClawApp({
 									)}
 								</div>
 							</div>
+							) : null}
 							<DockSplitHandle
 								orientation="vertical"
 								className={filesSplitHandleClass}
@@ -714,24 +858,64 @@ export function ClawApp({
 						return mod ? mod.render(clawModuleContext) : null;
 					})()}
 				</div>
+
+				{layoutVariant === "mobile" ? (
+					<ClawMobileTabBar
+						activeTab={activeTab}
+						onTab={onTabChange}
+						onHelp={onHelp}
+						appearanceDark={isDark}
+					/>
+				) : null}
 			</div>
 
+			{narrowClawDesktop && clawNavOpen ? (
+				<div
+					className="fixed inset-0 z-[55] flex"
+					role="dialog"
+					aria-modal="true"
+					aria-label="Claw navigation"
+				>
+					<div
+						className={`flex h-[100dvh] max-h-screen shrink-0 flex-col shadow-2xl ${
+							isDark ? "bg-[#1a1a1a]" : "bg-white"
+						}`}
+						style={{
+							paddingTop: "max(0px, env(safe-area-inset-top))",
+							paddingBottom: "max(0px, env(safe-area-inset-bottom))",
+						}}
+					>
+						{clawNavEl}
+					</div>
+					<button
+						type="button"
+						className="min-h-0 min-w-0 flex-1 cursor-default border-0 bg-black/50 p-0"
+						aria-label="Close navigation"
+						onClick={() => setClawNavOpen(false)}
+					/>
+				</div>
+			) : null}
+
 			{/* ── Status bar ── */}
-			<StatusBar
-				uiMode={uiMode}
-				workspaceRoot={workspacePath}
-				connected={connected}
-				line={line}
-				col={col}
-				language={languageFromPath(selectedPath)}
-				contextPct={contextPct}
-				tokensDown={tokensDown}
-				tokensUp={tokensUp}
-				contextTitle={contextTitle}
-				tokensTitle={tokensTitle}
-				onCopyWorkspacePath={copyWorkspacePath}
-				simpleAppearanceDark={isDark}
-			/>
+			{layoutVariant === "desktop" ? (
+				<div className={narrowClawDesktop ? "hidden md:block" : undefined}>
+					<StatusBar
+						uiMode={uiMode}
+						workspaceRoot={workspacePath}
+						connected={connected}
+						line={line}
+						col={col}
+						language={languageFromPath(selectedPath)}
+						contextPct={contextPct}
+						tokensDown={tokensDown}
+						tokensUp={tokensUp}
+						contextTitle={contextTitle}
+						tokensTitle={tokensTitle}
+						onCopyWorkspacePath={copyWorkspacePath}
+						simpleAppearanceDark={isDark}
+					/>
+				</div>
+			) : null}
 
 			{config?.clawWorkspaceDirAbs ? (
 				<ClawWorkspaceOnboardingModal

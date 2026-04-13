@@ -1,0 +1,14 @@
+# This file is TRACKED by git — never paste a real authtoken here.
+# Put the token only in `.ngrok-authtoken.local` (gitignored).
+#
+# Local ngrok authtoken (gitignored copy)
+#
+# 1. Copy: cp .ngrok-authtoken.local.example .ngrok-authtoken.local
+# 2. Edit `.ngrok-authtoken.local` so it contains ONLY your dashboard authtoken
+#    (one line, no quotes). Delete all comment lines.
+# 3. Apply: ngrok config add-authtoken "$(cat .ngrok-authtoken.local)"
+#
+# Prefer rotating tokens exposed in chat; dashboard:
+# https://dashboard.ngrok.com/get-started/your-authtoken
+#
+# Or use the app: Settings → ngrok → Save authtoken on this machine.

@@ -9,6 +9,9 @@ __pycache__/
 .env
 agent/auth.json
 
+# ngrok dashboard authtoken — local one-line file only (never commit)
+apps/wayofpi-ui/.ngrok-authtoken.local
+
 .pi/agent-sessions/
 
 # Local Pi agent state (machine-specific; do not publish chat logs)

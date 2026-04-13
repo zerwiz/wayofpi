@@ -3,7 +3,7 @@
  *
  * Covers: what Claw is, navigation tabs, `.claw/workspace/` files,
  * schedules, channels (Telegram), files & preview, extending Claw (Pi skills,
- * tools, extensions, community), Honcho cross-session memory vs `.claw/workspace/`, and tips.
+ * tools, extensions, community), Honcho cross-session memory vs `.claw/workspace/`, ngrok sharing, and tips.
  */
 import {
 	AlertTriangle,
@@ -13,6 +13,7 @@ import {
 	Cog,
 	Cpu,
 	Database,
+	Globe,
 	Files,
 	FolderOpen,
 	Info,
@@ -117,9 +118,9 @@ function TableRow({
 	right: React.ReactNode;
 }) {
 	return (
-		<div className="flex gap-3 border-b border-[#2a2a2a] py-2 text-[12px] last:border-0">
-			<span className="w-32 shrink-0 font-semibold text-[#cccccc]">{left}</span>
-			<span className="text-[#858585]">{right}</span>
+		<div className="flex flex-col gap-1 border-b border-[#2a2a2a] py-2 text-[12px] last:border-0 sm:flex-row sm:gap-3">
+			<span className="shrink-0 font-semibold text-[#cccccc] sm:w-32">{left}</span>
+			<span className="min-w-0 text-[#858585]">{right}</span>
 		</div>
 	);
 }
@@ -307,6 +308,43 @@ function SectionHoncho() {
 				<strong>Product gap:</strong> Claw&apos;s Mission tab does not yet show Honcho health or browse API
 				data — see <Code>docs/WOP_OPEN_TODOS.md</Code> (Honcho and Way of Pi UI). Capability map:{" "}
 				<Code>docs/HONCHO_CAPABILITIES.md</Code>.
+			</Note>
+		</>
+	);
+}
+
+function SectionNgrok() {
+	return (
+		<>
+			<H>Share Way of Pi with ngrok</H>
+			<P>
+				<strong className="text-[#cccccc]">ngrok</strong> is a separate tool from{" "}
+				<a href="https://ngrok.com/" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline hover:text-sky-300">
+					ngrok.com
+				</a>
+				. It gives you a <strong className="text-[#cccccc]">temporary https://… link</strong> on the internet that forwards to the machine
+				where Bun + Vite run (often your home PC) — so you can use Claw from <strong className="text-[#cccccc]">work, travel, or another
+				network</strong> while the real setup stays on that host.
+			</P>
+
+			<Tip>
+				Use it when you want the <strong className="text-[#cccccc]">same session from another place</strong>, a colleague{" "}
+				<strong className="text-[#cccccc]">demo link</strong>, or a cloud service to <strong className="text-[#cccccc]">hit your dev machine
+				once</strong>. The link only works while Way of Pi and ngrok are both running on that host.
+			</Tip>
+
+			<H>What you should know</H>
+			<P>
+				Anyone with the link can use your app while the tunnel is open — share it sparingly and stop ngrok when you
+				are finished. Way of Pi does <strong className="text-[#cccccc]">not</strong> install ngrok; use the menu{" "}
+				<strong className="text-[#cccccc]">Settings → ngrok (public URL)…</strong> for copy-paste setup steps, or
+				ask someone comfortable running a few terminal commands.
+			</P>
+
+			<Note tone="info">
+				For the full Help Center (same ideas with a bit more context), open{" "}
+				<strong className="text-[#cccccc]">Help → How to use</strong> from the top bar and choose{" "}
+				<strong className="text-[#cccccc]">Share with ngrok</strong>.
 			</Note>
 		</>
 	);
@@ -715,6 +753,7 @@ export type ClawHelpSectionId =
 	| "files"
 	| "extend"
 	| "honcho"
+	| "ngrok"
 	| "tips";
 
 type SectionId = ClawHelpSectionId;
@@ -728,6 +767,7 @@ const SECTIONS: { id: SectionId; label: string; icon: typeof Radar }[] = [
 	{ id: "files", label: "Files & Preview", icon: Files },
 	{ id: "extend", label: "Extending Claw", icon: Puzzle },
 	{ id: "honcho", label: "Honcho & memory", icon: Database },
+	{ id: "ngrok", label: "Share with ngrok", icon: Globe },
 	{ id: "tips", label: "Tips", icon: Zap },
 ];
 
@@ -759,6 +799,7 @@ function renderSection(
 		case "files": return <SectionFiles />;
 		case "extend": return <SectionExtendingClaw />;
 		case "honcho": return <SectionHoncho />;
+		case "ngrok": return <SectionNgrok />;
 		case "tips": return <SectionTips />;
 	}
 }
@@ -776,6 +817,7 @@ export function ClawHelpModal({
 	streaming = false,
 	onGoToTelegramChannels,
 	onFocusClawChatTab,
+	layout = "desktop",
 }: {
 	open: boolean;
 	onDismiss: () => void;
@@ -787,6 +829,8 @@ export function ClawHelpModal({
 	onGoToTelegramChannels?: () => void;
 	/** Switch to Claw Chat before composer inject (Help can open from any tab). */
 	onFocusClawChatTab?: () => void;
+	/** `mobile` = full viewport, horizontal section chips (`?shell=mobile`). */
+	layout?: "desktop" | "mobile";
 }) {
 	const [activeSection, setActiveSection] = useState<SectionId>("overview");
 
@@ -805,17 +849,22 @@ export function ClawHelpModal({
 		onFocusClawChatTab,
 	};
 
+	const isMobileLayout = layout === "mobile";
+	const shellClass = isMobileLayout
+		? "relative flex h-[100dvh] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-none border-0 bg-[#161616] shadow-none"
+		: "relative flex h-[88vh] w-[min(900px,95vw)] flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#161616] shadow-2xl";
+
 	const modal = (
 		<div
-			className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+			className={`fixed inset-0 z-[9000] flex items-center justify-center bg-black/70 backdrop-blur-sm ${isMobileLayout ? "p-0" : "p-3"}`}
 			onClick={(e) => e.target === e.currentTarget && onDismiss()}
 		>
-			<div
-				className="relative flex h-[88vh] w-[min(900px,95vw)] flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#161616] shadow-2xl"
-				onClick={(e) => e.stopPropagation()}
-			>
+			<div className={shellClass} onClick={(e) => e.stopPropagation()}>
 				{/* ── Header ── */}
-				<div className="flex shrink-0 items-center justify-between border-b border-[#2a2a2a] px-6 py-4">
+				<div
+					className="flex shrink-0 items-center justify-between border-b border-[#2a2a2a] px-4 py-3 sm:px-6 sm:py-4"
+					style={{ paddingTop: isMobileLayout ? "max(0.75rem, env(safe-area-inset-top))" : undefined }}
+				>
 					<div className="flex items-center gap-3">
 						<div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ea580c]/30 bg-[#ea580c]/10">
 							<Cpu size={18} className="text-[#fb923c]" />
@@ -830,46 +879,74 @@ export function ClawHelpModal({
 					<button
 						type="button"
 						onClick={onDismiss}
-						className="flex h-8 w-8 items-center justify-center rounded-lg text-[#585858] transition-colors hover:bg-[#2a2a2a] hover:text-[#cccccc]"
+						className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-[#585858] transition-colors hover:bg-[#2a2a2a] hover:text-[#cccccc]"
 						aria-label="Close help"
 					>
-						<X size={16} />
+						<X size={18} />
 					</button>
 				</div>
 
 				{/* ── Body ── */}
-				<div className="flex min-h-0 flex-1 overflow-hidden">
-					{/* Sidebar */}
-					<nav className="flex w-[175px] shrink-0 flex-col gap-1 border-r border-[#2a2a2a] overflow-y-auto p-3">
-						{SECTIONS.map((s) => {
-							const isActive = activeSection === s.id;
-							return (
-								<button
-									key={s.id}
-									type="button"
-									onClick={() => setActiveSection(s.id)}
-									className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-colors ${
-										isActive
-											? "bg-[#ea580c]/18 text-[#fb923c]"
-											: "text-[#585858] hover:bg-[#1e1e1e] hover:text-[#aaaaaa]"
-									}`}
-								>
-									<s.icon size={14} className="shrink-0" />
-									{s.label}
-								</button>
-							);
-						})}
-					</nav>
-
-					{/* Content */}
-					<div className="min-h-0 flex-1 overflow-y-auto p-6">
-						{renderSection(activeSection, channelsHelp)}
+				{isMobileLayout ? (
+					<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+						<nav className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-[#2a2a2a] px-2 py-2">
+							{SECTIONS.map((s) => {
+								const isActive = activeSection === s.id;
+								return (
+									<button
+										key={s.id}
+										type="button"
+										onClick={() => setActiveSection(s.id)}
+										className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-left text-[11px] font-semibold transition-colors ${
+											isActive
+												? "border-[#ea580c]/40 bg-[#ea580c]/18 text-[#fb923c]"
+												: "border-[#2a2a2a] bg-[#1e1e1e] text-[#858585] hover:text-[#cccccc]"
+										}`}
+									>
+										<s.icon size={13} className="shrink-0" />
+										{s.label}
+									</button>
+								);
+							})}
+						</nav>
+						<div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+							{renderSection(activeSection, channelsHelp)}
+						</div>
 					</div>
-				</div>
+				) : (
+					<div className="flex min-h-0 flex-1 overflow-hidden">
+						<nav className="flex w-[175px] shrink-0 flex-col gap-1 overflow-y-auto border-r border-[#2a2a2a] p-3">
+							{SECTIONS.map((s) => {
+								const isActive = activeSection === s.id;
+								return (
+									<button
+										key={s.id}
+										type="button"
+										onClick={() => setActiveSection(s.id)}
+										className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-colors ${
+											isActive
+												? "bg-[#ea580c]/18 text-[#fb923c]"
+												: "text-[#585858] hover:bg-[#1e1e1e] hover:text-[#aaaaaa]"
+										}`}
+									>
+										<s.icon size={14} className="shrink-0" />
+										{s.label}
+									</button>
+								);
+							})}
+						</nav>
+						<div className="min-h-0 flex-1 overflow-y-auto p-6">
+							{renderSection(activeSection, channelsHelp)}
+						</div>
+					</div>
+				)}
 
 				{/* ── Footer ── */}
-				<div className="flex shrink-0 items-center justify-between border-t border-[#2a2a2a] px-6 py-3">
-					<p className="text-[11px] text-[#3c3c3c]">
+				<div
+					className="flex shrink-0 flex-col gap-2 border-t border-[#2a2a2a] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+					style={{ paddingBottom: isMobileLayout ? "max(0.75rem, env(safe-area-inset-bottom))" : undefined }}
+				>
+					<p className="min-w-0 text-[11px] text-[#3c3c3c]">
 						Full roadmap:{" "}
 						<span className="font-mono text-[10px] text-[#585858]">docs/WOP_CLAW_MODE_PLAN.md</span>
 						{" · "}
@@ -878,7 +955,7 @@ export function ClawHelpModal({
 					<button
 						type="button"
 						onClick={onDismiss}
-						className="rounded-lg px-4 py-2 text-[12px] font-semibold text-[#585858] transition-colors hover:bg-[#1e1e1e] hover:text-[#cccccc]"
+						className="min-h-11 w-full rounded-lg px-4 py-2 text-[12px] font-semibold text-[#585858] transition-colors hover:bg-[#1e1e1e] hover:text-[#cccccc] sm:min-h-0 sm:w-auto"
 					>
 						Close
 					</button>
