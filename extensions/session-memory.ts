@@ -61,31 +61,6 @@ function extractMessageText(entry: {
 
 type Turn = { role: "user" | "assistant"; text: string };
 
-function collectTurns(ctx: ExtensionContext): Turn[] {
-  const sm = ctx.sessionManager as { getBranch?: () => unknown[] } | undefined;
-  const getBranch = sm?.getBranch;
-  if (!getBranch) return [];
-
-  const branch = getBranch.call(sm);
-  if (!Array.isArray(branch)) return [];
-
-  const out: Turn[] = [];
-  for (const entry of branch as {
-    type?: string;
-    message?: { role?: string };
-  }[]) {
-    if (entry.type !== "message") continue;
-    const msg = entry.message;
-    if (!msg || (msg.role !== "user" && msg.role !== "assistant")) continue;
-    const text = extractMessageText(
-      entry as { message?: { content?: unknown } },
-    ).trim();
-    if (!text) continue;
-    out.push({ role: msg.role as "user" | "assistant", text });
-  }
-  return out;
-}
-
 interface SessionHeaderLine {
   type: "session";
   id?: string;
@@ -99,13 +74,6 @@ interface ExtractedJsonlResult {
 }
 
 
-  const turns: Turn[] = [];
-  const summaries: string[] = [];
-  let header: { id?: string; cwd?: string } = {};
-
-  if (!existsSync(filePath)) return { turns, header, summaries };
-
-  let raw: string;
   try {
     raw = await readFile(filePath, "utf-8");
   } catch {
@@ -155,6 +123,7 @@ interface ExtractedJsonlResult {
       if (!text) continue;
 
       // Extract tool usage metadata for distinguishing source
+      // This is CRITICAL: the agent must know what is user input, what it wrote, and what tools were used
       const toolMeta: string[] = [];
       if (e.message && typeof e.message === "object") {
         const msgObj = e.message as { tools?: unknown; toolOutputs?: unknown };
@@ -162,10 +131,10 @@ interface ExtractedJsonlResult {
           for (const tool of msgObj.tools) {
             if (typeof tool === "object") {
               toolMeta.push(
-                `[AGENT TOOL] ${tool.function?.name || tool.name}(${JSON.stringify(tool.arguments).slice(0, 160)})`,
+                `[MEMORY] [AGENT TOOL] ${tool.function?.name || tool.name}(${JSON.stringify(tool.arguments).slice(0, 160)})`,
               );
             } else if (typeof tool === "string") {
-              toolMeta.push(`[AGENT TOOL] ${tool.slice(0, 160)}`);
+              toolMeta.push(`[MEMORY] [AGENT TOOL] ${tool.slice(0, 160)}`);
             }
           }
         }
@@ -173,22 +142,27 @@ interface ExtractedJsonlResult {
           for (const output of msgObj.toolOutputs) {
             if (typeof output === "object") {
               toolMeta.push(
-                `[TOOL RESPONSE] ${output.tool_name || output.toolCallId}: ${output.content?.toString().slice(0, 400) || JSON.stringify(output).slice(0, 400)}`,
+                `[MEMORY] [TOOL RESPONSE] ${
+                  output.tool_name || output.toolCallId
+                }: ${
+                  output.content?.toString().slice(0, 400) ||
+                  JSON.stringify(output).slice(0, 400)
+                }`,
               );
             } else if (typeof output === "string") {
-              toolMeta.push(`[TOOL RESPONSE] ${output.slice(0, 400)}`);
+              toolMeta.push(`[MEMORY] [TOOL RESPONSE] ${output.slice(0, 400)}`);
             }
           }
         }
       }
 
-      // Build full text with source labels
+      // Build full text with source labels - this distinguishes user vs agent vs tools
       let fullText = text;
       if (toolMeta.length > 0) {
         fullText = `[MEMORY] Source context:\n${toolMeta.join("\n")}\n\n${fullText}`;
       }
 
-      // Store turn with full labeled text
+      // Store turn with full labeled text so agent knows the source
       turns.push({ role, text: fullText });
     }
   }
@@ -321,6 +295,31 @@ async function buildFullDigest(ctx: ExtensionContext): Promise<string | null> {
   if (!metaLines.length && !recap && !summaryBlock) return null;
 
   return `${metaLines.join("\n")}${summaryBlock}${recapBlock}`;
+}
+
+function collectTurns(ctx: ExtensionContext): Turn[] {
+  const sm = ctx.sessionManager as { getBranch?: () => unknown[] } | undefined;
+  const getBranch = sm?.getBranch;
+  if (!getBranch) return [];
+
+  const branch = getBranch.call(sm);
+  if (!Array.isArray(branch)) return [];
+
+  const out: Turn[] = [];
+  for (const entry of branch as {
+    type?: string;
+    message?: { role?: string };
+  }[]) {
+    if (entry.type !== "message") continue;
+    const msg = entry.message;
+    if (!msg || (msg.role !== "user" && msg.role !== "assistant")) continue;
+    const text = extractMessageText(
+      entry as { message?: { content?: unknown } },
+    ).trim();
+    if (!text) continue;
+    out.push({ role: msg.role as "user" | "assistant", text });
+  }
+  return out;
 }
 
 export default function (pi: ExtensionAPI) {
