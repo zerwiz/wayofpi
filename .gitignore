@@ -47,3 +47,6 @@ chronicle/
 
 # Way of Pi — GitHub PAT written under an opened workspace (do not publish)
 .wayofpi/github-credentials.json
+
+# Release artifacts (large build files)
+release/

@@ -11,10 +11,10 @@
 ## Communication preferences
 - Preferred language: English
 - Detail level: concise unless asked for depth
-- Code style: (your preferred style, e.g. TypeScript strict, functional)
+- Conversation style style: (your preferred style, e.g. funny, functional)
 
 ## Current focus
 - (What are you primarily working on this week/month?)
 
 ## Things the agent should always remember
-- (e.g. "We use Bun, not npm." / "This project targets Node 20+.")
+- (e.g. "We use xxx, not xxx." / "This project targets.")
