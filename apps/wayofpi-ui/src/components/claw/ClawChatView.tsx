@@ -12,8 +12,9 @@
  * The file panel lists the host checkout’s **`.claw/`** tree (not the opened
  * `WOP_WORKSPACE` project). Paths are `.claw/…` for API read/write/move.
  */
-import { FilePlus } from "lucide-react";
+import { FilePlus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useMaxWidthMediaQuery } from "../../hooks/useMaxWidthMediaQuery";
 import type { ChatSessionTab, ChatSessionMode, ChatRow } from "../../hooks/useWayOfPiSession";
 import type { AgentMeta } from "../../hooks/useAgents";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
@@ -97,6 +98,9 @@ export function ClawChatView({
 	filePanelTreeError,
 	onAddClawMarkdownDocument,
 	addClawMarkdownDocumentBusy,
+	layoutVariant = "desktop",
+	/** When present and increments, open the `.claw/` file panel (mobile shell or narrow ≤767px desktop); path set from App menu / palette. */
+	menuFileFocusRev,
 }: {
 	chatTabs: ChatSessionTab[];
 	activeChatTabId: string;
@@ -158,20 +162,51 @@ export function ClawChatView({
 	filePanelTreeError?: string | null;
 	onAddClawMarkdownDocument?: () => Promise<void>;
 	addClawMarkdownDocumentBusy?: boolean;
+	/** `mobile` = single-column chat, session sheet, full-screen file overlay. */
+	layoutVariant?: "desktop" | "mobile";
+	menuFileFocusRev?: number;
 }) {
 	const clawAgentAvailable = agents.some((a) => a.name === "claw");
 	const [showFilePanel, setShowFilePanel] = useState(false);
 	const [filePanelWidth, setFilePanelWidth] = useState(FILE_PANEL_DEFAULT_PX);
+	const [sessionSheetOpen, setSessionSheetOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const isMobile = layoutVariant === "mobile";
+	/** Desktop Claw on viewports ≤767px: nav is a drawer (matches Tailwind `md`). */
+	const narrowDesktop = useMaxWidthMediaQuery(767) && !isMobile;
+
+	const prevMenuFileFocusRev = useRef<number | null>(null);
+	useEffect(() => {
+		if (menuFileFocusRev === undefined) {
+			prevMenuFileFocusRev.current = null;
+			return;
+		}
+		if (!isMobile && !narrowDesktop) {
+			prevMenuFileFocusRev.current = null;
+			return;
+		}
+		const rev = menuFileFocusRev;
+		if (prevMenuFileFocusRev.current === null) {
+			prevMenuFileFocusRev.current = rev;
+			return;
+		}
+		if (rev !== prevMenuFileFocusRev.current) {
+			prevMenuFileFocusRev.current = rev;
+			setShowFilePanel(true);
+			setSessionSheetOpen(false);
+		}
+	}, [isMobile, narrowDesktop, menuFileFocusRev]);
 
 	const toggleFilePanel = useCallback(() => {
 		setShowFilePanel((v) => !v);
-	}, []);
+		if (layoutVariant === "mobile") setSessionSheetOpen(false);
+	}, [layoutVariant]);
 
 	const handleOpenClawFile = useCallback(
 		(path: string) => {
 			setSelectedPath(path);
 			setShowFilePanel(true);
+			setSessionSheetOpen(false);
 		},
 		[setSelectedPath],
 	);
@@ -180,6 +215,7 @@ export function ClawChatView({
 		(rel: string) => {
 			setSelectedPath(rel);
 			setShowFilePanel(true);
+			setSessionSheetOpen(false);
 		},
 		[setSelectedPath],
 	);
@@ -188,29 +224,74 @@ export function ClawChatView({
 		if (!onAddClawMarkdownDocument) return;
 		await onAddClawMarkdownDocument();
 		setShowFilePanel(true);
+		setSessionSheetOpen(false);
 	}, [onAddClawMarkdownDocument]);
 
-	const splitHandleC = dark
-		? "hidden md:block"
-		: "hidden md:block !bg-[#ececec] hover:!bg-[#007acc]/35 active:!bg-[#007acc]/55";
+	const splitHandleC =
+		isMobile ? "hidden" : dark
+			? "hidden md:block"
+			: "hidden md:block !bg-[#ececec] hover:!bg-[#007acc]/35 active:!bg-[#007acc]/55";
+
+	const sheetBg = dark ? "bg-[#161616] border-[#3c3c3c]" : "bg-white border-[#e5e5e5]";
+	const sheetHeader = dark ? "border-[#3c3c3c] bg-[#1a1a1a]" : "border-[#e5e5e5] bg-[#f5f5f5]";
+
+	const filePanelProps = {
+		nodes: filePanelNodes,
+		treeLoading: filePanelTreeLoading,
+		filePanelRootLabel,
+		filePanelTreeError,
+		onAddClawMarkdownDocument: onAddClawMarkdownDocument ? handleAddClawMarkdownDocument : undefined,
+		addClawMarkdownDocumentBusy: Boolean(addClawMarkdownDocumentBusy),
+		selectedPath,
+		onSelectFile: handleOpenClawFile,
+		content,
+		setContent,
+		persistEncoding,
+		fileMimeType,
+		fileLoading,
+		fileError,
+		dirty,
+		onSave: async () => {
+			await onSave();
+			await onRefreshTree();
+			await onRefreshFilePanelTree();
+		},
+		onDiscardUnsaved,
+		onClose: () => setSelectedPath(null),
+		onCursor,
+		workspaceEditorRef,
+		onUndoRedoStackChange,
+		onSelectionPrefsChange,
+		onFindInFiles,
+		onReplaceInFiles,
+		onMoveFileToDirectory,
+		allowWorkspaceRootDrop: false,
+		dark,
+	};
 
 	return (
 		<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-			{/* Session strip */}
 			<ClawSessionStrip
 				tabs={chatTabs}
 				activeTabId={activeChatTabId}
-				onNew={onNewSession}
+				onNew={() => {
+					setSessionSheetOpen(false);
+					onNewSession();
+				}}
 				showClawFiles={showFilePanel}
 				onToggleClawFiles={toggleFilePanel}
 				dark={dark}
+				layoutVariant={layoutVariant}
+				onOpenSessionPicker={isMobile ? () => setSessionSheetOpen(true) : undefined}
 			/>
 
-			{/* Chat + optional file panel */}
-			<div ref={containerRef} className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-				{/* Chat column */}
+			<div
+				ref={containerRef}
+				className={`relative flex min-h-0 min-w-0 flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}
+			>
 				<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 					<SimpleChatView
+						compactChrome={isMobile}
 						rows={rows}
 						streaming={streaming}
 						chatStreamUiEnabled={chatStreamUiEnabled}
@@ -244,26 +325,25 @@ export function ClawChatView({
 					/>
 				</div>
 
-				<ClawSessionSidebar
-					tabs={chatTabs}
-					activeTabId={activeChatTabId}
-					onSelect={onSelectChatTab}
-					onClose={onCloseChatTab}
-					onRename={onRenameChatTab}
-					dark={dark}
-					streaming={streaming}
-				/>
+				{!isMobile ? (
+					<ClawSessionSidebar
+						tabs={chatTabs}
+						activeTabId={activeChatTabId}
+						onSelect={onSelectChatTab}
+						onClose={onCloseChatTab}
+						onRename={onRenameChatTab}
+						dark={dark}
+						streaming={streaming}
+					/>
+				) : null}
 
-				{/* File panel */}
-				{showFilePanel ? (
+				{!isMobile && showFilePanel ? (
 					<>
 						<DockSplitHandle
 							orientation="vertical"
 							className={splitHandleC}
 							onDelta={(dx) => {
-								setFilePanelWidth((w) =>
-									Math.max(FILE_PANEL_MIN_PX, w - dx),
-								);
+								setFilePanelWidth((w) => Math.max(FILE_PANEL_MIN_PX, w - dx));
 							}}
 							ariaLabel="Resize chat and file panel"
 						/>
@@ -271,44 +351,87 @@ export function ClawChatView({
 							className="flex min-h-0 flex-col overflow-hidden"
 							style={{ width: filePanelWidth, minWidth: FILE_PANEL_MIN_PX, flexShrink: 0 }}
 						>
-							<ClawFilePanel
-								nodes={filePanelNodes}
-								treeLoading={filePanelTreeLoading}
-								filePanelRootLabel={filePanelRootLabel}
-								filePanelTreeError={filePanelTreeError}
-								onAddClawMarkdownDocument={
-									onAddClawMarkdownDocument ? handleAddClawMarkdownDocument : undefined
-								}
-								addClawMarkdownDocumentBusy={Boolean(addClawMarkdownDocumentBusy)}
-								selectedPath={selectedPath}
-								onSelectFile={handleOpenClawFile}
-								content={content}
-								setContent={setContent}
-								persistEncoding={persistEncoding}
-								fileMimeType={fileMimeType}
-								fileLoading={fileLoading}
-								fileError={fileError}
-								dirty={dirty}
-								onSave={async () => {
-									await onSave();
-									await onRefreshTree();
-									await onRefreshFilePanelTree();
-								}}
-								onDiscardUnsaved={onDiscardUnsaved}
-								onClose={() => setSelectedPath(null)}
-								onCursor={onCursor}
-								workspaceEditorRef={workspaceEditorRef}
-								onUndoRedoStackChange={onUndoRedoStackChange}
-								onSelectionPrefsChange={onSelectionPrefsChange}
-								onFindInFiles={onFindInFiles}
-								onReplaceInFiles={onReplaceInFiles}
-								onMoveFileToDirectory={onMoveFileToDirectory}
-								allowWorkspaceRootDrop={false}
-								dark={dark}
-							/>
+							<ClawFilePanel {...filePanelProps} />
 						</div>
 					</>
 				) : null}
+
+			{isMobile && sessionSheetOpen ? (
+				<div className="absolute inset-0 z-[70] flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Chat sessions">
+					<button
+						type="button"
+						className="min-h-0 flex-1 bg-black/50"
+						aria-label="Dismiss session list"
+						onClick={() => setSessionSheetOpen(false)}
+					/>
+					<div
+						className={`max-h-[min(72vh,560px)] shrink-0 overflow-hidden rounded-t-2xl border shadow-2xl ${sheetBg}`}
+						style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+					>
+						<div className={`flex min-h-11 items-center justify-between border-b px-3 py-2 ${sheetHeader}`}>
+							<span className={`text-[13px] font-semibold ${dark ? "text-[#e5e5e5]" : "text-[#222]"}`}>
+								Sessions
+							</span>
+							<button
+								type="button"
+								onClick={() => setSessionSheetOpen(false)}
+								className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-[12px] font-semibold ${dark ? "text-[#858585] hover:bg-[#252526]" : "text-[#666] hover:bg-[#eee]"}`}
+							>
+								Done
+							</button>
+						</div>
+						<div className="min-h-0 max-h-[min(56vh,480px)] overflow-hidden">
+							<ClawSessionSidebar
+								tabs={chatTabs}
+								activeTabId={activeChatTabId}
+								onSelect={(id) => {
+									onSelectChatTab(id);
+									setSessionSheetOpen(false);
+								}}
+								onClose={onCloseChatTab}
+								onRename={onRenameChatTab}
+								dark={dark}
+								streaming={streaming}
+								presentation="sheet"
+							/>
+						</div>
+					</div>
+				</div>
+			) : null}
+
+			{isMobile && showFilePanel ? (
+				<div className="absolute inset-0 z-[80] flex flex-row" role="dialog" aria-modal="true" aria-label="Claw workspace files">
+					<button
+						type="button"
+						className="min-h-0 min-w-0 flex-1 bg-black/45"
+						aria-label="Dismiss workspace files"
+						onClick={() => setShowFilePanel(false)}
+					/>
+					<div
+						className={`flex h-full max-h-full w-[min(100%,440px)] max-w-[96vw] shrink-0 flex-col overflow-hidden border-l shadow-2xl ${dark ? "border-[#3c3c3c] bg-[#0c0c0c]" : "border-[#e5e5e5] bg-white"}`}
+						style={{
+							paddingBottom: "max(0px, env(safe-area-inset-bottom))",
+						}}
+					>
+						<div className={`flex min-h-10 shrink-0 items-center justify-between border-b px-2 py-1.5 ${sheetHeader}`}>
+							<span className={`min-w-0 truncate text-[12px] font-semibold ${dark ? "text-[#e5e5e5]" : "text-[#222]"}`}>
+								Workspace · .claw
+							</span>
+							<button
+								type="button"
+								onClick={() => setShowFilePanel(false)}
+								className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg ${dark ? "text-[#cccccc] hover:bg-[#252526]" : "text-[#333] hover:bg-[#eee]"}`}
+								aria-label="Close workspace files"
+							>
+								<X size={18} aria-hidden />
+							</button>
+						</div>
+						<div className="min-h-0 flex-1 overflow-hidden">
+							<ClawFilePanel {...filePanelProps} presentation="overlay" />
+						</div>
+					</div>
+				</div>
+			) : null}
 			</div>
 		</div>
 	);
@@ -343,6 +466,7 @@ function ClawFilePanel({
 	onMoveFileToDirectory,
 	allowWorkspaceRootDrop = false,
 	dark,
+	presentation = "dock",
 }: {
 	nodes: TreeNode[];
 	treeLoading: boolean;
@@ -371,6 +495,8 @@ function ClawFilePanel({
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	allowWorkspaceRootDrop?: boolean;
 	dark: boolean;
+	/** `overlay` = full-screen mobile sheet (no left border; compact header). */
+	presentation?: "dock" | "overlay";
 }) {
 	const borderC = dark ? "border-[#252526]" : "border-[#e5e5e5]";
 	const treeBg = dark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]";
@@ -385,68 +511,104 @@ function ClawFilePanel({
 
 	const addBusy = Boolean(addClawMarkdownDocumentBusy);
 
+	const edgeClass = presentation === "overlay" ? "" : `border-l ${borderC}`;
+
 	return (
-		<div className={`flex min-h-0 flex-1 flex-col overflow-hidden border-l ${borderC}`}>
-			{/* Panel header */}
-			<div
-				className={`flex shrink-0 flex-col gap-1 border-b px-3 py-1.5 ${borderC} ${dark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]"}`}
-			>
-				<div className="flex min-w-0 items-start justify-between gap-2">
-					<div className="flex min-w-0 flex-1 flex-col gap-0.5">
-						<span className={`text-[10px] font-bold uppercase tracking-widest ${muted}`}>
-							Files · .claw
-						</span>
-						{filePanelRootLabel ? (
-							<span
-								className={`truncate font-mono text-[9px] ${dark ? "text-[#6f6f6f]" : "text-[#9ca3af]"}`}
-								title={filePanelRootLabel}
-							>
-								{filePanelRootLabel}
-							</span>
-						) : null}
-					</div>
-					<div className="flex shrink-0 items-center gap-2">
-						{onAddClawMarkdownDocument ? (
-							<button
-								type="button"
-								disabled={addBusy}
-								title="Create a new Markdown file in Workspace"
-								onClick={() => void onAddClawMarkdownDocument()}
-								className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium ${
-									dark
-										? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838] disabled:opacity-50"
-										: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
-								}`}
-							>
-								<FilePlus size={12} className="shrink-0 opacity-80" aria-hidden />
-								Add document
-							</button>
-						) : null}
-						{selectedPath ? (
-							<span
-								className={`hidden max-w-[120px] truncate font-mono text-[10px] sm:inline ${dark ? "text-[#858585]" : "text-[#888888]"}`}
-								title={selectedPath}
-							>
-								{selectedPath
-									.replace(/^\.claw\/workspace\//, "")
-									.replace(/^\.claw\//, "")}
-							</span>
-						) : null}
-					</div>
+		<div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${edgeClass}`}>
+			{presentation === "overlay" ? (
+				<div
+					className={`flex shrink-0 items-center justify-end gap-2 border-b px-3 py-2 ${borderC} ${dark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]"}`}
+				>
+					{onAddClawMarkdownDocument ? (
+						<button
+							type="button"
+							disabled={addBusy}
+							title="Create a new Markdown file in Workspace"
+							onClick={() => void onAddClawMarkdownDocument()}
+							className={`inline-flex min-h-10 items-center gap-1 rounded-lg border px-3 py-2 text-[11px] font-semibold ${
+								dark
+									? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838] disabled:opacity-50"
+									: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
+							}`}
+						>
+							<FilePlus size={14} className="shrink-0 opacity-80" aria-hidden />
+							Add document
+						</button>
+					) : null}
+					{filePanelTreeError ? (
+						<p
+							className={`max-w-[60%] truncate font-mono text-[10px] ${dark ? "text-red-400" : "text-red-600"}`}
+							title={filePanelTreeError}
+						>
+							{filePanelTreeError}
+						</p>
+					) : null}
 				</div>
-				{filePanelTreeError ? (
-					<p
-						className={`font-mono text-[10px] leading-snug ${dark ? "text-red-400" : "text-red-600"}`}
-						title={filePanelTreeError}
-					>
-						{filePanelTreeError}
-					</p>
-				) : null}
-			</div>
+			) : (
+				<div
+					className={`flex shrink-0 flex-col gap-1 border-b px-3 py-1.5 ${borderC} ${dark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]"}`}
+				>
+					<div className="flex min-w-0 items-start justify-between gap-2">
+						<div className="flex min-w-0 flex-1 flex-col gap-0.5">
+							<span className={`text-[10px] font-bold uppercase tracking-widest ${muted}`}>
+								Files · .claw
+							</span>
+							{filePanelRootLabel ? (
+								<span
+									className={`truncate font-mono text-[9px] ${dark ? "text-[#6f6f6f]" : "text-[#9ca3af]"}`}
+									title={filePanelRootLabel}
+								>
+									{filePanelRootLabel}
+								</span>
+							) : null}
+						</div>
+						<div className="flex shrink-0 items-center gap-2">
+							{onAddClawMarkdownDocument ? (
+								<button
+									type="button"
+									disabled={addBusy}
+									title="Create a new Markdown file in Workspace"
+									onClick={() => void onAddClawMarkdownDocument()}
+									className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium ${
+										dark
+											? "border-[#3c3c3c] bg-[#2d2d2d] text-[#cccccc] hover:bg-[#383838] disabled:opacity-50"
+											: "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
+									}`}
+								>
+									<FilePlus size={12} className="shrink-0 opacity-80" aria-hidden />
+									Add document
+								</button>
+							) : null}
+							{selectedPath ? (
+								<span
+									className={`hidden max-w-[120px] truncate font-mono text-[10px] sm:inline ${dark ? "text-[#858585]" : "text-[#888888]"}`}
+									title={selectedPath}
+								>
+									{selectedPath
+										.replace(/^\.claw\/workspace\//, "")
+										.replace(/^\.claw\//, "")}
+								</span>
+							) : null}
+						</div>
+					</div>
+					{filePanelTreeError ? (
+						<p
+							className={`font-mono text-[10px] leading-snug ${dark ? "text-red-400" : "text-red-600"}`}
+							title={filePanelTreeError}
+						>
+							{filePanelTreeError}
+						</p>
+					) : null}
+				</div>
+			)}
 
 			{/* Tree (always visible, compact) — search bar pinned; list scrolls */}
 			<div
-				className={`flex min-h-0 max-h-[min(45vh,260px)] shrink-0 flex-col overflow-hidden border-b ${borderC} ${treeBg}`}
+				className={`flex min-h-0 shrink-0 flex-col overflow-hidden border-b ${borderC} ${treeBg} ${
+					presentation === "overlay"
+						? "max-h-[min(38vh,320px)]"
+						: "max-h-[min(45vh,260px)]"
+				}`}
 			>
 				{treeLoading ? (
 					<p className={`p-3 text-[11px] ${muted}`}>Loading…</p>

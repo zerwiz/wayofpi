@@ -1,0 +1,92 @@
+Format: http://www.debian.org/doc/source/docs/development/copyright format 1.5
+
+Source: wayof-pi
+Section: dev
+Priority: optional
+Maintainer: Zero <zerwiz@proton.me>
+Upstream-Name: Way of Pi
+Upstream-Contact: https://github.com/zerwiz/wayofpi
+Bug-Submit: https://github.com/zerwiz/wayofpi/issues
+Vcs-Bzr: lp:wayof-pi
+Vcs-Git: https://github.com/zerwiz/wayofpi
+
+Files: .
+Copyright: 2022-2024 Zero
+ License: Apache 2.0
+
+Files: apps/wayofpi-ui/*
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: extensions/*
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: agent/*
+ Copyright: 2022-2024 Zero
+ License: CC-BY-SA 4.0
+
+Files: docs/*
+ Copyright: 2022-2024 Zero
+ License: CC-BY-SA 4.0
+
+Files: scripts/*
+ Copyright: 2022-2024 Zero
+ License: CC-BY-SA 4.0
+
+Files: images/*
+ Copyright: 2022-2024 Zero
+ License: Public Domain or CC-BY-SA
+
+Files: agent-sessions/*
+ Copyright: 2022-2024 Zero
+ License: CC-BY-SA 4.0
+
+Files: agent-teams/*
+ Copyright: 2022-2024 Zero
+ License: CC-BY-SA 4.0
+
+Files: .claude/*
+ Copyright: User provided
+
+Files: .cursor/*
+ Copyright: User provided
+
+Files: .wayofpi/*
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: .pi/*
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: .pi/settings.json
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: projects/*
+ Copyright: Project owner
+
+Files: node_modules/*
+ Copyright: See LICENSE files
+
+Files: packages/*
+ Copyright: See LICENSE files
+
+Files: storage/*
+ License: See LICENSE
+
+Files: specs/*
+ License: See LICENSE
+
+Files: theme-lib/*
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: theme-lib/*
+ Copyright: 2022-2024 Zero
+ License: MIT
+
+Files: packages/*
+ License: MIT
+Upstream-Source: https://github.com/zerwiz/wayofpi

@@ -26,6 +26,32 @@
 
 ---
 
+## `install-ngrok-optional.sh` — optional ngrok agent (public URL to localhost)
+
+**Purpose:** **Way of Pi does not require ngrok** for local editing. When you *do* want a temporary **`https://…`** to this machine, this script prints the official **Debian/Ubuntu apt** block and **macOS Homebrew** one-liner (same ideas as [ngrok’s install docs](https://ngrok.com/download)). With **`--install`**, it can run **`sudo apt`** on Linux hosts that have **`apt-get`** (confirm prompt, or **`-y`** for non-interactive use in trusted environments).
+
+**Idempotent / safety:** Default mode **never** uses sudo. **`--install`** requires Debian-family **`apt-get`**; on macOS it tells you to use **Homebrew** instead.
+
+```bash
+# From repo root — print commands + next steps (no sudo)
+./scripts/install-ngrok-optional.sh
+
+# Same via just (no flags; add --install to the script path yourself when ready)
+just install-ngrok-optional
+
+# Debian/Ubuntu only: run apt (needs sudo; you will be prompted)
+./scripts/install-ngrok-optional.sh --install
+
+# CI / scripted host only
+./scripts/install-ngrok-optional.sh --install -y
+```
+
+After install: open **Way of Pi → Settings → ngrok (optional)** → paste **Your Authtoken** from the ngrok dashboard → **Save** → start the tunnel (dev), or run **`ngrok http <port>`** yourself. The UI tunnels **Vite’s port** (default **5173**), not **80**, unless you changed your dev layout.
+
+**Alternative without apt:** **`(cd apps/wayofpi-ui && npm install)`** installs optional npm package **`ngrok`** → **`node_modules/ngrok/bin`** (skip with **`npm install --omit=optional`**).
+
+---
+
 ## `ppi` — Pi playground dispatcher (**Pi** commands)
 
 This repo’s workflows are defined in the root **`justfile`**. **`scripts/ppi`** resolves its **real path** (symlinks in **`~/.local/bin`** are followed), **`export`s `PI_E_PROJECT_DIR`** and **`PI_USER_PROJECT_DIR`** as the directory you were in **before** the **`cd`** to the playground (so **`just pi-e`** options **1–2** (setup) apply to your app repo, and the **`workspace-boundary`** extension can tell the model your app vs **`~/.pi/agent`** / the playground clone), **`cd`**s to the repo root, **sources `.env` at the repo root if present** (so **`OPENROUTER_API_KEY`** and other secrets reach **`pi`**), then runs **`just`**.
@@ -173,3 +199,90 @@ See **`scripts/enable-playground-in-project`** / **[docs/PLAYGROUND.md](../docs/
 ## Other
 
 - **`quick-start.sh`** — Ollama-oriented Pi quick start (legacy/helper).
+
+---
+
+## Update Functions
+
+### 1. Normal Update (Merge Changes)
+
+```bash
+./scripts/wop-update-simple.sh
+```
+
+Respects your local changes, rebases onto latest.
+
+---
+
+### 2. Force Update (Discard Local)
+
+```bash
+./scripts/wop-update-simple.sh --force
+```
+
+Overwrites with upstream changes. Use when your local is behind.
+
+---
+
+### 3. Update with Backup
+
+```bash
+./scripts/wop-update-simple.sh --backup
+./scripts/wop-update-simple.sh --force
+```
+
+Creates backup before force updating.
+
+---
+
+### 4. Recovery if Build is Broken
+
+```bash
+# Auto-detect and fix issues
+./scripts/wop-recover.sh --auto
+
+# List backups
+./scripts/wop-recover.sh --list-backups
+
+# Full recovery
+./scripts/wop-recover.sh --full
+```
+
+---
+
+### 5. Manual Git Updates
+
+```bash
+# Fetch latest
+git fetch origin
+
+# Rebase changes
+git pull --rebase origin main
+
+# Or hard reset
+git reset --hard origin/main
+```
+
+---
+
+## Testing the Update System
+
+Run this to verify everything works:
+
+```bash
+# 1. Update
+./scripts/wop-update-simple.sh
+
+# 2. Check dependencies
+bun check
+
+# 3. Verify app starts
+./start-wayofpi-electron.sh
+
+# 4. Test with recovery
+./scripts/wop-recover.sh --auto
+```
+
+---
+
+*This file is maintained alongside the code.*

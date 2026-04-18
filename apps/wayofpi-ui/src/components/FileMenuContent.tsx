@@ -14,13 +14,26 @@ function run(close: () => void, fn: () => void) {
 	close();
 }
 
-export function FileMenuContent({ fm, closeMenus }: { fm: FileMenuProps; closeMenus: () => void }) {
+export function FileMenuContent({
+	fm,
+	closeMenus,
+	/** When true, list is in-flow inside the mobile menu sheet (not anchored under a menu label). */
+	embed = false,
+}: {
+	fm: FileMenuProps;
+	closeMenus: () => void;
+	embed?: boolean;
+}) {
 	const [sub, setSub] = useState<null | "recent" | "profile" | "share" | "remove" | "prefs">(null);
 	const sw = fm.switchAllowed;
 
+	const rootUlClass = embed
+		? "relative left-auto top-auto z-50 mt-0 max-h-[min(52vh,520px)] w-full min-w-0 list-none overflow-y-auto border-0 border-t border-[#3c3c3c] bg-[#252526] py-1 shadow-none"
+		: "absolute left-0 top-full z-50 mt-0.5 min-w-[280px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl";
+
 	return (
 		<ul
-			className="absolute left-0 top-full z-50 mt-0.5 min-w-[280px] list-none border border-[#454545] bg-[#252526] py-1 shadow-xl"
+			className={rootUlClass}
 			onMouseLeave={() => setSub(null)}
 		>
 			<li>

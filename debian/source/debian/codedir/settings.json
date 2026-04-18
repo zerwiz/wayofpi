@@ -1,0 +1,12 @@
+{
+  "defaultModel": "qwen3.5:9b-32k",
+  "defaultProvider": "ollama",
+  "lastChangelogVersion": "0.62.0",
+  "packages": [
+    "npm:pi-subagents",
+    "git:github.com/tmustier/pi-extensions"
+  ],
+  "theme": "everforest",
+  "hideThinkingBlock": false,
+  "defaultThinkingLevel": "medium"
+}

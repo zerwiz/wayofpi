@@ -278,3 +278,4 @@ Supporting utilities:
 | **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** | Modular dock TODO: parity, N strips, movable agent/sidebar, phases. |
 | **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)** | Agent rule when editing **`apps/wayofpi-ui`**. |
 | **`apps/wayofpi-ui/README.md`** | Commands, env vars, API table, WebSocket summary. |
+| **[WOP_MOBILE_UI_PLAN.md](WOP_MOBILE_UI_PLAN.md)** | **Mobile layouts** for **Claw**, **Simple**, **Technical** (distinct per shell; build **Claw → Simple → Technical**). |

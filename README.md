@@ -209,6 +209,20 @@ Set **`OPENROUTER_API_KEY`** in **`.env`** (see **`.env.sample`**). The **`openr
 
 Scripts prepend **`~/.bun/bin`** to **`PATH`**; install **[Bun](https://bun.sh)** if **`bun`** is missing. They source repo **`.env`** when present and set **`WOP_WORKSPACE`** to the playground root unless already exported. Full setup, API table, production Electron, terminal env: **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)**.
 
+### Public HTTPS URL (ngrok, optional)
+
+**[ngrok](https://ngrok.com/)** can give you a temporary **`https://...`** link to the same machine where **Way of Pi** is running (another network, phone on cellular, quick demos). It is **not** required for normal local use.
+
+Open **Settings → ngrok (optional)** in the app to:
+
+- **Install ngrok into this app** (runs **`bun install`** or **`npm install`** in **`apps/wayofpi-ui`** so the optional **`ngrok`** npm package can fetch the agent).
+- Save your **[ngrok dashboard authtoken](https://dashboard.ngrok.com/get-started/your-authtoken)** on the host.
+- **Save authtoken** from the same dialog even if **`WOP_ALLOW_NGROK_SPAWN`** is off (so the CLI is configured before you start **`ngrok http`** manually or re-enable spawn).
+- **Start / stop** a managed tunnel (**`ngrok http`** to your Vite port, usually **5173**) when **`WOP_ALLOW_NGROK_SPAWN`** is not turned off.
+- Optionally turn on **tunnel login** (HTTP Basic Auth on tunnel-style hostnames).
+
+**Full guide** (ports, **`WOP_*`** env vars, **`/api/dev/*`** routes on the Bun server, security, optional system install via **`./scripts/install-ngrok-optional.sh`**): **[docs/WOP_NGROK.md](docs/WOP_NGROK.md)**.
+
 ### Honcho (optional cross-session memory)
 
 **Simple picture:** Honcho is a **shared binder** other programs can read and write over the web (HTTP): a **workspace** is which binder, **peers** label you vs an assistant, **sessions** are conversation threads. Pi still uses its normal in-session memory (**[docs/AGENT_MEMORY.md](docs/AGENT_MEMORY.md)**); **Honcho** is an **extra** store so **Hermes** (and similar clients) can reuse the same memory across days and tools. The **`honcho-mirror`** extension **copies** finished Pi turns into Honcho when the API is reachable; if Honcho is down, Pi keeps working (you may see one mirror warning).
@@ -259,6 +273,7 @@ Set **`HONCHO_BASE_URL`** (and **`~/.honcho/config.json`** → **`baseUrl`**) to
 | **Capabilities** — shipped vs partial vs planned; boundaries and links | **[docs/WOP_PRODUCT_CAPABILITIES.md](docs/WOP_PRODUCT_CAPABILITIES.md)** |
 | **All roadmaps and WOP plans in one hub** | **[docs/WOP_PLANNING.md](docs/WOP_PLANNING.md)** |
 | **Run the app** (Electron, browser, env, `/api`, WebSocket) | **[apps/wayofpi-ui/README.md](apps/wayofpi-ui/README.md)** |
+| **Public dev URL (ngrok)** — install, authtoken, tunnel, optional login | **[docs/WOP_NGROK.md](docs/WOP_NGROK.md)** |
 | **Repo layout** (folders, `.pi/`, gitignore, `projects/_template`) | **[docs/REPO_INDEX.md](docs/REPO_INDEX.md)** |
 | **Pi concepts** (extensions, skills, agents, tools, memory) | **[docs/CONCEPTS.md](docs/CONCEPTS.md)**, then topic guides below |
 
@@ -271,6 +286,7 @@ Set **`HONCHO_BASE_URL`** (and **`~/.honcho/config.json`** → **`baseUrl`**) to
 | **[WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** | Long-form product plan: isolation, MVP, production checklist |
 | **[WOP_PI_BACKEND_WIRING_PLAN.md](docs/WOP_PI_BACKEND_WIRING_PLAN.md)** | HTTP/WebSocket inventory; **critical parity rule** (Pi owns agent behavior); phased wiring |
 | **[WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)** | **`WOP_*`** env; workspace root vs Way of Pi install vs editor-only state |
+| **[WOP_NGROK.md](docs/WOP_NGROK.md)** | **ngrok** — public HTTPS (Settings UI, ports, env, HTTP APIs, tunnel login, security) |
 | **[WOP_TECHNICAL_UI.md](docs/WOP_TECHNICAL_UI.md)** | Shell: Simple / Technical / Claw, grid, docks, persistence keys |
 | **[WOP_CLAW_MODE_PLAN.md](docs/WOP_CLAW_MODE_PLAN.md)**, **[WOP_CLAW_UI_PLAN.md](docs/WOP_CLAW_UI_PLAN.md)** | Claw operator mode: roadmap and UI research |
 | **[WOP_BUILD_PLAN_MODE.md](docs/WOP_BUILD_PLAN_MODE.md)** | Plan vs build chat workflows and **`plans/`** handoffs |
@@ -596,3 +612,155 @@ See **[CHANGELOG.md](CHANGELOG.md)** for notable playground updates (extensions,
 Learn tactical agentic coding patterns with [Tactical Agentic Coding](https://agenticengineer.com/tactical-agentic-coding)
 
 Follow the [IndyDevDan YouTube channel](https://www.youtube.com/@indydevdan) to improve your agentic coding advantage.
+
+---
+
+## 📦 System Installation (`.deb` Package)
+
+**⚠️ Note:** Way of Pi is primarily distributed as source code that requires system dependencies. However, a `.deb` package is being developed for convenience.
+
+### Current Status
+
+- ✅ **Electron app** - Works on Linux/MacOS/WSL
+- ✅ **Source-based install** - Install via git clone
+- 🟡 **`.deb` package** - In development for easier distribution
+- ✅ **Docker/Honcho** - Memory stack available via Docker
+
+### For now - Source Installation
+
+```bash
+# Clone repository
+git clone https://github.com/zerwiz/wayofpi.git /path/to/wayofpi
+cd /path/to/wayofpi
+
+# Install system dependencies
+sudo apt update
+sudo apt install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    git \
+    build-essential \
+    libgtk-3-0 \
+    libnotify4 \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libxi6 \
+    libxtst6 \
+    xdg-utils \
+    wget
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Set up npm (comes with Bun or via Node.js)
+npm install -g npm
+
+# Install Way of Pi dependencies
+bun install
+cd apps/wayofpi-ui && npm install && cd ../..
+
+# Create .env file
+cp .env.sample .env
+
+# Edit with your API keys
+nano .env
+
+# Start
+./start-wayofpi-electron.sh
+```
+
+### Future `.deb` Package (when ready)
+
+When a `.deb` package is available, you'll be able to install with:
+
+```bash
+sudo apt install wayofpi
+sudo apt install wayofpi-ui              # Way of Pi shell
+sudo apt install wayofpi-memory          # Honcho memory stack
+sudo apt install wayofpi-ngrok           # ngrok integration
+
+# Enable on system
+sudo systemctl enable wayofpi.service
+sudo systemctl start wayofpi.service
+```
+
+### Docker Alternative
+
+For containerized environments or minimal systems:
+
+```bash
+# Using the Docker image when available
+docker run --rm \
+    -p 5173:5173 \
+    -v $(pwd):/work \
+    --env-file .env \
+    zerwiz/wayofpi:latest
+```
+
+---
+
+## 🔄 Update Instructions
+
+### Normal Update
+
+```bash
+# From repository root
+./scripts/wop-update-simple.sh
+
+# Or force update
+./scripts/wop-update-simple.sh --force
+```
+
+### If Build is Broken
+
+```bash
+# Check if build is broken
+./scripts/wop-recover.sh
+
+# Auto-fix issues
+./scripts/wop-recover.sh --auto
+
+# Full recovery
+./scripts/wop-recover.sh --full
+```
+
+### Manual Git Update
+
+```bash
+git fetch origin
+git pull --rebase origin main
+bun install
+cd apps/wayofpi-ui && npm install
+```
+
+---
+
+## 📁 Backup & Recovery
+
+The update scripts automatically backup your:
+- `.pi/` configuration
+- `agent/` definitions  
+- `extensions/` custom extensions
+- `.env` file
+
+Backups are stored in:
+- `$HOME/.pi/wayofpi-backup/`
+- `./wop-backup-*.tar.gz` (current repo)
+
+### Manual Backup
+
+```bash
+# Create backup
+cp -r .pi agent extensions .env .env.sample $HOME/.pi/wayofpi-backup/
+
+# Restore from backup
+cp -r $HOME/.pi/wayofpi-backup/.pi .pi/
+cp -r $HOME/.pi/wayofpi-backup/agent agent/
+cp -r $HOME/.pi/wayofpi-backup/extensions extensions/
+```
+
+---
+

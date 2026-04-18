@@ -1,0 +1,22 @@
+#!/bin/bash
+# postrm script for wayof-pi package
+set -e
+
+status=$1
+newversion=$2
+oldversion=$3
+
+case "$status" in
+  remove|upgrade|disinhibit-upgrade|disinhibit-downgrade|upgrade-downgrade)
+    # Clean up any leftover files from old installation
+    rm -rf ~/.wayofpi-cache 2>/dev/null || true
+    rm -rf ~/.wayofpi-session 2>/dev/null || true
+    ;;
+  purge)
+    # Remove user configuration
+    rm -rf ~/.wayofpi-cache 2>/dev/null || true
+    rm -rf ~/.pi/.env 2>/dev/null || true
+    ;;
+esac
+
+exit 0

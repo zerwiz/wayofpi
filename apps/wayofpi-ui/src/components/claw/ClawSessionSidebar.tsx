@@ -13,6 +13,7 @@ export function ClawSessionSidebar({
 	onRename,
 	dark,
 	streaming,
+	presentation = "rail",
 }: {
 	tabs: ChatSessionTab[];
 	activeTabId: string;
@@ -22,6 +23,8 @@ export function ClawSessionSidebar({
 	dark: boolean;
 	/** When true on the active tab, close/clear is blocked until the reply finishes. */
 	streaming?: boolean;
+	/** `sheet` = full width (bottom sheet); `rail` = fixed narrow column beside chat. */
+	presentation?: "rail" | "sheet";
 }) {
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [draft, setDraft] = useState("");
@@ -76,11 +79,13 @@ export function ClawSessionSidebar({
 		? "rounded p-0.5 text-[#585858] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
 		: "rounded p-0.5 text-[#aaaaaa] hover:bg-[#e5e5e5] hover:text-[#555555]";
 
+	const widthClass =
+		presentation === "sheet"
+			? "flex w-full min-w-0 max-w-none shrink-0 flex-col"
+			: `flex w-[min(260px,34vw)] min-w-[200px] max-w-[300px] shrink-0 flex-col border-l ${border}`;
+
 	return (
-		<aside
-			className={`flex w-[min(260px,34vw)] min-w-[200px] max-w-[300px] shrink-0 flex-col border-l ${border} ${listBg}`}
-			aria-label="Chat sessions"
-		>
+		<aside className={`${widthClass} ${listBg}`} aria-label="Chat sessions">
 			<div
 				className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border} ${headerBg}`}
 			>

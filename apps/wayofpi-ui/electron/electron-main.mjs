@@ -2,6 +2,7 @@
  * Electron shell for Way of Pi UI — **primary desktop** target (same renderer as browser dev).
  * - Dev: `loadURL(WOP_ELECTRON_DEV_URL)` → Vite (default http://127.0.0.1:5173/) so relative `/api`, `/ws`,
  *   `/api/manifest`, `/ws/terminal` use vite.config.ts proxies to Bun on WOP_SERVER_PORT (3333).
+ *   On **`app.whenReady`**, if **`ELECTRON_DEV=1`**, Electron **starts the Bun API** when it is not already healthy (same as **Start service** / IPC). Set **`WOP_ELECTRON_SKIP_BUN_AUTOSTART=1`** to skip.
  * - Prod: `loadURL(WOP_ELECTRON_PROD_URL)` → Bun origin serving `dist/` + API (`npm run start`).
  */
 import { spawn } from "node:child_process";
@@ -137,6 +138,111 @@ if (!isMac) {
 	});
 }
 
+const wayofpiUiRoot = path.join(__dirname, "..");
+let startBunServerInFlight = false;
+
+/** Opt out of dev-time Bun autostart (Electron still loads Vite; use manual `bun run server` or Start service). */
+function electronSkipBunAutostart() {
+	const v = String(process.env.WOP_ELECTRON_SKIP_BUN_AUTOSTART ?? "").trim().toLowerCase();
+	return v === "1" || v === "true" || v === "yes" || v === "on";
+}
+
+/**
+ * Electron dev: ensure Bun serves `/api/health` on `WOP_SERVER_PORT` (spawn `bun run server/index.ts` from `apps/wayofpi-ui` if needed).
+ * Used at startup and by IPC **Start service**.
+ */
+async function ensureWayofpiBunServerDev() {
+	if (!isDev) {
+		return {
+			ok: false,
+			message:
+				"Start service is only available when the desktop shell runs in dev (ELECTRON_DEV=1). In production the API is bundled with `bun run start`.",
+		};
+	}
+	const port = String(process.env.WOP_SERVER_PORT || "3333").trim() || "3333";
+	const healthUrl = `http://127.0.0.1:${port}/api/health`;
+
+	async function wayofpiBunApiState() {
+		try {
+			const ac = new AbortController();
+			const t = setTimeout(() => ac.abort(), 900);
+			const r = await fetch(healthUrl, {
+				signal: ac.signal,
+				headers: { Accept: "application/json" },
+			});
+			clearTimeout(t);
+			if (!r.ok) return "absent";
+			const j = await r.json().catch(() => ({}));
+			const c = j?.capabilities;
+			if (
+				c?.workspaceProblems === true &&
+				c?.configRuntimePost === true &&
+				c?.clawHostTreeGet === true &&
+				c?.clawTelegramStatusGet === true
+			) {
+				return "fresh";
+			}
+			return "stale";
+		} catch {
+			return "absent";
+		}
+	}
+
+	if (startBunServerInFlight) {
+		return { ok: false, message: "A start request is already in progress." };
+	}
+	startBunServerInFlight = true;
+	try {
+		const state = await wayofpiBunApiState();
+		if (state === "fresh") {
+			return {
+				ok: true,
+				alreadyRunning: true,
+				message: `Bun API is already reachable at ${healthUrl}.`,
+			};
+		}
+		if (state === "stale") {
+			return {
+				ok: false,
+				staleServer: true,
+				message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems, configRuntimePost, clawHostTreeGet, and/or clawTelegramStatusGet — old Bun). Stop the old process, then try Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
+			};
+		}
+		const bunExe = process.platform === "win32" ? "bun.exe" : "bun";
+		const child = spawn(bunExe, ["run", "server/index.ts"], {
+			cwd: wayofpiUiRoot,
+			detached: true,
+			stdio: "ignore",
+			env: {
+				...process.env,
+				NODE_ENV: "development",
+				PATH: wayofpiEnrichedPath(process.env.PATH),
+			},
+		});
+		child.on("error", (err) => {
+			console.error("[wayofpi] failed to spawn Bun server:", err);
+		});
+		child.unref();
+
+		const deadline = Date.now() + 20_000;
+		while (Date.now() < deadline) {
+			await new Promise((resolve) => setTimeout(resolve, 400));
+			if ((await wayofpiBunApiState()) === "fresh") {
+				return {
+					ok: true,
+					message: `Started Bun server (apps/wayofpi-ui) — ${healthUrl} is responding.`,
+				};
+			}
+		}
+		return {
+			ok: false,
+			message: `Bun did not become ready on port ${port} within 20s. Install Bun, run from repo root, or start manually: cd apps/wayofpi-ui && bun run server/index.ts`,
+		};
+	} finally {
+		startBunServerInFlight = false;
+	}
+}
+
 function registerWopShellIpc() {
 	ipcMain.handle("wop-shell:reload", (event) => {
 		BrowserWindow.fromWebContents(event.sender)?.webContents.reload();
@@ -191,104 +297,12 @@ function registerWopShellIpc() {
 		return { path: r.filePath };
 	});
 
-	let startBunServerInFlight = false;
-
 	/**
 	 * Electron dev: Vite proxies `/api` to Bun on `WOP_SERVER_PORT`. If Bun is down, spawn
 	 * `bun run server/index.ts` from `apps/wayofpi-ui` (parent of this `electron/` folder).
+	 * Same logic as startup autostart (`ensureWayofpiBunServerDev`).
 	 */
-	ipcMain.handle("wop-shell:start-wayofpi-bun-server", async () => {
-		if (!isDev) {
-			return {
-				ok: false,
-				message:
-					"Start service is only available when the desktop shell runs in dev (ELECTRON_DEV=1). In production the API is bundled with `bun run start`.",
-			};
-		}
-		const port = String(process.env.WOP_SERVER_PORT || "3333").trim() || "3333";
-		const wayofpiUiRoot = path.join(__dirname, "..");
-		const healthUrl = `http://127.0.0.1:${port}/api/health`;
-
-		async function wayofpiBunApiState() {
-			try {
-				const ac = new AbortController();
-				const t = setTimeout(() => ac.abort(), 900);
-				const r = await fetch(healthUrl, {
-					signal: ac.signal,
-					headers: { Accept: "application/json" },
-				});
-				clearTimeout(t);
-				if (!r.ok) return "absent";
-				const j = await r.json().catch(() => ({}));
-				const c = j?.capabilities;
-				if (
-					c?.workspaceProblems === true &&
-					c?.configRuntimePost === true &&
-					c?.clawHostTreeGet === true &&
-					c?.clawTelegramStatusGet === true
-				) {
-					return "fresh";
-				}
-				return "stale";
-			} catch {
-				return "absent";
-			}
-		}
-
-		if (startBunServerInFlight) {
-			return { ok: false, message: "A start request is already in progress." };
-		}
-		startBunServerInFlight = true;
-		try {
-			const state = await wayofpiBunApiState();
-			if (state === "fresh") {
-				return {
-					ok: true,
-					alreadyRunning: true,
-					message: `Bun API is already reachable at ${healthUrl}.`,
-				};
-			}
-			if (state === "stale") {
-				return {
-					ok: false,
-					staleServer: true,
-					message: `Port ${port} responds to /api/health but not this app’s current API (missing workspaceProblems, configRuntimePost, clawHostTreeGet, and/or clawTelegramStatusGet — old Bun). Stop the old process, then try Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
-				};
-			}
-			const bunExe = process.platform === "win32" ? "bun.exe" : "bun";
-			const child = spawn(bunExe, ["run", "server/index.ts"], {
-				cwd: wayofpiUiRoot,
-				detached: true,
-				stdio: "ignore",
-				env: {
-					...process.env,
-					NODE_ENV: "development",
-					PATH: wayofpiEnrichedPath(process.env.PATH),
-				},
-			});
-			child.on("error", (err) => {
-				console.error("[wayofpi] failed to spawn Bun server:", err);
-			});
-			child.unref();
-
-			const deadline = Date.now() + 20_000;
-			while (Date.now() < deadline) {
-				await new Promise((resolve) => setTimeout(resolve, 400));
-				if ((await wayofpiBunApiState()) === "fresh") {
-					return {
-						ok: true,
-						message: `Started Bun server (apps/wayofpi-ui) — ${healthUrl} is responding.`,
-					};
-				}
-			}
-			return {
-				ok: false,
-				message: `Bun did not become ready on port ${port} within 20s. Install Bun, run from repo root, or start manually: cd apps/wayofpi-ui && bun run server/index.ts`,
-			};
-		} finally {
-			startBunServerInFlight = false;
-		}
-	});
+	ipcMain.handle("wop-shell:start-wayofpi-bun-server", () => ensureWayofpiBunServerDev());
 }
 
 const devUrl = process.env.WOP_ELECTRON_DEV_URL || "http://127.0.0.1:5173";
@@ -349,10 +363,18 @@ function createWindow() {
 	});
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 	applyMacOSDockBranding();
 	registerWopShellIpc();
 	setChromeMenus();
+	if (isDev && !electronSkipBunAutostart()) {
+		const r = await ensureWayofpiBunServerDev();
+		if (r.ok) {
+			console.log("[wayofpi-electron] Bun API:", r.message);
+		} else if (!r.alreadyRunning) {
+			console.warn("[wayofpi-electron] Bun API autostart:", r.message);
+		}
+	}
 	createWindow();
 	app.on("activate", () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();

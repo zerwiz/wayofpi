@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Way of Pi
+Comment=Pi Coding Agent Desktop Shell
+GenericName=AI Code Assistant
+Exec=wayofpi %U
+TryExec=wayofpi
+Icon=wayofpi
+Terminal=false
+Type=Application
+Categories=Development;IDE;Productivity;GTK;
+Keywords=bun;coding;ai;agent;assistant;editor;
+StartupWMClass=Way of Pi

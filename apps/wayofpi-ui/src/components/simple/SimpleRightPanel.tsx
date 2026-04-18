@@ -20,6 +20,7 @@ export function SimpleRightPanel({
 	onExplorerGitMutated,
 	onMoveFileToDirectory,
 	allowWorkspaceRootDrop,
+	presentation = "sidebar",
 }: {
 	nodes: TreeNode[];
 	selectedPath: string | null;
@@ -36,6 +37,8 @@ export function SimpleRightPanel({
 	onExplorerGitMutated?: () => void;
 	onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
 	allowWorkspaceRootDrop?: boolean;
+	/** `sheet` = full-width (e.g. Simple mobile bottom sheet). */
+	presentation?: "sidebar" | "sheet";
 }) {
 	const [happeningOpen, setHappeningOpen] = useState(true);
 	const timeline =
@@ -63,8 +66,11 @@ export function SimpleRightPanel({
 		? "text-[#858585] group-hover:text-[#cccccc]"
 		: "text-[#616161] group-hover:text-[#333333]";
 
+	const widthClass =
+		presentation === "sheet" ? "w-full min-w-0 max-w-none shrink-0 border-t" : "w-80 shrink-0 border-l";
+
 	return (
-		<aside className={`z-10 flex w-80 shrink-0 flex-col border-l shadow-sm ${aside}`}>
+		<aside className={`z-10 flex flex-col shadow-sm ${widthClass} ${aside}`}>
 			<div className={`flex min-h-0 flex-1 flex-col border-b p-5 ${sectionBorder}`}>
 				<div className="mb-4 flex items-center justify-between gap-2">
 					<h2 className={`flex min-w-0 items-center gap-2 text-[13px] font-extrabold uppercase tracking-wider ${title}`}>

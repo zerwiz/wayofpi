@@ -70,6 +70,21 @@ import {
 } from "./claw-webhook-store";
 import { getClawTelegramIntegrationStatus } from "./claw-telegram-status";
 import { collectDiagnostics, collectUpstreamSnapshot } from "./diagnostics";
+import { getShareUrlHintsJson } from "./share-url-hints";
+import {
+	configureNgrokAuthtokenDev,
+	getNgrokTunnelDevJson,
+	installNgrokBundledDev,
+	updateNgrokBundledDev,
+	startNgrokTunnelDev,
+	stopNgrokTunnelDev,
+} from "./ngrok-tunnel-manager";
+import {
+	applyTunnelGateDevPost,
+	getTunnelGateDevStatusJson,
+	tunnelGateAllowsBunRequest,
+	tunnelGateUnauthorizedResponse,
+} from "./tunnel-gate";
 import { runWorkspaceProblemsAnalysis, type WorkspaceProblemsRunResult } from "./workspace-problems";
 import { resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
 import { collectStaticWebManifest } from "./web-manifest";
@@ -871,6 +886,45 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				"Access-Control-Max-Age": "86400",
 			},
 		});
+	}
+
+	/** LAN URL guess + ngrok public URL from local inspector (`127.0.0.1:4040`). */
+	if (p === "/api/dev/share-url-hints" && req.method === "GET") {
+		return json(await getShareUrlHintsJson());
+	}
+
+	if (p === "/api/dev/ngrok-tunnel" && req.method === "GET") {
+		return json(await getNgrokTunnelDevJson());
+	}
+
+	if (p === "/api/dev/ngrok-tunnel" && req.method === "POST") {
+		const body = (await req.json().catch(() => ({}))) as { action?: unknown; authtoken?: unknown };
+		const action = String(body.action ?? "").trim().toLowerCase();
+		if (action === "start") return json(await startNgrokTunnelDev());
+		if (action === "stop") return json(await stopNgrokTunnelDev());
+		if (action === "install-bundled") return json(await installNgrokBundledDev());
+		if (action === "update-bundled") return json(await updateNgrokBundledDev());
+		if (action === "set-authtoken") {
+			const raw = typeof body.authtoken === "string" ? body.authtoken : "";
+			return json(await configureNgrokAuthtokenDev(raw));
+		}
+		return json(
+			{
+				ok: false,
+				message:
+					'JSON body must include "action": "start", "stop", "install-bundled", "update-bundled", or "set-authtoken" (with authtoken string).',
+			},
+			400,
+		);
+	}
+
+	if (p === "/api/dev/tunnel-gate" && req.method === "GET") {
+		return json(getTunnelGateDevStatusJson());
+	}
+
+	if (p === "/api/dev/tunnel-gate" && req.method === "POST") {
+		const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+		return json(await applyTunnelGateDevPost(body));
 	}
 
 	if (p === "/api/health") {
@@ -1934,6 +1988,10 @@ const server = Bun.serve<ServerWsData>({
 	port: PORT,
 	async fetch(req, srv) {
 		const url = new URL(req.url);
+
+		if (!tunnelGateAllowsBunRequest(req)) {
+			return tunnelGateUnauthorizedResponse();
+		}
 
 		if (url.pathname === "/ws/terminal" && req.headers.get("upgrade") === "websocket") {
 			if (!terminalAllowed()) {

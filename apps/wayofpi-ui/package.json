@@ -30,6 +30,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "optionalDependencies": {
+    "ngrok": "^4.3.3"
+  },
   "devDependencies": {
     "@types/diff": "^7.0.2",
     "@types/dompurify": "^3.0.5",

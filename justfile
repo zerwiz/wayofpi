@@ -191,6 +191,10 @@ install-global:
 bootstrap-wayofpi:
     @./scripts/bootstrap-wayofpi-environment.sh
 
+# Optional ngrok agent: print apt/brew commands (pass --install / -y to the script for Debian/Ubuntu apt). See scripts/README.md
+install-ngrok-optional:
+    @./scripts/install-ngrok-optional.sh
+
 # pi-e: interactive multi-select for stacked `pi -e ...` in one session
 #
 # Use: `just pi-e`

@@ -285,6 +285,17 @@ function wsUrl(): string {
 	return `${proto}//${window.location.host}/ws`;
 }
 
+function chatWsErrorHint(): string {
+	const base =
+		"Chat WebSocket unreachable — start the Bun server on port 3333 (from apps/wayofpi-ui: npm run dev, or: bun run server/index.ts). Vite-only (npm run dev:ui) does not include the server.";
+	if (typeof window === "undefined") return base;
+	const h = window.location.hostname;
+	if (h !== "localhost" && h !== "127.0.0.1") {
+		return `${base} On a phone or LAN URL, Bun must still be running on the dev PC (Vite on ${window.location.host} proxies /ws to 127.0.0.1:3333 there).`;
+	}
+	return base;
+}
+
 /**
  * Single WebSocket, **three** in-memory chat surfaces (`simple`, `technical`, `claw`): separate tab stacks,
  * row maps, persisted mode/agent keys, and `activate_session` keys so server JSONL never collides across shells.
@@ -406,9 +417,6 @@ export function useWayOfPiSession(
 		[patchActiveSurface],
 	);
 
-	const WS_ERROR_HINT =
-		"Chat WebSocket unreachable — start the Bun server on port 3333 (from apps/wayofpi-ui: npm run dev, or: bun run server/index.ts). Vite-only (npm run dev:ui) does not include the server.";
-
 	useEffect(() => {
 		let disposed = false;
 		let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -501,7 +509,7 @@ export function useWayOfPiSession(
 			};
 
 			ws.onerror = () => {
-				setError(WS_ERROR_HINT);
+				setError(chatWsErrorHint());
 			};
 
 			ws.onmessage = (ev) => {

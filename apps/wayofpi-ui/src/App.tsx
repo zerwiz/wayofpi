@@ -20,9 +20,10 @@ import { CommandPalette, type CommandItem } from "./components/CommandPalette";
 import { AgentPermissionsModal } from "./components/AgentPermissionsModal";
 import { HostDoctorModal } from "./components/HostDoctorModal";
 import { HonchoSettingsModal } from "./components/HonchoSettingsModal";
+import { NgrokSettingsModal } from "./components/NgrokSettingsModal";
 import { IndexingDocsModal } from "./components/IndexingDocsModal";
 import { InstallDebuggersModal } from "./components/InstallDebuggersModal";
-import { HowToUseModal } from "./components/HowToUseModal";
+import { HowToUseModal, type HowToUseSectionId } from "./components/HowToUseModal";
 import { MitLicenseModal } from "./components/MitLicenseModal";
 import { RestartServerModal } from "./components/RestartServerModal";
 import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
@@ -56,6 +57,7 @@ import { useAgents } from "./hooks/useAgents";
 import { buildFilePutPayload, useFileEditor, type FilePersistEncoding } from "./hooks/useFileEditor";
 import { useServerConfig } from "./hooks/useServerConfig";
 import { useUiMode, type UiMode } from "./hooks/useUiMode";
+import { MobileChrome, MobileTechnicalShell, useShellMobile } from "./components/mobile";
 import { useUiViewsCatalog } from "./hooks/useUiViewsCatalog";
 import { useRunMenuDebugState } from "./hooks/useRunMenuDebugState";
 import {
@@ -68,6 +70,7 @@ import {
 	type ChatSessionMode,
 	type ChatSessionSurfaceId,
 } from "./hooks/useWayOfPiSession";
+import { useMaxWidthMediaQuery } from "./hooks/useMaxWidthMediaQuery";
 import { useWorkspaceTree } from "./hooks/useWorkspaceTree";
 import { useWorkspaceStaticAnalysis } from "./hooks/useWorkspaceStaticAnalysis";
 import type { PiModelConfigPath } from "./constants/piModelConfigPaths";
@@ -260,8 +263,16 @@ function languageFromPath(path: string | null): string {
 
 export default function App() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
-	/** IDE-style shell (Technical or Claw); Simple uses `SimpleApp`. */
-	const technical = uiMode !== "simple";
+	const { shellMobile, setShellMobile } = useShellMobile();
+	const narrowViewport767 = useMaxWidthMediaQuery(767);
+	const shouldBumpSimpleMenuFileFocus = useMemo(
+		() => shellMobile || (uiMode === "simple" && narrowViewport767),
+		[shellMobile, uiMode, narrowViewport767],
+	);
+	const shouldBumpClawMenuFileFocus = useMemo(
+		() => shellMobile || (uiMode === "claw" && narrowViewport767),
+		[shellMobile, uiMode, narrowViewport767],
+	);
 	const {
 		root,
 		nodes,
@@ -317,7 +328,8 @@ export default function App() {
 		[session.tokenMeter.tokensDown, session.tokenMeter.tokensUp, session.tokenMeter.tokensTitle],
 	);
 	const { isDark: simpleIsDark } = useSimplePreferences();
-	const llmFixModalAppearanceDark = technical || simpleIsDark;
+	/** Simple + Claw share `useSimplePreferences` color mode; Technical shell is always dark-chrome for this dialog. */
+	const llmFixModalAppearanceDark = uiMode === "technical" ? true : simpleIsDark;
 	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
 	const prevChatErrorRef = useRef<string | null>(null);
 	useEffect(() => {
@@ -655,8 +667,31 @@ export default function App() {
 	const [activity, setActivity] = useState<TechnicalActivity>("explorer");
 	const [simpleTab, setSimpleTab] = useState<SimpleTabId>("chat");
 	const [clawTab, setClawTab] = useState<ClawTabId>("mission");
+	/** Workspace editor is mounted on Claw Chat (with file) and Files — not Mission / Schedule / … */
+	const clawWorkspaceEditorSurface = useMemo(
+		() => uiMode === "claw" && (clawTab === "chat" || clawTab === "files"),
+		[uiMode, clawTab],
+	);
 	const [simpleProviderPath, setSimpleProviderPath] = useState<PiModelConfigPath | null>(null);
 	const [simpleProviderNonce, setSimpleProviderNonce] = useState(0);
+	/** Simple: increment so `SimpleApp` opens the editor overlay (mobile shell or narrow viewport) when the path came from global menu / palette. */
+	const [simpleMobileMenuFileFocusRev, setSimpleMobileMenuFileFocusRev] = useState(0);
+	const bumpSimpleMobileMenuFileFocus = useCallback(() => {
+		setSimpleMobileMenuFileFocusRev((r) => r + 1);
+	}, []);
+	const [clawMenuFileFocusRev, setClawMenuFileFocusRev] = useState(0);
+	const bumpClawMenuFileFocus = useCallback(() => {
+		setClawMenuFileFocusRev((r) => r + 1);
+	}, []);
+	/** After `setSelectedPath` for a workspace file in Claw: Chat + `.claw/` sheet bump on mobile/narrow, else Files tab. */
+	const focusClawTabAfterWorkspaceFileSelect = useCallback(() => {
+		if (shouldBumpClawMenuFileFocus) {
+			setClawTab("chat");
+			bumpClawMenuFileFocus();
+		} else {
+			setClawTab("files");
+		}
+	}, [shouldBumpClawMenuFileFocus, bumpClawMenuFileFocus, setClawTab]);
 	const [chrome, setChrome] = useState(() => readChromePreferences());
 	const [zenMode, setZenMode] = useState(false);
 	const zenBackupRef = useRef<{
@@ -716,7 +751,7 @@ export default function App() {
 		});
 	}, []);
 
-	const staticAnalysisEnabled = technical && !!(folders[0]?.path ?? root);
+	const staticAnalysisEnabled = uiMode === "technical" && !!(folders[0]?.path ?? root);
 	const workspaceStaticAnalysis = useWorkspaceStaticAnalysis(staticAnalysisEnabled);
 
 	const openProblemLocation = useCallback(
@@ -770,7 +805,7 @@ export default function App() {
 
 	const prevEffDirtyForProblems = useRef(effDirty);
 	useEffect(() => {
-		if (!technical || !staticAnalysisEnabled) return;
+		if (!staticAnalysisEnabled) return;
 		if (prevEffDirtyForProblems.current && !effDirty && effSelectedPath) {
 			workspaceStaticAnalysis.scheduleDebouncedRefresh();
 		}
@@ -778,7 +813,6 @@ export default function App() {
 	}, [
 		effDirty,
 		effSelectedPath,
-		technical,
 		staticAnalysisEnabled,
 		workspaceStaticAnalysis.scheduleDebouncedRefresh,
 	]);
@@ -824,17 +858,35 @@ export default function App() {
 				setActivity("explorer");
 				persistLeftSidebar(true);
 			} else if (uiMode === "claw") {
-				setClawTab("files");
+				focusClawTabAfterWorkspaceFileSelect();
+			} else if (uiMode === "simple") {
+				setSimpleTab("chat");
+				if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
 			}
 		},
-		[persistLeftSidebar, uiMode, workspaceGrid.cols, workspaceGrid.rows],
+		[
+			persistLeftSidebar,
+			uiMode,
+			workspaceGrid.cols,
+			workspaceGrid.rows,
+			shouldBumpSimpleMenuFileFocus,
+			bumpSimpleMobileMenuFileFocus,
+			focusClawTabAfterWorkspaceFileSelect,
+		],
 	);
 
-	const openPiModelConfigInSimpleBrains = useCallback((path: PiModelConfigPath) => {
-		setSimpleTab("models");
-		setSimpleProviderPath(path);
-		setSimpleProviderNonce((n) => n + 1);
-	}, []);
+	const openPiModelConfigInSimpleBrains = useCallback(
+		(path: PiModelConfigPath) => {
+			if (uiMode === "claw") {
+				openPiModelConfigInEditor(path);
+				return;
+			}
+			setSimpleTab("models");
+			setSimpleProviderPath(path);
+			setSimpleProviderNonce((n) => n + 1);
+		},
+		[uiMode, openPiModelConfigInEditor],
+	);
 
 	const dismissLlmFixModal = useCallback(() => setLlmFixModalDismissed(true), []);
 	const reopenLlmFixModal = useCallback(() => setLlmFixModalDismissed(false), []);
@@ -842,10 +894,16 @@ export default function App() {
 	const openLlmFixSimpleBrains = useCallback(() => {
 		dismissLlmFixModal();
 		queueMicrotask(() => {
-			if (technical) setUiMode("simple");
+			if (uiMode === "claw") {
+				setClawTab("settings");
+				return;
+			}
+			if (uiMode === "technical") {
+				setUiMode("simple");
+			}
 			setSimpleTab("models");
 		});
-	}, [dismissLlmFixModal, technical, setUiMode]);
+	}, [dismissLlmFixModal, uiMode, setUiMode, setClawTab]);
 
 	const openLlmFixProviderCatalog = useCallback(() => {
 		dismissLlmFixModal();
@@ -854,11 +912,15 @@ export default function App() {
 		});
 	}, [dismissLlmFixModal, openPiModelConfigInEditor]);
 
-	/** Menu Settings → My Team (Pi `.pi/agents/*.md`, `teams.yaml`); Technical mode switches to Simple so the view exists. */
+	/** Menu Settings → My Team (Pi `.pi/agents/*.md`, `teams.yaml`); Technical switches to Simple for that UI; Claw uses Team tab. */
 	const openAgentSetupFromMenu = useCallback(() => {
+		if (uiMode === "claw") {
+			setClawTab("team");
+			return;
+		}
 		setUiMode("simple");
 		setSimpleTab("team");
-	}, []);
+	}, [uiMode, setUiMode, setClawTab, setSimpleTab]);
 
 	/** Open a workspace-relative file from the menu (Technical: explorer / grid; Simple: editor + chat layout). */
 	const focusWorkspaceFileFromMenu = useCallback(
@@ -867,9 +929,10 @@ export default function App() {
 			if (uiMode === "simple") {
 				setSelectedPath(rel);
 				setSimpleTab("chat");
+				if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
 			} else if (uiMode === "claw") {
 				setSelectedPath(rel);
-				setClawTab("files");
+				focusClawTabAfterWorkspaceFileSelect();
 			} else {
 				if (workspaceGrid.cols > 1 || workspaceGrid.rows > 1) {
 					setWorkspaceOpenSignal((s) => ({ path: rel, rev: (s?.rev ?? 0) + 1 }));
@@ -880,7 +943,15 @@ export default function App() {
 				persistLeftSidebar(true);
 			}
 		},
-		[uiMode, workspaceGrid.cols, workspaceGrid.rows, persistLeftSidebar],
+		[
+			uiMode,
+			workspaceGrid.cols,
+			workspaceGrid.rows,
+			persistLeftSidebar,
+			shouldBumpSimpleMenuFileFocus,
+			bumpSimpleMobileMenuFileFocus,
+			focusClawTabAfterWorkspaceFileSelect,
+		],
 	);
 	focusAgentWrittenWorkspaceFileRef.current = focusWorkspaceFileFromMenu;
 
@@ -925,14 +996,26 @@ description:
 	const settingsMenuHandlers = useMemo<SettingsMenuHandlers>(
 		() => ({
 			onOpenSimpleAppSettings: () => {
+				if (uiMode === "claw") {
+					setClawTab("settings");
+					return;
+				}
 				setUiMode("simple");
 				setSimpleTab("settings");
 			},
 			onOpenAiBrains: () => {
+				if (uiMode === "claw") {
+					setClawTab("settings");
+					return;
+				}
 				setUiMode("simple");
 				setSimpleTab("models");
 			},
 			onOpenProjects: () => {
+				if (uiMode === "claw") {
+					setClawTab("files");
+					return;
+				}
 				setUiMode("simple");
 				setSimpleTab("projects");
 			},
@@ -942,17 +1025,35 @@ description:
 			onOpenHonchoSettings: () => {
 				setHonchoSettingsOpen(true);
 			},
+			onOpenNgrokSettings: () => {
+				setNgrokSettingsOpen(true);
+			},
 			onEditWorkspaceViewsCatalog: () => {
 				const rel = uiViewsCatalog.data?.catalogRelPath ?? ".wayofpi/ui-views.json";
+				if (uiMode === "claw") {
+					focusWorkspaceFileFromMenu(rel);
+					return;
+				}
 				setUiMode("simple");
 				setSelectedPath(rel);
 				setSimpleTab("chat");
+				if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
 			},
 			onRestartServer: () => {
 				setRestartServerModalOpen(true);
 			},
 		}),
-		[uiViewsCatalog.data?.catalogRelPath],
+		[
+			uiMode,
+			uiViewsCatalog.data?.catalogRelPath,
+			focusWorkspaceFileFromMenu,
+			shouldBumpSimpleMenuFileFocus,
+			bumpSimpleMobileMenuFileFocus,
+			setSelectedPath,
+			setSimpleTab,
+			setUiMode,
+			setClawTab,
+		],
 	);
 
 	const consumeSimpleProviderFocus = useCallback(() => {
@@ -1154,20 +1255,29 @@ description:
 				await refresh();
 				setSelectedPath(path);
 				if (uiMode === "claw") {
-					// Stay in Claw mode — open the plan file in the Files tab
-					setClawTab("files");
-				} else if (technical) {
-					setUiMode("technical");
+					focusClawTabAfterWorkspaceFileSelect();
+				} else if (uiMode === "technical") {
 					persistLeftSidebar(true);
 					setActivity("explorer");
 				} else {
 					setSimpleTab("chat");
+					if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
 				}
 			} catch (e) {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
 		},
-		[persistLeftSidebar, refresh, setActivity, setClawTab, setSelectedPath, setSimpleTab, setUiMode, technical, uiMode],
+		[
+			persistLeftSidebar,
+			refresh,
+			setActivity,
+			setSelectedPath,
+			setSimpleTab,
+			uiMode,
+			shouldBumpSimpleMenuFileFocus,
+			bumpSimpleMobileMenuFileFocus,
+			focusClawTabAfterWorkspaceFileSelect,
+		],
 	);
 
 	const orchestratorPlanBootstrapLockRef = useRef(false);
@@ -1220,7 +1330,7 @@ description:
 		(m: Parameters<typeof session.setChatMode>[0]) => {
 			const agentAtClick = session.chatAgentName;
 			session.setChatMode(m);
-			if (m === "plan" && !technical) {
+			if (m === "plan" && (uiMode === "simple" || uiMode === "claw")) {
 				setSelectedPath((p) => {
 					if (!p) return null;
 					const norm = p.replace(/\\/g, "/");
@@ -1235,7 +1345,7 @@ description:
 			session.chatAgentName,
 			session.setChatMode,
 			setSelectedPath,
-			technical,
+			uiMode,
 			tryOrchestratorPlanArtifactBootstrap,
 		],
 	);
@@ -1250,7 +1360,6 @@ description:
 	latestShellForPlanRef.current = { activity, leftSidebarVisible };
 
 	useEffect(() => {
-		if (!technical) return;
 		/** Plan sidebar layout is Technical-only; Claw has its own chat `surfaceId` and must not drive this ref. */
 		if (uiMode !== "technical") return;
 		const prev = prevTechnicalChatModeRef.current;
@@ -1277,7 +1386,7 @@ description:
 			shellBeforePlanRef.current = null;
 		}
 		// `latestShellForPlanRef` is updated each render; do not list `activity` / `leftSidebarVisible` here or the effect would fire on every sidebar change while in Plan.
-	}, [persistLeftSidebar, session.chatMode, technical, uiMode]);
+	}, [persistLeftSidebar, session.chatMode, uiMode]);
 
 	const openWorkspaceSearch = useCallback(() => {
 		setUiMode("technical");
@@ -1320,7 +1429,19 @@ description:
 		skipHistoryPushRef.current = true;
 		setSelectedPath(p);
 		setNavHistoryTick((t) => t + 1);
-	}, []);
+		if (uiMode === "simple") {
+			setSimpleTab("chat");
+			if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+		} else if (uiMode === "claw") {
+			focusClawTabAfterWorkspaceFileSelect();
+		}
+	}, [
+		uiMode,
+		shouldBumpSimpleMenuFileFocus,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		setSimpleTab,
+	]);
 
 	const goHistoryForward = useCallback(() => {
 		const h = navHistoryRef.current;
@@ -1331,7 +1452,19 @@ description:
 		skipHistoryPushRef.current = true;
 		setSelectedPath(p);
 		setNavHistoryTick((t) => t + 1);
-	}, []);
+		if (uiMode === "simple") {
+			setSimpleTab("chat");
+			if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+		} else if (uiMode === "claw") {
+			focusClawTabAfterWorkspaceFileSelect();
+		}
+	}, [
+		uiMode,
+		shouldBumpSimpleMenuFileFocus,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		setSimpleTab,
+	]);
 
 	useLayoutEffect(() => {
 		bumpEditorMenu();
@@ -1352,15 +1485,16 @@ description:
 	const editMenu = useMemo((): EditMenuHandlers => {
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		const inSimpleFileSurface = uiMode === "simple" && simpleTab === "chat";
-		const inTechnicalSurface = technical;
+		const inTechnicalIdeSurface = uiMode === "technical";
 		const dockForEditMenu = isWsMulti ? (techWsSnapshot?.panelDock ?? panelDock) : panelDock;
 		const activeDockTab = dockForEditMenu.tabs[dockForEditMenu.activeIndex];
 		const fileTabFocusedInPane = activeDockTab?.type === "file";
 		const bufferMounted = Boolean(workspaceEditorRef.current);
 		const canEdit =
 			fileReady &&
-			(inSimpleFileSurface || inTechnicalSurface) &&
-			(inSimpleFileSurface ? bufferMounted : fileTabFocusedInPane && bufferMounted);
+			((inSimpleFileSurface && bufferMounted) ||
+				(clawWorkspaceEditorSurface && bufferMounted) ||
+				(inTechnicalIdeSurface && fileTabFocusedInPane && bufferMounted));
 		return {
 			canEdit,
 			onUndo: () => {
@@ -1390,9 +1524,9 @@ description:
 		effSelectedPath,
 		effFileLoading,
 		effFileError,
-		technical,
 		simpleTab,
 		uiMode,
+		clawWorkspaceEditorSurface,
 		isWsMulti,
 		techWsSnapshot,
 		panelDock,
@@ -1405,15 +1539,16 @@ description:
 		const ed = workspaceEditorRef.current;
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
 		const inSimpleFileSurface = uiMode === "simple" && simpleTab === "chat";
-		const inTechnicalSurface = technical;
+		const inTechnicalIdeSurface = uiMode === "technical";
 		const dockForEditMenu = isWsMulti ? (techWsSnapshot?.panelDock ?? panelDock) : panelDock;
 		const activeDockTab = dockForEditMenu.tabs[dockForEditMenu.activeIndex];
 		const fileTabFocusedInPane = activeDockTab?.type === "file";
 		const bufferMounted = Boolean(workspaceEditorRef.current);
 		const canEdit =
 			fileReady &&
-			(inSimpleFileSurface || inTechnicalSurface) &&
-			(inSimpleFileSurface ? bufferMounted : fileTabFocusedInPane && bufferMounted);
+			((inSimpleFileSurface && bufferMounted) ||
+				(clawWorkspaceEditorSurface && bufferMounted) ||
+				(inTechnicalIdeSurface && fileTabFocusedInPane && bufferMounted));
 		return {
 			canEdit,
 			ctrlClickMultiCursor: ed?.getCtrlClickMultiCursor() ?? false,
@@ -1446,9 +1581,9 @@ description:
 		effSelectedPath,
 		effFileLoading,
 		effFileError,
-		technical,
 		simpleTab,
 		uiMode,
+		clawWorkspaceEditorSurface,
 		isWsMulti,
 		techWsSnapshot,
 		panelDock,
@@ -1635,7 +1770,11 @@ description:
 
 	const toggleBreakpointAtCursor = useCallback(() => {
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
-		if (!fileReady || !(technical || simpleTab === "chat")) return;
+		const canBpSurface =
+			uiMode === "technical" ||
+			(uiMode === "simple" && simpleTab === "chat") ||
+			clawWorkspaceEditorSurface;
+		if (!fileReady || !canBpSurface) return;
 		setBreakpointsByPath((prev: Record<string, number[]>) => {
 			const path = effSelectedPath as string;
 			const cur = prev[path] ? [...prev[path]] : [];
@@ -1649,12 +1788,24 @@ description:
 			}
 			return { ...prev, [path]: cur };
 		});
-	}, [effSelectedPath, line, effFileLoading, effFileError, technical, simpleTab]);
+	}, [
+		effSelectedPath,
+		line,
+		effFileLoading,
+		effFileError,
+		uiMode,
+		simpleTab,
+		clawWorkspaceEditorSurface,
+	]);
 
 	const runMenu = useMemo((): RunMenuHandlers => {
 		const termOk = config?.terminalEnabled === true;
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
-		const canToggleBreakpoint = fileReady && (technical || simpleTab === "chat");
+		const canToggleBreakpoint =
+			fileReady &&
+			(uiMode === "technical" ||
+				(uiMode === "simple" && simpleTab === "chat") ||
+				clawWorkspaceEditorSurface);
 		const hasBreakpoints = Object.values(breakpointsByPath as Record<string, number[]>).some(
 			(lines) => lines.length > 0,
 		);
@@ -1698,8 +1849,9 @@ description:
 		effSelectedPath,
 		effFileLoading,
 		effFileError,
-		technical,
+		uiMode,
 		simpleTab,
+		clawWorkspaceEditorSurface,
 		breakpointsByPath,
 		allBreakpointsDisabled,
 		debugSessionActive,
@@ -1726,7 +1878,11 @@ description:
 	const goMenu = useMemo((): GoMenuHandlers => {
 		void navHistoryTick;
 		const fileReady = !!effSelectedPath && !effFileLoading && !effFileError;
-		const canEditSurface = fileReady && (technical || simpleTab === "chat");
+		const canEditSurface =
+			fileReady &&
+			(uiMode === "technical" ||
+				(uiMode === "simple" && simpleTab === "chat") ||
+				clawWorkspaceEditorSurface);
 		const h = navHistoryRef.current;
 		return {
 			canGoBack: h.idx > 0,
@@ -1755,7 +1911,7 @@ description:
 			canAddSymbolToChat: false,
 			onAddSymbolToCurrentChat: () => {},
 			onAddSymbolToNewChat: () => {},
-			canNavigateProblems: technical,
+			canNavigateProblems: uiMode === "technical",
 			onNextProblem: () => {
 				setUiMode("technical");
 				focusToolTab("problems");
@@ -1773,8 +1929,9 @@ description:
 		effSelectedPath,
 		effFileLoading,
 		effFileError,
-		technical,
+		uiMode,
 		simpleTab,
+		clawWorkspaceEditorSurface,
 		goHistoryBack,
 		goHistoryForward,
 		openWorkspaceSearch,
@@ -1785,12 +1942,14 @@ description:
 	const [hostDoctorOpen, setHostDoctorOpen] = useState(false);
 	const [indexingDocsOpen, setIndexingDocsOpen] = useState(false);
 	const [honchoSettingsOpen, setHonchoSettingsOpen] = useState(false);
+	const [ngrokSettingsOpen, setNgrokSettingsOpen] = useState(false);
 	const [agentPermissionsOpen, setAgentPermissionsOpen] = useState(false);
 	const [launchConfigAddOpen, setLaunchConfigAddOpen] = useState(false);
 	const [installDebuggersModalOpen, setInstallDebuggersModalOpen] = useState(false);
 	const [mitLicenseModalOpen, setMitLicenseModalOpen] = useState(false);
 	const [restartServerModalOpen, setRestartServerModalOpen] = useState(false);
 	const [howToUseModalOpen, setHowToUseModalOpen] = useState(false);
+	const [howToUseInitialSection, setHowToUseInitialSection] = useState<HowToUseSectionId | null>(null);
 	const [clawHelpOpen, setClawHelpOpen] = useState(false);
 	const [clawHelpDefaultSection, setClawHelpDefaultSection] = useState<ClawHelpSectionId | null>(null);
 	/**
@@ -1840,6 +1999,17 @@ description:
 		setHostDoctorOpen(true);
 	}, []);
 
+	const openShareNgrokFromSettings = useCallback(() => {
+		setNgrokSettingsOpen(false);
+		if (uiMode === "claw") {
+			setClawHelpDefaultSection("ngrok");
+			setClawHelpOpen(true);
+			return;
+		}
+		setHowToUseInitialSection("ngrok");
+		setHowToUseModalOpen(true);
+	}, [uiMode]);
+
 	const helpMenu = useMemo((): HelpMenuHandlers => {
 		const repo = WOP_PUBLIC_REPO_URL;
 		const shell = typeof window !== "undefined" ? window.wopShell : undefined;
@@ -1850,6 +2020,7 @@ description:
 					setClawHelpDefaultSection(null);
 					setClawHelpOpen(true);
 				} else {
+					setHowToUseInitialSection(null);
 					setHowToUseModalOpen(true);
 				}
 			},
@@ -1887,7 +2058,7 @@ description:
 		}
 		if (ok) {
 			await refresh();
-			if (technical && staticAnalysisEnabled) {
+			if (staticAnalysisEnabled) {
 				workspaceStaticAnalysis.scheduleDebouncedRefresh();
 			}
 		}
@@ -1980,11 +2151,28 @@ description:
 					}));
 				} else {
 					setSelectedPath(r.selectPath);
+					if (uiMode === "simple") {
+						setSimpleTab("chat");
+						if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+					} else if (uiMode === "claw") {
+						focusClawTabAfterWorkspaceFileSelect();
+					}
 				}
 			}
 			await refresh();
 		})();
-	}, [bumpRecent, pickAbsoluteServerPath, refresh, uiMode, workspaceGrid.cols, workspaceGrid.rows]);
+	}, [
+		bumpRecent,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		pickAbsoluteServerPath,
+		refresh,
+		setSimpleTab,
+		shouldBumpSimpleMenuFileFocus,
+		uiMode,
+		workspaceGrid.cols,
+		workspaceGrid.rows,
+	]);
 
 	const handleAddFolderPrompt = useCallback(() => {
 		void (async () => {
@@ -2172,11 +2360,25 @@ description:
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
 				await refresh();
 				setSelectedPath(rel);
+				if (uiMode === "simple") {
+					setSimpleTab("chat");
+					if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+				} else if (uiMode === "claw") {
+					focusClawTabAfterWorkspaceFileSelect();
+				}
 			} catch (e) {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
 		})();
-	}, [explorerContextDir, refresh]);
+	}, [
+		explorerContextDir,
+		refresh,
+		uiMode,
+		shouldBumpSimpleMenuFileFocus,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		setSimpleTab,
+	]);
 
 	const performCreateNewWorkspaceFile = useCallback(
 		async (relRaw: string, initialContent?: string) => {
@@ -2199,13 +2401,28 @@ description:
 					setSelectedPath(rel);
 					if (uiMode === "technical") {
 						setPanelDock((prev) => applyAddFileTab(prev, rel));
+					} else if (uiMode === "simple") {
+						setSimpleTab("chat");
+						if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+					} else if (uiMode === "claw") {
+						focusClawTabAfterWorkspaceFileSelect();
 					}
 				}
 			} catch (e) {
 				window.alert(e instanceof Error ? e.message : String(e));
 			}
 		},
-		[refresh, uiMode, workspaceGrid.cols, workspaceGrid.rows],
+		[
+			refresh,
+			uiMode,
+			workspaceGrid.cols,
+			workspaceGrid.rows,
+			shouldBumpSimpleMenuFileFocus,
+			bumpSimpleMobileMenuFileFocus,
+			focusClawTabAfterWorkspaceFileSelect,
+			setPanelDock,
+			setSimpleTab,
+		],
 	);
 
 	/** From the workspace + tab strip: path is relative to the workspace (primary root), not the explorer selection. */
@@ -2236,12 +2453,29 @@ description:
 					setSelectedPath(r.selectPath);
 					if (uiMode === "technical") {
 						setPanelDock((prev) => applyAddFileTab(prev, r.selectPath!));
+					} else if (uiMode === "simple") {
+						setSimpleTab("chat");
+						if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+					} else if (uiMode === "claw") {
+						focusClawTabAfterWorkspaceFileSelect();
 					}
 				}
 			}
 			await refresh();
 		})();
-	}, [bumpRecent, pickAbsoluteServerPath, refresh, uiMode, workspaceGrid.cols, workspaceGrid.rows]);
+	}, [
+		bumpRecent,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		pickAbsoluteServerPath,
+		refresh,
+		setPanelDock,
+		setSimpleTab,
+		shouldBumpSimpleMenuFileFocus,
+		uiMode,
+		workspaceGrid.cols,
+		workspaceGrid.rows,
+	]);
 
 	const workspaceDockFileActions = useMemo(
 		() => [
@@ -2325,12 +2559,17 @@ description:
 					setSelectedPath(target);
 					if (uiMode === "technical") {
 						setPanelDock((prev) => applyAddFileTab(prev, target));
+					} else if (uiMode === "simple") {
+						setSimpleTab("chat");
+						if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+					} else if (uiMode === "claw") {
+						focusClawTabAfterWorkspaceFileSelect();
 					}
 				}
 				setExplorerContextDir(posixDirname(target));
 				setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(target) });
 				await refresh();
-				if (technical && staticAnalysisEnabled) {
+				if (staticAnalysisEnabled) {
 					workspaceStaticAnalysis.scheduleDebouncedRefresh();
 				}
 			} catch (e) {
@@ -2348,6 +2587,10 @@ description:
 		workspaceGrid.rows,
 		staticAnalysisEnabled,
 		workspaceStaticAnalysis.scheduleDebouncedRefresh,
+		shouldBumpSimpleMenuFileFocus,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		setPanelDock,
 	]);
 
 	const handleSaveAll = useCallback(async () => {
@@ -2621,7 +2864,7 @@ description:
 	);
 
 	const workspaceGridToolbar = useMemo((): WorkspaceGridPickerConfig | null => {
-		if (!technical) return null;
+		if (uiMode !== "technical") return null;
 		return {
 			cols: workspaceGrid.cols,
 			rows: workspaceGrid.rows,
@@ -2629,7 +2872,7 @@ description:
 			maxRows: WORKSPACE_GRID_MAX_ROWS,
 			onSelect: applyWorkspaceGridShape,
 		};
-	}, [technical, workspaceGrid.cols, workspaceGrid.rows, applyWorkspaceGridShape]);
+	}, [uiMode, workspaceGrid.cols, workspaceGrid.rows, applyWorkspaceGridShape]);
 
 	const agentTeamWorkspacePane = useMemo(
 		() => ({
@@ -2665,10 +2908,10 @@ description:
 	/** Cursor-style: roster beside the editor — show the agent dock and expand Team in Session Chat (not a center tab). */
 	const [teamPulseDockSignal, setTeamPulseDockSignal] = useState(0);
 	const openTeamPulseInAgentDock = useCallback(() => {
-		if (!technical) return;
+		if (uiMode !== "technical") return;
 		updateDockLayout({ agentPanelVisible: true });
 		setTeamPulseDockSignal((n) => n + 1);
-	}, [technical, updateDockLayout]);
+	}, [uiMode, updateDockLayout]);
 
 	const openPlanFileForReview = useCallback(
 		(workspaceRelativePath: string) => {
@@ -2679,12 +2922,25 @@ description:
 				setWorkspaceOpenSignal((s) => ({ path: p, rev: (s?.rev ?? 0) + 1 }));
 			} else {
 				setSelectedPath(p);
-				if (uiMode === "technical") {
+				if (uiMode === "simple") {
+					setSimpleTab("chat");
+					if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+				} else if (uiMode === "technical") {
 					setPanelDock((prev) => applyAddFileTab(prev, p));
+				} else if (uiMode === "claw") {
+					focusClawTabAfterWorkspaceFileSelect();
 				}
 			}
 		},
-		[uiMode, workspaceGrid.cols, workspaceGrid.rows, setPanelDock],
+		[
+			uiMode,
+			workspaceGrid.cols,
+			workspaceGrid.rows,
+			setPanelDock,
+			shouldBumpSimpleMenuFileFocus,
+			bumpSimpleMobileMenuFileFocus,
+			focusClawTabAfterWorkspaceFileSelect,
+		],
 	);
 
 	const workspaceEmbeddedChat = useCallback(
@@ -2829,7 +3085,7 @@ description:
 	);
 
 	const viewSimpleMenu: ViewMenuSimpleOptions | null = useMemo(() => {
-		if (technical) return null;
+		if (uiMode !== "simple" && uiMode !== "claw") return null;
 		const d = uiViewsCatalog.data;
 		const catalogRel = d?.catalogRelPath ?? ".wayofpi/ui-views.json";
 		const schemaRel = d?.schemaDocRelPath ?? "docs/WOP_SIMPLE_UI_VIEWS.md";
@@ -2837,14 +3093,25 @@ description:
 		const onActivateEntry = (e: UiViewCatalogEntry) => {
 			if (e.kind === "simpleTab") {
 				const t = e.target;
-				if (t === "chat" || t === "team" || t === "models" || t === "projects" || t === "settings") {
+				if (t !== "chat" && t !== "team" && t !== "models" && t !== "projects" && t !== "settings") return;
+				if (uiMode === "claw") {
+					if (t === "chat") setClawTab("chat");
+					else if (t === "team") setClawTab("team");
+					else if (t === "models" || t === "settings") setClawTab("settings");
+					else if (t === "projects") setClawTab("files");
+				} else {
 					setSimpleTab(t);
 				}
 				return;
 			}
 			if (e.kind === "openFile") {
 				setSelectedPath(e.target);
-				setSimpleTab("chat");
+				if (uiMode === "claw") {
+					focusClawTabAfterWorkspaceFileSelect();
+				} else {
+					setSimpleTab("chat");
+					if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+				}
 				return;
 			}
 			if (e.kind === "technicalActivity") {
@@ -2865,7 +3132,10 @@ description:
 		};
 
 		return {
-			onOpenAppearanceSettings: () => setSimpleTab("settings"),
+			onOpenAppearanceSettings: () => {
+				if (uiMode === "claw") setClawTab("settings");
+				else setSimpleTab("settings");
+			},
 			onToggleFullScreen: () => void toggleFullScreen(),
 			onSeedViewsCatalog: () => void uiViewsCatalog.seedCatalog(),
 			catalog: d?.entries ?? [],
@@ -2876,22 +3146,41 @@ description:
 			catalogRelPath: catalogRel,
 			onActivateEntry,
 			onEditCatalog: () => {
+				if (uiMode === "claw") {
+					focusWorkspaceFileFromMenu(catalogRel);
+					return;
+				}
 				setSelectedPath(catalogRel);
 				setSimpleTab("chat");
+				if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
 			},
 			onOpenSchemaDoc: () => {
+				if (uiMode === "claw") {
+					focusWorkspaceFileFromMenu(schemaRel);
+					return;
+				}
 				setSelectedPath(schemaRel);
 				setSimpleTab("chat");
+				if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
 			},
 		};
 	}, [
-		technical,
+		uiMode,
 		uiViewsCatalog.data,
 		uiViewsCatalog.loading,
 		uiViewsCatalog.error,
 		uiViewsCatalog.seedCatalog,
 		toggleFullScreen,
 		persistLeftSidebar,
+		setActivity,
+		shouldBumpSimpleMenuFileFocus,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		focusWorkspaceFileFromMenu,
+		setSelectedPath,
+		setSimpleTab,
+		setClawTab,
+		setUiMode,
 	]);
 
 	useEffect(() => {
@@ -3006,14 +3295,21 @@ description:
 					return;
 				}
 				if (e.key === "F8" && !e.ctrlKey && !e.altKey) {
-					e.preventDefault();
-					setUiMode("technical");
-					focusToolTab("problems");
-					return;
+					if (uiMode === "simple") {
+						e.preventDefault();
+						setUiMode("technical");
+						focusToolTab("problems");
+						return;
+					}
+					if (uiMode === "technical") {
+						e.preventDefault();
+						focusToolTab("problems");
+						return;
+					}
 				}
 			}
 			if (
-				technical &&
+				uiMode === "technical" &&
 				(e.metaKey || e.ctrlKey) &&
 				e.key.toLowerCase() === "b" &&
 				!e.shiftKey &&
@@ -3024,7 +3320,7 @@ description:
 				return;
 			}
 			if (
-				technical &&
+				uiMode === "technical" &&
 				(e.metaKey || e.ctrlKey) &&
 				e.altKey &&
 				e.key.toLowerCase() === "b" &&
@@ -3036,7 +3332,7 @@ description:
 			}
 			/** View → Appearance: Zen (toggle) / centered editor column */
 			if (
-				technical &&
+				uiMode === "technical" &&
 				(e.metaKey || e.ctrlKey) &&
 				e.altKey &&
 				!e.shiftKey &&
@@ -3048,7 +3344,7 @@ description:
 				return;
 			}
 			if (
-				technical &&
+				uiMode === "technical" &&
 				(e.metaKey || e.ctrlKey) &&
 				e.altKey &&
 				!e.shiftKey &&
@@ -3059,7 +3355,7 @@ description:
 				return;
 			}
 			if (
-				technical &&
+				uiMode === "technical" &&
 				(e.metaKey || e.ctrlKey) &&
 				e.altKey &&
 				!e.shiftKey &&
@@ -3069,17 +3365,33 @@ description:
 				restoreNormalView();
 				return;
 			}
-			if (technical && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j" && !e.shiftKey && !e.altKey) {
+			if (
+				uiMode === "technical" &&
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "j" &&
+				!e.shiftKey &&
+				!e.altKey
+			) {
 				e.preventDefault();
 				focusToolTab("terminal");
 				return;
 			}
-			if (technical && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "m") {
+			if (
+				uiMode === "technical" &&
+				(e.metaKey || e.ctrlKey) &&
+				e.shiftKey &&
+				e.key.toLowerCase() === "m"
+			) {
 				e.preventDefault();
 				focusToolTab("problems");
 				return;
 			}
-			if (technical && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "p") {
+			if (
+				uiMode === "technical" &&
+				(e.metaKey || e.ctrlKey) &&
+				e.shiftKey &&
+				e.key.toLowerCase() === "p"
+			) {
 				e.preventDefault();
 				setCommandPaletteOpen(true);
 				return;
@@ -3103,14 +3415,14 @@ description:
 				onOpenToolPanel("terminal");
 				return;
 			}
-			if (technical && e.altKey && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === "z") {
+			if (uiMode === "technical" && e.altKey && !e.metaKey && !e.ctrlKey && e.key.toLowerCase() === "z") {
 				if (!inChat) {
 					e.preventDefault();
 					setChrome((c) => ({ ...c, editorWordWrap: !c.editorWordWrap }));
 				}
 				return;
 			}
-			if (technical && e.shiftKey && e.altKey && (e.key === "0" || e.code === "Digit0")) {
+			if (uiMode === "technical" && e.shiftKey && e.altKey && (e.key === "0" || e.code === "Digit0")) {
 				e.preventDefault();
 				flipDockLayout();
 				return;
@@ -3159,7 +3471,7 @@ description:
 		return () => window.removeEventListener("keydown", onKey);
 	}, [
 		saveAndRefresh,
-		technical,
+		uiMode,
 		toggleLeftSidebar,
 		updateDockLayout,
 		focusToolTab,
@@ -3378,7 +3690,10 @@ description:
 				label: "Help: How to use Way of Pi",
 				detail: "Getting started modal + doc links",
 				keywords: ["help", "start", "guide", "tutorial", "onboarding"],
-				run: () => setHowToUseModalOpen(true),
+				run: () => {
+					setHowToUseInitialSection(null);
+					setHowToUseModalOpen(true);
+				},
 			},
 			{ id: "layout-simple", label: "Layout: Simple UI", keywords: ["mode", "shell"], run: () => setUiMode("simple") },
 			{
@@ -3634,15 +3949,36 @@ description:
 						setClawHelpDefaultSection(null);
 						setClawHelpOpen(true);
 					} else {
+						setHowToUseInitialSection(null);
 						setHowToUseModalOpen(true);
 					}
 				},
 			},
-			{ id: "s-chat", label: "Simple: Chat", run: () => setSimpleTab("chat") },
-			{ id: "s-team", label: "Simple: My Team", run: () => setSimpleTab("team") },
-			{ id: "s-models", label: "Simple: AI Brains", run: () => setSimpleTab("models") },
-			{ id: "s-projects", label: "Simple: Projects", run: () => setSimpleTab("projects") },
-			{ id: "s-settings", label: "Simple: Settings", run: () => setSimpleTab("settings") },
+			{
+				id: "s-chat",
+				label: uiMode === "claw" ? "Claw: Chat" : "Simple: Chat",
+				run: () => (uiMode === "claw" ? setClawTab("chat") : setSimpleTab("chat")),
+			},
+			{
+				id: "s-team",
+				label: uiMode === "claw" ? "Claw: Team" : "Simple: My Team",
+				run: () => (uiMode === "claw" ? setClawTab("team") : setSimpleTab("team")),
+			},
+			{
+				id: "s-models",
+				label: uiMode === "claw" ? "Claw: Settings" : "Simple: AI Brains",
+				run: () => (uiMode === "claw" ? setClawTab("settings") : setSimpleTab("models")),
+			},
+			{
+				id: "s-projects",
+				label: uiMode === "claw" ? "Claw: Files" : "Simple: Projects",
+				run: () => (uiMode === "claw" ? setClawTab("files") : setSimpleTab("projects")),
+			},
+			{
+				id: "s-settings",
+				label: uiMode === "claw" ? "Claw: Settings" : "Simple: Settings",
+				run: () => (uiMode === "claw" ? setClawTab("settings") : setSimpleTab("settings")),
+			},
 			{ id: "s-tech", label: "Layout: Technical UI", run: () => setUiMode("technical") },
 			{
 				id: "s-claw",
@@ -3682,7 +4018,8 @@ description:
 				label: "Chat: Insert Build handoff from latest plan",
 				keywords: ["plan", "implement"],
 				run: () => {
-					setSimpleTab("chat");
+					if (uiMode === "simple") setSimpleTab("chat");
+					else if (uiMode === "claw") setClawTab("chat");
 					void apiGet<{ latest: { path: string } | null }>("/api/plans")
 						.then((d) => {
 							const p = d.latest?.path;
@@ -3700,7 +4037,8 @@ description:
 				label: "Chat: Insert review prompt for latest plan",
 				keywords: ["plan", "review"],
 				run: () => {
-					setSimpleTab("chat");
+					if (uiMode === "simple") setSimpleTab("chat");
+					else if (uiMode === "claw") setClawTab("chat");
 					void apiGet<{ latest: { path: string } | null }>("/api/plans")
 						.then((d) => {
 							const p = d.latest?.path;
@@ -3729,7 +4067,12 @@ description:
 				keywords: [f.name, f.path],
 				run: () => {
 					setSelectedPath(f.path);
-					setSimpleTab("chat");
+					if (uiMode === "simple") {
+						setSimpleTab("chat");
+						if (shouldBumpSimpleMenuFileFocus) bumpSimpleMobileMenuFileFocus();
+					} else if (uiMode === "claw") {
+						focusClawTabAfterWorkspaceFileSelect();
+					}
 				},
 			})),
 		];
@@ -3750,6 +4093,10 @@ description:
 		uiMode,
 		setClawHelpOpen,
 		setClawHelpDefaultSection,
+		shouldBumpSimpleMenuFileFocus,
+		bumpSimpleMobileMenuFileFocus,
+		focusClawTabAfterWorkspaceFileSelect,
+		setClawTab,
 	]);
 
 	const leftPanel =
@@ -3838,52 +4185,156 @@ description:
 					aria-hidden
 					onChange={onWorkspaceFileChange}
 				/>
-				<div className="flex h-screen w-full flex-col overflow-hidden font-sans selection:bg-[#9a3412]">
-					<MenuBar
-						modelLabel={modelLabel}
-						uiMode={uiMode}
-						onUiModeChange={setUiMode}
-						config={config}
-						onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-						onSave={saveAndRefresh}
-						canSave={!!selectedPath && dirty}
-						onRevertFile={() => void reload()}
-						canRevert={!!selectedPath && dirty}
-						onRefreshWorkspace={refresh}
-						onCopyWorkspacePath={copyWorkspacePath}
-						onSelectActivity={(a) => {
-							setUiMode("technical");
-							persistLeftSidebar(true);
-							setActivity(a);
-						}}
-						onFocusBottomTab={(t) => {
-							setUiMode("technical");
-							focusToolTab(t);
-						}}
-						fileMenu={fileMenu}
-						editMenu={editMenu}
-						selectionMenu={selectionMenu}
-						goMenu={goMenu}
-						runMenu={runMenu}
-						terminalMenu={terminalMenu}
-						helpMenu={helpMenu}
-						onOpenAgentSetup={openAgentSetupFromMenu}
-						onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
-						settingsMenu={settingsMenuHandlers}
-						onOpenTeamsYaml={openTeamsYamlFromMenu}
-						onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
-						onReloadAgents={agentsApi.reload}
-						onOpenPiModelConfig={openPiModelConfigInSimpleBrains}
-						chatSessionControls={{
-							mode: session.chatMode,
-							switchDisabled: session.streaming,
-							onSetMode: handleChatModeChange,
-						}}
-						onNewPlanFile={() => void handleNewPlanFile()}
-						newPlanFileDisabled={!workspaceOperational}
-						viewSimple={viewSimpleMenu ?? undefined}
-					/>
-					<ClawApp
+				<div
+					className={`flex min-h-0 w-full flex-col overflow-hidden font-sans selection:bg-[#9a3412] ${shellMobile ? "h-[100dvh] max-h-[100dvh]" : "h-[100dvh] max-h-[100dvh]"}`}
+				>
+					{shellMobile ? (
+						<>
+							<MobileChrome
+								title="Claw"
+								subtitle={rootLabel}
+								onDesktopLayout={() => setShellMobile(false)}
+							/>
+							<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+								<ClawApp
+									layoutVariant="mobile"
+									refreshTreeQuiet={refreshTreeQuietShell}
+									uiMode={uiMode}
+									setUiMode={setUiMode}
+									root={root || null}
+									rootLabel={rootLabel}
+									nodes={nodes}
+									treeLoading={treeLoading}
+									treeError={treeError}
+									refreshTree={refresh}
+									modelLabel={modelLabel}
+									config={config}
+									effectiveModel={session.effectiveModel}
+									onSelectLlmModel={session.setLlmModel}
+									selectedPath={selectedPath}
+									setSelectedPath={setSelectedPath}
+									content={content}
+									setContent={setContent}
+									persistEncoding={persistEncoding}
+									fileMimeType={fileMimeType}
+									fileLoading={fileLoading}
+									fileError={fileError}
+									dirty={dirty}
+									save={save}
+									discardUnsavedChanges={discardUnsavedChanges}
+									line={line}
+									col={col}
+									onCursor={onCursor}
+									rows={session.rows}
+									logs={session.logs}
+									chatTabs={session.chatTabs}
+									activeChatTabId={session.activeChatTabId}
+									onSelectChatTab={session.selectChatTab}
+									onCloseChatTab={session.closeChatTab}
+									onRenameChatTab={session.renameChatTab}
+									onNewSession={session.startNewSession}
+									streaming={session.streaming}
+									chatStreamUiEnabled={simpleChatStreamUiEnabled}
+									onChatStreamUiEnabledChange={onSimpleChatStreamUiEnabledChange}
+									chatQueuePending={session.chatQueuePending}
+									chatQueueItems={session.chatQueueItems}
+									editChatQueueItem={session.editChatQueueItem}
+									deleteChatQueueItem={session.deleteChatQueueItem}
+									forceChatQueueItem={session.forceChatQueueItem}
+									connected={session.connected}
+									error={session.error}
+									sendChat={session.sendChat}
+									stop={session.stop}
+									clearError={session.clearError}
+									onReopenLlmFixModal={reopenLlmFixModal}
+									chatAgentName={session.chatAgentName}
+									dispatchTurnAgent={session.dispatchTurnAgent}
+									onChatAgentChange={session.setChatAgent}
+									chatMode={session.chatMode}
+									onChatModeChange={handleChatModeChange}
+									activeTab={clawTab}
+									onTabChange={setClawTab}
+									providerConfigInitialPath={simpleProviderPath}
+									providerConfigInitialNonce={simpleProviderNonce}
+									onConsumeProviderConfigFocus={consumeSimpleProviderFocus}
+									workspaceEditorRef={workspaceEditorRef}
+									onUndoRedoStackChange={bumpEditorMenu}
+									onSelectionPrefsChange={bumpSelectionPrefs}
+									onFindInFiles={openWorkspaceSearch}
+									onReplaceInFiles={openWorkspaceSearch}
+									teamsYamlWritePath={teamsYamlWritePath}
+									workspaceReady={workspaceOperational}
+									onOpenTeamsYaml={openTeamsYamlFromMenu}
+									onCreateAgentDefinition={createNewAgentMarkdownFromMenu}
+									onNewPlanFile={() => void handleNewPlanFile()}
+									newPlanFileDisabled={!workspaceOperational}
+									onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
+									onOpenHostDoctor={openHostDoctor}
+									onHelp={(section) => {
+										setClawHelpDefaultSection(section ?? null);
+										setClawHelpOpen(true);
+									}}
+									contextPct={session.tokenMeter.contextPct}
+									contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
+									tokensDown={session.tokenMeter.tokensDown}
+									tokensUp={session.tokenMeter.tokensUp}
+									contextTitle={session.tokenMeter.contextTitle}
+									tokensTitle={session.tokenMeter.tokensTitle}
+									onMoveFileToDirectory={handleExplorerMoveFile}
+									allowWorkspaceRootDrop={folders.length === 1}
+									clawMenuFileFocusRev={
+										shouldBumpClawMenuFileFocus ? clawMenuFileFocusRev : undefined
+									}
+								/>
+							</div>
+						</>
+					) : (
+						<>
+							<MenuBar
+								modelLabel={modelLabel}
+								uiMode={uiMode}
+								onUiModeChange={setUiMode}
+								config={config}
+								onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+								onSave={saveAndRefresh}
+								canSave={!!selectedPath && dirty}
+								onRevertFile={() => void reload()}
+								canRevert={!!selectedPath && dirty}
+								onRefreshWorkspace={refresh}
+								onCopyWorkspacePath={copyWorkspacePath}
+								onSelectActivity={(a) => {
+									setUiMode("technical");
+									persistLeftSidebar(true);
+									setActivity(a);
+								}}
+								onFocusBottomTab={(t) => {
+									setUiMode("technical");
+									focusToolTab(t);
+								}}
+								fileMenu={fileMenu}
+								editMenu={editMenu}
+								selectionMenu={selectionMenu}
+								goMenu={goMenu}
+								runMenu={runMenu}
+								terminalMenu={terminalMenu}
+								helpMenu={helpMenu}
+								onOpenAgentSetup={openAgentSetupFromMenu}
+								onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
+								settingsMenu={settingsMenuHandlers}
+								onOpenTeamsYaml={openTeamsYamlFromMenu}
+								onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
+								onReloadAgents={agentsApi.reload}
+								onOpenPiModelConfig={openPiModelConfigInSimpleBrains}
+								chatSessionControls={{
+									mode: session.chatMode,
+									switchDisabled: session.streaming,
+									onSetMode: handleChatModeChange,
+								}}
+								onNewPlanFile={() => void handleNewPlanFile()}
+								newPlanFileDisabled={!workspaceOperational}
+								viewSimple={viewSimpleMenu ?? undefined}
+							/>
+							<ClawApp
 						refreshTreeQuiet={refreshTreeQuietShell}
 						uiMode={uiMode}
 						setUiMode={setUiMode}
@@ -3968,7 +4419,12 @@ description:
 					tokensTitle={session.tokenMeter.tokensTitle}
 					onMoveFileToDirectory={handleExplorerMoveFile}
 					allowWorkspaceRootDrop={folders.length === 1}
+					clawMenuFileFocusRev={
+						shouldBumpClawMenuFileFocus ? clawMenuFileFocusRev : undefined
+					}
 				/>
+						</>
+					)}
 			</div>
 				<CommandPalette
 					open={commandPaletteOpen}
@@ -4002,15 +4458,44 @@ description:
 					appearanceDark={llmFixModalAppearanceDark}
 					integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`}
 				/>
+				<NgrokSettingsModal
+					open={ngrokSettingsOpen}
+					onClose={() => setNgrokSettingsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					onOpenShareNgrokHelp={openShareNgrokFromSettings}
+				/>
 				<AgentPermissionsModal
 					open={agentPermissionsOpen}
 					onClose={() => setAgentPermissionsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<NewWorkspaceFileModal
+					open={newWorkspaceFileDraft != null}
+					defaultPath={newWorkspaceFileDraft?.defaultPath ?? ""}
+					initialContent={newWorkspaceFileDraft?.initialContent}
+					onDismiss={() => setNewWorkspaceFileDraft(null)}
+					onCreate={(path, ic) => {
+						setNewWorkspaceFileDraft(null);
+						void performCreateNewWorkspaceFile(path, ic);
+					}}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<LaunchConfigAddModal
+					open={launchConfigAddOpen}
+					onDismiss={() => setLaunchConfigAddOpen(false)}
+					onPick={(id) => void appendLaunchConfigurationSnippet(id)}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<InstallDebuggersModal
+					open={installDebuggersModalOpen}
+					onDismiss={() => setInstallDebuggersModalOpen(false)}
 					appearanceDark={llmFixModalAppearanceDark}
 				/>
 			<MitLicenseModal
 				open={mitLicenseModalOpen}
 				onDismiss={() => setMitLicenseModalOpen(false)}
 				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 			<RestartServerModal
 				open={restartServerModalOpen}
@@ -4029,11 +4514,13 @@ description:
 				streaming={session.streaming}
 				onGoToTelegramChannels={() => setClawTab("channels")}
 				onFocusClawChatTab={() => setClawTab("chat")}
+				layout={shellMobile ? "mobile" : "desktop"}
 			/>
 			<NewPlanFileModal
 				open={newPlanFileModalOpen}
 				onDismiss={() => setNewPlanFileModalOpen(false)}
 				onCreate={(title, slug) => void handleNewPlanFileCreate(title, slug)}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 		</>
 	);
@@ -4051,8 +4538,17 @@ description:
 					aria-hidden
 					onChange={onWorkspaceFileChange}
 				/>
-				<div className="flex h-screen w-full flex-col overflow-hidden bg-[#1e1e1e] font-sans text-[#cccccc] selection:bg-[#9a3412]">
-					<MenuBar
+				<div
+					className={`flex min-h-0 w-full flex-col overflow-hidden bg-[#1e1e1e] font-sans text-[#cccccc] selection:bg-[#9a3412] ${shellMobile ? "h-[100dvh] max-h-[100dvh]" : "h-[100dvh] max-h-[100dvh]"}`}
+				>
+					{shellMobile ? (
+						<MobileChrome
+							title="Simple"
+							subtitle={rootLabel}
+							onDesktopLayout={() => setShellMobile(false)}
+						/>
+					) : (
+						<MenuBar
 						modelLabel={modelLabel}
 						uiMode={uiMode}
 						onUiModeChange={setUiMode}
@@ -4095,8 +4591,12 @@ description:
 						onNewPlanFile={() => void handleNewPlanFile()}
 						newPlanFileDisabled={!workspaceOperational}
 						viewSimple={viewSimpleMenu ?? undefined}
-					/>
+						/>
+					)}
+					<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 					<SimpleApp
+						layoutVariant={shellMobile ? "mobile" : "desktop"}
+						simpleMobileMenuFileFocusRev={shouldBumpSimpleMenuFileFocus ? simpleMobileMenuFileFocusRev : undefined}
 						uiMode={uiMode}
 						setUiMode={setUiMode}
 						root={root || null}
@@ -4162,7 +4662,10 @@ description:
 				onOpenFolder={handleOpenFolderPrompt}
 				onOpenRecentFolder={handleOpenRecentFolder}
 				recentFolders={recentFolders}
-				onHelp={() => setHowToUseModalOpen(true)}
+				onHelp={() => {
+					setHowToUseInitialSection(null);
+					setHowToUseModalOpen(true);
+				}}
 				onConfigRefresh={refreshServerConfig}
 				onNewPlanFile={() => void handleNewPlanFile()}
 					newPlanFileDisabled={!workspaceOperational}
@@ -4177,6 +4680,7 @@ description:
 				onMoveFileToDirectory={handleExplorerMoveFile}
 				allowWorkspaceRootDrop={folders.length === 1}
 			/>
+					</div>
 				</div>
 				<CommandPalette
 					open={commandPaletteOpen}
@@ -4210,6 +4714,12 @@ description:
 					appearanceDark={llmFixModalAppearanceDark}
 					integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`}
 				/>
+				<NgrokSettingsModal
+					open={ngrokSettingsOpen}
+					onClose={() => setNgrokSettingsOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
+					onOpenShareNgrokHelp={openShareNgrokFromSettings}
+				/>
 				<AgentPermissionsModal
 					open={agentPermissionsOpen}
 					onClose={() => setAgentPermissionsOpen(false)}
@@ -4224,20 +4734,30 @@ description:
 						setNewWorkspaceFileDraft(null);
 						void performCreateNewWorkspaceFile(path, ic);
 					}}
+					appearanceDark={llmFixModalAppearanceDark}
+				/>
+				<NewPlanFileModal
+					open={newPlanFileModalOpen}
+					onDismiss={() => setNewPlanFileModalOpen(false)}
+					onCreate={(title, slug) => void handleNewPlanFileCreate(title, slug)}
+					appearanceDark={llmFixModalAppearanceDark}
 				/>
 				<LaunchConfigAddModal
 					open={launchConfigAddOpen}
 					onDismiss={() => setLaunchConfigAddOpen(false)}
 					onPick={(id) => void appendLaunchConfigurationSnippet(id)}
+					appearanceDark={llmFixModalAppearanceDark}
 				/>
 				<InstallDebuggersModal
 					open={installDebuggersModalOpen}
 					onDismiss={() => setInstallDebuggersModalOpen(false)}
+					appearanceDark={llmFixModalAppearanceDark}
 				/>
 				<MitLicenseModal
 					open={mitLicenseModalOpen}
 					onDismiss={() => setMitLicenseModalOpen(false)}
 					repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+					appearanceDark={llmFixModalAppearanceDark}
 				/>
 				<RestartServerModal
 					open={restartServerModalOpen}
@@ -4247,7 +4767,11 @@ description:
 				/>
 				<HowToUseModal
 					open={howToUseModalOpen}
-					onDismiss={() => setHowToUseModalOpen(false)}
+					onDismiss={() => {
+						setHowToUseModalOpen(false);
+						setHowToUseInitialSection(null);
+					}}
+					initialSectionId={howToUseInitialSection}
 					repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`}
 				/>
 			</>
@@ -4362,9 +4886,22 @@ description:
 
 	return (
 		<WorkspaceStaticAnalysisProvider value={workspaceStaticAnalysisApi}>
+		{uiMode === "technical" && shellMobile ? (
+			<>
+				<input
+					ref={workspaceFileInputRef}
+					type="file"
+					accept=".code-workspace,.json,application/json"
+					className="hidden"
+					aria-hidden
+					onChange={onWorkspaceFileChange}
+				/>
+				<MobileTechnicalShell subtitle={rootLabel} onDesktopLayout={() => setShellMobile(false)} />
+			</>
+		) : (
 		<div
 			data-ui-mode={uiMode}
-			className="flex h-screen w-full flex-col overflow-hidden bg-[#1e1e1e] font-sans text-[#cccccc] selection:bg-[#9a3412] wop-density-compact"
+			className="flex h-[100dvh] max-h-[100dvh] min-h-0 w-full flex-col overflow-hidden bg-[#1e1e1e] font-sans text-[#cccccc] selection:bg-[#9a3412] wop-density-compact"
 		>
 			<input
 				ref={workspaceFileInputRef}
@@ -4388,6 +4925,7 @@ description:
 					onRefreshWorkspace={refresh}
 					onCopyWorkspacePath={copyWorkspacePath}
 					onSelectActivity={selectActivityWithSidebar}
+					technicalActivity={activity}
 					onFocusBottomTab={focusToolTab}
 					leftSidebarVisible={leftSidebarVisible}
 					onToggleLeftSidebar={toggleLeftSidebar}
@@ -4480,6 +5018,12 @@ description:
 				appearanceDark={llmFixModalAppearanceDark}
 				integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`}
 			/>
+			<NgrokSettingsModal
+				open={ngrokSettingsOpen}
+				onClose={() => setNgrokSettingsOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
+				onOpenShareNgrokHelp={openShareNgrokFromSettings}
+			/>
 			<AgentPermissionsModal
 				open={agentPermissionsOpen}
 				onClose={() => setAgentPermissionsOpen(false)}
@@ -4494,25 +5038,30 @@ description:
 					setNewWorkspaceFileDraft(null);
 					void performCreateNewWorkspaceFile(path, ic);
 				}}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 			<NewPlanFileModal
 				open={newPlanFileModalOpen}
 				onDismiss={() => setNewPlanFileModalOpen(false)}
 				onCreate={(title, slug) => void handleNewPlanFileCreate(title, slug)}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 			<LaunchConfigAddModal
 				open={launchConfigAddOpen}
 				onDismiss={() => setLaunchConfigAddOpen(false)}
 				onPick={(id) => void appendLaunchConfigurationSnippet(id)}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 			<InstallDebuggersModal
 				open={installDebuggersModalOpen}
 				onDismiss={() => setInstallDebuggersModalOpen(false)}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 			<MitLicenseModal
 				open={mitLicenseModalOpen}
 				onDismiss={() => setMitLicenseModalOpen(false)}
 				repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`}
+				appearanceDark={llmFixModalAppearanceDark}
 			/>
 			<RestartServerModal
 				open={restartServerModalOpen}
@@ -4522,7 +5071,11 @@ description:
 			/>
 			<HowToUseModal
 				open={howToUseModalOpen}
-				onDismiss={() => setHowToUseModalOpen(false)}
+				onDismiss={() => {
+					setHowToUseModalOpen(false);
+					setHowToUseInitialSection(null);
+				}}
+				initialSectionId={howToUseInitialSection}
 				repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`}
 			/>
 
@@ -4531,7 +5084,9 @@ description:
 				style={{ zoom: chrome.uiZoomPercent / 100 }}
 			>
 				{!zenMode ? (
-					<ActivityBar active={activity} onSelect={selectActivityWithSidebar} />
+					<div className="hidden md:contents">
+						<ActivityBar active={activity} onSelect={selectActivityWithSidebar} />
+					</div>
 				) : null}
 				{leftSidebarVisible ? (
 					<>
@@ -4748,7 +5303,7 @@ description:
 						isVisible: (id) => toolTabVisible(dockForZedStrip, id as ToolTabId),
 					}}
 					diagnosticsSummary={
-						technical && staticAnalysisEnabled
+						staticAnalysisEnabled
 							? {
 									total: workspaceStaticAnalysis.totalCount,
 									errors: workspaceStaticAnalysis.errorCount,
@@ -4760,6 +5315,7 @@ description:
 				/>
 			) : null}
 		</div>
+		)}
 		</WorkspaceStaticAnalysisProvider>
 	);
 }

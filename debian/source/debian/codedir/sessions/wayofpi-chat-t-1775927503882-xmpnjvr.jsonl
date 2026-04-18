@@ -1,0 +1,3 @@
+{"type":"session","kind":"wayofpi-web","id":"t-1775927503882-xmpnjvr","workspace":"/home/zerwiz/CodeP/Way of pi","createdAt":"2026-04-11T17:34:37.287Z","engine":"wayofpi-bun-chat"}
+{"type":"message","message":{"role":"user","content":"hi","createdAt":"2026-04-11T17:34:37.287Z"}}
+{"type":"message","message":{"role":"assistant","content":"Hi! 👋 Ready to help you with whatever you need in your Way of Pi workspace. Whether it's reading files, exploring the agent roster, coordinating work with teams, or any other tool-based task — just let me know what you'd like to tackle.","createdAt":"2026-04-11T17:34:37.287Z"}}
