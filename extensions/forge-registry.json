@@ -1,4 +1,17 @@
 {
   "version": 1,
-  "tools": []
+  "tools": [
+    {
+      "name": "text_fix_sed",
+      "file": "extensions/forge-text_fix_sed.ts",
+      "description": "Uses sed to fix common problems in text files (trailing whitespace, missing newlines, etc.)",
+      "createdAt": "2026-04-18T20:33:10.235Z"
+    },
+    {
+      "name": "text_fix_whitespace",
+      "file": "extensions/forge-text_fix_whitespace.ts",
+      "description": "Normalizes whitespace issues in text files",
+      "createdAt": "2026-04-18T20:33:22.810Z"
+    }
+  ]
 }
