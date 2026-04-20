@@ -18,7 +18,7 @@ function normalizeUnixPath(abs: string): string {
 function pathBasename(abs: string): string {
   const n = normalizeUnixPath(abs);
   const parts = n.split("/").filter(Boolean);
-  return parts.length ? parts[parts.length - 1]! : n;
+  return parts.length ? parts[parts.length - 1] : n;
 }
 
 /**
@@ -45,14 +45,11 @@ export function buildCodeWorkspacePayload(
   workspaceFileParentDir: string | null,
 ): { folders: CodeWorkspaceFolderEntry[] } {
   const out: CodeWorkspaceFolderEntry[] = [];
-  const base =
-    workspaceFileParentDir && workspaceFileParentDir.trim()
-      ? normalizeUnixPath(workspaceFileParentDir.trim())
-      : null;
+  const base = workspaceFileParentDir?.trim() ?? null;
 
   for (const f of folders) {
     const abs = normalizeUnixPath(f.path);
-    const path = base != null ? unixRelativePath(base, abs) : abs;
+    const path = base ? unixRelativePath(base, abs) : abs;
     const baseName = pathBasename(abs);
     const entry: CodeWorkspaceFolderEntry = { path };
     if (f.label && f.label !== baseName) entry.name = f.label;

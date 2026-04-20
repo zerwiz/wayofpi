@@ -18,10 +18,10 @@ function matchField(
   value: number,
   min: number,
   max: number,
-  depth = 0,
+  depth: number = 0,
 ): boolean {
   if (depth > MAX_CRON_LIST_DEPTH) return false;
-  let s = spec.trim();
+  const s = spec.trim();
   if (s === "*" || s === "?") return true;
 
   if (s.includes(",")) {
