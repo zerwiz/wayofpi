@@ -31,7 +31,6 @@ import { MitLicenseModal } from "./components/MitLicenseModal";
 import { RestartServerModal } from "./components/RestartServerModal";
 import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
 import { NewPlanFileModal } from "./components/NewPlanFileModal";
-import { NewAgentModal } from "./components/NewAgentModal";
 import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
 import { LlmFixModal } from "./components/LlmFixModal";
 import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
@@ -439,12 +438,8 @@ export default function App() {
     paths: string[];
   }>({ rev: 0, paths: [] });
   const [autoSave, setAutoSave] = useState(readAutoSaveInitial);
-  const [recentTick, setRecentTick] = useState(0);
   const workspaceFileInputRef = useRef<HTMLInputElement>(null);
-  const recentFolders = useMemo(
-    () => readRecentWorkspaceFolders(),
-    [recentTick],
-  );
+  const recentFolders = useMemo(() => readRecentWorkspaceFolders(), []);
   const [workspaceGrid, setWorkspaceGrid] = useState(() =>
     readWorkspaceGridState(),
   );
@@ -714,39 +709,7 @@ export default function App() {
     [],
   );
 
-  const onToggleWorkspaceMaximizeCell = useCallback((cellIndex: number) => {
-    setWsMaximizedCell((m) => (m === cellIndex ? null : cellIndex));
-  }, []);
 
-  const removeWorkspaceCellFromGrid = useCallback((cellIndex: number) => {
-    setWorkspaceGrid((g) => {
-      const next = removeWorkspaceCellAt(g, cellIndex);
-      if (next === g) return g;
-      writeWorkspaceGridState(next);
-      queueMicrotask(() => {
-        setWsFocusedCell((fc) => nextFocusAfterRemove(g, next, cellIndex, fc));
-        setWsMaximizedCell((m) => {
-          if (m == null) return m;
-          return mapCellIndexAfterRemoval(g, cellIndex, m);
-        });
-      });
-      return next;
-    });
-  }, []);
-
-  const onTechFocusedReport = useCallback(
-    (s: TechnicalWorkspaceCellSnapshot) => {
-      setTechWsSnapshot(s);
-      setSelectedPath(s.selectedPath);
-      if (s.selectedPath) setExplorerContextDir(posixDirname(s.selectedPath));
-    },
-    [],
-  );
-  const onTechFocusedCursor = useCallback((l: number, c: number) => {
-    setLine(l);
-    setCol(c);
-  }, []);
-  const {
     content,
     setContent,
     lastPersistedContent: _lastPersistedContent,
@@ -849,7 +812,7 @@ export default function App() {
     } else {
       setClawTab("files");
     }
-  }, [shouldBumpClawMenuFileFocus, bumpClawMenuFileFocus, setClawTab]);
+  }, [shouldBumpClawMenuFileFocus, bumpClawMenuFileFocus]);
   const [chrome, setChrome] = useState(() => readChromePreferences());
   const [zenMode, setZenMode] = useState(false);
   const zenBackupRef = useRef<{
@@ -1158,50 +1121,44 @@ export default function App() {
   }, [agentsApi.data?.teamsPath, focusWorkspaceFileFromMenu]);
 
   const createNewAgentMarkdownFromMenu = useCallback(() => {
-    setNewAgentModalOpen(true);
-  }, []);
-
-  const handleCreateAgent = useCallback(
-    (agentId: string) => {
-      setNewAgentModalOpen(false);
-      const teamsPath = agentsApi.data?.teamsPath;
-      const baseDir = teamsPath ? posixDirname(teamsPath) : ".pi/agents";
-      const trimmed = agentId.trim().replace(/\.md$/i, "");
-      if (!trimmed || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(trimmed)) {
-        window.alert(
-          "Use a non-empty id: letters, digits, hyphen, underscore, or dot (no slashes).",
-        );
-        return;
-      }
-      const rel = `${baseDir}/${trimmed}.md`;
-      const content = `---
+    const teamsPath = agentsApi.data?.teamsPath;
+    const baseDir = teamsPath ? posixDirname(teamsPath) : ".pi/agents";
+    const raw = window.prompt(
+      "New agent id (filename and YAML name; letters, numbers, -, _, .)",
+      "my-agent",
+    );
+    if (raw == null) return;
+    const trimmed = raw.trim().replace(/\.md$/i, "");
+    if (!trimmed || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(trimmed)) {
+      window.alert(
+        "Use a non-empty id: letters, digits, hyphen, underscore, or dot (no slashes).",
+      );
+      return;
+    }
+    const rel = `${baseDir}/${trimmed}.md`;
+    const content = `---
 name: ${trimmed}
 description:
 ---
 
 `;
-      void (async () => {
-        try {
-          await apiPutJson<{ ok: boolean }>("/api/file", {
-            path: rel,
-            content,
-          });
-          setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
-          await refresh();
-          focusWorkspaceFileFromMenu(rel);
-          agentsApi.reload();
-        } catch (e) {
-          window.alert(e instanceof Error ? e.message : String(e));
-        }
-      })();
-    },
-    [
-      agentsApi.data?.teamsPath,
-      agentsApi.reload,
-      focusWorkspaceFileFromMenu,
-      refresh,
-    ],
-  );
+    void (async () => {
+      try {
+        await apiPutJson<{ ok: boolean }>("/api/file", { path: rel, content });
+        setTreeExpand({ rev: Date.now(), paths: ancestorDirPaths(rel) });
+        await refresh();
+        focusWorkspaceFileFromMenu(rel);
+        agentsApi.reload();
+      } catch (e) {
+        window.alert(e instanceof Error ? e.message : String(e));
+      }
+    })();
+  }, [
+    agentsApi.data?.teamsPath,
+    agentsApi.reload,
+    focusWorkspaceFileFromMenu,
+    refresh,
+  ]);
 
   const settingsMenuHandlers = useMemo<SettingsMenuHandlers>(
     () => ({
@@ -1283,8 +1240,6 @@ description:
     const parts = p.split(/[/\\]/);
     return parts[parts.length - 1] || p;
   }, [folders, root]);
-
-  const bumpRecent = useCallback(() => setRecentTick((t) => t + 1), []);
 
   useEffect(() => {
     if (selectedPath) setExplorerContextDir(posixDirname(selectedPath));
@@ -1484,7 +1439,9 @@ description:
     [effDirty, effSelectedPath, refresh],
   );
 
+  const [newPlanFileModalOpen, setNewPlanFileModalOpen] = useState(false);
 
+  const handleNewPlanFile = useCallback(() => {
     if (!workspaceOperational) {
       window.alert(
         "No workspace loaded — use File → Open Folder, or wait until the file tree finishes loading.",
@@ -1564,7 +1521,15 @@ description:
         }
       })();
     },
-    [folders.length, refresh, root],
+    [
+      orchestratorPlanBootstrapLockRef,
+      createPlanArtifactInWorkspace,
+      ancestorDirPaths,
+      apiGet,
+      folders.length,
+      refresh,
+      root,
+    ],
   );
 
   useEffect(() => {
@@ -1587,8 +1552,7 @@ description:
         setSelectedPath((p) => {
           if (!p) return null;
           const norm = p.replace(/\\/g, "/");
-          // Allow plan files; allow any *.md file
-          if (!/.+\.md$/.test(norm)) return null;
+          if (/(^|\/)plans\/plan-[^/]+\.md$/i.test(norm)) return null;
           return p;
         });
       }
@@ -2231,7 +2195,35 @@ description:
     focusToolTab,
   ]);
 
+  const [hostDoctorOpen, setHostDoctorOpen] = useState(false);
+  const [indexingDocsOpen, setIndexingDocsOpen] = useState(false);
+  const [honchoSettingsOpen, setHonchoSettingsOpen] = useState(false);
+  const [ngrokSettingsOpen, setNgrokSettingsOpen] = useState(false);
+  const [agentPermissionsOpen, setAgentPermissionsOpen] = useState(false);
+  const [launchConfigAddOpen, setLaunchConfigAddOpen] = useState(false);
+  const [installDebuggersModalOpen, setInstallDebuggersModalOpen] =
+    useState(false);
+  const [mitLicenseModalOpen, setMitLicenseModalOpen] = useState(false);
+  const [restartServerModalOpen, setRestartServerModalOpen] = useState(false);
+  const [howToUseModalOpen, setHowToUseModalOpen] = useState(false);
+  const [howToUseInitialSection, setHowToUseInitialSection] =
+    useState<HowToUseSectionId | null>(null);
+  const [clawHelpOpen, setClawHelpOpen] = useState(false);
+  const [clawHelpDefaultSection, setClawHelpDefaultSection] =
+    useState<ClawHelpSectionId | null>(null);
+  /**
+   * Per-shell session agent (see **`useWayOfPiSession`** `surfaceId`): Simple + Technical use orchestrator
+   * (null); Claw defaults to **`claw`** once per Claw visit (including after `/api/agents` loads), without
+   * overriding a deliberate orchestrator choice on Claw.
+   */
+  const chatAgentShellPrevRef = useRef<UiMode | null>(null);
   useEffect(() => {
+    const from = chatAgentShellPrevRef.current;
+    const to = uiMode;
+    const hasClaw = (agentsApi.data?.agents ?? []).some(
+      (a) => a.name.trim().toLowerCase() === "claw",
+    );
+
     if (from != null && from !== to) {
       if (to === "simple" || to === "technical") {
         session.setChatAgent(null);
@@ -2241,7 +2233,7 @@ description:
     }
 
     chatAgentShellPrevRef.current = to;
-
+  }, [
     uiMode,
     session.chatAgentName,
     session.setChatAgent,
@@ -2271,7 +2263,12 @@ description:
       return;
     session.setChatAgent("claw");
     clawAutoAgentAppliedRef.current = true;
-  }, [uiMode, session.chatAgentName, session.setChatAgent, agentsApi.data?.agents]);
+  }, [
+    uiMode,
+    session.chatAgentName,
+    session.setChatAgent,
+    agentsApi.data?.agents,
+  ]);
   const [newWorkspaceFileDraft, setNewWorkspaceFileDraft] = useState<{
     defaultPath: string;
     initialContent?: string;
@@ -5149,36 +5146,6 @@ description:
           onGoToTelegramChannels={() => setClawTab("channels")}
           onFocusClawChatTab={() => setClawTab("chat")}
           layout={shellMobile ? "mobile" : "desktop"}
-        />
-        <NewAgentModal
-          open={newAgentModalOpen}
-          onDismiss={() => setNewAgentModalOpen(false)}
-          onCreate={handleCreateAgent}
-          appearanceDark={llmFixModalAppearanceDark}
-        />
-        <NewAgentModal
-          open={newAgentModalOpen}
-          onDismiss={() => setNewAgentModalOpen(false)}
-          onCreate={handleCreateAgent}
-          appearanceDark={llmFixModalAppearanceDark}
-        />
-        <NewAgentModal
-          open={newAgentModalOpen}
-          onDismiss={() => setNewAgentModalOpen(false)}
-          onCreate={handleCreateNewAgent}
-          appearanceDark={llmFixModalAppearanceDark}
-        />
-        <NewAgentModal
-          open={newAgentModalOpen}
-          onDismiss={() => setNewAgentModalOpen(false)}
-          onCreate={handleCreateNewAgent}
-          appearanceDark={llmFixModalAppearanceDark}
-        />
-        <NewAgentModal
-          open={newAgentModalOpen}
-          onDismiss={() => setNewAgentModalOpen(false)}
-          onCreate={handleCreateNewAgent}
-          appearanceDark={llmFixModalAppearanceDark}
         />
         <NewPlanFileModal
           open={newPlanFileModalOpen}
