@@ -1,0 +1,6 @@
+{"type":"session","version":3,"id":"4d23f13e-0be1-40ea-ad71-a538c9035971","timestamp":"2026-03-23T21:08:34.577Z","cwd":"/home/zerwiz/.pi"}
+{"type":"model_change","id":"8776f02d","parentId":null,"timestamp":"2026-03-23T21:08:34.578Z","provider":"ollama","modelId":"qwen3.5"}
+{"type":"thinking_level_change","id":"fe4b4c2c","parentId":"8776f02d","timestamp":"2026-03-23T21:08:34.578Z","thinkingLevel":"off"}
+{"type":"model_change","id":"26d9fe51","parentId":"fe4b4c2c","timestamp":"2026-03-23T21:09:05.249Z","provider":"ollama","modelId":"qwen3.5"}
+{"type":"message","id":"2c94c422","parentId":"26d9fe51","timestamp":"2026-03-23T21:09:06.496Z","message":{"role":"user","content":[{"type":"text","text":"hi"}],"timestamp":1774300146481}}
+{"type":"message","id":"9a6b94e9","parentId":"2c94c422","timestamp":"2026-03-23T21:09:06.577Z","message":{"role":"assistant","content":[],"api":"openai-completions","provider":"ollama","model":"qwen3.5","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","timestamp":1774300146555,"errorMessage":"404 model 'qwen3.5' not found"}}

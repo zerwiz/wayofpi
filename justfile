@@ -11,8 +11,7 @@ wop-upstream-sync *args:
     bun scripts/wop-pi-upstream.ts sync {{args}}
 
 # Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofpi-ui `npm run dev`
-wayofpi-full:
-    #!/usr/bin/env bash
+
     set -euo pipefail
     exec "{{justfile_directory()}}/start-full-system.sh"
 
@@ -89,7 +88,7 @@ ext-tilldone:
 
 # 10. Agent team: dispatcher orchestrator with team select and grid dashboard (incl. build-orchestra roster)
 ext-agent-team:
-    pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/agent-team.ts -e extensions/theme-cycler.ts
+
 
 # 10b. Builder-orchestra dispatcher (separate -e entry from ext-agent-team — starts on team build-orchestra)
 ext-builder-team:
@@ -179,13 +178,7 @@ hermes-honcho-setup:
 doctor *args:
     ./doctor.sh {{args}}
 
-# Ensure OpenRouter `:free` entries are grouped before other OpenRouter rows in pi.config.json
-normalize-pi-config-models:
-    python3 scripts/normalize-pi-config-model-order.py
 
-# Symlink ppi / pi-e / ppi-* into ~/.local/bin (same as ./install-global at repo root)
-install-global:
-    @./scripts/install-ppi-global.sh
 
 # Probe OS/CPU and installed tools; print install hints (pass flags by running the script directly)
 bootstrap-wayofpi:
@@ -200,9 +193,7 @@ install-ngrok-optional:
 # Use: `just pi-e`
 # Input: numbers separated by space/comma (e.g. `1 3 17`) or `all`
 # Keep "agent-team" and "agent-team (build-orchestra)" as consecutive options so the builder line is always N+1 after regular agent-team (e.g. 12 then 13 with the current list).
-pi-e:
-    #!/usr/bin/env bash
-    set -euo pipefail
+
 
     PLAYGROUND_ROOT="{{justfile_directory()}}"
     PROJECT_DIR="${PI_E_PROJECT_DIR:-$PWD}"

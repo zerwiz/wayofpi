@@ -1,6 +1,6 @@
-import { Brain, Cpu, Folder, HelpCircle, MessageCircle, Settings, Users } from "lucide-react";
+import { Brain, Cpu, Folder, HelpCircle, MessageCircle, Settings, Users, FileText } from "lucide-react";
 
-export type SimpleTabId = "chat" | "team" | "models" | "projects" | "settings";
+export type SimpleTabId = "chat" | "team" | "models" | "projects" | "documenthandler" | "settings";
 
 /**
  * Simple shell primary nav. Stub / depth by target (see each view file header):
@@ -78,6 +78,7 @@ export function SimpleNavRail({
 			<NavItem icon={Users} label="My Team" id="team" />
 			<NavItem icon={Brain} label="AI Brains" id="models" />
 			<NavItem icon={Folder} label="Projects" id="projects" />
+			<NavItem icon={FileText} label="Documents" id="documenthandler" />
 
 		<div className="mt-auto flex flex-col items-center gap-2">
 			{onHelp ? (

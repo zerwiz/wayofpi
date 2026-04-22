@@ -1,7 +1,7 @@
 import type { SimpleColorMode } from "../../hooks/useSimplePreferences";
 import type { ServerConfig } from "../../hooks/useServerConfig";
 import { GithubManageSettingsCard } from "../GithubManageSettingsCard";
-import { TerminalSettingsSection } from "../TerminalSettingsSection";
+import { TerminalSettingsSection } from "../technical/TerminalSettingsSection";
 
 export type ClawWorkspaceSettingsActions = {
 	/** False when no folder is open (or workspace not ready). */

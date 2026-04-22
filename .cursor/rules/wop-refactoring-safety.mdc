@@ -1,0 +1,334 @@
+# 🛡️ WOP Refactoring Safety Rules
+
+**Purpose:** Protect critical system directories from accidental modification during refactoring.
+
+**Status:** `MANDATORY` — Violating these rules will break subsystem functionality.
+
+---
+
+## 🚫 Protected System Directories
+
+These directories **MUST NOT** be modified, moved, or deleted during refactoring:
+
+### `/.vscode`
+**Reason:** VS Code workspace configuration (launch.json, tasks.json, settings.json)
+**Impact:** Breaks debugging, terminal, and editor configuration
+**Action:** NEVER modify or delete
+
+### `/.pi`
+**Reason:** Pi runtime configuration, agent definitions, extensions, skills
+**Impact:** Breaks Pi agent engine, tool execution, and extension loading
+**Action:** NEVER modify or delete (only add new files)
+
+### `/.claw`
+**Reason:** Claw mode workspace and session data
+**Impact:** Breaks Claw autonomous agent operations
+**Action:** NEVER modify or delete
+
+### `/.wayofpi`
+**Reason:** Way of Pi system files and configuration
+**Impact:** Breaks Way of Pi core functionality
+**Action:** NEVER modify or delete
+
+### `/agent`
+**Reason:** Agent definition files and configuration
+**Impact:** Breaks agent management system
+**Action:** NEVER modify or delete
+
+### `/agents`
+**Reason:** Agent team definitions and configurations
+**Impact:** Breaks multi-agent orchestration
+**Action:** NEVER modify or delete
+
+### `/agent/git/`
+**Reason:** Cloned Pi extensions from upstream repo
+**Impact:** Breaks Pi extension discovery and loading
+**Action:** NEVER modify or delete (use `/apps/wayofpi-ui/src/extensions/` for custom extensions)
+
+### `/.kilo`
+**Reason:** Kilo editor integration files
+**Impact:** Breaks Kilo editor synchronization
+**Action:** NEVER modify or delete
+
+### `/.hermes`
+**Reason:** Hermes client configuration and data
+**Impact:** Breaks Hermes Honcho connection
+**Action:** NEVER modify or delete
+
+---
+
+## ✅ Allowed Refactoring Areas
+
+These directories **CAN** be modified during refactoring:
+
+### `/apps/wayofpi-ui/src/`
+**Purpose:** Way of Pi UI application source
+**Allowed:** All UI components, hooks, modals, pages, utilities
+**Rule:** Create new files here, never delete without verification
+
+### `/components/` (inside apps/wayofpi-ui/src/)
+**Purpose:** UI component directory
+**Allowed:** Extract components here from monolithic files
+**Rule:** Organize into `components/menus/`, `components/layout/`, `components/modals/`, etc.
+
+### `/hooks/` (inside apps/wayofpi-ui/src/)
+**Purpose:** Custom React hooks
+**Allowed:** Extract custom hooks here
+**Rule:** Verify no duplicate hooks exist before extracting
+
+### `/pages/` (inside apps/wayofpi-ui/src/)
+**Purpose:** Page components for routing
+**Allowed:** Create and organize page components here
+**Rule:** Ensure routing works after each change
+
+### `/context/` (inside apps/wayofpi-ui/src/)
+**Purpose:** React context providers
+**Allowed:** Create and refactor context providers here
+**Rule:** Test context after refactoring
+
+### `/utils/` (inside apps/wayofpi-ui/src/)
+**Purpose:** Utility functions and helpers
+**Allowed:** Extract and organize utilities here
+**Rule:** Ensure no circular dependencies
+
+---
+
+## 📋 Refactoring Workflow
+
+### Phase 1: Analysis
+1. Read the file you want to refactor
+2. Identify extractable components/hooks
+3. Check for existing files with same name
+4. **Check if file is in a protected directory**
+
+### Phase 2: Extraction
+1. Create new file in allowed directory (e.g., `/components/menus/`)
+2. Extract the component logic
+3. Update imports in original file
+4. Test the change
+
+### Phase 3: Verification
+1. Run `npm run build`
+2. Check for TypeScript errors
+3. Verify modals open/close correctly
+4. Verify routes switch between modes
+5. Check console for errors
+
+### Phase 4: Cleanup (SAFE DELETION)
+**CRITICAL:** Before deleting ANY file:
+1. Search for references: `grep -r "filename" .`
+2. Check build files (package.json, tsconfig.json)
+3. Verify no components/hooks reference the file
+4. Ensure test files can still import modules
+5. Only delete if **zero external references** found
+
+**NEVER DELETE:**
+- Files in protected directories (`.vscode`, `.pi`, `.claw`, etc.)
+- Files referenced in package.json or tsconfig.json
+- Files imported by any component or hook
+- Files without build errors when deleted
+
+---
+
+## 🚨 Critical Safety Rules
+
+### Rule 1: Protected Directories Are Sacred
+```bash
+# NEVER touch these directories:
+./.vscode/       # VS Code config
+./.pi/           # Pi runtime
+./.claw/         # Claw workspace
+./.wayofpi/      # Way of Pi system
+/agent/          # Agent config
+/agents/         # Agent teams
+/agent/git/      # Cloned extensions
+/.kilo/          # Kilo editor
+/.hermes/        # Hermes client
+```
+
+### Rule 2: Always Search Before Creating
+Before creating ANY new file:
+```bash
+# Search for existing file with same name
+find . -name "filename.ts" -o -name "filename.tsx" 2>/dev/null
+
+# Search for file references
+grep -r "import.*filename" . --include="*.ts" --include="*.tsx"
+```
+
+### Rule 3: Verify Build Before Committing
+```bash
+# Always run build after changes
+npm run build
+
+# Check for errors
+npm run build 2>&1 | grep -i error
+
+# Fix errors before committing
+npm run build
+npm run fix  # if exists
+```
+
+### Rule 4: Document Phase Status
+Update the planning document after each phase:
+- Mark completed phases with ✅
+- Mark in-progress phases with ⏳
+- Document any blockers (e.g., build errors)
+
+### Rule 5: Handle Misplaced Files Carefully
+Files found in wrong locations:
+1. **Log them** in the planning document
+2. **Document** their content/type
+3. **Coordinate** team decision
+4. **Migrate** if valuable
+5. **Archive** if not needed
+
+### Rule 6: Never Use git restore on Active Files
+- ❌ NEVER run `git restore` on App.tsx or critical files
+- ✅ Only read old files from `ReferenceApp.tsx` for reference
+- ✅ Work with refactored App.tsx in `/apps/wayofpi-ui/src/`
+
+---
+
+## 📊 Refactoring Progress Tracking
+
+Use this checklist to track Phase 8 completion:
+
+### ✅ Completed:
+- [ ] All modals implemented
+- [ ] All modals linked in App.tsx
+- [ ] All routes configured (simple, claw, technical, documenthandler)
+- [ ] App.tsx < 1000 lines
+- [ ] All components properly typed
+- [ ] No new bugs introduced
+
+### ⏳ In Progress:
+- [ ] Fix build errors:
+  - [ ] Locate `pi-types` module
+  - [ ] Create/link hermes components
+  - [ ] Fix TypeScript type errors in agent-team.ts
+- [ ] Run `npm run build` successfully
+- [ ] Create component stories (optional)
+
+### ❌ Blocked:
+- [ ] Build errors preventing production deployment
+
+---
+
+## 📝 Example Refactoring Workflow
+
+### Scenario: Extract a large render function to a component
+
+**Step 1: Analyze the file**
+```tsx
+// Find this in App.tsx
+const renderMainContent = () => {
+  // 100 lines of code
+  // Mixed logic and UI
+};
+```
+
+**Step 2: Create new component**
+```bash
+# Create in allowed directory
+touch /apps/wayofpi-ui/src/components/MainContent.tsx
+
+# OR better: create with jiti
+pi create-component MainContent /apps/wayofpi-ui/src/components/
+```
+
+**Step 3: Extract the component**
+```tsx
+// /apps/wayofpi-ui/src/components/MainContent.tsx
+import React from "react";
+
+export function MainContent() {
+  // Extracted render logic here
+  return (
+    <div>
+      {/* Your content */}
+    </div>
+  );
+}
+```
+
+**Step 4: Update imports**
+```tsx
+// /apps/wayofpi-ui/src/App.tsx
+import { MainContent } from "./components/MainContent";
+
+// In renderMainContent
+return <MainContent />;
+```
+
+**Step 5: Test and verify**
+```bash
+npm run build
+npm run dev  # Verify functionality
+```
+
+**Step 6: Commit and update planning document**
+```bash
+git add src/components/MainContent.tsx
+git commit -m "Extract MainContent component"
+
+# Update /plans/refactoring/PLAN-20250311-app-component-split.md
+```
+
+---
+
+## 🔍 Common Mistakes to Avoid
+
+### ❌ Bad: Modifying protected directories
+```bash
+# DON'T DO THIS:
+rm .vscode/launch.json
+rm .pi/agents/agent.md
+rm .claw/workspace/...
+rm .wayofpi/config.json
+rm /agent/git/*
+rm .kilo/*
+rm .hermes/*
+```
+
+### ✅ Good: Working in allowed directories
+```bash
+# DO THIS INSTEAD:
+touch /apps/wayofpi-ui/src/components/NewComponent.tsx
+touch /apps/wayofpi-ui/src/hooks/useNewFeature.ts
+touch /apps/wayofpi-ui/src/pages/NewPage.tsx
+```
+
+### ❌ Bad: Deleting files without verification
+```bash
+# DON'T DO THIS:
+rm /apps/wayofpi-ui/src/components/SomeComponent.tsx
+
+# Without checking references
+```
+
+### ✅ Good: Safe deletion workflow
+```bash
+# DO THIS INSTEAD:
+grep -r "SomeComponent" . --include="*.ts" --include="*.tsx"
+grep -r "SomeComponent" package.json tsconfig.json
+
+# If no references found:
+rm /apps/wayofpi-ui/src/components/SomeComponent.tsx
+
+# Document deletion in planning document
+```
+
+---
+
+## 📞 Contact
+
+**Author:** Pi Coding Agent  
+**Created:** 2025-03-11  
+**Last Updated:** 2026-04-22  
+**Status:** Active  
+**Purpose:** Prevent accidental deletion of critical system files during refactoring
+
+---
+
+*Protected directories ensure subsystem stability. Always verify before modifying or deleting any file.*

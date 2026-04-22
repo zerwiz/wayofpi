@@ -5,9 +5,28 @@
   "description": "Pi Coding Agent extension playground",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zerwiz/wayofpi.git"
+    "url": "git+https://github.com/zerwiz/wayofpi.git"
   },
   "dependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "yaml": "^2.8.0"
-  }
+  },
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zerwiz/wayofpi/issues"
+  },
+  "homepage": "https://github.com/zerwiz/wayofpi#readme"
 }

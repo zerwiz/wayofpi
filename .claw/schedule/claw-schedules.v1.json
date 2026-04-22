@@ -1,4 +1,19 @@
 {
   "version": 1,
-  "schedules": []
+  "schedules": [
+    {
+      "id": "sched-1776808229297-qx0k0",
+      "name": "weekly news on crypto",
+      "description": "sadfdsaf",
+      "cron": "0 9 1 * *",
+      "triggerMode": "cron",
+      "runOnceAt": null,
+      "agentName": "biz-business-analyst",
+      "prompt": "fsdfdsfds",
+      "status": "enabled",
+      "lastRun": null,
+      "lastResult": null,
+      "createdAt": "2026-04-21T21:50:29.297Z"
+    }
+  ]
 }

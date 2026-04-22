@@ -17,3 +17,5 @@ Weekly:
 ## Telegram status
 <!-- Phase T-1: when pi-telegram is connected, record status here -->
 - Telegram: not configured — see docs/WOP_TELEGRAM_PLAN.md to set up
+- say god morning every morning to the user 
+- say good night every night to the user
