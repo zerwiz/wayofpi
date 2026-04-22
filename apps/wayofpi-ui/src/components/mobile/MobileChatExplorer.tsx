@@ -28,7 +28,7 @@
  * ```
  */
 
-import { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 
 // Props interface for MobileChatExplorer component
 export interface MobileChatExplorerProps {
@@ -112,4 +112,107 @@ export default function MobileChatExplorer({
   // Handle keyboard events
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" &&
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        void handleSend();
+      }
+    },
+    [handleSend],
+  );
+
+  // Render chat messages
+  const renderedMessages = useMemo(
+    () =>
+      messages.map((msg) => (
+        <div
+          key={msg.id}
+          className={`flex ${
+            msg.role === "user" ? "justify-end" : "justify-start"
+          }`}
+        >
+          <div
+            className={`max-w-[80%] rounded-lg p-3 ${
+              msg.role === "user"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-700 text-gray-100"
+            }`}
+          >
+            {msg.content}
+          </div>
+        </div>
+      )),
+    [messages],
+  );
+
+  // Render file list items
+  const renderedFiles = useMemo(
+    () =>
+      files.map((file) => (
+        <div
+          key={file.path}
+          className={`p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700 ${
+            selectedFile?.path === file.path ? "bg-gray-600" : ""
+          }`}
+          onClick={() => handleFileSelect(file)}
+        >
+          <div className="font-medium text-gray-100">{file.name}</div>
+          <div className="text-sm text-gray-400">
+            {file.size} • {file.date}
+          </div>
+        </div>
+      )),
+    [files, selectedFile, handleFileSelect],
+  );
+
+  return (
+    <div className="flex flex-col h-full bg-[#1e1e1e]">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-gray-700">
+        <button
+          className="p-2 rounded-lg bg-gray-700 text-gray-100"
+          onClick={onToggleExplorer}
+        >
+          Files
+        </button>
+        <button
+          className="p-2 rounded-lg bg-gray-700 text-gray-100"
+          onClick={onToggleChat}
+        >
+          Chat
+        </button>
+      </div>
+
+      {/* Explorer Panel */}
+      {explorerVisible && (
+        <div className="flex-1 overflow-auto p-3" style={mobileLayout.explorerPanel}>
+          {renderedFiles}
+        </div>
+      )}
+
+      {/* Chat Panel */}
+      {chatVisible && (
+        <div className="flex-1 overflow-auto p-3" style={mobileLayout.chatPanel}>
+          {renderedMessages}
+        </div>
+      )}
+
+      {/* Input Area */}
+      <div className="p-3 border-t border-gray-700">
+        <textarea
+          className="w-full p-3 rounded-lg bg-gray-700 text-gray-100 border border-gray-600"
+          placeholder="Type a message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={3}
+        />
+        <button
+          className="mt-2 w-full p-3 rounded-lg bg-blue-500 text-white font-medium"
+          onClick={() => void handleSend()}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}

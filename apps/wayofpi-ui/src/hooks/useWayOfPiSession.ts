@@ -361,7 +361,7 @@ export function useWayOfPiSession(
   /** Active UI shell — must match `App` `uiMode` so Simple / Technical / Claw never share one transcript. */
   surfaceId: ChatSessionSurfaceId,
   onTreeRefresh?: () => void,
-  /** When ref is true, assistant deltas are buffered and applied once on `done` (Simple UI “streaming off”). */
+  /** When ref is true, assistant deltas are buffered and applied once on `done` (Simple UI "streaming off"). */
   bufferAssistantDeltasRef?: MutableRefObject<boolean>,
   /** Refreshes agent/team catalog when the server rewrites `teams.yaml` (orchestrator `team_*` tools). */
   onAgentsCatalogInvalidate?: () => void,

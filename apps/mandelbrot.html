@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandelbrot Animator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            border: 1px solid #0f0;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            min-width: 100px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+
+        button.active {
+            background: #0f0;
+            color: #000;
+        }
+
+        select, input {
+            padding: 8px;
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="ui">
+        <select id="iterationStyle">
+            <option value="linear">Linear</option>
+            <option value="logarithmic">Logarithmic</option>
+            <option value="sinusoidal">Sinusoidal</option>
+            <option value="chaotica">Chaotica</option>
+            <option value="golden">Golden Ratio</option>
+            <option value="cosine">Cosine Waves</option>
+            <option value="fractal">Fractal Pattern</option>
+            <option value="polar">Polar Coordinates</option>
+        </select>
+
+        <select id="colorPalette">
+            <option value="hsv">HSV Rainbow</option>
+            <option value="fire">Fire</option>
+            <option value="ocean">Ocean</option>
+            <option value="plasma">Plasma</option>
+            <option value="terrain">Terrain</option>
+            <option value="grayscale">Grayscale</option>
+            <option value="custom">Custom (click canvas)</option>
+        </select>
+
+        <select id="animationSpeed">
+            <option value="0.001">Very Slow</option>
+            <option value="0.005" selected>Slow</option>
+            <option value="0.02">Normal</option>
+            <option value="0.05">Fast</option>
+            <option value="0.1">Very Fast</option>
+        </select>
+
+        <select id="zoomLevel">
+            <option value="75">x75</option>
+            <option value="150">x150</option>
+            <option value="300">x300</option>
+            <option value="600">x600</option>
+            <option value="1200">x1200</option>
+        </select>
+
+        <select id="colorSpeed">
+            <option value="0.1">Slow</option>
+            <option value="0.5" selected>Normal</option>
+            <option value="2">Fast</option>
+            <option value="inf">Infinite</option>
+        </select>
+
+        <input type="range" id="pixelSize" min="2" max="10" step="0.5" value="3">
+        <span id="pixelSizeValue">3</span>px
+
+        <select id="renderMode">
+            <option value="both">Both</option>
+            <option value="static">Static Mandelbrot</option>
+            <option value="animated">Animated Only</option>
+        </select>
+
+        <select id="renderMethod">
+            <option value="gpu" selected>GPU (WebGL)</option>
+            <option value="cpu">CPU (Canvas)</option>
+        </select>
+
+        <button id="presetBtn">Load Presets</button>
+        <button id="randomBtn">Random</button>
+        <button id="saveBtn">Save Screenshot</button>
+        <button id="pauseBtn">Pause</button>
+    </div>
+
+    <script>
+        class MandelbrotAnimator {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d', { alpha: true });
+                this.webgl = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
+                this.gl = this.webgl;
+                
+                this.baseMandelbrot = {
+                    x0: -2.5, y0: -1, x1: 1, y1: 1.5,
+                    zoom: 1,
+                    pixels: 3
+                };
+                
+                this.baseFractal = {
+                    r: 1, tOffset: 0, k: 0,
+                    zoom: 1,
+                    pixels: 3
+                };
+                
+                this.currentStyle = JSON.parse(JSON.stringify(this.baseFractal));
+                this.colorPalette = 'hsv';
+                this.animationSpeed = 0.005;
+                this.colorSpeed = 0.5;
+                
+                this.t = 0;
+                this.paused = false;
+                this.staticPixels = new Set();
+                
+                // WebGL shader program
+                if (this.gl) {
+                    this.compileProgram();
+                }
+                
+                // Set up controls
+                this.setupControls();
+                
+                // Initialize canvas
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                
+                requestAnimationFrame(() => this.update());
+            }
+            
+            setupControls() {
+                const bind = (id, field) => {
+                    const el = document.getElementById(id);
+                    el.addEventListener('change', () => {
+                        this[field] = el.value;
+                        if (field === 'colorPalette') {
+                            this.colorPalette = el.value;
+                        }
+                        this.resize();
+                    });
+                    el.addEventListener('input', () => {
+                        if (id === 'pixelSize') {
+                            this.currentStyle.pixels = parseFloat(el.value);
+                            document.getElementById('pixelSizeValue').textContent = el.value;
+                        }
+                    });
+                };
+                
+                bind('iterationStyle', 'iterationStyle');
+                bind('animationSpeed', 'animationSpeed');
+                bind('colorSpeed', 'colorSpeed');
+                bind('colorPalette', 'colorPalette');
+                
+                const resize = (el, field) => {
+                    el = document.getElementById(el);
+                    el.addEventListener('change', () => {
+                        this[field] = parseInt(el.value);
+                        this.resize();
+                    });
+                };
+                
+                resize('zoomLevel', 'zoomLevel');
+                resize('renderMode', 'renderMode');
+                resize('renderMethod', 'renderMethod');
+                
+                document.getElementById('presetBtn').addEventListener('click', () => this.loadPresets());
+                document.getElementById('randomBtn').addEventListener('click', () => this.randomize());
+                document.getElementById('saveBtn').addEventListener('click', () => this.saveScreenshot());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
+                
+                // Click on canvas to pick color
+                this.canvas.addEventListener('click', (e) => {
+                    if (this.colorPalette === 'custom') {
+                        const rect = this.canvas.getBoundingClientRect();
+                        const x = (e.clientX - rect.left) / (rect.width / this.canvas.width);
+                        const y = 1 - (e.clientY - rect.top) / (rect.height / this.canvas.height);
+                        this.pickColor(x, y);
+                    }
+                });
+            }
+            
+            compileProgram() {
+                const vs = `
+                    attribute vec2 aPosition;
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = aPosition / 2.0 + 0.5;
+                        gl_Position = vec4(aPosition.x, aPosition.y, 0.0, 1.0);
+                    }
+                `;
+                
+                const fs = `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform vec2 uBaseMandelbrot;
+                    uniform float uT;
+                    uniform float uZoom;
+                    uniform float uPixels;
+                    uniform float uIteration;
+                    
+                    float mandelbrot(vec2 c) {
+                        vec2 z = vec2(0.0);
+                        for (float i = 0.0; i < uIteration; i++) {
+                            if (dot(z, z) > 4.0) return 0.0;
+                            z = vec2(
+                                z.x*z.x - z.y*z.y + c.x,
+                                2.0*z.x*z.y + c.y
+                            );
+                        }
+                        return dot(z, z);
+                    }
+                    
+                    vec3 hsvToRgb(vec3 hsv) {
+                        vec3 c = hsv.g * vec3(
+                            1.0, 1.0 - hsv.z,
+                            1.0 - hsv.b
+                        );
+                        return clamp(abs(fract(c + vec3(0., 2./3., 0.)) * 6.0 - 3.0), 0.0, 1.0);
+                    }
+                    
+                    vec3 palette(float t) {
+                        vec3 a = vec3(0.5, 0.5, 0.5);
+                        vec3 b = vec3(0.5, 0.5, 0.5);
+                        vec3 c = vec3(1.0, 1.0, 1.0) / 0.009;
+                        vec3 d = vec3(1.0, 1.0, 1.0);
+                        return pow(a + b * cos(6.28318 * (c * t + d)), 3.0 + vec3(0.25));
+                    }
+                    
+                    void main() {
+                        vec2 base = uBaseMandelbrot.xy;
+                        vec2 zoomed = base + (vec2(2,3) - base) * 2.0 / uZoom;
+                        vec2 center = (zoomed + base) / 2.0;
+                        vec2 delta = (zoomed - base) / 2.0;
+                        vec2 uv = vUv * 2.0 - 1.0;
+                        vec2 fractPixel = fract(uv * uPixels);
+                        if (fractalPixel.x < 0.5 || fractalPixel.y < 0.5) discard;
+                        vec2 pixel = center + delta * fractPixel;
+                        float d = -mandelbrot(pixel) / mod(-uIteration + log(abs(mandelbrot(pixel)) + 1.0) / log(2.0), 3.0) - 0.0000001;
+                        if (d < 0.0) {
+                            d = 0.0;
+                        }
+                        if (mod(uT + d * 0.5 + 0.05 + uIteration * d * 0.05, 2.0) > 1.0) d = -1.0;
+                        if (uColorPalette == "hsv") {
+                            vec3 hsv = vec3(mod(uT / 3.0 + 0.07, 1.0), 0.9, 0.9);
+                            gl_FragColor = vec4(hsvToRgb(hsv), 1.0);
+                        } else if (uColorPalette == "fire") {
+                            gl_FragColor = vec4(smoothPalette(d) * 0.7 + 0.3, 1.0);
+                        } else if (uColorPalette == "ocean") {
+                            gl_FragColor = vec4(smoothPalette(d - 2.0) * 0.7 + 0.3, 1.0);
+                        } else {
+                            gl_FragColor = vec4(smoothPalette(d), 1.0);
+                        }
+                    }
+                `;
+                
+                this.program = this.createProgram(vs, fs);
+            }
+            
+            createProgram(vs, fs) {
+                const gl = this.gl;
+                const vsShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vsShader, vs);
+                gl.compileShader(vsShader);
+                
+                const fsShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fsShader, fs.replace('uColorPalette', 'uColorPalette === "hsv" ? 1.0 : 2.0'));
+                gl.compileShader(fsShader);
+                
+                const program = gl.createProgram();
+                gl.attachShader(program, vsShader);
+                gl.attachShader(program, fsShader);
+                gl.linkProgram(program);
+                
+                gl.useProgram(program);
+                
+                const positionLocation = gl.getAttribLocation(program, 'aPosition');
+                const buffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                    -1, -1,
+                    -1, 1,
+                    1, -1,
+                    1, -1,
+                    1, 1,
+                    -1, 1
+                ]), gl.STATIC_DRAW);
+                
+                gl.enableVertexAttribArray(positionLocation);
+                gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+                
+                const baseLocation = gl.getUniformLocation(program, 'uBaseMandelbrot');
+                const tLocation = gl.getUniformLocation(program, 'uT');
+                const zoomLocation = gl.getUniformLocation(program, 'uZoom');
+                const pixelsLocation = gl.getUniformLocation(program, 'uPixels');
+                const iterationLocation = gl.getUniformLocation(program, 'uIteration');
+                
+                return {
+                    program,
+                    baseLocation,
+                    tLocation,
+                    zoomLocation,
+                    pixelsLocation,
+                    iterationLocation,
+                    draw: () => gl.drawArrays(gl.TRIANGLES, 0, 6)
+                };
+            }
+            
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                if (this.gl && this.gl.discardFramebuffer) {
+                    const fblayer = gl.DISCARD_COLOR;
+                }
+            }
+            
+            renderMandelbrot() {
+                const { x0, y0, x1, y1, zoom, pixels } = this.baseMandelbrot;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                const dw = (x1 - x0) * zoom;
+                const dh = (y1 - y0) * zoom;
+                const dx = dw / width;
+                const dy = dh / height;
+                
+                for (let py = 0; py < height; py++) {
+                    const cy = y0 + dy * (y1 - y0) * py / height + (y1 - y0) / 2;
+                    for (let px = 0; px < width; px++) {
+                        const cx = x0 + dx * (x1 - x0) * px / width + (x1 - x0) / 2;
+                        
+                        let zx = 0, zy = 0;
+                        let iteration = 0;
+                        const maxIter = 256;
+                        
+                        while (zx * zx + zy * zy < 4 && iteration < maxIter) {
+                            const temp = zx * zx - zy * zy + cx;
+                            zy = 2 * zx * zy + cy;
+                            zx = temp;
+                            iteration++;
+                        }
+                        
+                        if (iteration === maxIter) {
+                            this.staticPixels.add(py * width + px);
+                        }
+                    }
+                }
+            }
+            
+            renderFractal() {
+                const { r, tOffset, k, zoom, pixels } = this.currentStyle;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                const xMin = -(1 + 1 / r) + tOffset;
+                const xMax = (1 + 1 / r);
+                const yMax = k;
+                const yMin = -k;
+                
+                for (let py = 0; py < height; py++) {
+                    const y = yMax - dy * py;
+                    for (let px = 0; px < width; px++) {
+                        const x = xMin + dx * px;
+                        const iteration = Math.pow(abs(x - 1) * r - 1, k) + Math.abs(y - tOffset) * k;
+                        const index = Math.floor(iteration / 3);
+                        
+                        for (let j = 0; j < index; j++) {
+                            this.currentStyle.tOffset += dy;
+                            this.currentStyle.r -= dx;
+                        }
+                        
+                        this.currentStyle.t += dx;
+                        this.currentStyle.r += dx;
+                        this.currentStyle.k += dy;
+                        
+                        const idx = py * width + px;
+                        if (!this.staticPixels.has(idx)) {
+                            if (this.currentStyle.t > 2 * Math.PI) {
+                                this.currentStyle.t -= 2 * Math.PI;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            update() {
+                if (!this.paused) {
+                    const dt = this.animationSpeed;
+                    const tOffset = this.currentStyle.tOffset;
+                    const pixels = this.currentStyle.pixels;
+                    const baseZoom = this.baseMandelbrot.zoom;
+                    const zoom = this.zoomLevel;
+                    
+                    const width = this.canvas.width;
+                    const height = this.canvas.height;
+                    const dw = (x1 - x0) * zoom;
+                    const dy = dh / height;
+                    const dx = dw / width;
+                    
+                    this.staticPixels.clear();
+                    this.renderMandelbrot();
+                    this.renderFractal();
+                }
+                
+                requestAnimationFrame(() => this.update());
+            }
+            
+            loadPresets() {
+                const presets = {
+                    'default': {
+                        baseMandelbrot: { x0: -2.5, y0: -1, x1: 1, y1: 1.5 },
+                        fractal: { r: 1, tOffset: 0, k: 0, zoom: 1 }
+                    },
+                    'deepSpace': {
+                        baseMandelbrot: { x0: -1.5, y0: -0.7, x1: 0.3, y1: 1.1, zoom: 3 },
+                        fractal: { r: 1, tOffset: 3, k: 2, zoom: 8 }
+                    },
+                    'butterfly': {
+                        baseMandelbrot: { x0: -1.2, y0: -0.5, x1: 0.5, y1: 0.8, zoom: 1.5 },
+                        fractal: { r: 1, tOffset: 2, k: 4, zoom: 4 }
+                    }
+                };
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new MandelbrotAnimator();
+        });
+    </script>
+</body>
+</html>

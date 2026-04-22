@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiGet } from "../../api/client";
 import type { ChatSessionMode } from "../../hooks/useWayOfPiSession";
 
@@ -19,7 +19,9 @@ export function PlanReview({ mode }: { mode: ChatSessionMode }) {
   }, []);
 
   // Load on mount
-  fetchPlan();
+  useEffect(() => {
+    fetchPlan();
+  }, []);
 
   return (
     <div className="p-2 bg-[#252526] text-[#cccccc]">

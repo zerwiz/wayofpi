@@ -24,30 +24,8 @@ export function App() {
   const { data: config } = useServerConfig();
   const workspaceStaticAnalysis = useWorkspaceStaticAnalysis(true);
 
-  // Conditionally call hook only for valid chat modes
-  const session =
-    mode === "documenthandler" ? undefined : useWayOfPiSession(mode);
+  const session = useWayOfPiSession(mode);
   const modelLabel = config?.chatEngine || "No server";
-
-  // Get properties with safe defaults for when session might be undefined
-  const rows = session?.rows ?? [];
-  const logs = session?.logs ?? [];
-  const streaming = session?.streaming ?? false;
-  const chatQueuePending = session?.chatQueuePending ?? 0;
-  const chatQueueItems = session?.chatQueueItems ?? [];
-  const connected = session?.connected ?? false;
-  const error = session?.error ?? null;
-  const chatAgentName = session?.chatAgentName ?? null;
-  const chatMode = session?.chatMode ?? "build";
-  const contextPct = session?.tokenMeter.contextPct ?? "";
-  const contextFillPct = session?.tokenMeter.contextFillPct ?? 0;
-  const tokensDown = session?.tokenMeter.tokensDown ?? "";
-  const tokensUp = session?.tokenMeter.tokensUp ?? "";
-  const contextTitle = session?.tokenMeter.contextTitle ?? "";
-  const tokensTitle = session?.tokenMeter.tokensTitle ?? "";
-
-  // Determine if this is a valid chat mode or documenthandler
-  const isDocumentHandlerMode = mode === "documenthandler";
 
   return (
     <React.StrictMode>
@@ -61,7 +39,7 @@ export function App() {
           />
 
           <main className="flex-1 overflow-hidden">
-            {!isDocumentHandlerMode && mode === "simple" && (
+            {mode === "simple" && (
               <SimpleApp
                 uiMode={mode}
                 setUiMode={setMode}
@@ -90,28 +68,28 @@ export function App() {
                 line={1}
                 col={1}
                 onCursor={() => {}}
-                rows={rows}
-                logs={logs}
-                streaming={streaming}
+                rows={session.rows}
+                logs={session.logs}
+                streaming={session.streaming}
                 chatStreamUiEnabled={true}
                 onChatStreamUiEnabledChange={() => {}}
-                chatQueuePending={chatQueuePending}
-                chatQueueItems={chatQueueItems}
+                chatQueuePending={0}
+                chatQueueItems={session.chatQueueItems}
                 editChatQueueItem={() => {}}
                 deleteChatQueueItem={() => {}}
                 forceChatQueueItem={() => {}}
-                connected={connected}
-                error={error}
+                connected={session.connected}
+                error={session.error}
                 sendChat={() => Promise.resolve()}
                 stop={() => {}}
                 clearError={() => {}}
                 onReopenLlmFixModal={() => {}}
-                chatAgentName={chatAgentName}
+                chatAgentName={session.chatAgentName}
                 dispatchTurnAgent={() => {}}
                 onChatAgentChange={() => {}}
-                chatMode={chatMode}
+                chatMode={session.chatMode}
                 onChatModeChange={() => {}}
-                activeTab={null as any}
+                activeTab={0}
                 onTabChange={() => {}}
                 providerConfigInitialPath={null}
                 providerConfigInitialNonce={0}
@@ -127,24 +105,24 @@ export function App() {
                 onCreateAgentDefinition={() => {}}
                 onOpenFolder={() => {}}
                 onOpenRecentFolder={() => {}}
-                recentFolders={[]}
+                recentFolders={folders}
                 onHelp={() => {}}
                 onConfigRefresh={() => {}}
                 onNewPlanFile={() => {}}
                 newPlanFileDisabled={false}
                 onOpenIndexingDocs={() => {}}
-                contextPct={contextPct}
-                contextFillPct={contextFillPct}
-                tokensDown={tokensDown}
-                tokensUp={tokensUp}
-                contextTitle={contextTitle}
-                tokensTitle={tokensTitle}
+                contextPct={session.tokenMeter.contextPct ?? ""}
+                contextFillPct={session.tokenMeter.contextFillPct}
+                tokensDown={session.tokenMeter.tokensDown ?? ""}
+                tokensUp={session.tokenMeter.tokensUp ?? ""}
+                contextTitle={session.tokenMeter.contextTitle ?? ""}
+                tokensTitle={session.tokenMeter.tokensTitle ?? ""}
                 onMoveFileToDirectory={() => Promise.resolve()}
                 layoutVariant="desktop"
               />
             )}
 
-            {!isDocumentHandlerMode && mode === "claw" && (
+            {mode === "claw" && (
               <ClawApp
                 uiMode={mode}
                 setUiMode={setMode}
@@ -173,32 +151,32 @@ export function App() {
                 line={1}
                 col={1}
                 onCursor={() => {}}
-                rows={rows}
-                logs={logs}
-                chatTabs={session?.chatTabs ?? []}
-                activeChatTabId={session?.activeChatTabId ?? ""}
+                rows={session.rows}
+                logs={session.logs}
+                chatTabs={session.chatTabs}
+                activeChatTabId={session.activeChatTabId}
                 onSelectChatTab={() => {}}
                 onCloseChatTab={() => {}}
                 onRenameChatTab={() => {}}
                 onNewSession={() => {}}
-                streaming={streaming}
+                streaming={session.streaming}
                 chatStreamUiEnabled={true}
                 onChatStreamUiEnabledChange={() => {}}
-                chatQueuePending={chatQueuePending}
-                chatQueueItems={chatQueueItems}
+                chatQueuePending={0}
+                chatQueueItems={session.chatQueueItems}
                 editChatQueueItem={() => {}}
                 deleteChatQueueItem={() => {}}
                 forceChatQueueItem={() => {}}
-                connected={connected}
-                error={error}
+                connected={session.connected}
+                error={session.error}
                 sendChat={() => Promise.resolve()}
                 stop={() => {}}
                 clearError={() => {}}
                 onReopenLlmFixModal={() => {}}
-                chatAgentName={chatAgentName}
+                chatAgentName={session.chatAgentName}
                 dispatchTurnAgent={() => {}}
                 onChatAgentChange={() => {}}
-                chatMode={chatMode}
+                chatMode={session.chatMode}
                 onChatModeChange={() => {}}
                 chatSessionControls={undefined}
                 workspaceReady={!!root}
@@ -206,18 +184,18 @@ export function App() {
                 onCreateAgentDefinition={() => {}}
                 onOpenFolder={() => {}}
                 onOpenRecentFolder={() => {}}
-                recentFolders={[]}
+                recentFolders={folders}
                 onHelp={() => {}}
                 onConfigRefresh={() => {}}
                 onNewPlanFile={() => {}}
                 newPlanFileDisabled={false}
                 onOpenHostDoctor={() => {}}
-                contextPct={contextPct}
-                contextFillPct={contextFillPct}
-                tokensDown={tokensDown}
-                tokensUp={tokensUp}
-                contextTitle={contextTitle}
-                tokensTitle={tokensTitle}
+                contextPct={session.tokenMeter.contextPct ?? ""}
+                contextFillPct={session.tokenMeter.contextFillPct}
+                tokensDown={session.tokenMeter.tokensDown ?? ""}
+                tokensUp={session.tokenMeter.tokensUp ?? ""}
+                contextTitle={session.tokenMeter.contextTitle ?? ""}
+                tokensTitle={session.tokenMeter.tokensTitle ?? ""}
                 onMoveFileToDirectory={() => Promise.resolve()}
                 layoutVariant="desktop"
               />
@@ -241,18 +219,18 @@ export function App() {
           <StatusBar
             uiMode={mode}
             workspaceRoot={root || "No workspace"}
-            connected={connected}
+            connected={session.connected}
             line={1}
             col={1}
             language=""
-            contextPct={contextPct}
-            tokensDown={tokensDown}
-            tokensUp={tokensUp}
-            contextTitle={contextTitle}
-            tokensTitle={tokensTitle}
+            contextPct={session.tokenMeter.contextPct ?? ""}
+            tokensDown={session.tokenMeter.tokensDown ?? ""}
+            tokensUp={session.tokenMeter.tokensUp ?? ""}
+            contextTitle={session.tokenMeter.contextTitle ?? ""}
+            tokensTitle={session.tokenMeter.tokensTitle ?? ""}
             onCopyWorkspacePath={() => {}}
-            chatMode={chatMode}
-            chatAgentName={chatAgentName}
+            chatMode={session.chatMode}
+            chatAgentName={session.chatAgentName}
           />
         </div>
       </WorkspaceStaticAnalysisProvider>

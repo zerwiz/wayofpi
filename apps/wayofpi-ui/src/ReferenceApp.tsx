@@ -16,7 +16,7 @@ import { requestNativePick } from "./api/nativeDialog";
 import { postWorkspaceOp } from "./api/workspace";
 import { ActivityBar } from "./components/ActivityBar";
 import { ChatPanel } from "./components/ChatPanel";
-import { CommandPalette, type CommandItem } from "./components/CommandPalette";
+
 import { AgentPermissionsModal } from "./components/AgentPermissionsModal";
 import { HostDoctorModal } from "./components/HostDoctorModal";
 import { HonchoSettingsModal } from "./components/HonchoSettingsModal";
@@ -33,7 +33,7 @@ import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
 import { NewPlanFileModal } from "./components/NewPlanFileModal";
 import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
 import { LlmFixModal } from "./components/LlmFixModal";
-import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
+import { TechnicalPrimarySidebar } from "./components/technical/TechnicalPrimarySidebar";
 import { DockSplitHandle } from "./components/DockSplitHandle";
 import { ExplorerSidebar } from "./components/ExplorerSidebar";
 import { MenuBar } from "./components/MenuBar";
@@ -51,7 +51,7 @@ import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalys
 import {
   TechnicalWorkspaceGrid,
   type TechnicalWorkspaceCellSnapshot,
-} from "./components/TechnicalWorkspaceGrid";
+} from "./components/technical/TechnicalWorkspaceGrid";
 import { WorkspaceCellDropSurface } from "./components/WorkspaceCellDropSurface";
 import type { WorkspaceGridPickerConfig } from "./components/WorkspaceGridLayoutPicker";
 import { WorkspacePane } from "./components/WorkspacePane";
@@ -61,7 +61,8 @@ import {
   ScmSidePanel,
   SearchSidePanel,
   SettingsSidePanel,
-} from "./components/TechnicalSidePanels";
+} from "./components/technical/TechnicalSidePanels";
+import { CommandPalette, type CommandItem } from "./components/technical/CommandPalette";
 import { useAgents } from "./hooks/useAgents";
 import {
   buildFilePutPayload,
@@ -359,7 +360,7 @@ export default function App() {
    * queue UI, plan/build + agent prefs, and server JSONL key prefix (`wireSessionKeyForSurface`). Switching
    * `uiMode` swaps the active slice and re-`activate_session`s the socket for that surface.
    */
-  const chatSurfaceId: ChatSessionSurfaceId = uiMode;
+  const chatSurfaceId: ChatSessionSurfaceId = uiMode as ChatSessionSurfaceId;
   const session = useWayOfPiSession(
     chatSurfaceId,
     refresh,
@@ -438,8 +439,12 @@ export default function App() {
     paths: string[];
   }>({ rev: 0, paths: [] });
   const [autoSave, setAutoSave] = useState(readAutoSaveInitial);
+  const [recentTick, setRecentTick] = useState(0);
   const workspaceFileInputRef = useRef<HTMLInputElement>(null);
-  const recentFolders = useMemo(() => readRecentWorkspaceFolders(), []);
+  const recentFolders = useMemo(
+    () => readRecentWorkspaceFolders(),
+    [recentTick],
+  );
   const [workspaceGrid, setWorkspaceGrid] = useState(() =>
     readWorkspaceGridState(),
   );
@@ -709,7 +714,39 @@ export default function App() {
     [],
   );
 
+  const onToggleWorkspaceMaximizeCell = useCallback((cellIndex: number) => {
+    setWsMaximizedCell((m) => (m === cellIndex ? null : cellIndex));
+  }, []);
 
+  const removeWorkspaceCellFromGrid = useCallback((cellIndex: number) => {
+    setWorkspaceGrid((g) => {
+      const next = removeWorkspaceCellAt(g, cellIndex);
+      if (next === g) return g;
+      writeWorkspaceGridState(next);
+      queueMicrotask(() => {
+        setWsFocusedCell((fc) => nextFocusAfterRemove(g, next, cellIndex, fc));
+        setWsMaximizedCell((m) => {
+          if (m == null) return m;
+          return mapCellIndexAfterRemoval(g, cellIndex, m);
+        });
+      });
+      return next;
+    });
+  }, []);
+
+  const onTechFocusedReport = useCallback(
+    (s: TechnicalWorkspaceCellSnapshot) => {
+      setTechWsSnapshot(s);
+      setSelectedPath(s.selectedPath);
+      if (s.selectedPath) setExplorerContextDir(posixDirname(s.selectedPath));
+    },
+    [],
+  );
+  const onTechFocusedCursor = useCallback((l: number, c: number) => {
+    setLine(l);
+    setCol(c);
+  }, []);
+  const {
     content,
     setContent,
     lastPersistedContent: _lastPersistedContent,
@@ -812,7 +849,7 @@ export default function App() {
     } else {
       setClawTab("files");
     }
-  }, [shouldBumpClawMenuFileFocus, bumpClawMenuFileFocus]);
+  }, [shouldBumpClawMenuFileFocus, bumpClawMenuFileFocus, setClawTab]);
   const [chrome, setChrome] = useState(() => readChromePreferences());
   const [zenMode, setZenMode] = useState(false);
   const zenBackupRef = useRef<{
@@ -1241,6 +1278,8 @@ description:
     return parts[parts.length - 1] || p;
   }, [folders, root]);
 
+  const bumpRecent = useCallback(() => setRecentTick((t) => t + 1), []);
+
   useEffect(() => {
     if (selectedPath) setExplorerContextDir(posixDirname(selectedPath));
   }, [selectedPath]);
@@ -1521,15 +1560,7 @@ description:
         }
       })();
     },
-    [
-      orchestratorPlanBootstrapLockRef,
-      createPlanArtifactInWorkspace,
-      ancestorDirPaths,
-      apiGet,
-      folders.length,
-      refresh,
-      root,
-    ],
+    [folders.length, refresh, root],
   );
 
   useEffect(() => {
@@ -2565,8 +2596,7 @@ description:
   const downloadWorkspaceJson = useCallback(
     (suggestedName: string, workspaceFileParentDir: string | null) => {
       const payload = buildCodeWorkspacePayload(
-        folders,
-        workspaceFileParentDir,
+        folders[0]
       );
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
         type: "application/json",

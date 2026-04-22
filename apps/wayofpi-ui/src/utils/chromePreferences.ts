@@ -9,6 +9,7 @@ export interface ChromePreferences {
 	/** 75–150; applied to main technical work area (Chromium `zoom`). */
 	uiZoomPercent: number;
 	centeredEditorLayout: boolean;
+	leftSidebarVisible: boolean;
 }
 
 export const CHROME_DEFAULTS: ChromePreferences = {
@@ -18,6 +19,7 @@ export const CHROME_DEFAULTS: ChromePreferences = {
 	breadcrumbsVisible: true,
 	uiZoomPercent: 100,
 	centeredEditorLayout: false,
+	leftSidebarVisible: true,
 };
 
 export function readChromePreferences(): ChromePreferences {
@@ -35,6 +37,7 @@ export function readChromePreferences(): ChromePreferences {
 			base.uiZoomPercent = Math.min(150, Math.max(75, Math.round(o.uiZoomPercent)));
 		}
 		if (typeof o.centeredEditorLayout === "boolean") base.centeredEditorLayout = o.centeredEditorLayout;
+		if (typeof o.leftSidebarVisible === "boolean") base.leftSidebarVisible = o.leftSidebarVisible;
 	} catch {
 		/* ignore */
 	}
