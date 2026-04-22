@@ -8,19 +8,19 @@ import {
   useRef,
   useState,
 } from "react";
-import { apiPostJson } from "../api/client";
-import type { AgentMeta } from "../hooks/useAgents";
+import { apiPostJson } from "../../api/client";
+import type { AgentMeta } from "../../hooks/useAgents";
 import type {
   ChatPulseMeters,
   ChatRow,
   LogRow,
-} from "../hooks/useWayOfPiSession";
-import { useFileEditor } from "../hooks/useFileEditor";
-import type { BottomPanelTab } from "../types/technicalShell";
-import type { TreeNode, WorkspaceResponse } from "../types/tree";
-import type { WorkspaceEditorRef } from "../types/workspaceEditor";
-import type { FilePersistEncoding } from "../hooks/useFileEditor";
-import type { WorkspaceGridState } from "../utils/workspaceGridStorage";
+} from "../../hooks/useWayOfPiSession";
+import { useFileEditor } from "../../hooks/useFileEditor";
+import type { BottomPanelTab } from "../../types/technicalShell";
+import type { TreeNode, WorkspaceResponse } from "../../types/tree";
+import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
+import type { FilePersistEncoding } from "../../hooks/useFileEditor";
+import type { WorkspaceGridState } from "../../utils/workspaceGridStorage";
 import {
   applyAddFileTab,
   applyCloseToolTab,
@@ -29,18 +29,18 @@ import {
   applyRemoveFileTab,
   type PanelDockLayout,
   type PanelTab,
-} from "../utils/panelDockLayout";
+} from "../../utils/panelDockLayout";
 import {
   gitMarkedFilePathsSorted,
   nextGitReviewFilePath,
-} from "../utils/flattenTree";
-import { computeWorkspaceFilePreview } from "../utils/workspaceFilePreview";
-import type { WopDropZone } from "../utils/workspaceDropZones";
-import type { DockFileActionItem } from "./dockToolAddMenu";
-import { DockSplitHandle } from "./DockSplitHandle";
-import { WorkspaceCellDropSurface } from "./WorkspaceCellDropSurface";
-import type { WorkspaceGridPickerConfig } from "./WorkspaceGridLayoutPicker";
-import { WorkspacePane } from "./WorkspacePane";
+} from "../../utils/flattenTree";
+import { computeWorkspaceFilePreview } from "../../utils/workspaceFilePreview";
+import type { WopDropZone } from "../../utils/workspaceDropZones";
+import type { DockFileActionItem } from "../dockToolAddMenu";
+import { DockSplitHandle } from "../DockSplitHandle";
+import { WorkspaceCellDropSurface } from "../WorkspaceCellDropSurface";
+import type { WorkspaceGridPickerConfig } from "../WorkspaceGridLayoutPicker";
+import { WorkspacePane } from "../WorkspacePane";
 
 export type TechnicalWorkspaceCellSnapshot = {
   selectedPath: string | null;

@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import type { PiModelConfigPath } from "../constants/piModelConfigPaths";
-import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
-import { apiGet, apiPostJson, apiPutJson } from "../api/client";
-import { GithubManageSettingsCard } from "./GithubManageSettingsCard";
-import type { ServerConfig } from "../hooks/useServerConfig";
-import { useWebManifest } from "../hooks/useWebManifest";
+import type { PiModelConfigPath } from "../../constants/piModelConfigPaths";
+import { PI_MODEL_CONFIG_ENTRIES } from "../../constants/piModelConfigPaths";
+import { apiGet, apiPostJson, apiPutJson } from "../../api/client";
+import { GithubManageSettingsCard } from "../GithubManageSettingsCard";
+import type { ServerConfig } from "../../hooks/useServerConfig";
+import { useWebManifest } from "../../hooks/useWebManifest";
 import { TerminalSettingsSection } from "./TerminalSettingsSection";
-import type { ChatSessionMode } from "../hooks/useWayOfPiSession";
-import type { FileGetResponse } from "../types/workspaceFile";
-import type { TreeNode, WorkspaceFolderInfo, WorkspaceGitState } from "../types/tree";
-import { flattenDirectGitStatusPaths, flattenTreeFiles } from "../utils/flattenTree";
-import { mergePiSettingsExtensionsArray, normExtEntry, piExtensionShimRef } from "../utils/piSettingsJson";
+import type { ChatSessionMode } from "../../hooks/useWayOfPiSession";
+import type { FileGetResponse } from "../../types/workspaceFile";
+import type { TreeNode, WorkspaceFolderInfo, WorkspaceGitState } from "../../types/tree";
+import { flattenDirectGitStatusPaths, flattenTreeFiles } from "../../utils/flattenTree";
+import { mergePiSettingsExtensionsArray, normExtEntry, piExtensionShimRef } from "../../utils/piSettingsJson";
 
 export function SearchSidePanel({
 	nodes,

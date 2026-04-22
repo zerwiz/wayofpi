@@ -16,7 +16,10 @@ import { requestNativePick } from "./api/nativeDialog";
 import { postWorkspaceOp } from "./api/workspace";
 import { ActivityBar } from "./components/ActivityBar";
 import { ChatPanel } from "./components/ChatPanel";
-import { CommandPalette, type CommandItem } from "./components/CommandPalette";
+import {
+  CommandPalette,
+  type CommandItem,
+} from "./components/technical/CommandPalette";
 import { AgentPermissionsModal } from "./components/AgentPermissionsModal";
 import { HostDoctorModal } from "./components/HostDoctorModal";
 import { HonchoSettingsModal } from "./components/HonchoSettingsModal";
@@ -32,26 +35,15 @@ import { RestartServerModal } from "./components/RestartServerModal";
 import { LaunchConfigAddModal } from "./components/LaunchConfigAddModal";
 import { NewPlanFileModal } from "./components/NewPlanFileModal";
 import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
-import { LlmFixModal } from "./components/LlmFixModal";
-import { TechnicalPrimarySidebar } from "./components/TechnicalPrimarySidebar";
-import { DockSplitHandle } from "./components/DockSplitHandle";
-import { ExplorerSidebar } from "./components/ExplorerSidebar";
-import { MenuBar } from "./components/MenuBar";
-import { SimpleApp } from "./components/simple/SimpleApp";
-import type { SimpleTabId } from "./components/simple/SimpleNavRail";
-import { ClawApp } from "./components/claw/ClawApp";
-import {
-  ClawHelpModal,
-  type ClawHelpSectionId,
-} from "./components/claw/ClawHelpModal";
-import type { ClawTabId } from "./components/claw/ClawNavRail";
-import "./claw/clawUserUiModules";
-import { StatusBar } from "./components/StatusBar";
+
+import { TechnicalChatPanel } from "./components/technical/TechnicalChatPanel";
+import { DebugPanel } from "./components/technical/DebugPanel";
+import { PlanReview } from "./components/technical/PlanReview";
 import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalysisContext";
 import {
   TechnicalWorkspaceGrid,
   type TechnicalWorkspaceCellSnapshot,
-} from "./components/TechnicalWorkspaceGrid";
+} from "./components/technical/TechnicalWorkspaceGrid";
 import { WorkspaceCellDropSurface } from "./components/WorkspaceCellDropSurface";
 import type { WorkspaceGridPickerConfig } from "./components/WorkspaceGridLayoutPicker";
 import { WorkspacePane } from "./components/WorkspacePane";
@@ -61,7 +53,10 @@ import {
   ScmSidePanel,
   SearchSidePanel,
   SettingsSidePanel,
-} from "./components/TechnicalSidePanels";
+} from "./components/technical/TechnicalSidePanels";
+import { ExplorerSidebar } from "./components/ExplorerSidebar";
+import { MenuBar } from "./components/MenuBar";
+import { DocsApp } from "./components/documenthandler/DocsApp";
 import { useAgents } from "./hooks/useAgents";
 import {
   buildFilePutPayload,
@@ -359,7 +354,8 @@ export default function App() {
    * queue UI, plan/build + agent prefs, and server JSONL key prefix (`wireSessionKeyForSurface`). Switching
    * `uiMode` swaps the active slice and re-`activate_session`s the socket for that surface.
    */
-  const chatSurfaceId: ChatSessionSurfaceId = uiMode;
+  const chatSurfaceId: ChatSessionSurfaceId =
+    uiMode === "documenthandler" ? "simple" : uiMode;
   const session = useWayOfPiSession(
     chatSurfaceId,
     refresh,
@@ -5551,7 +5547,94 @@ description:
 
   return (
     <WorkspaceStaticAnalysisProvider value={workspaceStaticAnalysisApi}>
-      {uiMode === "technical" && shellMobile ? (
+      {uiMode === "documenthandler" ? (
+        <>
+          {chrome.menuBarVisible ? (
+            <MenuBar
+              modelLabel={modelLabel}
+              uiMode={uiMode}
+              onUiModeChange={setUiMode}
+              config={config}
+              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+              onSave={saveAndRefresh}
+              canSave={!!effSelectedPath && effDirty}
+              onRevertFile={() => void reloadFocusedOrMain()}
+              canRevert={!!effSelectedPath && effDirty}
+              onRefreshWorkspace={refresh}
+              onCopyWorkspacePath={copyWorkspacePath}
+              onSelectActivity={selectActivityWithSidebar}
+              technicalActivity={activity}
+              onFocusBottomTab={focusToolTab}
+              leftSidebarVisible={leftSidebarVisible}
+              onToggleLeftSidebar={toggleLeftSidebar}
+              agentPanelVisible={dockLayout.agentPanelVisible}
+              agentChatDock={dockLayout.chatDock}
+              onSetAgentChatDock={(r) =>
+                updateDockLayout((d) => ({
+                  ...d,
+                  chatDock: r,
+                  agentPanelVisible: true,
+                  chatSizePx: chatSizePxWhenSwitchingDock(
+                    d.chatDock,
+                    r,
+                    d.chatSizePx,
+                  ),
+                }))
+              }
+              onToggleAgentPanel={() =>
+                updateDockLayout((d) => ({
+                  ...d,
+                  agentPanelVisible: !d.agentPanelVisible,
+                }))
+              }
+              fileMenu={fileMenu}
+              editMenu={editMenu}
+              selectionMenu={selectionMenu}
+              goMenu={goMenu}
+              runMenu={runMenu}
+              terminalMenu={terminalMenu}
+              helpMenu={helpMenu}
+              onOpenAgentSetup={openAgentSetupFromMenu}
+              onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
+              settingsMenu={settingsMenuHandlers}
+              onOpenTeamsYaml={openTeamsYamlFromMenu}
+              onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
+              onReloadAgents={agentsApi.reload}
+              onOpenPiModelConfig={openPiModelConfigInEditor}
+              chatSessionControls={{
+                mode: session.chatMode,
+                switchDisabled: session.streaming,
+                onSetMode: handleChatModeChange,
+              }}
+              onNewPlanFile={() => void handleNewPlanFile()}
+              newPlanFileDisabled={!workspaceOperational}
+              viewTechnical={viewTechnicalOptions}
+            />
+          ) : (
+            <div className="flex h-8 shrink-0 items-center gap-2 border-b border-[#252526] bg-[#2d2d2d] px-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setChrome((c) => ({ ...c, menuBarVisible: true }))
+                }
+                className="text-xs text-[#858585] hover:text-[#cccccc]"
+              >
+                Show Menu Bar
+              </button>
+            </div>
+          )}
+           <DocsApp
+             connected={session.connected}
+             config={config}
+             refreshWorkspace={refresh}
+             modelLabel={modelLabel}
+             workspaceOperational={workspaceOperational}
+             onOpenAgentSetup={openAgentSetupFromMenu}
+           />
+           <DebugPanel mode={uiMode} />
+           <PlanReview mode={uiMode} />
+         </>
+      ) : uiMode === "technical" && shellMobile ? (
         <>
           <input
             ref={workspaceFileInputRef}
@@ -5822,62 +5905,59 @@ description:
                           maxWidth: 1280,
                         }}
                       >
-                        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
-                          <ChatPanel
-                            uiMode={uiMode}
-                            rows={session.rows}
-                            chatTabs={session.chatTabs}
-                            activeChatTabId={session.activeChatTabId}
-                            onSelectChatTab={session.selectChatTab}
-                            onCloseChatTab={session.closeChatTab}
-                            streaming={session.streaming}
-                            connected={session.connected}
-                            error={session.error}
-                            onSend={session.sendChat}
-                            onStop={session.stop}
-                            onClearError={session.clearError}
-                            onReopenLlmFixModal={reopenLlmFixModal}
-                            onNewSession={session.startNewSession}
-                            chatMode={session.chatMode}
-                            onChatModeChange={handleChatModeChange}
-                            agents={agentsApi.data?.agents ?? []}
-                            agentsLoading={agentsApi.loading}
-                            agentTeams={agentsApi.data?.teams ?? {}}
-                            onOpenAgentTeamInPane={openTeamPulseInAgentDock}
-                            openTeamPulseSignal={teamPulseDockSignal}
-                            onEditTeam={openAgentSetupFromMenu}
-                            chatAgentName={session.chatAgentName}
-                            dispatchTurnAgent={session.dispatchTurnAgent}
-                            onChatAgentChange={session.setChatAgent}
-                            chatQueuePending={session.chatQueuePending}
-                            chatQueueItems={session.chatQueueItems}
-                            editChatQueueItem={session.editChatQueueItem}
-                            deleteChatQueueItem={session.deleteChatQueueItem}
-                            forceChatQueueItem={session.forceChatQueueItem}
-                            chatPulseMeters={session.chatPulseMeters}
-                            contextTitle={session.tokenMeter.contextTitle}
-                            sessionTokenSummary={teamPulseSessionTokenSummary}
-                            dockPanelFrame
-                            onOpenPlanFileForReview={openPlanFileForReview}
-                            planHandoffWorkspaceKey={planHandoffWorkspaceKey}
-                            technicalDock={{
-                              region: "right",
-                              sizePx: dockLayout.chatSizePx,
-                              onSetRegion: (r) =>
-                                updateDockLayout((d) => ({
-                                  ...d,
-                                  chatDock: r,
-                                  chatSizePx: chatSizePxWhenSwitchingDock(
-                                    d.chatDock,
-                                    r,
-                                    d.chatSizePx,
-                                  ),
-                                })),
-                              onHidePanel: () =>
-                                updateDockLayout({ agentPanelVisible: false }),
-                            }}
-                          />
-                        </div>
+                        <TechnicalChatPanel
+                          uiMode={uiMode}
+                          rows={session.rows}
+                          chatTabs={session.chatTabs}
+                          activeChatTabId={session.activeChatTabId}
+                          onSelectChatTab={session.selectChatTab}
+                          onCloseChatTab={session.closeChatTab}
+                          streaming={session.streaming}
+                          connected={session.connected}
+                          error={session.error}
+                          onSend={session.sendChat}
+                          onStop={session.stop}
+                          onClearError={session.clearError}
+                          reopenLlmFixModal={reopenLlmFixModal}
+                          onNewSession={session.startNewSession}
+                          chatMode={session.chatMode}
+                          onChatModeChange={handleChatModeChange}
+                          agents={agentsApi.data?.agents ?? []}
+                          agentsLoading={agentsApi.loading}
+                          agentTeams={agentsApi.data?.teams ?? {}}
+                          onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+                          openTeamPulseSignal={teamPulseDockSignal}
+                          onEditTeam={openAgentSetupFromMenu}
+                          chatAgentName={session.chatAgentName}
+                          dispatchTurnAgent={session.dispatchTurnAgent}
+                          onChatAgentChange={session.setChatAgent}
+                          chatQueuePending={session.chatQueuePending}
+                          chatQueueItems={session.chatQueueItems}
+                          editChatQueueItem={session.editChatQueueItem}
+                          deleteChatQueueItem={session.deleteChatQueueItem}
+                          forceChatQueueItem={session.forceChatQueueItem}
+                          chatPulseMeters={session.chatPulseMeters}
+                          contextTitle={session.tokenMeter.contextTitle}
+                          sessionTokenSummary={teamPulseSessionTokenSummary}
+                          onOpenPlanFileForReview={openPlanFileForReview}
+                          planHandoffWorkspaceKey={planHandoffWorkspaceKey}
+                          technicalDock={{
+                            region: "right",
+                            sizePx: dockLayout.chatSizePx,
+                            onSetRegion: (r) =>
+                              updateDockLayout((d) => ({
+                                ...d,
+                                chatDock: r,
+                                chatSizePx: chatSizePxWhenSwitchingDock(
+                                  d.chatDock,
+                                  r,
+                                  d.chatSizePx,
+                                ),
+                              })),
+                            onHidePanel: () =>
+                              updateDockLayout({ agentPanelVisible: false }),
+                          }}
+                        />
                       </div>
                     </>
                   ) : dockLayout.agentPanelVisible &&
@@ -5904,62 +5984,59 @@ description:
                           maxHeight: 720,
                         }}
                       >
-                        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
-                          <ChatPanel
-                            uiMode={uiMode}
-                            rows={session.rows}
-                            chatTabs={session.chatTabs}
-                            activeChatTabId={session.activeChatTabId}
-                            onSelectChatTab={session.selectChatTab}
-                            onCloseChatTab={session.closeChatTab}
-                            streaming={session.streaming}
-                            connected={session.connected}
-                            error={session.error}
-                            onSend={session.sendChat}
-                            onStop={session.stop}
-                            onClearError={session.clearError}
-                            onReopenLlmFixModal={reopenLlmFixModal}
-                            onNewSession={session.startNewSession}
-                            chatMode={session.chatMode}
-                            onChatModeChange={handleChatModeChange}
-                            agents={agentsApi.data?.agents ?? []}
-                            agentsLoading={agentsApi.loading}
-                            agentTeams={agentsApi.data?.teams ?? {}}
-                            onOpenAgentTeamInPane={openTeamPulseInAgentDock}
-                            openTeamPulseSignal={teamPulseDockSignal}
-                            onEditTeam={openAgentSetupFromMenu}
-                            chatAgentName={session.chatAgentName}
-                            dispatchTurnAgent={session.dispatchTurnAgent}
-                            onChatAgentChange={session.setChatAgent}
-                            chatQueuePending={session.chatQueuePending}
-                            chatQueueItems={session.chatQueueItems}
-                            editChatQueueItem={session.editChatQueueItem}
-                            deleteChatQueueItem={session.deleteChatQueueItem}
-                            forceChatQueueItem={session.forceChatQueueItem}
-                            chatPulseMeters={session.chatPulseMeters}
-                            contextTitle={session.tokenMeter.contextTitle}
-                            sessionTokenSummary={teamPulseSessionTokenSummary}
-                            dockPanelFrame
-                            onOpenPlanFileForReview={openPlanFileForReview}
-                            planHandoffWorkspaceKey={planHandoffWorkspaceKey}
-                            technicalDock={{
-                              region: "bottom",
-                              sizePx: dockLayout.chatSizePx,
-                              onSetRegion: (r) =>
-                                updateDockLayout((d) => ({
-                                  ...d,
-                                  chatDock: r,
-                                  chatSizePx: chatSizePxWhenSwitchingDock(
-                                    d.chatDock,
-                                    r,
-                                    d.chatSizePx,
-                                  ),
-                                })),
-                              onHidePanel: () =>
-                                updateDockLayout({ agentPanelVisible: false }),
-                            }}
-                          />
-                        </div>
+                        <TechnicalChatPanel
+                          uiMode={uiMode}
+                          rows={session.rows}
+                          chatTabs={session.chatTabs}
+                          activeChatTabId={session.activeChatTabId}
+                          onSelectChatTab={session.selectChatTab}
+                          onCloseChatTab={session.closeChatTab}
+                          streaming={session.streaming}
+                          connected={session.connected}
+                          error={session.error}
+                          onSend={session.sendChat}
+                          onStop={session.stop}
+                          onClearError={session.clearError}
+                          reopenLlmFixModal={reopenLlmFixModal}
+                          onNewSession={session.startNewSession}
+                          chatMode={session.chatMode}
+                          onChatModeChange={handleChatModeChange}
+                          agents={agentsApi.data?.agents ?? []}
+                          agentsLoading={agentsApi.loading}
+                          agentTeams={agentsApi.data?.teams ?? {}}
+                          onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+                          openTeamPulseSignal={teamPulseDockSignal}
+                          onEditTeam={openAgentSetupFromMenu}
+                          chatAgentName={session.chatAgentName}
+                          dispatchTurnAgent={session.dispatchTurnAgent}
+                          onChatAgentChange={session.setChatAgent}
+                          chatQueuePending={session.chatQueuePending}
+                          chatQueueItems={session.chatQueueItems}
+                          editChatQueueItem={session.editChatQueueItem}
+                          deleteChatQueueItem={session.deleteChatQueueItem}
+                          forceChatQueueItem={session.forceChatQueueItem}
+                          chatPulseMeters={session.chatPulseMeters}
+                          contextTitle={session.tokenMeter.contextTitle}
+                          sessionTokenSummary={teamPulseSessionTokenSummary}
+                          onOpenPlanFileForReview={openPlanFileForReview}
+                          planHandoffWorkspaceKey={planHandoffWorkspaceKey}
+                          technicalDock={{
+                            region: "bottom",
+                            sizePx: dockLayout.chatSizePx,
+                            onSetRegion: (r) =>
+                              updateDockLayout((d) => ({
+                                ...d,
+                                chatDock: r,
+                                chatSizePx: chatSizePxWhenSwitchingDock(
+                                  d.chatDock,
+                                  r,
+                                  d.chatSizePx,
+                                ),
+                              })),
+                            onHidePanel: () =>
+                              updateDockLayout({ agentPanelVisible: false }),
+                          }}
+                        />
                       </div>
                     </div>
                   ) : (

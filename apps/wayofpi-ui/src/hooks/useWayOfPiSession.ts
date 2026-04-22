@@ -381,9 +381,9 @@ export function useWayOfPiSession(
   const surfacesRef = useRef(surfaces);
   surfacesRef.current = surfaces;
 
-  const slice = surfaces[surfaceId];
+  const surface = surfaces[surfaceId];
   const { chatTabs, activeChatTabId, rowsByTab, chatMode, chatAgentName } =
-    slice;
+    surface;
   const rows = rowsByTab[activeChatTabId] ?? [];
 
   const [connected, setConnected] = useState(false);
@@ -429,17 +429,6 @@ export function useWayOfPiSession(
   const rowsByTabRef = useRef(rowsByTab);
   const chatTabsRef = useRef(chatTabs);
 
-  useEffect(() => {
-    activeChatTabIdRef.current = slice.activeChatTabId;
-    rowsByTabRef.current = slice.rowsByTab;
-    chatTabsRef.current = slice.chatTabs;
-    chatAgentNameRef.current = slice.chatAgentName;
-  }, [
-    slice.activeChatTabId,
-    slice.rowsByTab,
-    slice.chatTabs,
-    slice.chatAgentName,
-  ]);
   useEffect(() => {
     dispatchTurnAgentRef.current = dispatchTurnAgent;
   }, [dispatchTurnAgent]);

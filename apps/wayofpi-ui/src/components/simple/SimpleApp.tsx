@@ -26,6 +26,7 @@ import { SimpleSecondaryToolbar } from "./SimpleSecondaryToolbar";
 import { SimpleSettingsView } from "./SimpleSettingsView";
 import { SimpleTeamView } from "./SimpleTeamView";
 import { SimpleMobileTabBar } from "../mobile/simple/SimpleMobileTabBar";
+import ChatExplorer from "../documenthandler/ChatExplorer";
 
 function languageFromPath(path: string | null): string {
 	if (!path) return "Plain Text";
@@ -665,6 +666,10 @@ export function SimpleApp({
 										recentFolders={recentFolders}
 										appearanceDark={appearanceDark}
 									/>
+								</div>
+							) : activeTab === "documenthandler" ? (
+								<div className="min-h-0 flex-1 overflow-hidden">
+									<ChatExplorer appearanceDark={appearanceDark} />
 								</div>
 							) : activeTab === "settings" ? (
 								<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2">

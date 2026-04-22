@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Brain, Cpu, Folder, HelpCircle, MessageCircle, Settings, Users } from "lucide-react";
+import { Brain, Cpu, FileText, Folder, HelpCircle, MessageCircle, Settings, Users } from "lucide-react";
 import type { SimpleTabId } from "../../simple/SimpleNavRail";
 
 function Tab({
@@ -77,6 +77,9 @@ export function SimpleMobileTabBar({
 			</Tab>
 			<Tab active={activeTab === "projects"} dark={appearanceDark} label="Projects" onClick={() => onTab("projects")}>
 				<Folder size={18} aria-hidden />
+			</Tab>
+			<Tab active={activeTab === "documenthandler"} dark={appearanceDark} label="Documents" onClick={() => onTab("documenthandler")}>
+				<FileText size={18} aria-hidden />
 			</Tab>
 			{onHelp ? (
 				<button

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { apiPostJson } from "../api/client";
-import type { ServerConfig } from "../hooks/useServerConfig";
-import { useTerminalUiPreferences } from "../hooks/useTerminalUiPreferences";
-import { TERMINAL_UI_DEFAULT_FONT } from "../utils/terminalUiPreferences";
+import { apiPostJson } from "../../api/client";
+import type { ServerConfig } from "../../hooks/useServerConfig";
+import { useTerminalUiPreferences } from "../../hooks/useTerminalUiPreferences";
+import { TERMINAL_UI_DEFAULT_FONT } from "../../utils/terminalUiPreferences";
 
 /** Shared terminal setup: server status (from `/api/config`) + client xterm prefs (localStorage). */
 export function TerminalSettingsSection({

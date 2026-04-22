@@ -1,9 +1,9 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef } from "react";
-import { useFileEditor } from "../hooks/useFileEditor";
-import type { WorkspaceEditorRef } from "../types/workspaceEditor";
-import { computeWorkspaceFilePreview } from "../utils/workspaceFilePreview";
-import type { PanelTab } from "../utils/panelDockLayout";
-import { WorkspacePane, type WorkspacePaneProps } from "./WorkspacePane";
+import { useFileEditor } from "../../hooks/useFileEditor";
+import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
+import { computeWorkspaceFilePreview } from "../../utils/workspaceFilePreview";
+import type { PanelTab } from "../../utils/panelDockLayout";
+import { WorkspacePane, type WorkspacePaneProps } from "../WorkspacePane";
 
 export type MainEditorColumnApi = {
 	save: () => Promise<boolean>;

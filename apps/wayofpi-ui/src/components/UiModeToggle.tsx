@@ -68,6 +68,16 @@ export function UiModeToggle({
 			>
 				Claw
 			</button>
+			<button
+				type="button"
+				{...primaryPointerHandlers(dedupeRef, "ui-documenthandler", () => onUiModeChange("documenthandler"))}
+				className={`rounded px-1.5 py-0.5 transition-colors ${
+					uiMode === "documenthandler" ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
+				}`}
+				title="Chat & Document Explorer: Combined chat interface and file explorer with document preview"
+			>
+				Docs
+			</button>
 		</div>
 	);
 }
