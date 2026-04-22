@@ -5,7 +5,7 @@ alwaysApply: true
 
 # No hard-coded file paths
 
-Do **not** embed **machine- or user-specific** absolute paths in code, docs, samples, tests, or rules (e.g. `/home/alice/...`, `/Users/bob/...`, `C:\Users\...`). They break other machines, CI, and collaborators.
+Do **not** embed **machine- or user-specific** absolute paths in code, docs, samples, tests, or rules (e.g. `/path/to/your/repo`, `/path/to/workspace`, `C:\\ProgramData\\...`). They break other machines, CI, and collaborators.
 
 ## Prefer
 

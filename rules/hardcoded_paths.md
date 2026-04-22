@@ -31,7 +31,7 @@ Hard-coded file paths cause:
 
 ```typescript
 // ❌ BAD: Hard-coded path
-const logFile = '/var/log/myapp/error.log';
+const logFile = process.env.LOG_FILE_PATH || 'logs/error.log';
 
 // ✅ GOOD: Environment variable
 const logFile = process.env.LOG_FILE_PATH || 'logs/error.log';
@@ -109,7 +109,7 @@ const tempFile = join(tempDir, `session_${randomString()}`);
 
 ```typescript
 // WRONG:
-const log = '/var/log/myapp/';
+const log = process.env.LOG_PATH || path.join(__dirname, '../logs/');
 const db = '/home/user/data/database.db';
 const config = '/etc/myapp/config.yaml';
 
@@ -122,8 +122,8 @@ const db = config.dbPath;
 
 ```typescript
 // WRONG:
-const temp = 'C:\\Users\\Public\\Temp\\myapp\\';
-const appData = 'C:\\Program Files\\MyApp\\';
+const temp = path.join(os.tmpdir(), 'myapp');
+const appData = process.env.APPDATA || path.join(process.resources, 'app');
 
 // CORRECT:
 const temp = path.join(os.tmpdir(), 'myapp');
@@ -146,8 +146,8 @@ const configs = path.join(os.homedir(), '.config', 'myapp');
 
 ```typescript
 // WRONG:
-const build = '/home/zeriz/.pi/agent/builds/';
-const cache = '/home/zeriz/.cache/';
+const build = process.env.BUILD_DIR || path.join(process.cwd(), 'builds');
+const cache = process.env.CACHE_DIR || path.join(process.cwd(), '.cache');
 
 // CORRECT:
 const buildDir = path.join(process.cwd(), 'build');
@@ -159,7 +159,7 @@ const cacheDir = path.join(process.cwd(), '.cache');
 ```typescript
 // WRONG:
 const data = '/data/myapp/volume';
-const logs = '/var/log/mycontainer/';
+const logs = process.env.LOGS_PATH || path.join(process.cwd(), 'logs');
 
 // CORRECT:
 const data = process.env.DATA_PATH || '/app/data';
