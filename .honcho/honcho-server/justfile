@@ -1,0 +1,126 @@
+# Honcho server — Docker stack and browser openers (keep this separate from Pi).
+# Run from repo root: `just honcho-up`, `just honcho-open-docs`, etc.
+# =========================================================================
+
+set dotenv-load := true
+
+default:
+    @just --list
+
+# 🌙 Night/Auto Start Configuration
+honcho-night:
+    # Auto-start Honcho at 10 PM for night operations
+    @echo "🌙 Starting Honcho server at 22:00..."
+    docker compose up -d database redis api
+    @echo "✅ Honcho running: http://localhost:18000"
+    @curl -sS http://127.0.0.1:18000/ | head -5
+
+honcho-stop-night:
+    # Stop Honcho at 7 AM
+    @echo "⏰ Stopping Honcho server at 07:00..."
+    docker compose down
+
+honcho-configure-models:
+    # Configure Honcho with multi-model setup (Ollama, OpenRouter, Google)
+    @cat ${USER_HOME}/.honcho/config.json
+    @echo "\nModels configured in configuration.\n"
+
+honcho-model-status:
+    # Check model availability
+    @echo "🤖 Multi-model status:"
+    @echo "  - Ollama: $(curl -s http://localhost:11434/api/tags | python3 -c 'import json,sys; models=json.load(sys.stdin)["models"]; print("\n  ".join([m["name"] for m in models]))' 2>/dev/null || echo "Not running")"
+    @echo "  - Ollama-Remote: http://192.168.68.108:5173/v1"
+    @echo "  - OpenRouter: https://openrouter.ai/api/v1"
+    @echo "  - Google: https://generativelanguage.googleapis.com/v1beta"
+
+honcho-configure:
+    # Configure Honcho with Hermes integration
+    @mkdir -p ${USER_HOME}/.honcho
+    @echo '{' > ${USER_HOME}/.honcho/config.json
+    @echo '  "baseUrl": "http://localhost:18000",' >> ${USER_HOME}/.honcho/config.json
+    @echo '  "defaultWorkspace": "way-of-pi",' >> ${USER_HOME}/.honcho/config.json
+    @echo '  "userPeer": "zerwiz",' >> ${USER_HOME}/.honcho/config.json
+    @echo '  "memoryMode": "hybrid",' >> ${USER_HOME}/.honcho/config.json
+    @echo '  "models": {' >> ${USER_HOME}/.honcho/config.json
+    @echo '    "ollama": "nemotron-cascade-2:30b",' >> ${USER_HOME}/.honcho/config.json
+    @echo '    "openrouter": "meta-llama/llama-3.3-70b-instruct",' >> ${USER_HOME}/.honcho/config.json
+    @echo '    "google": "gemini-2.5-pro"' >> ${USER_HOME}/.honcho/config.json
+    @echo '  }' >> ${USER_HOME}/.honcho/config.json
+    @echo '}' >> ${USER_HOME}/.honcho/config.json
+    @echo "✅ Honcho configured with multi-model setup"
+
+# Night/Auto Start recipes (continued)
+honcho-schedule-night:
+    # Schedule cron for nightly starts
+    @crontab -l | grep -q '0 22 \*' || (echo '0 22 * * * /usr/local/bin/docker-compose -P up -d database redis api >> /tmp/honcho-night.log 2>&1' | crontab - && echo "✅ Scheduled nightly start at 22:00")
+
+honcho-schedule-stop:
+    # Schedule cron for morning stops
+    @crontab -l | grep -q '0 7 \*' || (echo '0 7 * * * /usr/local/bin/docker-compose -P down >> /tmp/honcho-morning-stop.log 2>&1' | crontab - && echo "✅ Scheduled morning stop at 07:00")
+
+honcho-night-check:
+    # Check honcho health at night
+    @curl -sS http://127.0.0.1:18000/ -o /dev/null -w "%{http_code}" || echo "Honcho not running"
+
+# Docker stack recipes
+honcho-up:
+    cd "{{justfile_directory()}}" && docker compose up -d database redis api deriver
+
+honcho-up-api:
+    # Only start API services
+    cd "{{justfile_directory()}}" && docker compose up -d database redis api
+
+honcho-down:
+    cd "{{justfile_directory()}}" && docker compose down
+
+honcho-status:
+    curl -sS --connect-timeout 2 http://127.0.0.1:18000/ || true
+
+# UI opener recipes
+honcho-open-docs:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" docs
+
+honcho-open-redoc:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" redoc
+
+honcho-open-metrics:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" metrics
+
+honcho-open-cloud:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud
+
+honcho-open-cloud-playground:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-playground
+
+honcho-open-cloud-explore:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-explore
+
+honcho-open-docs-web:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" docs-web
+
+honcho-open-cloud-billing:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-billing
+
+honcho-open-cloud-status:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-status
+
+honcho-open-cloud-performance:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-performance
+
+honcho-open-cloud-api-keys:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-api-keys
+
+honcho-open-cloud-webhooks:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-webhooks
+
+honcho-open-cloud-members:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" cloud-members
+
+honcho-open-docs-platform:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" docs-platform
+
+honcho-open-ui-list:
+    @bash "{{justfile_directory()}}/scripts/honcho-open-ui.sh" list
+
+install-bin:
+    @bash "{{justfile_directory()}}/scripts/install-honcho-bin.sh"

@@ -148,8 +148,8 @@ export function MenuBar({
   viewSimple,
 }: {
   modelLabel: string;
-  uisModels: { name: string; size?: number }[];
-  modelIdFromLabel: (label: string) => string | null;
+  uisModels?: { name: string; size?: number }[] | undefined;
+  modelIdFromLabel?: (label: string) => string | null | undefined;
   uiMode: UiMode;
   onUiModeChange: (mode: UiMode) => void;
   config: ServerConfig | null;
@@ -3998,7 +3998,7 @@ export function MenuBar({
           </button>
           {modelOpen ? (
             <ModelSelectorModal
-              models={uisModels.map((m) => ({ name: m.name, size: m.size }))}
+              models={uisModels?.map((m) => ({ name: m.name, size: m.size })) || []}
               activeModelId={modelId || modelLabel || ""}
               onSelectModel={(id) => {
                 setModelId(id);
