@@ -24,9 +24,9 @@ export function App() {
   const { data: config } = useServerConfig();
   const workspaceStaticAnalysis = useWorkspaceStaticAnalysis(true);
 
-  // Conditionally call hook only for valid chat modes
-  const session =
-    mode === "documenthandler" ? undefined : useWayOfPiSession(mode);
+  // Always call the hook, but choose a surfaceId that is always valid.
+  const activeSurface = mode === "documenthandler" ? "simple" : mode;
+  const session = useWayOfPiSession(activeSurface, undefined, undefined, undefined, undefined);
   const modelLabel = config?.chatEngine || "No server";
 
   // Get properties with safe defaults for when session might be undefined
