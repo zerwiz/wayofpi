@@ -970,6 +970,55 @@ Blocker Issues: [LIST]
 
 ---
 
+## 🐛 **Known Prop Wiring Issues — Critical**
+
+### ⚠️ Missing Props in Component Instantiation
+
+**Issue:** `ClawApp` is missing `onTabChange` prop in `App.tsx`
+
+**Error:**
+```
+ClawApp.tsx:526 Uncaught TypeError: onTabChange is not a function
+```
+
+**Location:** `App.tsx` line 290 (ClawApp instantiation)
+
+**Root Cause:** `ClawApp` expects `onTabChange` prop but `App.tsx` doesn't pass it
+
+**Fix Required:**
+```tsx
+// In App.tsx, ClawApp section
+<ClawApp
+  // ... existing props ...
+  activeTab={activeTab}
+  onTabChange={setActiveTab}  // <-- ADD THIS PROP
+  // ... rest of props ...
+/>
+```
+
+**Status:** ⏳ **BLOCKER** — Must fix before production deployment
+
+**Impact:** Claw view unusable until prop is added
+
+---
+
+### 🔍 Other Potential Prop Wiring Issues to Monitor
+
+- [ ] Check all components receive required props from parent
+- [ ] Verify optional props have defaults or are passed from hooks
+- [ ] Review `SimpleApp` to ensure all `on*` handlers are wired correctly
+- [ ] Audit `TechnicalApp` for similar prop omissions
+- [ ] Validate `MobileTabBar` props match `ClawMobileTabBar`
+
+**Pattern for Prevention:**
+```tsx
+// Always pass handlers even if they're no-ops during development
+onTabChange={() => {}}  // or setActiveTab hook when available
+```
+
+---
+
+*This document is auto-updated during each validation run. Any discrepancies found during validation must be documented and resolved immediately.*
 ## 🔍 Individual File Verification Tracking
 
 
