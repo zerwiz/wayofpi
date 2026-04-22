@@ -236,7 +236,8 @@ export function App() {
                 <p>Workspace: {root || "No workspace"}</p>
               </div>
             )}
-          </main>
+           <div className="flex-1 p-4 text-gray-300">Unsupported mode</div>
+           </main>
 
           <StatusBar
             uiMode={mode}

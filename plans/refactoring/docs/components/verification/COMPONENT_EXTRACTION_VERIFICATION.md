@@ -643,10 +643,335 @@ src/
 - [ ] Add complete type safety for all components
 - [ ] Final integration testing
 - [ ] Performance optimization
+- [ ] **CRITICAL: Verify all extracted components render in UI**
+
+---
+
+## 🖥️ UI Completeness Verification
+
+### 🚨 CRITICAL REQUIREMENT
+**Every extracted component must be visible and functional in the final UI.**
+
+This verification ensures that all components extracted from the reference implementation are properly integrated into App.tsx and actually rendered for users to see and interact with.
+
+### ✅ Components Rendering Checklist
+
+Check each category below to confirm the component appears and functions in the UI:
+
+#### Core UI Components (Render Verification)
+- [ ] **Navigation Components** — File Explorer, Activity Bar, Status Bar visible
+- [ ] **Layout Components** — Main layout grid properly displayed
+- [ ] **Mode Components** — Simple/Claw/Technical modes each render correctly
+- [ ] **Content Components** — Editor panes, breadcrumbs, tab bar visible
+- [ ] **Shared Components** — Common UI elements accessible everywhere
+
+#### Menu Components (Render Verification)
+- [ ] **File Menu** — All items (New, Open, Save, etc.) appear in dropdown
+- [ ] **Edit Menu** — Edit commands (Undo, Redo, Find, Replace) visible
+- [ ] **View Menu** — Toggle options (Sidebar, Status Bar, Menu Bar) work
+- [ ] **Run/Debug Menu** — Debug controls rendered and functional
+- [ ] **Go Menu** — Navigation controls visible
+- [ ] **Help Menu** — Help items and About dialog accessible
+- [ ] **Command Palette** — Opens with Ctrl+Shift+P, shows all commands
+
+#### Modal Components (Render Verification)
+- [ ] **Setup Modals** — Error and setup dialogs display when triggered
+- [ ] **Feature Modals** — All feature modals render in overlay
+- [ ] **About Modal** — About dialog shows with repo info
+- [ ] **All 13 Modals** — Each modal opens and closes properly
+
+#### Mobile Components (Render Verification)
+- [ ] **Mobile Shell** — Mobile interface renders on smaller screens
+- [ ] **Mobile Navigation** — Mobile menu items accessible
+- [ ] **Mobile Editor** — Mobile editing interface displays
+
+#### Extension Components (Render Verification)
+- [ ] **Extension UI** — Extension panel visible when active
+- [ ] **Extension Items** — Extension items render in extension list
+- [ ] **Extension Icons** — Extension icons display correctly
+
+### 🔧 Integration Verification
+
+Each component must pass these checks:
+
+1. **Import Statement Present** — Component is imported in App.tsx
+2. **Props Passed Correctly** — All required props are supplied
+3. **Event Handlers Wired** — Click events and interactions work
+4. **Conditional Rendering** — Component shows when its mode is active
+5. **No Missing Dependencies** — All child components and hooks available
+6. **No Type Errors** — TypeScript compilation succeeds
+7. **Render Test Passed** — Component renders without errors in dev tools
+
+### 📊 Verification Results Summary
+
+```text
+Total Components to Verify: 70+ components + 13 modals + 7 menus
+Components Verified Rendering: [COUNT]
+Components Missing from UI: [COUNT]
+Critical Issues Found: [COUNT]
+```
+
+### 🚨 If Components Are Missing from UI
+
+1. Check if component is imported in App.tsx
+2. Verify props are correctly passed
+3. Ensure conditional rendering logic is correct
+4. Check for missing dependencies or hooks
+5. Look for TypeScript errors blocking render
+6. Add debugging console.log to trace component rendering
+
+**MANDATORY:** Before merging any refactoring commit, run the UI completeness test and confirm all components render.
+
+---
+
+
+### 🔧 Technical View Production Checklist
+
+#### ✅ Rendering & Integration
+- [ ] TechnicalWorkspaceGrid renders in Technical mode
+- [ ] TechnicalEditorColumn displays multiple files side-by-side
+- [ ] TechnicalPrimarySidebar shows primary side panel
+- [ ] TechnicalSidePanels contains all sub-panels (Search, SCM, Extensions, etc.)
+- [ ] TechnicalChatPanel shows chat interface when active
+- [ ] All technical dock regions properly mounted
+- [ ] Workspace grid layout persists and restores correctly
+- [ ] Tab switching between files works without errors
+
+#### ✅ Functionality Checks
+- [ ] File loading works from `/api/file` endpoints
+- [ ] Auto-save functionality enabled and working
+- [ ] Dirty state detection accurate for each file
+- [ ] Save operations properly call API and update state
+- [ ] Reload operations fetch fresh content
+- [ ] Discard unsaved changes works safely
+- [ ] Error handling displays user-friendly messages
+- [ ] Loading states show progress indicators
+- [ ] File type icons display correctly for different file types
+
+#### ✅ Panel Component Verification
+- [ ] SearchSidePanel filters files correctly
+- [ ] ScmSidePanel shows Git status properly
+- [ ] ExtensionsSidePanel loads and displays extension list
+- [ ] OrchestratorOnOffButtons toggle functionality works
+- [ ] TerminalSettingsSection displays terminal settings
+- [ ] PlanningSidePanel shows planning options
+- [ ] SettingsSidePanel loads configuration
+
+#### ✅ Component Props & Dependencies
+- [ ] All components receive correct props from TechnicalWorkspaceGrid
+- [ ] Event handlers properly wired between components
+- [ ] No prop type mismatches in TypeScript
+- [ ] All hooks (useFileEditor) properly initialized
+- [ ] Shared state correctly managed between columns
+
+#### ✅ UI/UX Quality Checks
+- [ ] Responsive layout adapts to window resize
+- [ ] Panel resizing works smoothly
+- [ ] Scroll synchronization between panels
+- [ ] Keyboard navigation works (Tab, Arrow keys)
+- [ ] Mouse wheel scrolling behaves correctly
+- [ ] Focus management prevents focus trapping
+- [ ] Click handlers have proper event prevention
+- [ ] Hover states and tooltips display
+
+#### ⚠️ Known Issues to Fix Before Production
+- [ ] Stage/commit UI not yet wired in SCM panel
+- [ ] Some extension toggle handlers may need refinement
+- [ ] Error boundary not fully implemented for all components
+- [ ] Performance optimization for large file trees pending
+- [ ] Accessibility attributes may need audit
+
+#### 📊 Production Readiness Score
+
+```text
+Technical View Components: [COUNT]
+Components Rendering: [COUNT] ✅
+Components With Issues: [COUNT] ⚠️
+Production Ready: [YES/NO]
+Blocker Issues: [LIST]
+```
+
+---
+
+### 🔧 Claw View Production Checklist
+
+#### ✅ Rendering & Integration
+- [ ] ClawApp renders in Claw mode
+- [ ] ClawNavRail displays navigation rail with all tabs
+- [ ] ClawMissionView shows mission dashboard when active
+- [ ] ClawChatView displays chat interface with file panel
+- [ ] ClawSchedulesView renders calendar and schedules
+- [ ] ClawChannelsView shows Telegram/Webhook/Email cards
+- [ ] ClawWorkspaceOnboardingModal appears for new workspaces
+- [ ] All tab switching between Mission/Chat/Team/Schedule/Channels/Files works
+- [ ] Mobile tab bar renders on narrow screens
+
+#### ✅ Functionality Checks
+- [ ] Mission tab: Activity status updates correctly
+- [ ] Chat tab: Messages stream and queue properly
+- [ ] Schedule tab: Calendar displays events correctly
+- [ ] Channels tab: All integration badges show correct status
+- [ ] Files tab: File tree filters and selects files
+- [ ] Team tab: Agent list and team management works
+- [ ] Settings modal opens and displays options
+- [ ] Help modal shows all help sections
+- [ ] Workspace onboarding flow completes successfully
+- [ ] Auto-save for .claw files works correctly
+- [ ] Error handling displays user-friendly messages
+
+#### ✅ Component Props & Dependencies
+- [ ] All components receive correct props from ClawApp
+- [ ] Event handlers properly wired between components
+- [ ] No prop type mismatches in TypeScript
+- [ ] All hooks (useClawWorkspace, useClawSchedules, etc.) properly initialized
+- [ ] Shared state correctly managed between views
+- [ ] Telegram/automation status hooks fetch correctly
+
+#### ✅ UI/UX Quality Checks
+- [ ] Responsive layout adapts to window resize
+- [ ] Panel resizing works smoothly
+- [ ] Scroll synchronization between panels
+- [ ] Keyboard navigation works (Tab, Arrow keys)
+- [ ] Mouse wheel scrolling behaves correctly
+- [ ] Focus management prevents focus trapping
+- [ ] Click handlers have proper event prevention
+- [ ] Hover states and tooltips display
+- [ ] Dark/light theme switching works correctly
+- [ ] Mobile view transitions smoothly
+
+#### ⚠️ Known Issues to Fix Before Production
+- [ ] Some Telegram webhook integrations may need retry logic
+- [ ] Schedule calendar needs better timezone handling
+- [ ] File panel sync between chat and files needs optimization
+- [ ] Automation status updates could be more frequent
+- [ ] Onboarding flow could be more informative
+
+#### 📊 Production Readiness Score
+
+```text
+Claw View Components: [COUNT]
+Components Rendering: [COUNT] ✅
+Components With Issues: [COUNT] ⚠️
+Production Ready: [YES/NO]
+Blocker Issues: [LIST]
+```
+
+---
+
+
+
+## 🔧 Simple View Production Checklist
+
+#### ✅ Rendering & Integration
+- [ ] SimpleApp renders in Simple mode
+- [ ] SimpleNavRail displays navigation rail with all tabs (Chat, Team, Models, Projects, Documents, Settings)
+- [ ] SimpleChatView shows chat interface with agent picker
+- [ ] SimpleTeamView displays agent catalog and team management
+- [ ] SimpleModelsView renders AI models list
+- [ ] SimpleProjectsView shows workspace and recent folders
+- [ ] SimpleFilePanel displays file editor with markdown/source toggle
+- [ ] SimpleFileTree shows project file explorer
+- [ ] SimpleRightPanel renders file tree and timeline
+- [ ] SimpleSettingsView displays theme and configuration options
+- [ ] Mobile tab bar renders on narrow screens
+
+#### ✅ Functionality Checks
+- [ ] Chat tab: WebSocket connection and message streaming works
+- [ ] Team tab: Agent roster loads and editing functions correctly
+- [ ] Models tab: Provider/model list fetches from `/api/models`
+- [ ] Projects tab: Workspace switching works, recent folders load
+- [ ] Documents tab: Indexing and docs modal opens (server-side)
+- [ ] File editing: Save, undo, discard unsaved changes work
+- [ ] Markdown preview: Preview/source toggle functions
+- [ ] Image/SVG/Mermaid previews: Render correctly in editor
+- [ ] Git integration: Status badges show in file tree
+- [ ] File drag-and-drop: Move files between directories works
+- [ ] Error handling: User-friendly messages for common errors
+- [ ] Keyboard shortcuts: Tab switching, save (Ctrl+Enter) work
+
+#### ✅ Component Props & Dependencies
+- [ ] All components receive correct props from SimpleApp
+- [ ] Event handlers properly wired between components
+- [ ] No prop type mismatches in TypeScript
+- [ ] All hooks (useSimplePreferences, useClawWorkspace, etc.) properly initialized
+- [ ] Shared state correctly managed between views
+- [ ] Agent picker functions correctly
+- [ ] File tree state persists properly
+
+#### ✅ UI/UX Quality Checks
+- [ ] Responsive layout adapts to window resize
+- [ ] Panel resizing works smoothly
+- [ ] Scroll synchronization between panels
+- [ ] Keyboard navigation works (Tab, Arrow keys)
+- [ ] Mouse wheel scrolling behaves correctly
+- [ ] Focus management prevents focus trapping
+- [ ] Click handlers have proper event prevention
+- [ ] Hover states and tooltips display
+- [ ] Dark/light theme switching works correctly
+- [ ] Mobile view transitions smoothly
+
+#### ⚠️ Known Issues to Fix Before Production
+- [ ] Some agent team operations may need error handling refinement
+- [ ] Models tab needs better loading state for large provider lists
+- [ ] File drag-and-drop could have better visual feedback
+- [ ] Git status update frequency could be optimized
+
+#### 📊 Production Readiness Score
+
+```text
+Simple View Components: [COUNT]
+Components Rendering: [COUNT] ✅
+Components With Issues: [COUNT] ⚠️
+Production Ready: [YES/NO]
+Blocker Issues: [LIST]
+```
+
+---
+
+## 🔧 Docs View Production Checklist (IN PROGRESS)
+
+#### 🚧 Current Status
+**NOTE:** The Docs view is still being built and is not yet production-ready. This checklist tracks the development progress.
+
+#### ✅ Planned Components (Under Construction)
+- [ ] DocsApp — Main docs shell component
+- [ ] DocsNavRail — Navigation for docs sections
+- [ ] DocsContentView — Main content display area
+- [ ] DocsSearchView — Search functionality for documentation
+- [ ] DocsReferenceView — API reference documentation viewer
+- [ ] DocsTutorialView — Tutorial-based learning path
+- [ ] DocsSettingsView — Documentation preferences and theme
+
+#### 🚧 Implementation Status
+- [ ] Documentation structure defined ✅
+- [ ] Component architecture planned
+- [ ] [ ] Components implemented
+- [ ] [ ] Props and interfaces defined
+- [ ] [ ] Event handlers wired
+- [ ] [ ] Error handling implemented
+- [ ] [ ] User-facing tests passed
+
+#### 🚧 Known Issues to Fix Before Production
+- [ ] Docs view not yet implemented
+- [ ] [ ] Search indexing not yet built
+- [ ] [ ] Reference documentation not yet generated
+- [ ] [ ] Tutorial content not yet authored
+- [ ] [ ] Performance optimization pending
+
+#### 📊 Production Readiness Score
+
+```text
+Docs View Components: [COUNT]
+Components Rendering: [COUNT] ✅
+Components With Issues: [COUNT] ⚠️
+Production Ready: [NO] (Under Construction)
+Blocker Issues: [LIST]
+```
 
 ---
 
 ## 🔍 Individual File Verification Tracking
+
 
 This section tracks the verification of each extracted component file against its requirements from the verification document. Each file is verified for:
 

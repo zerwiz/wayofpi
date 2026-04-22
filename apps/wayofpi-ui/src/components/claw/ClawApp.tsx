@@ -935,7 +935,7 @@ export function ClawApp({
           ) : (
             (() => {
               const mod = getClawUiModule(activeTab);
-              return mod ? mod.render(clawModuleContext) : null;
+               return mod ? mod.render(clawModuleContext) : <div className="p-4 text-gray-300">Unsupported mode</div>;
             })()
           )}
         </div>
