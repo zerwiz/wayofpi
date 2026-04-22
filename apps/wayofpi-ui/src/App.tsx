@@ -37,6 +37,7 @@ import { NewPlanFileModal } from "./components/NewPlanFileModal";
 import { NewWorkspaceFileModal } from "./components/NewWorkspaceFileModal";
 
 import { TechnicalChatPanel } from "./components/technical/TechnicalChatPanel";
+import DocsApp from "./components/documenthandler/DocsApp";
 import { DebugPanel } from "./components/technical/DebugPanel";
 import { PlanReview } from "./components/technical/PlanReview";
 import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalysisContext";
