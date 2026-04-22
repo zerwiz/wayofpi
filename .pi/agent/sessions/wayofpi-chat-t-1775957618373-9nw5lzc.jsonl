@@ -1,0 +1,5 @@
+{"type":"session","kind":"wayofpi-web","id":"t-1775957618373-9nw5lzc","workspace":"/home/zerwiz/CodeP/Way of pi","createdAt":"2026-04-12T02:12:36.743Z","engine":"wayofpi-bun-chat"}
+{"type":"message","message":{"role":"user","content":"hi","createdAt":"2026-04-12T02:12:36.743Z"}}
+{"type":"message","message":{"role":"assistant","content":"Hello! I'm **Claw**, the operator-facing agent for **Way of Pi**. I can help you with:\n\n- Workspace operations (files, git, bash)\n- Skills and extensions for Pi\n- Telegram channel setup (via `pi-telegram` extension)\n- Agent teams and roster management\n- Workspace context (SOUL.md, AGENTS.md, TOOLS.md, etc.)\n\nWhat would you like to get done today?","createdAt":"2026-04-12T02:12:36.743Z"}}
+{"type":"message","message":{"role":"user","content":"hi","createdAt":"2026-04-12T02:12:36.743Z"}}
+{"type":"message","message":{"role":"assistant","content":"Hi! 👋 I'm here to help with your Way of Pi session. What's on your mind today? Need help with:\n\n- Files and workspace ops\n- Git work and commits\n- Setting up skills or extensions\n- Anything else","createdAt":"2026-04-12T02:12:36.743Z"}}

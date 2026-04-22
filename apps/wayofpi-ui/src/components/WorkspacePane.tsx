@@ -761,20 +761,22 @@ export const WorkspacePane = forwardRef<WorkspaceEditorRef, WorkspacePaneProps>(
                           Save
                         </button>
                       ) : null}
-                      <button
-                        type="button"
-                        draggable={false}
-                        className="rounded p-0.5 text-[#858585] opacity-0 hover:bg-[#3c3c3c] hover:text-[#cccccc] group-hover:opacity-100"
-                        title={
-                          entry.type === "tool" ? "Close panel" : "Close tab"
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCloseTab(entry);
-                        }}
-                      >
-                        <X size={14} strokeWidth={2} />
-                      </button>
+                      {entry.type === "tool" && entry.id !== "terminal" && (
+                        <button
+                          type="button"
+                          draggable={false}
+                          className="rounded p-0.5 text-[#858585] opacity-0 hover:bg-[#3c3c3c] hover:text-[#cccccc] group-hover:opacity-100"
+                          title={
+                            entry.type === "tool" ? "Close panel" : "Close tab"
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCloseTab(entry);
+                          }}
+                        >
+                          <X size={14} strokeWidth={2} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

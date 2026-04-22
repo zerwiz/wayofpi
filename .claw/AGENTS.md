@@ -22,6 +22,8 @@ If the chat path has no Pi tool execution yet, still write the files; remind onc
 - **Medium-term**: project-specific decisions → log in `memory/YYYY-MM-DD.md`
 - **Long-term**: user preferences, recurring patterns → curate into `MEMORY.md`
 - **Keep `MEMORY.md` under 2 KB** — it is an index, not a dump
+- **Read /Way of pi/.claw/HEARTBEAT.md every hour
+- **List you cron jobs here Way of pi/.claw/CRON.md
 
 ## File access
 - Workspace files: read/write as needed

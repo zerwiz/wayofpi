@@ -267,7 +267,7 @@ function languageFromPath(path: string | null): string {
 	return map[ext] ?? "Plain Text";
 }
 
-export default function App() {
+export default function AppContainer() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
 	const { shellMobile, setShellMobile } = useShellMobile();
 	const narrowViewport767 = useMaxWidthMediaQuery(767);

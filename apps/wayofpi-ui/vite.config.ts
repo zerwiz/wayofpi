@@ -127,7 +127,7 @@ function wayofpiDevStartApiPlugin(): Plugin {
 							JSON.stringify({
 								ok: false,
 								staleServer: true,
-								message: `Port ${port} responds to /api/health but not this app’s current API (missing capabilities.workspaceProblems, configRuntimePost, clawHostTreeGet, and/or clawTelegramStatusGet — old Bun). Stop the old process (macOS: lsof -nP -iTCP:${port} | grep LISTEN; Linux: ss -tlnp | grep ${port}), then click Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
+								message: `Port ${port} responds to /api/health but not this app's current API (missing capabilities.workspaceProblems, configRuntimePost, clawHostTreeGet, and/or clawTelegramStatusGet — old Bun). Stop the old process (macOS: lsof -nP -iTCP:${port} | grep LISTEN; Linux: ss -tlnp | grep ${port}), then click Start service again, or: cd apps/wayofpi-ui && bun run server/index.ts`,
 							}),
 						);
 						return;
@@ -203,6 +203,11 @@ const viteDevPort = /^\d+$/.test(vitePortEnv)
 
 export default defineConfig({
 	plugins: [wayofpiTunnelGatePlugin(), wayofpiDevStartApiPlugin(), react()],
+	resolve: {
+		alias: {
+			"@": path.join(__dirname, "./src"),
+		},
+	},
 	server: {
 		host: viteServerHost,
 		port: viteDevPort,
