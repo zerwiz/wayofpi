@@ -1,6 +1,6 @@
 /**
  * TerminalInput - Real inline terminal editing
- * Tracks cursor position and handles keyboard events
+ * Uses textarea/contentEditable with cursor tracking
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -14,111 +14,242 @@ export const TerminalInput = ({
   cursorPosition = { x: 0, y: 0 },
   onInput,
   onExecute,
-  onBackspace,
-  onArrowLeft,
-  onArrowRight,
   onCancel,
   disabled = false,
   prompt = '$ ',
 }) => {
   const textareaRef = useRef(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [promptLength, setPromptLength] = useState(prompt?.length || 0);
 
   useEffect(() => {
+    setPromptLength(prompt?.length || 0);
     if (textareaRef.current) {
       textareaRef.current.value = value;
+      
+      // Move cursor to prompt length (position after prompt)
+      textareaRef.current.setSelectionRange(promptLength, promptLength);
+      
+      // Ensure cursor is at correct position after text changes
+      const newValue = value;
+      const newCursorPos = Math.max(0, Math.min(newValue.length, promptLength));
+      textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
     }
   }, [value]);
 
   /**
-   * Move cursor left
+   * Handle keyboard events
    */
-  const [cursorOffset, setCursorOffset] = useState(value.length - prompt.length);
-
-  /**
-   * Move cursor right
-   */
-  const handleArrowRight = () => {
-    const newValue = value.slice(0, cursorOffset) + ' ' + value.slice(cursorOffset);
-    setCursorOffset(cursorOffset + 1);
-  };
-
-  /**
-   * Move cursor left
-   */
-  const handleArrowLeft = () => {
-    const newValue = value.slice(0, cursorOffset - 1) + ' ' + value.slice(cursorOffset - 1);
-    setCursorOffset(cursorOffset - 1);
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      
+      if (onExecute) {
+        onExecute(newValue);
+        // Clear input and update buffer
+        handleExecuteAndClear();
+      }
+      
+      if (event.ctrlKey && event.key === 'c') {
+        // Ctrl+C - Cancel command
+        onCancel();
+      }
+      
+      if (event.ctrlKey && event.key === 'z') {
+        // Ctrl+Z - Suspend (send ^Z)
+        session.ptySlave.write('\x1a');
+        
+        onCancel();
+      }
+      
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        onCancel();
+      }
+      
+      return;
+    }
+    
+    // Arrow key handling
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      moveCursor(-1);
+      return;
+    }
+    
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      moveCursor(1);
+      return;
+    }
+    
+    if (event.key === 'Home') {
+      event.preventDefault();
+      moveCursor(-(value.length - promptLength));
+      return;
+    }
+    
+    if (event.key === 'End') {
+      event.preventDefault();
+      moveCursor(value.length - promptLength);
+      return;
+    }
+    
+    // Backspace
+    if (event.key === 'Backspace') {
+      event.preventDefault();
+      deleteCursor(-1);
+      return;
+    }
+    
+    // Delete key
+    if (event.key === 'Delete') {
+      event.preventDefault();
+      deleteCursor(0); // Delete character after cursor
+      return;
+    }
+    
+    // Tab key
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      // Tab completion logic
+    }
+    
+    // Ctrl+Left/Right - Word boundaries
+    if (event.ctrlKey) {
+      if (event.key === 'Left') {
+        event.preventDefault();
+        moveCursorToPreviousWord();
+      }
+      
+      if (event.key === 'Right') {
+        event.preventDefault();
+        moveCursorToNextWord();
+      }
+    }
   };
 
   /**
    * Handle input changes for text input
    */
-  const handleInputChange = (text) => {
-    const newValue = value + text;
-    onInput(newValue, { x: newValue.length - prompt.length, y: 0 });
+  const handleInputChange = (event) => {
+    const newValue = event.target.value;
+    const newPos = getCursorPosition(event);
+    
+    onInput(newValue, newPos);
+    setNewValue(value);
+    setNewCursorPos(cursor);
   };
 
   /**
-   * Handle backspace
+   * Get cursor position from textarea
    */
-  const handleBackspace = () => {
-    const newValue = value.slice(0, value.length - 1) + value.slice(value.length);
-    onInput(newValue, { x: value.length - 2 - prompt.length, y: 0 });
-  };
-
-  /**
-   * Handle Enter (execute command)
-   */
-  const [executeValue, setExecuteValue] = useState('');
-
-  /**
-   * Execute command
-   */
-  const handleExecute = () => {
-    if (executeValue) {
-      onExecute(executeValue);
+  const getCursorPosition = (event) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return { x: 0, y: 0 };
+    
+    const value = textarea.value;
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+    
+    // Calculate row and column
+    const rows = value.split('\n');
+    let y = 0;
+    let x = 0;
+    
+    for (let i = 0; i < rows.length; i++) {
+      const rowLength = rows[i].length;
+      
+      if (i < y) {
+        x = 0;
+        y++;
+      } else if (i > y) {
+        x = 0;
+        y++;
+      } else if (rowLength === x) {
+        x = 0;
+        y++;
+      } else if (selectionStart === rowLength + x) {
+        x = 0;
+        y++;
+      } else {
+        x = selectionStart - (value.substr(0, selectionStart).lastIndexOf('\n'));
+      }
     }
+    
+    return { x, y };
   };
 
   /**
-   * Cancel command
+   * Move cursor by offset
    */
-  const handleCancel = () => {
-    onCancel();
+  const moveCursor = (offset) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const value = textarea.value;
+    const cursorPos = Math.max(promptLength + offset, 0);
+    const newPosition = Math.min(cursorPos, value.length);
+    textarea.setSelectionRange(newPosition, newPosition);
   };
 
   /**
-   * Move cursor to beginning
+   * Delete character before cursor
    */
-  const handleHome = () => {
-    setCursorOffset(0);
+  const deleteCursor = (offset) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const value = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const newValue = value.slice(0, cursorPos + offset) + value.slice(cursorPos + offset + 1);
+    textarea.value = newValue;
+    textarea.setSelectionRange(cursorPos + offset, cursorPos + offset);
   };
 
   /**
-   * Move cursor to end
+   * Move to beginning
    */
-  const handleEnd = () => {
-    setCursorOffset(value.length - prompt.length);
+  const moveCursorToPreviousWord = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const value = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const wordStart = value.lastIndexOf(' ', cursorPos);
+    moveCursor(cursorPos - wordStart - 1);
+  };
+
+  /**
+   * Move to next word
+   */
+  const moveCursorToNextWord = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const value = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const wordEnd = value.indexOf(' ', cursorPos);
+    moveCursor(wordEnd !== -1 ? wordEnd + 1 : cursorPos);
   };
 
   return (
     <div className="terminal-prompt">
       <span>{prompt}</span>
       <textarea
+        ref={textareaRef}
         value={value}
-        onChange={(e) => handleInputChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft') handleArrowLeft();
-          if (e.key === 'ArrowRight') handleArrowRight();
-          if (e.key === 'Backspace') handleBackspace();
-          if (e.key === 'Home') handleHome();
-          if (e.key === 'End') handleEnd();
-          if (e.key === 'Enter') handleExecute();
-          if (e.ctrlKey && e.key === 'c') handleCancel();
-        }}
-        onFocus={setCursorOffset}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         disabled={disabled}
         className="terminal-input"
+        style={{
+          width: '100%',
+          fontFamily: 'monospace',
+          cursor: 'text',
+        }}
       />
     </div>
   );

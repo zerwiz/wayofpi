@@ -35,6 +35,28 @@ If you use these three together, you transform a basic AI chatbot into a profess
 - **Memory tool** – ensures the AI remembers your goals efficiently.
 - **Hints tool** – prevents local models from crashing when the conversation gets too deep.
 
+## Integration
+
+To integrate this Memory & Context Management System into your Way of Pi configuration, copy the three TypeScript files into your `.pi/extensions` directory:
+
+```bash
+# These three files form a complete, robust Memory and Context Management System
+/home/zerwiz/CodeP/Way of pi/ref/context-local-hints.ts
+/home/zerwiz/CodeP/Way of pi/ref/session-replay.ts
+/home/zerwiz/CodeP/Way of pi/ref/session-memory.ts
+
+# Copy them to .pi/extensions:
+cp /home/zerwiz/CodeP/Way of pi/ref/context-local-hints.ts /home/zerwiz/CodeP/Way of pi/.pi/extensions/
+cp /home/zerwiz/CodeP/Way of pi/ref/session-replay.ts /home/zerwiz/CodeP/Way of pi/.pi/extensions/
+cp /home/zerwiz/CodeP/Way of pi/ref/session-memory.ts /home/zerwiz/CodeP/Way of pi/.pi/extensions/
+```
+
+Once copied, the AI will automatically pick them up as extensions, activating:
+
+- **Session Replay** (`session-replay.ts`) – visible timeline via `/replay` command
+- **Session Memory** (`session-memory.ts`) – keeps history concise and relevant
+- **Context Local Hints** (`context-local-hints.ts`) – warns you before context fills up
+
 ---
 
 *Document generated on `2026-04-23` for the Way of Pi project.*

@@ -74,3 +74,7 @@ flowchart LR
 ## 6. Maintenance
 
 When the **positioning** of the product changes (for example, default chat engine or major UI mode), update this overview in the same pass as **[WOP_PRODUCT_CAPABILITIES.md](WOP_PRODUCT_CAPABILITIES.md)** and the **Way of Pi** bullets in root **[README.md](../README.md)** so newcomers do not drift across three stories.
+
+## 7. Governance (CABA)
+
+The **CABA** framework governs how new capabilities are introduced and reviewed. Ensure that any new capability added to this repository is documented in the CABA checklist and that the corresponding entry is added to `CABA.md`. This helps maintain consistency and traceability.

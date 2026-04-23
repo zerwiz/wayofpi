@@ -3,10 +3,10 @@
  * Exports all terminal-related components
  */
 
-export { TerminalInput } from './TerminalInput.js';
-export { TerminalRow } from './TerminalRow.js';
-export { LogsPanel } from './LogsPanel.js';
-export { TerminalBuffer } from './TerminalBuffer.js';
+export { TerminalInput } from './TerminalInput.jsx';
+export { TerminalRow } from './TerminalRow.jsx';
+export { LogsPanel } from './LogsPanel.jsx';
+export { TerminalBuffer } from './TerminalBuffer.jsx';
 
 /**
  * Server imports for PTY management

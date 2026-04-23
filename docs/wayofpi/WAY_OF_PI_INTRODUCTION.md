@@ -94,4 +94,14 @@ Sometimes you want a **temporary public `https` link** to the computer where Way
 
 ---
 
+## 8. Governance (CABA)
+
+The **CABA** framework (Capability Assurance & Boundedness Architecture) outlines how new capabilities are reviewed, documented, and bounded. For each new capability added to Way of Pi, ensure:
+
+- It is listed in the **CABA checklist** (`CABA_CHECKLIST.md`).
+- The entry is added to the **CABA log** (`docs/wayofpi/CABA.md`).
+- The capability’s documentation references the CABA entry and the relevant workspace scope.
+
+This ensures traceability, safety, and clear ownership for future contributions.
+
 *This is Way of Pi. Meet your AI assistant's control center.*

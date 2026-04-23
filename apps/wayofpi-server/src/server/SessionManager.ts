@@ -1,199 +1,165 @@
+#!/usr/bin/env node
 /**
- * Session Manager - Background server for terminal sessions
- * Implements PTY-based architecture with session persistence
+ * SessionManager - Way of Pi Terminal Server
+ * Handles WebSocket connections and PTY-based terminal sessions
  */
 
-import net from 'net';
-import WebSocket from 'ws';
-import { posix_openpt, forkpty, readlink, kill } from 'node:pty';
+import WebSocket, { WebSocketServer } from 'ws';
+import { spawn } from 'child_process';
 
-type SocketConnection = net.Socket & { peerAddress: string };
+const PORT = Number(process.env.WOP_SERVER_PORT) || 3333;
+const HOST = process.env.WOP_SERVER_HOST || 'localhost';
+const MAX_HISTORY = 256;
 
-/**
- * Terminal Session - One PTY instance per session
- */
-interface TerminalSession {
+interface Session {
   id: string;
-  ptyMasterFd: number;
-  ptySlaveFd: number;
-  shellProcess: ReturnType<typeof forkpty>;
-  buffer: string[];
-  connected: boolean;
-  createdAt: number;
+  ws: WebSocket;
+  child: ReturnType<typeof spawn> | null;
+  history: string[MAX_HISTORY];
+  historyIndex: number;
 }
 
-/**
- * Session Manager - Background server
- * Stays alive even when all clients disconnect
- */
-class SessionManager {
-  private sessions = new Map<string, TerminalSession>();
-  private readonly PORT = 3333; // WebSocket port
-  private server: net.Server;
-  private wss: WebSocket.Server;
-  private screenBuffers = new Map<string, ScreenBuffer>();
+// Create a new terminal session
+const createSession = (): Session => {
+  const sessionId = `session_${Date.now()}`;
+  
+  // Create a Bash shell process
+  const child = spawn('bash', [], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: { ...process.env },
+    cwd: process.cwd(),
+  });
 
-  constructor() {
-    // Create WebSocket server for client connections
-    this.server = net.createServer();
-    this.wss = new WebSocket.Server({ server: this.server });
-    
-    this.wss.on('connection', (socket) => {
-      console.log(`Client connected from ${socket.remoteAddress}`);
-      
-      socket.on('message', (data, websocket) => {
-        this.handleMessage(data, websocket);
-      });
-      
-      socket.on('close', () => {
-        console.log(`Client disconnected. Sessions remain active.`);
-      });
-    });
-    
-    // Start server
-    this.server.listen(this.PORT, () => {
-      console.log(`Terminal server listening on port ${this.PORT}`);
-    });
-  }
+  return {
+    id: sessionId,
+    ws: null! as WebSocket,
+    child,
+    history: new Array(MAX_HISTORY).fill(''),
+    historyIndex: -1,
+  };
+};
 
-  /**
-   * Create new terminal session
-   */
-  createSession(prompt = 'bash'): string {
-    // Open PTY pair (PTY Master/Slave)
-    const ptyMasterFd = posix_openpt();
-    const ptySlaveFd = ptyMasterFd; // Simplified for TypeScript
-    
-    // Fork shell process on PTY slave
-    const shellProcess = forkpty(ptySlaveFd, prompt, {
-      cwd: '/home/user',
-      env: process.env,
-      columns: 80,
-      rows: 24,
-    });
-    
-    // Create buffer for this session
-    const screenBuffer = new ScreenBuffer(80, 24);
-    this.screenBuffers.set(ptyMasterFd, screenBuffer);
-    
-    const session: TerminalSession = {
-      id: crypto.randomUUID(),
-      ptyMasterFd,
-      ptySlaveFd,
-      shellProcess,
-      buffer: [],
-      connected: true,
-      createdAt: Date.now(),
-    };
-    
-    this.sessions.set(session.id, session);
-    console.log(`Created new session: ${session.id}`);
-    
-    return session.id;
-  }
+// Main server setup
+const sessions = new Map<string, Session>();
 
-  /**
-   * Get session by ID
-   */
-  getSession(sessionId: string): TerminalSession | null {
-    return this.sessions.get(sessionId) || null;
-  }
+const wss = new WebSocketServer({ 
+  port: PORT,
+  host: HOST,
+});
 
-  /**
-   * Handle incoming client message
-   */
-  handleMessage(data: string | Buffer, websocket: WebSocket): void {
-    // Parse and handle command
-    const sessionId = websocket.socket;
-    const session = this.sessions.get(sessionId as string);
-    
-    if (!session) {
-      websocket.send(JSON.stringify({
-        error: 'Session not found',
-        timestamp: new Date().toISOString(),
-      }));
-      return;
-    }
+wss.on('connection', (ws: WebSocket) => {
+  const session = createSession();
+  sessions.set(session.id, session);
+  
+  console.log(`[SESSION] Connected: ${session.id}`);
 
-    // Send message to PTY master (echoes to shell)
-    session.ptySlaveFd.write(data);
-    
-    // Read PTY output
-    let output = '';
+  // Send welcome message
+  setTimeout(() => {
+    const prompt = `$\x1b[0m $ `;
+    ws.send(`\x1b[?25h${prompt}`); // Show cursor
+  }, 100);
+
+  // Handle incoming messages
+  ws.on('message', (data: Buffer) => {
     try {
-      output = session.ptyMasterFd.read();
+      const input = data.toString().trim();
+      
+      if (input.startsWith('\x1b[1;3')) {
+        // Skip styling codes
+        return;
+      }
+
+      if (input === '') return;
+
+      console.log(`[${session.id}] Command: ${input}`);
+
+      // Send to shell
+      session.child?.stdin.write(input + '\n');
+
+      // Capture output
+      (process.stdout as any).read();
+      session.child?.stdout.read((chunk: string) => {
+        if (chunk) ws.send(chunk);
+      });
+
+      // History management
+      if (input.startsWith('^\x1b')) {
+        // Keyboard shortcut - update history
+      }
     } catch (err) {
-      console.error('Error reading PTY output:', err);
+      console.error(`[${session.id}] Error:`, err);
     }
-    
-    websocket.send(JSON.stringify({
-      output,
-      sessionId,
-      timestamp: new Date().toISOString(),
-    }));
-  }
+  });
 
-  /**
-   * Handle session creation requests
-   */
-  handleSessionCreate(): { session: string; output: string } {
-    const sessionId = this.createSession('bash');
-    const session = this.sessions.get(sessionId);
-    
-    return {
-      session: sessionId,
-      output: session?.ptyMasterFd.read() || '',
-    };
-  }
+  // Handle close
+  ws.on('close', () => {
+    console.log(`[SESSION] Disconnected: ${session.id}`);
+    cleanup(session);
+  });
 
-  /**
-   * Handle window resize
-   */
-  handleResize(sessionId: string, newRows: number, cols: number): void {
-    const session = this.sessions.get(sessionId);
-    if (!session) return;
-    
-    // Send window size change to shell
-    const ws = new winsize({
-      ws_row: newRows,
-      ws_col: cols,
-      ws_xpixel: 0,
-      ws_ypixel: 0,
+  // Handle errors
+  ws.on('error', (err: Error) => {
+    console.error(`[${session.id}] WebSocket error:`, err.message);
+  });
+});
+
+const cleanup = (session: Session) => {
+  if (session.child) {
+    session.child.kill();
+  }
+  sessions.delete(session.id);
+};
+
+// Graceful shutdown
+const shutdown = () => {
+  console.log('\n[SIGNAL] Shutting down gracefully...');
+  for (const [, session] of sessions) {
+    session.child?.kill();
+  }
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// Health check endpoint
+const healthHandler = () => {
+  const response = JSON.stringify({
+    service: 'wayofpi-ui-server',
+    uptime: process.uptime(),
+    sessions: sessions.size,
+  });
+  return response;
+};
+
+wss.on('listening', () => {
+  console.log(`\n=== Way of Pi Server ===`);
+  console.log(`[INFO] Listening on ws://${HOST}:${PORT}/`);
+  console.log(`[INFO] Health: http://${HOST}:${PORT}/api/health`);
+  console.log(`[INFO] Max History: ${MAX_HISTORY} lines\n`);
+});
+
+// API health endpoint
+wss.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[ERROR] Port ${PORT} is in use. Check existing processes.`);
+    // Health check still works via HTTP server on same port
+    const http = require('http');
+    const httpServer = http.createServer((req, res) => {
+      if (req.url === '/api/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok' }));
+        return;
+      }
+      res.writeHead(404);
+      res.end();
     });
-    
-    write(session.ptySlaveFd, '\x1b[?25 h  // Show cursor');
+    httpServer.listen(PORT);
+  } else {
+    console.error(`[ERROR] Server error:`, err);
   }
+});
 
-  /**
-   * Handle SIGWINCH (window resize signal)
-   */
-  handleSIGWINCH(sessionId: string, newRows: number, cols: number): void {
-    // Program like htop/top will auto-resize based on new size
-    this.handleResize(sessionId, newRows, cols);
-  }
 
-  /**
-   * Handle SIGHUP (send hangup signal)
-   */
-  handleSIGHUP(sessionId: string): void {
-    // Mask SIGHUP to keep sessions alive
-    // Sessions don't die when client disconnects
-  }
-
-  /**
-   * Terminate session
-   */
-  terminateSession(sessionId: string): void {
-    const session = this.sessions.get(sessionId);
-    if (!session) return;
-    
-    this.sessions.delete(sessionId);
-    if (shellProcess) {
-      kill(shellProcess);
-    }
-  }
-}
-
-// Export for use
-export default SessionManager;
-export { TerminalSession };

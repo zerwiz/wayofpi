@@ -1,86 +1,81 @@
-#!/usr/bin/env tsx
+import { createServer, Server } from 'http';
+import { WebSocketServer } from 'ws';
+import { spawn } from 'child_process';
 
-/**
- * Vite WebSocket Server with PTY Integration
- * 
- * This server serves the Vite dev server AND auto-starts the PTY server.
- */
+const PORT = Number(process.env.WOP_SERVER_PORT) || 3333;
+const HOST = process.env.WOP_SERVER_HOST || '127.0.0.1';
 
-import { createServer } from 'vite';
-import { fork } from 'node:child_process';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import type Server from 'koa';
+const httpServer = createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/api/health') {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({
+      service: 'wayofpi-ui-server',
+      port: PORT,
+      pid: process.pid,
+    }, null, 2));
+    return;
+  }
 
-// __dirname for ES modules
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const PORT = 4545;
-const PTY_PORT = 3333;
-
-// Start PTY server in background
-console.log('[Vite Server] Starting PTY server...');
-
-// Fork PTY server in background
-const ptyProc = fork('ts-node apps/wayofpi-server/src/server/SessionManager.ts', [
-  '-p', String(PTY_PORT),
-], {
-  stdio: 'inherit',
-  env: {
-    ...process.env,
-    PRODUCTION: 'false',
-  },
+  res.writeHead(404);
+  res.end('Not Found');
 });
 
-console.log(`[Vite Server] PTY server started on port ${PTY_PORT}`);
-console.log('[Vite Server] Main server starting...');
+const wss = new WebSocketServer({ 
+  server: httpServer,
+  path: '/api/session',
+});
 
-let viteServer: Server;
+const terminals = new Map<string, ReturnType<typeof spawn> | null>();
 
-async function startServer() {
-  viteServer = await createServer({
-    appType:'spa',
+httpServer.listen(PORT, HOST, () => {
+  console.log(`[Server] Running on ws://${HOST}:${PORT}/api/session`);
+  console.log(`[Server] Health: http://${HOST}:${PORT}/api/health`);
+  console.log(`[Server] PID: ${process.pid}\n`);
+});
+
+function spawnShell() {
+  return spawn('bash', [], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: { ...process.env },
   });
-
-  // Add Vite middleware for file serving
-  viteServer.middlewares.use(async (req, res, next) => {
-    const url = `http://localhost:${PORT}${req.url || ''}`;
-    if (req.url?.endsWith('.html')) {
-      return res.end(`
-        <!DOCTYPE html>
-        <html>
-        <head><title>Way of Pi Terminal</title></head>
-        <body style="display:flex;gap:10px">
-          <div style="width:100%;height:400px;background:#1e1e1e;overflow:hidden">
-            <iframe src="${url}" style="width:100%;height:100%;border:none"></iframe>
-          </div>
-          <iframe 
-            src="ws://localhost:${PTY_PORT}/websocket" 
-            style="flex:1;resize:both;border:none"
-            sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation allow-top-navigation"
-          ></iframe>
-        </body>
-        </html>
-      `);
-    }
-    next();
-  });
-
-  // Add WebSocket proxy
-  viteServer.middlewares.use(async (req, res, next) => {
-    if (req.url?.startsWith('/ws')) {
-      return; // Let main WebSocket handler deal with it
-    }
-    next();
-  });
-
-  await viteServer.listen(PORT, '0.0.0.0');
-  console.log(`[Vite Server] Vite dev server running at http://localhost:${PORT}`);
-  console.log(`[Vite Server] PTY WebSocket at ws://localhost:${PTY_PORT}/websocket`);
 }
 
-startServer().catch((err) => {
-  console.error('[Vite Server] Failed to start:', err);
-  ptyProc.kill();
-  process.exit(1);
+wss.on('connection', async (ws) => {
+  const sessionId = Date.now().toString().slice(-6);
+  const shell = spawnShell();
+  terminals.set(sessionId, shell);
+
+  setTimeout(() => {
+    const prompt = `$\x1b[0m $ `;
+    ws.send(prompt + '\n');
+  }, 100);
+
+  ws.on('message', (data: Buffer) => {
+    let input = data.toString().trim();
+    if (input.startsWith('\x1b[')) return;
+    if (input) {
+      console.log(`[${sessionId}] ${input}`);
+      shell.stdin?.write(input + '\n');
+    }
+  });
+
+  shell.stdout.on('data', (chunk: Buffer) => {
+    ws.send(chunk.toString());
+  });
+
+  shell.stderr.on('data', (chunk: Buffer) => {
+    ws.send(chunk.toString());
+  });
+
+  ws.on('close', () => {
+    console.log(`[${sessionId}] Disconnected`);
+    terminals.delete(sessionId);
+    shell.kill();
+  });
+});
+
+process.on('SIGINT', signal => {
+  console.log(`\n[SIGNAL] Shutdown requested (${signal})`);
+  for (const shell of terminals.values()) shell?.kill();
+  httpServer.close(() => process.exit(0));
 });

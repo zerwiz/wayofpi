@@ -168,3 +168,7 @@ Legend: **Shipped** = usable end-to-end in normal setup · **Partial** = works w
 ## 6. Maintenance
 
 When a capability **ships** or a **gap** closes, update **this file's tables** in the same change as **[CHANGELOG.md](../CHANGELOG.md)** (if user-visible) and adjust **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** so the three stay aligned.
+
+### 7. Governance (CABA)
+
+The **CABA** framework (Capability Assurance & Boundedness Architecture) governs how new capabilities are introduced and reviewed. Ensure that any new capability added to this repository is documented in the CABA checklist and logged in `CABA.md`. This provides traceability and consistency across the product roadmap.

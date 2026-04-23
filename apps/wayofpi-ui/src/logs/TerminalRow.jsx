@@ -3,7 +3,7 @@
  * Handles output display and input state
  */
 
-import React, { useMemo, forwardRef } from 'react';
+import React, { useMemo, forwardRef, useState } from 'react';
 
 /**
  * TerminalRow Component

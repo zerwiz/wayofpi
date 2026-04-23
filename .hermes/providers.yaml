@@ -115,24 +115,24 @@ providers:
   ollama_remote:
     api: openai-completions
     apiKey: ollama
-    baseUrl: http://192.168.68.108:5173/v1
+    baseUrl: http://192.168.68.103:5173/v1
     models:
       - id: gemma4:e4b
         name: "Gemma4 e4B"
         contextWindow: 32768
-        input: ["text"]
+        input: ["text", "image"]
         reasoning: true
       
       - id: gemma4:26b
         name: "Gemma4 26B"
         contextWindow: 32768
-        input: ["text"]
+        input: ["text", "image"]
         reasoning: true
       
       - id: qwen3.5:9b
         name: "Qwen3.5:9B"
         contextWindow: 32768
-        input: ["text"]
+        input: ["text", "image"]
         reasoning: true
       
       - id: qwen-4bit:latest
@@ -151,6 +151,17 @@ providers:
         name: "DeepSeek R1 Tool Calling"
         contextWindow: 262144
         input: ["text"]
+        reasoning: true
+
+  openai:
+    api: openai-chat
+    apiKey: sk-no-key-required
+    baseUrl: https://minisforum-ai.craigema.com/v1
+    models:
+      - id: Nemotron-Cascade-2-30B-A3B.Q8_0.gguf
+        name: "remote Nemotron"
+        contextWindow: 131072
+        input: ["text", "image"]
         reasoning: true
 
   openrouter:

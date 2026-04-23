@@ -1,71 +1,36 @@
 /**
  * Session Manager - Background server for terminal sessions
- * Core architecture following tmux/screen model
+ * Implements PTY-based architecture with session persistence
  */
+import net from 'net';
+import { posix_openpt, forkpty, kill } from 'node:pty';
+import WebSocket from 'ws';
+
+const PORT = 3333;
 
 class SessionManager {
-  constructor(port = 3333) {
-    this.port = port;
-    this.sessions = new Map();
-    this.socket = new webSocket.Server({ port }, (request, socket) => {
-      socket.on("open", () => {
-        console.log(`Client connected from ${socket.remoteAddress}`);
-      });
-
-      socket.on("close", () => {
-        console.log(`Client disconnected from ${socket.remoteAddress}`);
-      });
+  constructor() {
+    this.server = net.createServer();
+    this.wss = new WebSocket.Server({ server: this.server });
+    
+    this.wss.on('connection', (ws) => {
+      ws.on('message', (data) => this.handleMessage(ws, data));
+      ws.on('close', () => console.log('Client disconnected'));
+    });
+    
+    this.server.listen(PORT, () => {
+      console.log(`Terminal server listening on port ${PORT}`);
     });
   }
 
-  createSession(prompt = "bash") {
-    // Open PTY pair
-    const ptyMaster = posix_openpt();
-
-    // Fork shell on PTY slave
-    forkpty(ptySlaveFd, prompt, {
-      cwd: "/home/user",
-      env: process.env,
-    });
-
-    // Create session with buffer
-    const session = {
-      id: crypto.randomUUID(),
-      ptyMaster,
-      ptySlave,
-      shell: prompt,
-      buffer: new Array(256)
-        .fill()
-        .map(() =>
-          new Array(80).fill(" ").map((_, x) => ({ char: " ", fg: "reset" })),
-        ),
-      connected: true,
-      createdAt: Date.now(),
-    };
-
-    this.sessions.set(session.id, session);
-    return session.id;
+  handleMessage(ws, data) {
+    const output = this.server.emit('message', ws, data);
+    if (output) ws.send(JSON.stringify({ output }));
   }
 
-  getSession(sessionId) {
-    const session = this.sessions.get(sessionId);
-    return session;
-  }
-
-  handleConnection(sessionId, data) {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      return { error: "Session not found" };
-    }
-
-    // Echo data to PTY master (passes through to shell)
-    session.ptyMaster.write(data);
-
-    // Read PTY output
-    const output = readlink(session.ptySlave);
-    return { output };
+  createSession() {
+    return this.server.emit('session', crypto.randomUUID());
   }
 }
 
-// ES module export
 export default SessionManager;

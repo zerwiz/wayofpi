@@ -49,8 +49,5 @@
     "typescript": "~5.7.2",
     "vite": "^6.0.3",
     "wait-on": "^8.0.1"
-  },
-  "exports": {
-    "@wayofpi-server/*": "./node_modules/@wayofpi-server/*"
   }
 }

@@ -1,5 +1,4 @@
 # Plan: Way of Pi Chat UI Enhancement Issues - Build Team Handoff
-
 **Status:** ready-for-build
 **Created:** 2025-03-11
 **Revision:** 8
@@ -14,7 +13,6 @@ Multiple chat UI issues require fixes in Way of Pi client repository, plus Git w
 ---
 
 ## Critical Issues (Priority 1-2)
-
 ### Issue #1: Keep Button Broken
 - Keep button in pane view doesn't respond to clicks
 - No visible error, likely disabled state or CSS issue
@@ -55,7 +53,7 @@ Multiple chat UI issues require fixes in Way of Pi client repository, plus Git w
 
 ### Issue #9: Context Meter Display Bug
 - Context meter stuck at 100% despite chat working
-- Context usage fluctuates (100% → down → up again)
+- Usage appears to fluctuate but meter doesn't reflect accurately
 - Display not matching actual usage
 
 ### Issue #10: Message Under Ongoing Agent Work
@@ -75,19 +73,15 @@ Multiple chat UI issues require fixes in Way of Pi client repository, plus Git w
 ---
 
 ## Context Meter Issue (NEW)
-
 ### Problem
 - Context meter shows 100% usage consistently
 - Chat still works normally
 - Usage appears to fluctuate but meter doesn't reflect accurately
 
 ### Investigation Steps
-1. Find context meter component (`src/components/**/ContextMeter*`, `TokenUsage*`, `TokenUsageViewer`*)
+1. Find context meter component (`src/components/**/ContextMeter*`, `TokenUsage*`, `TokenUsageViewer*`)
 2. Check context calculation formula (input tokens / limit)
-3. Review real-time counting (is it counting correctly?)
-   - Are we double-counting?
-   - Is context limit updated correctly?
-   - Is usage reset properly?
+3. Review real-time counting (is it counting correctly?); double‑counting? limit updated? reset?
 4. Debug: Check tokens in/out vs displayed percentage
 5. Fix: Ensure accurate calculation, smooth updates
 
@@ -98,7 +92,7 @@ Multiple chat UI issues require fixes in Way of Pi client repository, plus Git w
 - Resets properly on new session/context window
 
 ### Files to modify
-- Context meter component (likely `src/components/.../ContextMeter*.tsx`)
+- Context meter component (`src/components/.../ContextMeter*.tsx`)
 - Token counting logic
 - Display update logic
 
@@ -125,7 +119,7 @@ apps/wayofpi-ui/src/hooks/**
 
 ## Git Workflow Rule Update (CRITICAL)
 
-### Step 8: Commit and sync
+### Step 8: Commit and sync (OLD)
 ```bash
 git add .
 git commit -m "Fix: keep button + file revision refresh + context meter + scroll tracking + image paste + file navigation + file explorer reset + message queue routing + zed strip removal"
@@ -133,10 +127,9 @@ BROKEN: git push origin main  # ❌ DO NOT PUSH TO MAIN DIRECTLY
 ```
 
 **CORRECTED Git workflow:**
-
 ```bash
 git add .
-git commit -m "Fix: keep button + file revision refresh + context meter"
+git commit -m "Fix: keep button + file revision refresh + context meter + scroll tracking + image paste"
 git push -u origin main  # First push creates upstream
 git checkout -b feature/chat-ui-fixes  # Create feature branch
 git push -u origin feature/chat-ui-fixes  # Push feature branch
@@ -155,20 +148,20 @@ git checkout -b feature/chat-ui-fixes
 
 # 2. Make changes
 git add .
-
-# 3. Commit with descriptive message
 git commit -m "Fix: keep button + file revision refresh + context meter + scroll tracking + image paste"
 
-# 4. Push feature branch (upstream link created automatically)
+# 3. Push feature branch (upstream link created automatically)
 git push -u origin feature/chat-ui-fixes
 
-# 5. Merge via Pull Request or
+# 4. Merge via Pull Request or
+git checkout main
+git pull origin main
+git merge feature/chat-ui-fixes  # Or use pull request
 ```
 
 ---
 
 ## Build Team Handoff Checklist
-
 ### Step 1: Clone or access Way of Pi client repository
 ```bash
 git clone [WAYOFPI_CLIENT_REPO_URL]
@@ -182,6 +175,9 @@ git clone [WAYOFPI_CLIENT_REPO_URL]
 cd apps/wayofpi-ui
 npm install
 ng serve --host
+# Or bun run dev
+# Reproduce keep button issue
+# Reproduce file revision stale issue
 ```
 
 ### Step 3-9: Debug and implement each issue
@@ -205,10 +201,9 @@ git push -u origin feature/chat-ui-fixes  # ✓ Correct way
 ---
 
 ## Verification Checklist
-
 - [ ] Keep button clicks work
-- [ ] File picker shows latest revision
-- [ ] Image paste works
+- [ ] File picker shows latest revision (no stale Revision 1)
+- [ ] Image paste works (screenshots → inline images)
 - [ ] New chat button works
 - [ ] Scroll tracking works
 - [ ] File explorer doesn't reset
@@ -223,7 +218,6 @@ git push -u origin feature/chat-ui-fixes  # ✓ Correct way
 ---
 
 ## Notes for Build Team
-
 ### Git Workflow Rule Change
 **All PRs must use feature branches:**
 1. Create feature branch from main
@@ -241,13 +235,17 @@ git push -u origin feature/chat-ui-fixes  # ✓ Correct way
 - Real code changes needed in Way of Pi client repository
 - Plan files in workspace are documentation ONLY
 - Need access to client repo to implement
+- If access issue → open GitHub issue or use Ralph queue ticket
 
----
-
-## Team Roster Update
+### Team Roster Update
 **full team:** scout, planner, documenter, reviewer, bowser, builder, ralph
 **Recommended:** builder, reviewer, code-documenter
 
 ---
+
+## Telegram Integration Overview (see `PLAN-20260411-connect-telegram.md` for full plan)
+- A dedicated Telegram bot will be added to the Way of Pi extensions.
+- It will expose a `telegram-notify` CLI tool for real‑time notifications.
+- The integration follows the same modular extension pattern as other tools.
 
 **Ready for build team implementation.**
