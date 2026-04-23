@@ -1,0 +1,104 @@
+{
+  "model_list": {
+    "ollama": {
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "baseUrl": "http://127.0.0.1:11434/v1",
+      "models": [
+        "nemotron-cascade-2:30b",
+        "nemotron-3-nano:4b",
+        "qwen3.5:9b-32k",
+        "unsloth-qwen3-30b",
+        "minimax-m2.5:cloud",
+        "qwen3.5:27b",
+        "devstral-small-2:24b",
+        "qwen3.5:9b",
+        "qwen2.5-coder:latest",
+        "qwen3.5:27b",
+        "unsloth-qwen3-30b:latest",
+        "nomic-embed-text:latest",
+        "mxbai-embed-large:latest",
+        "llama3.1:latest",
+        "unsloth-r1-8b:latest",
+        "ds-r1-8b:latest",
+        "llama3.1:latest",
+        "qwen2.5-coder:14b-instruct",
+        "qwen-7b-gpu:latest"
+      ],
+      "context_windows": {
+        "nemotron-cascade-2:30b": 262144,
+        "nemotron-3-nano:4b": 262144,
+        "qwen3.5:9b-32k": 262144,
+        "unsloth-qwen3-30b": null,
+        "minimax-m2.5:cloud": 262144,
+        "qwen3.5:27b": 262144,
+        "devstral-small-2:24b": 15000,
+        "qwen3.5:9b": 32768,
+        "unsloth-r1-8b:latest": 128000,
+        "ds-r1-8b:latest": 128000
+      }
+    },
+    "ollama_remote": {
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "baseUrl": "http://192.168.68.108:5173/v1",
+      "models": [
+        "gemma4:e4b",
+        "gemma4:26b",
+        "qwen3.5:9b",
+        "qwen-4bit:latest",
+        "deepseek-r1:8b",
+        "MFDoom/deepseek-r1-tool-calling:8b"
+      ],
+      "context_windows": {
+        "gemma4:e4b": 32768,
+        "gemma4:26b": 32768,
+        "qwen3.5:9b": 32768,
+        "qwen-4bit:latest": 8192,
+        "deepseek-r1:8b": 262144,
+        "MFDoom/deepseek-r1-tool-calling:8b": 262144
+      }
+    },
+    "openrouter": {
+      "api": "openai-completions",
+      "apiKey": "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",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "models": [
+        "meta-llama/llama-3.3-70b-instruct",
+        "mistralai/mistral-8x2b-nemo-expert-2409",
+        "google/gemini-2.5-pro-exp-03-25"
+      ],
+      "context_windows": {
+        "meta-llama/llama-3.3-70b-instruct": 128000,
+        "mistralai/mistral-8x2b-nemo-expert-2409": 131072,
+        "google/gemini-2.5-pro-exp-03-25": 131072
+      }
+    },
+    "google": {
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+      "api": "google-generative-ai",
+      "apiKey": "AIzaSyD61r-cqLINMVyiC4KfnwmgdK-rmXJ8WIs",
+      "models": [
+        "gemini-3-flash-preview",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-3.1-pro-preview",
+        "gemini-2.5-pro"
+      ],
+      "context_windows": {
+        "gemini-3-flash-preview": 1048576,
+        "gemini-2.5-flash": 1048576,
+        "gemini-2.5-flash-lite": 1048576,
+        "gemini-3.1-pro-preview": 1048576,
+        "gemini-2.5-pro": 1048576
+      }
+    }
+  },
+  "default_model": "meta-llama/llama-3.3-70b-instruct",
+  "model_priority": [
+    "ollama",
+    "ollama_remote",
+    "openrouter",
+    "google"
+  ]
+}

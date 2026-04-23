@@ -1,0 +1,23 @@
+{
+  "name": "wayofpi-server",
+  "version": "1.0.0",
+  "description": "PTY WebSocket Server for Way of Pi",
+  "main": "start-server.ts",
+  "scripts": {
+    "start": "tsx src/server/SessionManager.ts",
+    "start:watch": "tsx watch src/server/SessionManager.ts",
+    "test": "echo \"Server is running\"",
+    "lint": "echo \"Linting skipped\""
+  },
+  "keywords": ["pty", "websocket", "terminal", "way-of-pi"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.10"
+  }
+}

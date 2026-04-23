@@ -1,0 +1,13 @@
+{
+  "name": "way-of-pi-subagents",
+  "version": "1.0.0",
+  "description": "pi.dev Subagent Orchestration System",
+  "main": "orchestrator.ts",
+  "scripts": {
+    "start": "ts-node orchestrator.ts",
+    "demo": "ts-node orchestrator.ts"
+  },
+  "devDependencies": {
+    "ts-node": "*"
+  }
+}

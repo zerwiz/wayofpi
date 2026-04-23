@@ -147,7 +147,7 @@ export function MenuBar({
   viewTechnical,
   viewSimple,
 }: {
-  modelLabel: string;
+  modelLabel?: string;
   uisModels?: { name: string; size?: number }[] | undefined;
   modelIdFromLabel?: (label: string) => string | null | undefined;
   uiMode: UiMode;

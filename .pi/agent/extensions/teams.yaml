@@ -1,0 +1,185 @@
+# === Way of Pi Team Extensions ===
+# Location: .pi/agent/extensions/teams.yaml
+# Use: pi -e teams or pi -e build-orchestra
+# All agents loaded from: .pi/agents/*.md
+# Or: pi -e <team-name>
+
+---
+
+# === Main Orchestra (All Agents) ===
+# Loads ALL agents from .pi/agents/*.md automatically
+name: build-orchestra
+description: "Full build orchestra with all .md agents from .pi/agents/"
+members: []  # Empty - loads all .md agents automatically
+load_command: pi -e build-orchestra
+
+---
+
+# === Way (Main Orchestrator) ===
+# Main Way of Pi orchestrator
+name: way
+description: "Main Way of Pi orchestrator agent"
+members: []
+load_command: pi -e way
+
+---
+
+# === All Available Agents ===
+# Loads all .md agents from .pi/agents/
+name: all-way-agents
+description: "All available .md agents in .pi/agents/"
+members: []
+load_command: pi -e all-way-agents
+
+---
+
+# === Documentation Team ===
+# Documentation and documentation management
+name: documentation
+description: "Documentation team - manages documentation, API docs, and knowledge base"
+members: []
+# Members are loaded from .pi/agents/*.md that match documentation keywords
+
+---
+
+# === Core Development Team ===
+name: core-dev
+description: "Core development - coder, researcher, architect, builder"
+members: []
+# Auto-discovered from .pi/agents/*.md
+
+---
+
+# === Architecture Team ===
+name: architect
+description: "System architecture and design"
+members: []
+# All .md agents in domain-specialists/01-core-development/*
+
+---
+
+# === Builder Team ===
+name: builder  
+description: "Implementation and coding"
+members: []
+# All .md agents in domain-specialists/02-language-specialists/*
+
+---
+
+# === Reviewer Team ===
+name: reviewer
+description: "Code and quality review"
+members: []
+# All .md agents in domain-specialists/04-quality-security/*
+
+---
+
+# === Tester Team ===
+name: tester
+description: "Testing and validation"
+members: []
+# All .md agents in domain-specialists/04-quality-security/*
+
+---
+
+# === Deployer Team ===
+name: deployer
+description: "Release and deployment"
+members: []
+# All .md agents in domain-specialists/03-infrastructure/*
+
+---
+
+# === Orchestrator Team ===
+name: orchestrator
+description: "Advanced orchestration and coordination"
+members: []
+# All .md agents in domain-specialists/09-meta-orchestration/*
+
+---
+
+# === Analyzer Team ===
+name: analyzer
+description: "Code analysis and optimization"
+members: []
+# All .md agents in .pi/agents/ with analysis capabilities
+
+---
+
+# === Monitor Team ===
+name: monitor
+description: "Monitoring and diagnostics"
+members: []
+# All .md agents with monitoring/observability capabilities
+
+---
+
+# === Planner Team ===
+name: planner
+description: "Goal decomposition and planning"
+members: []
+# Relevant .md agents for planning
+
+---
+
+# === Executor Team ===
+name: executor
+description: "Task execution and automation"
+members: []
+# Agents that execute tasks
+
+---
+
+# === Researcher Team ===
+name: researcher
+description: "Knowledge research and synthesis"
+members: []
+# All .md agents in domain-specialists/10-research-analysis/*
+
+---
+
+# === Coder Team ===
+name: coder
+description: "Code generation and development"
+members: []
+# All .md agents in domain-specialists/01-core-development/*, 02-language-specialists/*
+
+---
+
+# === Refiner Team ===
+name: refiner
+description: "Code refinement and optimization"
+members: []
+# Agents for refactoring and optimization
+
+---
+
+# === Validator Team ===
+name: validator
+description: "Code validation and checking"
+members: []
+# Agents for validation and checking
+
+---
+
+# === All Development Teams ===
+name: teams
+description: "All team configurations for development work"
+members: []
+# All .md agents organized into teams
+
+---
+
+# === Legacy: Build Orchestra ===
+# Same as build-orchestra for backwards compatibility
+name: build-orchestra
+description: "Full orchestra - loads all agents"
+members: []
+
+---
+
+# === All Core Development ===
+name: core
+description: "All core development agents"
+members: []
+# Loads all .md agents
