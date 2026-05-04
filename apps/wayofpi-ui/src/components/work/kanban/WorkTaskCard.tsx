@@ -143,29 +143,32 @@ export const WorkTaskCard: React.FC<WorkTaskCardProps> = ({
 
   // Load available notes, tasks, files, and calendar events for linking
   useEffect(() => {
-    if (showLinkNote) {
-      const notes = notesService.getAllNotes();
-      setAvailableNotes(notes);
-    }
-    if (showLinkTask) {
-      const tasks = tasksService.getAllTasks();
-      setAvailableTasks(tasks);
-    }
-    if (showLinkFile) {
-      const files = driveService.getAllFiles();
-      setAvailableFiles(files);
-    }
-    if (showLinkCalendar) {
-      const events = calendarService.getEvents();
-      setAvailableCalendarEvents(events);
-    }
+    const loadData = async () => {
+      if (showLinkNote) {
+        const notes = await notesService.getAllNotes();
+        setAvailableNotes(notes);
+      }
+      if (showLinkTask) {
+        const tasks = await tasksService.getAllTasks();
+        setAvailableTasks(tasks);
+      }
+      if (showLinkFile) {
+        const files = await driveService.getAllFiles();
+        setAvailableFiles(files);
+      }
+      if (showLinkCalendar) {
+        const events = await calendarService.getEvents();
+        setAvailableCalendarEvents(events);
+      }
+    };
+    loadData();
   }, [showLinkNote, showLinkTask, showLinkFile, showLinkCalendar]);
 
-  const loadCard = () => {
+  const loadCard = async () => {
     if (!cardId || !boardId) return;
 
     try {
-      const loadedCard = kanbanService.getCard(boardId, cardId);
+      const loadedCard = await kanbanService.getCard(cardId);
       if (loadedCard) {
         setCard(loadedCard);
         setEditedCard({
@@ -198,14 +201,24 @@ export const WorkTaskCard: React.FC<WorkTaskCardProps> = ({
     }
   };
 
-  const handleLinkNote = (noteId: string) => {
-    const note = notesService.getNote(noteId);
+  const handleLinkNote = async (noteId: string) => {
+    const note = await notesService.getNote(noteId);
     if (!note) return;
 
     const updatedMetadata = {
       ...(editedCard.metadata || {}),
       noteId,
     };
+
+    if (isCreateMode) {
+      setEditedCard({
+        ...editedCard,
+        metadata: updatedMetadata,
+      });
+    } else if (card && cardId) {
+      await kanbanService.updateCard(boardId, cardId, { metadata: updatedMetadata }).then(() => loadCard());
+    }
+  };
 
     if (isCreateMode) {
       setEditedCard({
@@ -728,7 +741,7 @@ export const WorkTaskCard: React.FC<WorkTaskCardProps> = ({
           
           // Update bidirectional development workflow links
           if (updatedCard.metadata.developmentStepId) {
-            const { developmentWorkflowService } = require('../../services/mockDevelopmentWorkflowService');
+            const { developmentWorkflowService } = require('../../services/developmentWorkflowService');
             const workflow = developmentWorkflowService.getWorkflow(updatedCard.metadata.developmentWorkflowId || '');
             if (workflow) {
               const step = workflow.steps.find((s: any) => s.id === updatedCard.metadata.developmentStepId);
@@ -746,7 +759,7 @@ export const WorkTaskCard: React.FC<WorkTaskCardProps> = ({
           // Unlink old development step if changed
           if (card.metadata?.developmentStepId && 
               card.metadata.developmentStepId !== updatedCard.metadata?.developmentStepId) {
-            const { developmentWorkflowService } = require('../../services/mockDevelopmentWorkflowService');
+            const { developmentWorkflowService } = require('../../services/developmentWorkflowService');
             const oldStepId = card.metadata.developmentStepId;
             const oldWorkflowId = card.metadata.developmentWorkflowId;
             if (oldStepId && oldWorkflowId) {
@@ -852,16 +865,33 @@ export const WorkTaskCard: React.FC<WorkTaskCardProps> = ({
     }
   };
 
-  // Mock user search - replace with real user service
-  const mockUsers: CardAssignee[] = [
-    { userId: '1', email: 'user1@example.com', displayName: 'User One', avatar: undefined },
-    { userId: '2', email: 'user2@example.com', displayName: 'User Two', avatar: undefined },
-    { userId: '3', email: 'user3@example.com', displayName: 'User Three', avatar: undefined },
-  ];
+  // Fetch real users from admin API (or use tenant users)
+  const [realUsers, setRealUsers] = useState<CardAssignee[]>([]);
 
-  const filteredUsers = mockUsers.filter(u =>
-    u.displayName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch('/api/admin/users');
+        if (res.ok) {
+          const users = await res.json();
+          const assignees: CardAssignee[] = users.map((u: any) => ({
+            userId: u.id,
+            displayName: u.full_name || u.username,
+            email: u.email || '',
+            avatar: undefined,
+          }));
+          setRealUsers(assignees);
+        }
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = realUsers.filter(u =>
+    u.displayName?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
   // Helper function to get ISO week number (same as in Kanban.tsx)

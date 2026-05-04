@@ -8,29 +8,13 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 // import { useNavigate, useSearchParams } from 'react-router-dom';
 const useNavigate = () => (path: string) => console.log('Navigate to:', path);
 const useSearchParams = () => [new URLSearchParams(), (params: any) => {}] as const;
-import { kanbanService } from '../../../services/mockKanbanService';
-import { notesService } from '../../../services/mockNotesService';
-import { tasksService } from '../../../services/mockTasksService';
-import { projectsService } from '../../../services/mockProjectsService';
-import { driveService } from '../../../services/mockDriveService';
-import { calendarService } from '../../../services/mockCalendarService';
-import { developmentWorkflowService } from '../../../services/mockDevelopmentWorkflowService';
-import { workflowsService } from '../../../services/mockWorkflowsService';
-import type { DevelopmentWorkflow, DevelopmentPhase } from '../../../types/developmentWorkflow';
-import type { Workflow, WorkflowTrack } from '../../../types/workflows';
-import type { NSRFolder } from '../../../types/nsrCompliance';
-import { NSR_MANDATORY_FOLDERS, NSR_FOLDER_DISPLAY_NAMES } from '../../../types/nsrCompliance';
-import NSRFolderBadge from '../components/development/NSRFolderBadge';
-import NSRComplianceBadge from '../components/development/NSRComplianceBadge';
-import { useToast } from '../contexts/ToastContext';
-import { BOARD_TEMPLATES, getTemplatesByCategory, type TemplateCategory } from '../../../services/boardTemplates';
-import { WorkTaskCard } from './WorkTaskCard';
-import { BoardSettingsModal } from './BoardSettingsModal';
-import { WorkTeamView } from './WorkTeamView';
-import BoardSelector from './WorkBoardSelector';
-import ConfirmationModal from '../components/modals/ConfirmationModal';
-import { WorkDocsView } from './WorkDocsView';
-import { WorkFilesView } from './WorkFilesView';
+import { kanbanService } from '../../../services/kanbanService';
+import { notesService } from '../../../services/notesService';
+import { tasksService } from '../../../services/tasksService';
+import { driveService } from '../../../services/driveService';
+import { calendarService } from '../../../services/calendarService';
+import { developmentWorkflowService } from '../../../services/developmentWorkflowService';
+import { boardMembersService } from '../../../services/boardMembersService';
 import type { Board, BoardCard } from '../../../types/kanban';
 import type { DriveFile } from '../../../types/drive';
 import {
@@ -62,7 +46,6 @@ import {
   ExternalLink,
   FolderKanban,
   GitBranch,
-  // Archive, // TODO: Use for archive functionality
 } from 'lucide-react';
 import type { BoardViewType } from '../../../types/kanban';
 

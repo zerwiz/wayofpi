@@ -37,29 +37,62 @@ export function WorkApp({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadData();
-  }, []);
+   useEffect(() => {
+     loadData();
+   }, []);
 
-  async function loadData() {
-    try {
-      setLoading(true);
-      // TODO: Replace with actual API calls
-      // const [timeRes, tasksRes, contactsRes] = await Promise.all([
-      //   fetch("/api/portal/time", { headers: { Authorization: `Bearer ${localStorage.getItem("wop_token")}` } }),
-      //   fetch("/api/portal/tasks", { headers: { Authorization: `Bearer ${localStorage.getItem("wop_token")}` } }),
-      //   fetch("/api/portal/contacts", { headers: { Authorization: `Bearer ${localStorage.getItem("wop_token")}` } }),
-      // ]);
-      // if (timeRes.ok) setTimeEntries(await timeRes.json());
-      // if (tasksRes.ok) setTasks(await tasksRes.json());
-      // if (contactsRes.ok) setContacts(await contactsRes.json());
-      setError("API endpoints not yet implemented");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load data");
-    } finally {
-      setLoading(false);
-    }
-  }
+   async function loadData() {
+     try {
+       setLoading(true);
+       const token = localStorage.getItem("wop_token");
+       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+       
+       const [timeRes, tasksRes, contactsRes] = await Promise.all([
+         fetch("/api/portal/time", { headers }),
+         fetch("/api/portal/tasks", { headers }),
+         fetch("/api/admin/users", { headers }), // For contacts, we use admin users endpoint
+       ]);
+       
+       if (timeRes.ok) {
+         const timeData = await timeRes.json();
+         setTimeEntries(timeData.map((t: any) => ({
+           id: t.id,
+           workerName: t.user_id || "Unknown",
+           date: t.date,
+           hours: t.hours,
+           project: t.project_name || t.project_id || "Unknown",
+           status: t.status || "pending",
+         })));
+       }
+       
+       if (tasksRes.ok) {
+         const tasksData = await tasksRes.json();
+         setTasks(tasksData.map((t: any) => ({
+           id: t.id,
+           title: t.title,
+           assignedTo: t.assigned_to || "Unassigned",
+           status: t.status,
+           estimatedHours: t.estimated_hours,
+         })));
+       }
+       
+       if (contactsRes.ok) {
+         const contactsData = await contactsRes.json();
+         setContacts(contactsData.map((u: any) => ({
+           id: u.id,
+           name: u.username,
+           phone: u.phone || "N/A",
+           role: u.role,
+         })));
+       }
+       
+       setError("");
+     } catch (e) {
+       setError(e instanceof Error ? e.message : "Failed to load data");
+     } finally {
+       setLoading(false);
+     }
+   }
 
   const pendingCount = timeEntries.filter(e => e.status === "pending").length;
   const approvedCount = timeEntries.filter(e => e.status === "approved").length;
