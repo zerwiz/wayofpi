@@ -56,67 +56,6 @@ export function EmbeddedTerminal() {
 		term.open(el);
 		fit.fit();
 
-		/** Clipboard: xterm consumes Ctrl/Cmd+C/V; wire common shortcuts so users can copy out / paste in (see xtermjs#2478). */
-		term.attachCustomKeyEventHandler((ev) => {
-			if (ev.type !== "keydown") return true;
-			const sel = term.getSelection();
-			const hasSel = sel.length > 0;
-
-			// Copy — Ctrl+Shift+C / Cmd+Shift+C (avoid plain Ctrl+C = SIGINT)
-			if ((ev.ctrlKey || ev.metaKey) && ev.shiftKey && ev.code === "KeyC" && hasSel) {
-				void navigator.clipboard
-					.writeText(sel)
-					.then(() => term.clearSelection())
-					.catch(() => {});
-				return false;
-			}
-			// Copy — Ctrl+Insert (Linux habit)
-			if (ev.ctrlKey && !ev.metaKey && ev.code === "Insert" && hasSel) {
-				void navigator.clipboard
-					.writeText(sel)
-					.then(() => term.clearSelection())
-					.catch(() => {});
-				return false;
-			}
-			// Copy — Ctrl+C when there is a selection (VS Code–style); else let SIGINT through
-			if (ev.ctrlKey && !ev.metaKey && !ev.shiftKey && ev.code === "KeyC" && hasSel) {
-				void navigator.clipboard
-					.writeText(sel)
-					.then(() => term.clearSelection())
-					.catch(() => {});
-				return false;
-			}
-			// Copy — Cmd+C with selection (macOS)
-			if (ev.metaKey && !ev.ctrlKey && ev.code === "KeyC" && hasSel) {
-				void navigator.clipboard
-					.writeText(sel)
-					.then(() => term.clearSelection())
-					.catch(() => {});
-				return false;
-			}
-
-			// Paste — Ctrl+Shift+V / Cmd+Shift+V
-			if ((ev.ctrlKey || ev.metaKey) && ev.shiftKey && ev.code === "KeyV") {
-				void navigator.clipboard.readText().then((t) => {
-					if (t) term.paste(t);
-				});
-				return false;
-			}
-			// Paste — Shift+Insert
-			if (ev.shiftKey && ev.code === "Insert" && !ev.ctrlKey && !ev.metaKey) {
-				void navigator.clipboard.readText().then((t) => {
-					if (t) term.paste(t);
-				});
-				return false;
-			}
-			// Paste — Ctrl+V / Cmd+V: let the browser paste into xterm’s hidden textarea
-			if ((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && ev.code === "KeyV") {
-				return false;
-			}
-
-			return true;
-		});
-
 		const ws = new WebSocket(terminalWsUrl());
 		let open = false;
 

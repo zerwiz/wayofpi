@@ -13,10 +13,12 @@ export default function(pi: ExtensionAPI) {
     description: "Read the AGENTS.md project layout file and return the content. Use this to get project structure and available skills.",
     parameters: {},
     async execute() {
+      const response = await pi.filesystem.read(AGENTS_PATH);
       return {
         layout: "AGENTS.md project layout context is now available",
         path: AGENTS_PATH,
-        loaded: true
+        loaded: true,
+        content: response.content 
       };
     },
     responseFormat: "markdown"

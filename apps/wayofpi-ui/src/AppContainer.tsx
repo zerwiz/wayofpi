@@ -5,12 +5,12 @@
 
 import React, { useState, useEffect } from "react";
 import { LogsPanel } from "./logs/index";
-import { SessionManager } from "@wayofpi-server/session";
+import { SessionManagerClient } from "./lib/SessionManagerClient";
 /**
  * Props for AppContainer
  */
 type AppContainerProps = {
-  sessionManager: SessionManager;
+  sessionManager: SessionManagerClient;
   prompt?: string;
   sessionId?: string;
 };

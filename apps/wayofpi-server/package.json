@@ -2,6 +2,15 @@
   "name": "wayofpi-server",
   "version": "1.0.0",
   "description": "PTY WebSocket Server for Way of Pi",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./session": "./index.js",
+    "./screenBuffer": "./index.js",
+    "./screen": "./index.js"
+  },
   "scripts": {
     "start": "tsx src/server/SessionManager.ts",
     "start:watch": "tsx watch src/server/SessionManager.ts",

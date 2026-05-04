@@ -58,16 +58,16 @@ The main example agent following all Pi agent rules.
 
 ---
 
-## Installation Instructions
+# Installation Instructions
 
 ### Install Agent
 
 ```bash
 # Install from local path
-pi install -l /home/zerwiz/CodeP/Way of pi/.pi/agents
-
+pi install -l .pi/agents
+```
 # Or copy to ~/.pi/agents/
-cp -r /home/zerwiz/CodeP/Way of pi/.pi/agents/ ~/.pi/agents/
+cp -r .pi/agents/ ~/.pi/agents/
 
 # Verify installation
 pi list
@@ -76,7 +76,7 @@ pi list
 ### Update Agent
 
 ```bash
-cd /home/zerwiz/CodeP/Way of pi/.pi/agents
+cd .pi/agents
 git pull  # If using git
 pi install --update
 ```
@@ -173,7 +173,7 @@ pi "Create a markdown file with code examples"
 All examples are stored in:
 
 ```
-/home/zerwiz/CodeP/Way of pi/.pi/agents/
+.pi/agents/
 ```
 
 ### Copy to User Home
@@ -181,7 +181,7 @@ All examples are stored in:
 ```bash
 # Copy to user ~/.pi/agents/
 mkdir -p ~/.pi/agents
-cp -r /home/zerwiz/CodeP/Way of pi/.pi/agents/* ~/.pi/agents/
+cp -r .pi/agents/* ~/.pi/agents/
 ```
 
 ### Local Project Usage
@@ -189,7 +189,7 @@ cp -r /home/zerwiz/CodeP/Way of pi/.pi/agents/* ~/.pi/agents/
 ```bash
 # Create local agents directory
 mkdir -p ~/.pi/agents/project-name
-cp -r /home/zerwiz/CodeP/Way of pi/.pi/agents/* ~/.pi/agents/project-name/
+cp -r .pi/agents/* ~/.pi/agents/project-name/
 ```
 
 ---
@@ -247,14 +247,14 @@ cp -r /home/zerwiz/CodeP/Way of pi/.pi/agents/* ~/.pi/agents/project-name/
 **Solutions**:
 ```bash
 # Verify package.json exists
-cd /home/zerwiz/CodeP/Way of pi/.pi/agents
+cd .pi/agents
 cat package.json
 
 # Check permissions
 pi list
 
 # Reinstall
-pi install -l /home/zerwiz/CodeP/Way of pi/.pi/agents
+pi install -l .pi/agents
 ```
 
 ### Issue: Permission Denied

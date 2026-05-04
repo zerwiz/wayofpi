@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type UiMode = "simple" | "technical" | "claw" | "documenthandler";
+export type UiMode = "simple" | "technical" | "claw";
 
 const STORAGE_KEY = "wayofpi.uiMode";
 
-	function readStored(): UiMode {
-		try {
-			const v = localStorage.getItem(STORAGE_KEY);
-			if (v === "technical" || v === "simple" || v === "claw" || v === "documenthandler") return v;
-		} catch {
-			/* ignore */
-		}
-		return "simple";
+function readStored(): UiMode {
+	try {
+		const v = localStorage.getItem(STORAGE_KEY);
+		if (v === "technical" || v === "simple" || v === "claw") return v;
+	} catch {
+		/* ignore */
 	}
+	return "simple";
+}
 
 export function useUiMode() {
 	const [mode, setModeState] = useState<UiMode>(() =>
@@ -34,7 +34,7 @@ export function useUiMode() {
 
 	const toggleMode = useCallback(() => {
 		setModeState((m) => {
-			const next: UiMode = m === "simple" ? "technical" : m === "technical" ? "claw" : m === "claw" ? "documenthandler" : "simple";
+			const next: UiMode = m === "simple" ? "technical" : m === "technical" ? "claw" : "simple";
 			try {
 				localStorage.setItem(STORAGE_KEY, next);
 			} catch {
@@ -44,5 +44,5 @@ export function useUiMode() {
 		});
 	}, []);
 
-	return { mode, setMode, toggleMode, isTechnical: mode === "technical", isClaw: mode === "claw", isDocumentHandler: mode === "documenthandler" };
+	return { mode, setMode, toggleMode, isTechnical: mode === "technical", isClaw: mode === "claw" };
 }

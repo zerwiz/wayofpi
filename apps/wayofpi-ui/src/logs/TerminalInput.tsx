@@ -1,77 +1,86 @@
 /**
  * TerminalInput - Real inline terminal editing
- * Tracks cursor position and handles keyboard events
+ * Uses textarea/contentEditable with cursor tracking
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
+
+/**
+ * TerminalInput Component Props
+ */
+type TerminalInputProps = {
+  value?: string;
+  cursorPosition?: { x: number; y: number };
+  onInput?: (value: string) => void;
+  onExecute?: (value: string) => void;
+  onCancel?: () => void;
+  disabled?: boolean;
+  prompt?: string;
+};
 
 /**
  * TerminalInput Component
- * Handles all keyboard events for terminal-like input
+ * Tracks cursor position and handles keyboard events
  */
-export const TerminalInput = ({
-  value = '',
-  cursorPosition = { x: 0, y: 0 },
-  onInput,
-  onExecute,
-  onBackspace,
-  onArrowLeft,
-  onArrowRight,
-  onCancel,
-  disabled = false,
-  prompt = '$ ',
-}) => {
-  const textareaRef = useRef(null);
+export const TerminalInput = forwardRef((props: TerminalInputProps, ref) => {
+  const {
+    value = '',
+    onInput,
+    onExecute,
+    onCancel,
+    disabled = false,
+    prompt = '$ ',
+  } = props;
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.value = value;
-    }
-  }, [value]);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      textareaRef.current?.focus();
+    },
+  }));
 
   /**
-   * Handle keydown events
+   * Handle keyboard events
    */
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
-      handleArrowLeft();
       return;
     }
-    
+
     if (event.key === 'ArrowRight') {
       event.preventDefault();
-      handleArrowRight();
       return;
     }
-    
+
     if (event.key === 'Home') {
       event.preventDefault();
-      handleHome();
       return;
     }
-    
+
     if (event.key === 'End') {
       event.preventDefault();
-      handleEnd();
       return;
     }
-    
+
     if (event.key === 'Backspace') {
-      event.preventDefault();
-      handleBackspace();
       return;
     }
-    
+
     if (event.key === 'Delete') {
-      event.preventDefault();
-      handleDelete();
       return;
     }
-    
-    if (event.key === 'Enter') {
+
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      handleExecute();
+      onExecute && onExecute(value);
+      return;
+    }
+
+    if (event.ctrlKey && event.key === 'c') {
+      event.preventDefault();
+      onCancel && onCancel();
       return;
     }
   };
@@ -79,11 +88,8 @@ export const TerminalInput = ({
   /**
    * Handle input changes
    */
-  const handleInputChange = (event) => {
-    const newValue = event.target.value;
-    const newPos = event.target.selectionStart - prompt.length;
-    
-    onInput(newValue, newPos);
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onInput && onInput(event.target.value);
   };
 
   return (
@@ -94,12 +100,8 @@ export const TerminalInput = ({
         value={value}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => {
-          // Reset cursor to position after prompt
-          const promptLen = prompt.length;
-          textareaRef.current.focus();
-        }}
         disabled={disabled}
+        className="terminal-input"
         style={{
           width: '100%',
           fontFamily: 'monospace',
@@ -112,6 +114,6 @@ export const TerminalInput = ({
       />
     </div>
   );
-};
+});
 
 export default TerminalInput;

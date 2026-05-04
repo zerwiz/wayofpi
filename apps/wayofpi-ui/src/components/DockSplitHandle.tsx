@@ -52,8 +52,8 @@ export function DockSplitHandle({
 
 	const base =
 		vertical
-			? "group relative z-30 w-2.5 shrink-0 cursor-col-resize touch-none select-none bg-[#2d2d2d] hover:bg-[#3c3c3c] active:bg-[#454545]"
-			: "group relative z-30 h-3 shrink-0 cursor-row-resize touch-none select-none bg-[#2d2d2d] hover:bg-[#3c3c3c] active:bg-[#454545]";
+			? "group relative z-30 w-2.5 shrink-0 cursor-col-resize bg-[#2d2d2d] hover:bg-[#3c3c3c] active:bg-[#454545]"
+			: "group relative z-30 h-3 shrink-0 cursor-row-resize bg-[#2d2d2d] hover:bg-[#3c3c3c] active:bg-[#454545]";
 
 	return (
 		<div

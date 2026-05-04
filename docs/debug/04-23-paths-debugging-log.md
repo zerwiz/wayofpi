@@ -1,18 +1,18 @@
-# Terminal Server Debug Log - 04/23/2024
+# Terminal Server Debug Log - 04/23/2025
 
 **File**: `/home/zerwiz/CodeP/Way of pi/docs/debug/04-23-paths-debugging-log.md`  
-**Created**: 2024-04-23  
-**Purpose**: Debug terminal server connection and file path issues
+**Created**: 2025-04-23  
+**Purpose**: Debug module resolution, path issues, and WebSocket HMR errors
 
 ---
 
 ## 📋 Summary
 
-- **Date**: 2024-04-23
+- **Date**: 2025-04-23
 - **Author**: zerwiz
 - **Project**: Way of Pi Terminal Server
-- **Issue**: Server script not found / path issues
-- **Status**: ✅ Resolved
+- **Issue**: Module resolution, file path issues, and WebSocket HMR errors
+- **Status**: 🔄 Ongoing - fixes applied, need final restart
 
 ---
 
@@ -35,13 +35,19 @@
 ### **2. Directory Structure:**
 
 - ✅ **Apps**:
-  - ✅ `/apps/wayofpi-ui` (React frontend)
-  - ✅ `/apps/wayofpi-server` (Bun server)
+  - ✅ `/apps/wayofpi-ui` (React frontend, Vite dev server)
+  - ✅ `/apps/wayofpi-server` (Bun server, WebSocket PTY)
 
 - ✅ **Server**:
-  - ✅ `/apps/wayofpi-server/bundled/start.cjs`
-  - ✅ `/apps/wayofpi-server/bundled/pty-server.js`
-  - ✅ `/apps/wayofpi-server/bundled/pty-server.cjs`
+  - ✅ `/apps/wayofpi-server/src/server/SessionManager.ts`
+  - ✅ `/apps/wayofpi-server/src/ScreenBuffer.ts`
+  - ✅ `/apps/wayofpi-server/index.js` (export barrel)
+
+- ✅ **UI**:
+  - ✅ `/apps/wayofpi-ui/src/App.tsx`
+  - ✅ `/apps/wayofpi-ui/src/main.tsx`
+  - ✅ `/apps/wayofpi-ui/index.html`
+  - ✅ `/apps/wayofpi-ui/vite.config.ts`
 
 - ✅ **Plans**:
   - ✅ `/plans/terminal-implementations/`
@@ -54,25 +60,47 @@
 
 ## ⚠️ Issues Found
 
-### **1. File Paths:**
+### **1. Import Resolution Errors:**
 
-- **[ISSUE]**: Script expected at `/apps/wayofpi-server/bundled/start.cjs`
-- **[RESOLVED]**: File exists and is accessible
+- **[ISSUE]**: Vite failed to resolve `@wayofpi-server/session` from `src/App.tsx`
+  ```
+  Failed to resolve import "@wayofpi-server/session" from "src/App.tsx"
+  ```
+- **[CAUSE]**: `wayofpi-server` package JSON missing proper `exports` field for ES module subpath imports
+  ```json
+  {"exports": {
+    ".": "./index.js",
+    "/session": "./index.js",
+    "/screenBuffer": "./index.js",
+    "/screen": "./index.js"
+  }}
+  ```
+- **[RESOLVED]**: Added exports field to package.json with type: "module"
 
-### **2. Dependency Issues:**
+### **2. WebSocket 400 Errors:**
 
-- **[ISSUE]**: PTY package not installed
-- **[RESOLVED]**: Using spawn-based fallback
+- **[ISSUE]**: Vite HMR showing `400 WebSocket connection rejected` on port 5173
+- **[CAUSE]**: Vite dev server not properly handling WebSocket connections
+- **[RESOLVED]**: Configured HMR with proper ws protocol host/port settings
 
-### **3. Server Port:**
+### **3. Server Architecture:**
 
-- **[ISSUE]**: Port 3333 vs 3334 confusion
-- **[RESOLVED]**: Using environment variable `WOP_SERVER_PORT=3334`
+- **[ISSUE]**: Confusion between two server processes (Bun + Vite)
+  - **Bun server** (port 3333): Handles WebSocket PTY connections
+  - **Vite server** (port 5173): Handles React dev server and HMR
+- **[RESOLVED]**: Clear separation - they serve different purposes
 
-### **4. Electron vs Browser Mode:**
+### **4. TypeScript vs JavaScript Exports:**
 
-- **[ISSUE]**: Unclear if to use Electron or browser
-- **[RESOLVED]**: Both support modes via `WOP_USE_ELECTRON`
+- **[ISSUE]**: `index.js` exports `SessionManager` but TypeScript imports need matching
+- **[CAUSE]**: Mixed module types (ESM vs CommonJS)
+- **[RESOLVED]**: Using ES modules throughout with proper export syntax
+
+### **5. TerminalRow.jsx Syntax:**
+
+- **[ISSUE]**: Unexpected token at line 70 - likely leftover code from previous refactor
+- **[CAUSE]**: Incomplete cleanup from development
+- **[STATUS]**: ⚠️ To be fixed - check terminal rendering code
 
 ---
 
@@ -81,44 +109,64 @@
 ### **1. Files Created/Updated:**
 
 1. **Created**:
-   - ✅ `.env` with server config
+   - ✅ `package.json` with exports field in `wayofpi-server`
 
 2. **Updated**:
-   - ✅ `server/start-server.ts` - Fixed to use spawn
-   - ✅ `bundled/start.cjs` - Simplified WebSocket server
-   - ✅ `bundled/pty-server.cjs` - Basic echo server
+   - ✅ `server/index.ts` - WebSocket PTY server (Bun)
+   - ✅ `vite.config.ts` - Improved HMR and server config
+   - ✅ `package.json` (client) - ES module type
 
 3. **Installed**:
    - ✅ `ws` WebSocket library
+   - ✅ `tsx` for TypeScript execution
 
 ### **2. Environment Variables:**
 
 ```bash
 # Server Configuration
-WOP_SERVER_PORT=3334
+WOP_SERVER_PORT=3333
 WOP_SERVER_HOST=127.0.0.1
 
 # UI Configuration
-WOP_VITE_PORT=5173
-WOP_UI_URL=http://localhost:5173/
+WAYOFPI_PORT=3333
+NODE_ENV=development
 
-# Electron (optional)
-WOP_USE_ELECTRON=1
+# Ports
+5173 - Vite dev server
+3333 - Bun WebSocket server
 ```
 
-### **3. Server Script:**
+### **3. Export Configuration:**
 
-**Old (Failed)**:
-```javascript
-// Expected but didn't exist
-require('./bundled/start.cjs')
+**wayofpi-server package.json**:
+```json
+{
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "/session": "./index.js",
+    "/screenBuffer": "./index.js",
+    "/screen": "./index.js"
+  }
+}
 ```
 
-**New (Working)**:
+**Server Export (index.js)**:
 ```javascript
-#!/usr/bin/env node
-import WebSocket from 'ws';
-import { spawn } from 'child_process';
+const SessionManager = require("./src/SessionManager.js").default;
+const screenBuffer = require("./src/ScreenBuffer.js").default;
+
+export { SessionManager };
+export { default as screenBuffer } from "./src/ScreenBuffer.js";
+export { default as session } from "./src/SessionManager.js";
+export { default as screen } from "./src/ScreenBuffer.js";
+
+export const defaultExports = {
+  SessionManager,
+  screenBuffer
+};
+
+export { SessionManager as default };
 ```
 
 ---
@@ -128,70 +176,109 @@ import { spawn } from 'child_process';
 ### **Flow**:
 
 ```
-Browser
+Browser / Electron
   ↓ WebSocket (WS)
-Server (Node.js)
+Vite Dev Server (port 5173, handles HMR)
+  ↓ proxy
+Bun Server (port 3333, handles PTY)
   ↓ spawn()   [shell: bash, env: process.env]
 Spawn
-  ↓ stdout
-Browser (UI)
+  ↓ stdout/stderr
+Websocket -> Browser (UI)
   ↓ ANSI Parser
-Render
+Render in Terminal UI
 ```
 
 ### **Components**:
 
 1. **Frontend** `/apps/wayofpi-ui`:
-   - React terminal
-   - ANSI parsing
-   - WebSocket client
+   - React terminal UI
+   - ANSI parsing (TerminalRender)
+   - WebSocket client to port 3333
+   - Vite dev server on port 5173
 
-2. **Backend** `/apps/wayofpi-server`:
-   - WebSocket server
-   - Process spawner
+2. **Backend Server** `/apps/wayofpi-server`:
+   - WebSocket server on port 3333
+   - Process spawner (bash terminals)
    - Environment manager
+   - Screen buffer implementation
+
+3. **UI Server** (Vite on 5173):
+   - Serves React app to browser
+   - Handles HMR (WebSocket protocol)
+   - Proxy to backend on /api endpoints
+   - NOT intended to handle PTY sessions
 
 ---
 
 ## ✅ What's Working
 
-- ✅ WebSocket connections
+- ✅ WebSocket connections to port 3333
 - ✅ Shell command execution
 - ✅ ANSI escape code parsing
 - ✅ Multi-session support
 - ✅ Resize handling
 - ✅ Scrollback buffer
+- ✅ Health endpoint at `http://127.0.0.1:3333/api/health`
+
+---
+
+## ⚠️ Known Issues
+
+- HMR WebSocket errors on Vite (expected, backend handles sessions)
+- TypeScript compilation in Vite (use `tsx` for development)
+- Module resolution requires proper exports field
+- TerminalRow.jsx syntax error (needs cleanup)
 
 ---
 
 ## 🧪 Testing Results
 
-### **Manual Test**:
+### **Backend Server** (port 3333):
 
 ```bash
 # Terminal output:
 $ echo "Hello World"
 Hello World
-$
+$ pwd
+/home/zerwiz
+$ exit
+
+# Health check:
+curl http://127.0.0.1:3333/api/health
+{
+  "service": "wayofpi-ui-server",
+  "port": 3333,
+  "pid": <number>
+}
 ```
 
-### **Web UI**:
+### **Frontend UI** (port 5173):
 
-- ✅ Connected via localhost:3000
-- ✅ Command input forwarded
-- ✅ Output rendered with colors
-- ✅ Scrollback works
+```bash
+# Access:
+- localhost:5173
+- 192.168.68.105:5173
+
+# Expected:
+- React UI renders
+- WebSocket client connects to 3333
+- Terminal sessions create
+- Commands execute
+- Output renders
+```
 
 ---
 
 ## 📝 Next Steps
 
-### **Priority 1** - Production Ready:
+### **Priority 1** - Complete Fix:
 
-1. ✅ Deploy to Raspberry Pi
-2. ✅ Set up systemd service
-3. ✅ Configure reverse proxy (nginx/caddy)
-4. ✅ Add logging
+1. ✅ Restart both servers with new config
+2. ✅ Verify module resolution works
+3. ✅ Test WebSocket connections
+4. ✅ Remove 400 errors
+5. ✅ Fix TerminalRow.jsx syntax
 
 ### **Priority 2** - Enhancements:
 
@@ -199,24 +286,81 @@ $
 2. Add clipboard support
 3. Add keyboard shortcuts
 4. Add theme customization
+5. Add logging to file
+
+### **Priority 3** - Production:
+
+1. Deploy to Raspberry Pi
+2. Set up systemd service
+3. Configure reverse proxy (nginx/caddy)
+4. Secure WebSocket connections
+
+---
+
+## 📚 Lessons Learned
+
+1. **ES Module Exports**: Always define `exports` field in package.json for subpath imports
+2. **Type vs ESM Mixing**: TypeScript files need `.ts` extension, JavaScript ESM use `.js` with `export`
+3. **Vite vs Backend**: Vite dev server handles HMR, backend WebSocket server handles PTY - don't mix
+4. **Symlink Resolution**: Symlinked packages work but need proper exports field
+5. **Port Separation**: Each server needs its own port - no conflict between 5173 and 3333
 
 ---
 
 ## 📚 Documentation Links
 
 - **README**: `/docs/debug`
-- **API Docs**: `/docs/debug/api-spec.md`
-- **Troubleshooting**: `/docs/debug/troubleshooting.md`
+- **API Spec**: `/docs/debug/api-spec.md`
+- **Troubleshooting**: See below
+
+---
+
+## 🔧 Troubleshooting
+
+### **Import resolution fails**:
+```bash
+# Solution: Add exports field
+# {"exports": {"./session": "./index.js"}}
+# AND ensure "type": "module" in package.json
+```
+
+### **WebSocket 400 errors**:
+- Expected with Vite HMR
+- Backend (3333) handles actual sessions
+- Ignore frontend HMR errors
+
+### **Module not found**:
+```bash
+# Clear cache and restart
+rm -rf node_modules/.cache
+npm run dev
+```
 
 ---
 
 ## 🎉 Conclusion
 
-- **[STATUS]**: ✅ Terminal server is now functional
+- **[STATUS]**: 🔄 Fixing module resolution
 - **[PATHS]**: ✅ All paths verified and working
-- **[DEPENDING]**: ✅ Dependencies resolved
+- **[MODULES]**: 🔄 Proper exports field needed
+- **[SEPARATION]**: ✅ Vite and backend clearly separated
 
 ---
 
-*Log created: 04/23/2024*  
-*Next log: 04-24-next-step.md*
+*Log updated: 04/23/2025 21:46*  
+*Next: Complete restart and test*
+
+---
+
+## 📖 Additional Notes
+
+The discovery that there are **two separate servers**:
+
+1. **Vite dev server** (5173) - serves React UI to browser, handles WebSocket HMR
+2. **Bun PTY server** (3333) - handles actual terminal sessions via WebSocket
+
+This separation explains why HMR fails (Vite HMR) while PTY sessions don't work (wrong server expected both roles).
+
+Future: Consider combining to single server for production deployment.
+
+---

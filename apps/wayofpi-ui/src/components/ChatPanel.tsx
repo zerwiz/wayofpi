@@ -1,9 +1,6 @@
 import {
 	Brain,
-	Maximize2,
 	MessageSquarePlus,
-	Minimize2,
-	MoreVertical,
 	PanelBottom,
 	PanelRight,
 	Paperclip,
@@ -153,14 +150,13 @@ export function ChatPanel({
 }) {
 	const [queueModalOpen, setQueueModalOpen] = useState(false);
 	const technical = uiMode !== "simple";
-	const technicalIde = uiMode === "technical";
 	const activeChatTabLabel =
 		chatTabs.find((t) => t.id === activeChatTabId)?.label ?? (technical ? "New Chat" : "Chat");
-	const docked = technicalIde && technicalDock != null;
+	const docked = technical && technicalDock != null;
 	const embedPane = Boolean(embeddedInWorkspace);
 	const widthClass = embedPane
 		? ""
-		: technicalIde && !docked
+		: technical && !docked
 			? "w-[min(440px,40vw)]"
 			: !technical
 				? "w-[min(560px,48vw)]"
@@ -178,9 +174,6 @@ export function ChatPanel({
 	const [showModelThinking, setShowModelThinking] = useState(() =>
 		typeof window !== "undefined" ? readShowModelThinking() : true,
 	);
-	const [mobileChatHeaderMenuOpen, setMobileChatHeaderMenuOpen] = useState(false);
-	const [mobileChatOverlay, setMobileChatOverlay] = useState(false);
-	const mobileChatHeaderMenuRef = useRef<HTMLDivElement>(null);
 	const endRef = useRef<HTMLDivElement>(null);
 	const assistantColEndRef = useRef<HTMLDivElement>(null);
 	const fileRef = useRef<HTMLInputElement>(null);
@@ -193,7 +186,7 @@ export function ChatPanel({
 	const assistantShort = sessionPick ? workspaceAgentDisplayName(sessionPick) : "Orchestrator";
 	/** Pulse grid / team highlight — session picker only (matches who “speaks” in Team pulse transcript). */
 	const pulseAgentName = sessionPick;
-	const embedSplit = embedPane && technicalIde;
+	const embedSplit = embedPane && technical;
 	const userRows = useMemo(() => rows.filter((r) => r.role === "user"), [rows]);
 	const transcriptRows = useMemo(() => {
 		if (!teamPaneOpen || !pulseTeam || !agentTeams?.[pulseTeam]?.length) return rows;
@@ -242,47 +235,6 @@ export function ChatPanel({
 			return next;
 		});
 	}, []);
-
-	useEffect(() => {
-		if (!mobileChatHeaderMenuOpen) return;
-		const onDown = (e: MouseEvent) => {
-			if (mobileChatHeaderMenuRef.current?.contains(e.target as Node)) return;
-			setMobileChatHeaderMenuOpen(false);
-		};
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setMobileChatHeaderMenuOpen(false);
-		};
-		document.addEventListener("mousedown", onDown);
-		window.addEventListener("keydown", onKey);
-		return () => {
-			document.removeEventListener("mousedown", onDown);
-			window.removeEventListener("keydown", onKey);
-		};
-	}, [mobileChatHeaderMenuOpen]);
-
-	const showMobileOverlayToggle = technicalIde && (docked || embedPane);
-
-	useEffect(() => {
-		const mq = window.matchMedia("(min-width: 768px)");
-		const onChange = () => {
-			if (mq.matches) {
-				setMobileChatOverlay(false);
-				setMobileChatHeaderMenuOpen(false);
-			}
-		};
-		mq.addEventListener("change", onChange);
-		onChange();
-		return () => mq.removeEventListener("change", onChange);
-	}, []);
-
-	useEffect(() => {
-		if (!mobileChatOverlay || !showMobileOverlayToggle) return;
-		const prev = document.body.style.overflow;
-		document.body.style.overflow = "hidden";
-		return () => {
-			document.body.style.overflow = prev;
-		};
-	}, [mobileChatOverlay, showMobileOverlayToggle]);
 
 	const teamNames = useMemo(() => Object.keys(agentTeams ?? {}), [agentTeams]);
 	useEffect(() => {
@@ -344,7 +296,7 @@ export function ChatPanel({
 		handoffPath,
 		handoffSummary,
 		setHandoffPath,
-	} = usePlanHandoffSelection(planHandoffWorkspaceKey, Boolean(technicalIde && connected));
+	} = usePlanHandoffSelection(planHandoffWorkspaceKey, Boolean(technical && connected));
 	useEffect(() => {
 		setSlashHighlight(0);
 	}, [slashMenuKey]);
@@ -398,7 +350,7 @@ export function ChatPanel({
 		setInput("");
 		setAttachment(null);
 		setAttachErr(null);
-		if (technicalIde && wasBuild && shouldSuggestPlanModeForMessage(msg)) {
+		if (technical && wasBuild && shouldSuggestPlanModeForMessage(msg)) {
 			setPlanNudgeOpen(true);
 		}
 		setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -459,48 +411,10 @@ export function ChatPanel({
 		: embedPane
 			? "flex min-h-0 min-w-0 flex-1 flex-col bg-[#1e1e1e]"
 			: `flex min-h-0 ${widthClass} shrink-0 flex-col border-l border-[#3c3c3c] bg-[#1e1e1e]`;
-	const sessionHeaderHasActions =
-		docked || technical || (Boolean(onNewSession) && !teamPaneOpen);
-
-	const overlayMobile = Boolean(mobileChatOverlay && showMobileOverlayToggle);
-	const mergedStyle: CSSProperties | undefined = overlayMobile
-		? {
-				position: "fixed",
-				left: 0,
-				right: 0,
-				top: 32,
-				bottom: 0,
-				zIndex: 83,
-				width: "100%",
-				minHeight: 0,
-				maxHeight: "none",
-			}
-		: outerStyle;
-	const outerClassOverlay = overlayMobile
-		? `${outerClass} max-md:border-0 max-md:shadow-2xl md:static md:inset-auto md:z-auto md:max-h-none md:shadow-none`
-		: outerClass;
-
-	useEffect(() => {
-		if (!overlayMobile) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setMobileChatOverlay(false);
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, [overlayMobile]);
 
 	return (
-		<>
-			{overlayMobile ? (
-				<button
-					type="button"
-					className="fixed bottom-0 left-0 right-0 top-8 z-[82] bg-black/45 md:hidden"
-					aria-label="Close expanded chat"
-					onClick={() => setMobileChatOverlay(false)}
-				/>
-			) : null}
-			<div className={outerClassOverlay} style={mergedStyle} data-wop-chat-root>
-			<div className="flex h-9 min-w-0 shrink-0 items-stretch bg-[#252526]">
+		<div className={outerClass} style={outerStyle} data-wop-chat-root>
+			<div className="flex h-9 min-w-0 shrink-0 items-stretch overflow-hidden bg-[#252526]">
 				{/* Tabs use full header width; dock + New sit on top so extra tabs scroll sideways underneath the fixed chrome. */}
 				<div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
 					<div
@@ -510,17 +424,15 @@ export function ChatPanel({
 					>
 						<div
 							className={`flex h-full items-stretch ${
-								!sessionHeaderHasActions
-									? "pr-1"
-									: docked
-										? "pr-12 md:pr-[11.75rem]"
-										: technical
-											? onNewSession && !teamPaneOpen
-												? "pr-12 md:pr-[7.5rem]"
-												: "pr-10 md:pr-12"
-											: onNewSession && !teamPaneOpen
-												? "pr-12 md:pr-24"
-												: "pr-1"
+								docked
+									? "pr-[11.75rem]"
+									: technical
+										? onNewSession && !teamPaneOpen
+											? "pr-[7.5rem]"
+											: "pr-12"
+										: onNewSession && !teamPaneOpen
+											? "pr-24"
+											: "pr-1"
 							}`}
 						>
 							{chatTabs.map((tab) => {
@@ -592,199 +504,70 @@ export function ChatPanel({
 						className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-stretch"
 						data-wop-chat-session-actions
 					>
-						<div className="pointer-events-auto flex h-full items-stretch border-l border-[#3c3c3c] bg-[#252526] pl-1 pr-1 shadow-[-12px_0_18px_6px_#252526]">
-							<div className="hidden h-full flex-nowrap items-center gap-0.5 md:flex">
-								{docked && technicalDock ? (
-									<>
-										<button
-											type="button"
-											title="Dock agents to the right"
-											onClick={() => technicalDock.onSetRegion("right")}
-											className={`rounded p-1.5 ${technicalDock.region === "right" ? "bg-[#37373d] text-white" : "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"}`}
-										>
-											<PanelRight size={15} strokeWidth={1.75} />
-										</button>
-										<button
-											type="button"
-											title="Dock agents to the bottom"
-											onClick={() => technicalDock.onSetRegion("bottom")}
-											className={`rounded p-1.5 ${technicalDock.region === "bottom" ? "bg-[#37373d] text-white" : "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"}`}
-										>
-											<PanelBottom size={15} strokeWidth={1.75} />
-										</button>
-										<button
-											type="button"
-											title="Hide agent panel (View menu or palette to show again)"
-											onClick={() => technicalDock.onHidePanel()}
-											className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-										>
-											<SidebarClose size={15} strokeWidth={1.75} />
-										</button>
-									</>
-								) : null}
-								{technical ? (
+						<div className="pointer-events-auto flex h-full flex-nowrap items-center gap-0.5 border-l border-[#3c3c3c] bg-[#252526] pl-1 pr-1 shadow-[-12px_0_18px_6px_#252526]">
+							{docked ? (
+								<>
 									<button
 										type="button"
-										title={
-											showModelThinking
-												? "Hide model thinking — reasoning blocks already in the transcript stay saved"
-												: "Show model thinking — when the provider streams reasoning (e.g. some OpenRouter models), it appears above each assistant reply"
-										}
-										aria-label={showModelThinking ? "Hide model thinking" : "Show model thinking"}
-										aria-pressed={showModelThinking}
-										onClick={toggleShowModelThinking}
-										className={`rounded p-1.5 ${
-											showModelThinking
-												? "bg-[#312e81]/60 text-[#c7d2fe]"
-												: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-										}`}
+										title="Dock agents to the right"
+										onClick={() => technicalDock.onSetRegion("right")}
+										className={`rounded p-1.5 ${technicalDock.region === "right" ? "bg-[#37373d] text-white" : "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"}`}
 									>
-										<Brain size={15} strokeWidth={1.75} />
+										<PanelRight size={15} strokeWidth={1.75} />
 									</button>
-								) : null}
-								{onNewSession && !teamPaneOpen ? (
 									<button
 										type="button"
-										title={
-											streaming
-												? "Wait for the current reply to finish before starting a new session"
-												: "New Chat — add a tab and start a fresh session on the server for this connection"
-										}
-										disabled={!connected || streaming}
-										onClick={() => onNewSession()}
-										className="flex shrink-0 items-center gap-1 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-wide text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+										title="Dock agents to the bottom"
+										onClick={() => technicalDock.onSetRegion("bottom")}
+										className={`rounded p-1.5 ${technicalDock.region === "bottom" ? "bg-[#37373d] text-white" : "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"}`}
 									>
-										<MessageSquarePlus size={14} className="shrink-0" />
-										<span className="hidden sm:inline">New</span>
+										<PanelBottom size={15} strokeWidth={1.75} />
 									</button>
-								) : null}
-							</div>
-							{sessionHeaderHasActions ? (
-							<div ref={mobileChatHeaderMenuRef} className="relative flex h-full items-center md:hidden">
+									<button
+										type="button"
+										title="Hide agent panel (View menu or palette to show again)"
+										onClick={() => technicalDock.onHidePanel()}
+										className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+									>
+										<SidebarClose size={15} strokeWidth={1.75} />
+									</button>
+								</>
+							) : null}
+							{technical ? (
 								<button
 									type="button"
-									className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
-									aria-expanded={mobileChatHeaderMenuOpen}
-									aria-haspopup="menu"
-									title="Chat panel actions"
-									onClick={() => setMobileChatHeaderMenuOpen((o) => !o)}
+									title={
+										showModelThinking
+											? "Hide model thinking — reasoning blocks already in the transcript stay saved"
+											: "Show model thinking — when the provider streams reasoning (e.g. some OpenRouter models), it appears above each assistant reply"
+									}
+									aria-label={showModelThinking ? "Hide model thinking" : "Show model thinking"}
+									aria-pressed={showModelThinking}
+									onClick={toggleShowModelThinking}
+									className={`rounded p-1.5 ${
+										showModelThinking
+											? "bg-[#312e81]/60 text-[#c7d2fe]"
+											: "text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]"
+									}`}
 								>
-									<MoreVertical size={16} strokeWidth={2} aria-hidden />
+									<Brain size={15} strokeWidth={1.75} />
 								</button>
-								{mobileChatHeaderMenuOpen ? (
-									<ul
-										className="absolute right-0 top-full z-[100] mt-0.5 min-w-[12rem] list-none rounded border border-[#454545] bg-[#252526] py-1 shadow-xl"
-										role="menu"
-										aria-label="Chat panel actions"
-										onMouseDown={(e) => e.stopPropagation()}
-									>
-										{showMobileOverlayToggle ? (
-											<li role="none" className="border-b border-[#3c3c3c] pb-1 mb-1">
-												<button
-													type="button"
-													role="menuitem"
-													className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
-													onClick={() => {
-														setMobileChatHeaderMenuOpen(false);
-														setMobileChatOverlay((o) => !o);
-													}}
-												>
-													{mobileChatOverlay ? (
-														<Minimize2 size={15} strokeWidth={1.75} className="shrink-0 text-[#858585]" />
-													) : (
-														<Maximize2 size={15} strokeWidth={1.75} className="shrink-0 text-[#858585]" />
-													)}
-													{mobileChatOverlay ? "Exit expanded chat" : "Expand chat over workspace"}
-												</button>
-											</li>
-										) : null}
-										{docked && technicalDock ? (
-											<>
-												<li role="none">
-													<button
-														type="button"
-														role="menuitem"
-														className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-[#3c3c3c] ${
-															technicalDock.region === "right" ? "text-white" : "text-[#cccccc]"
-														}`}
-														onClick={() => {
-															setMobileChatHeaderMenuOpen(false);
-															technicalDock.onSetRegion("right");
-														}}
-													>
-														<PanelRight size={15} strokeWidth={1.75} className="shrink-0 text-[#858585]" />
-														Dock agents to the right
-													</button>
-												</li>
-												<li role="none">
-													<button
-														type="button"
-														role="menuitem"
-														className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-[#3c3c3c] ${
-															technicalDock.region === "bottom" ? "text-white" : "text-[#cccccc]"
-														}`}
-														onClick={() => {
-															setMobileChatHeaderMenuOpen(false);
-															technicalDock.onSetRegion("bottom");
-														}}
-													>
-														<PanelBottom size={15} strokeWidth={1.75} className="shrink-0 text-[#858585]" />
-														Dock agents to the bottom
-													</button>
-												</li>
-												<li role="none">
-													<button
-														type="button"
-														role="menuitem"
-														className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
-														onClick={() => {
-															setMobileChatHeaderMenuOpen(false);
-															technicalDock.onHidePanel();
-														}}
-													>
-														<SidebarClose size={15} strokeWidth={1.75} className="shrink-0 text-[#858585]" />
-														Hide agent panel
-													</button>
-												</li>
-											</>
-										) : null}
-										{technical ? (
-											<li role="none">
-												<button
-													type="button"
-													role="menuitem"
-													className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c]"
-													onClick={() => {
-														setMobileChatHeaderMenuOpen(false);
-														toggleShowModelThinking();
-													}}
-												>
-													<Brain size={15} strokeWidth={1.75} className="shrink-0 text-[#858585]" />
-													{showModelThinking ? "Hide model thinking" : "Show model thinking"}
-												</button>
-											</li>
-										) : null}
-										{onNewSession && !teamPaneOpen ? (
-											<li role="none">
-												<button
-													type="button"
-													role="menuitem"
-													disabled={!connected || streaming}
-													className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
-													onClick={() => {
-														if (!connected || streaming) return;
-														setMobileChatHeaderMenuOpen(false);
-														onNewSession();
-													}}
-												>
-													<MessageSquarePlus size={14} className="shrink-0 text-[#858585]" />
-													New chat session
-												</button>
-											</li>
-										) : null}
-									</ul>
-								) : null}
-							</div>
+							) : null}
+							{onNewSession && !teamPaneOpen ? (
+								<button
+									type="button"
+									title={
+										streaming
+											? "Wait for the current reply to finish before starting a new session"
+											: "New Chat — add a tab and start a fresh session on the server for this connection"
+									}
+									disabled={!connected || streaming}
+									onClick={() => onNewSession()}
+									className="flex shrink-0 items-center gap-1 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-wide text-[#cccccc] hover:bg-[#3c3c3c] disabled:cursor-not-allowed disabled:opacity-40"
+								>
+									<MessageSquarePlus size={14} className="shrink-0" />
+									<span className="hidden sm:inline">New</span>
+								</button>
 							) : null}
 						</div>
 					</div>
@@ -1197,7 +980,7 @@ export function ChatPanel({
 				) : null}
 				<form
 					onSubmit={submit}
-					className="flex min-w-0 flex-col border border-[#3c3c3c] bg-[#3c3c3c] transition-colors focus-within:border-[#ea580c]"
+					className="flex flex-col border border-[#3c3c3c] bg-[#3c3c3c] transition-colors focus-within:border-[#ea580c]"
 				>
 					<input
 						ref={fileRef}
@@ -1318,7 +1101,7 @@ export function ChatPanel({
 						</div>
 					</div>
 					{technical && chatMode === "plan" ? (
-						<div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-[#3c3c3c] bg-[#252526] px-2 py-1">
+						<div className="flex items-center gap-2 border-t border-[#3c3c3c] bg-[#252526] px-2 py-1">
 							<div className="flex min-w-0 flex-1 items-center gap-2">
 								{planCatalogReady && planFiles.length > 0 ? (
 									<select
@@ -1364,8 +1147,8 @@ export function ChatPanel({
 							</div>
 						</div>
 					) : null}
-					<div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-[#3c3c3c] bg-[#2d2d2d] p-1.5 sm:flex-nowrap">
-						<div className="scrollbar-hide flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overflow-y-hidden">
+					<div className="flex items-center gap-2 border-t border-[#3c3c3c] bg-[#2d2d2d] p-1.5">
+						<div className="flex min-w-0 flex-1 items-center gap-2">
 							<button
 								type="button"
 								onClick={() => fileRef.current?.click()}
@@ -1385,7 +1168,7 @@ export function ChatPanel({
 										const v = e.target.value;
 										onChatAgentChange(v === "" ? null : v);
 									}}
-									className="min-w-0 max-w-[min(100px,34vw)] shrink rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-1 font-mono text-[10px] text-[#cccccc] outline-none focus:border-[#ea580c] disabled:opacity-40 sm:max-w-[min(200px,50%)]"
+									className="min-w-0 max-w-[min(200px,50%)] shrink rounded border border-[#3c3c3c] bg-[#1e1e1e] px-1.5 py-1 font-mono text-[10px] text-[#cccccc] outline-none focus:border-[#ea580c] disabled:opacity-40"
 								>
 								<option value="">Orchestrator (session lead)</option>
 								{pickerAgents.map((a) => (
@@ -1424,12 +1207,11 @@ export function ChatPanel({
 									title="Show the agent panel (if hidden) and expand Team here — roster beside the editor, like Cursor’s agent sidebar"
 									className="shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-[#858585] hover:border-[#555555] hover:text-[#cccccc]"
 								>
-									<span className="sm:hidden">Pane</span>
-									<span className="hidden sm:inline">Pane team</span>
+									Pane team
 								</button>
 							) : null}
 						</div>
-						<div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
+						<div className="flex shrink-0 items-center gap-2">
 							{technical && chatMode && onChatModeChange && !teamPaneOpen ? (
 								<div
 									className="flex shrink-0 rounded border border-[#3c3c3c] bg-[#1e1e1e] p-0.5"
@@ -1481,6 +1263,5 @@ export function ChatPanel({
 				</form>
 			</div>
 		</div>
-		</>
 	);
 }

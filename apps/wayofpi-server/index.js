@@ -1,10 +1,20 @@
 // Barrel export file for @wayofpi-server module resolution
-// This file allows importing via @wayofpi-server/session
+// Supports: @wayofpi-server, @wayofpi-server/session, @wayofpi-server/screenBuffer
 
-const SessionManager = require("./src/SessionManager.js").default;
-const screenBuffer = require("./src/ScreenBuffer.js").default;
+import SessionManager from "./src/SessionManager.js";
+import screenBuffer from "./src/ScreenBuffer.js";
 
-module.exports = {
+// Export with package exports map for subpath imports
+export { SessionManager };
+export { screenBuffer };
+export { default as session } from "./src/SessionManager.js";
+export { default as screen } from "./src/ScreenBuffer.js";
+
+// Also export at root for direct imports
+export const defaultExports = {
   SessionManager,
-  screenBuffer,
+  screenBuffer
 };
+
+// Main export for @wayofpi-server
+export { SessionManager as default };

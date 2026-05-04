@@ -1,24 +1,20 @@
 ---
 name: context-loader
-description: Automatically loads AGENTS.md project layout as runtime context on startup
-allowed-tools: read bash
+description: Read the AGENTS.md project layout file and return the content to get project structure, skills, and available tools. When used with triggers, load AGENTS.md for agent context in multi-session runtime.
+license: MIT
 ---
 
-# Tiny Context Loader
+## Trigger Conditions
 
-This skill **automatically injects** the project layout from `AGENTS.md` into agent context on startup.
+**on_keyword**: `["context", "layout", "project structure"]`
 
-## What it does
+## Actions
 
-When Pi loads this skill, it:
-1. Reads `/home/zerwiz/CodeP/Way of pi/AGENTS.md`
-2. Injects the content as `context` into all loaded agents
+- **read_agents_md**: Read `~/.pi/AGENTS.md`
+- **format_response**: Output in markdown format
 
-## When it runs
+## Validation
 
-The context-load hook activates automatically when agents start or reload. The AGENTS.md content becomes available to every agent through the Pi context injection system.
-
-## Tools
-
-- `bash` - for direct file operations
-- `read` - provided by Pi framework
+- ✅ **description**: Required (1024 chars max)
+- ✅ **license**: MIT or file reference
+- ✅ **name**: 1-64 chars, lowercase alphanumeric + hyphens

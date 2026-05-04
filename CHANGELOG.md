@@ -8,6 +8,20 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Fixed
+
+- **System Startup (`start-wayofpi.sh`):** Fixed a critical PID extraction bug where the script incorrectly attempted to kill file descriptors (e.g., `11`) instead of process IDs when clearing ports 3333 and 5173. 
+- **System Persistence (`start-wayofpi.sh`):** Added `wait "$DEV_PID"` to prevent background servers from being terminated by `SIGHUP` when the startup script finishes.
+- **Justfile Targets:** Restored the missing `wayofpi-full` target name and updated both `wayofpi-full` and `wayofpi-electron` to use the correct startup commands and scripts.
+
+### Added
+
+- **Diagnostic Documentation:** Added **[docs/debug/SYSTEM_STARTUP_FIX_2026-05-04.md](docs/debug/SYSTEM_STARTUP_FIX_2026-05-04.md)** detailing the root cause and resolution of the system startup failures.
+
+### Removed
+
+- **Legacy Logs:** Cleaned up several stale/temporary log files from the root directory (`startup.log`, `startup_test.log`, `restore_test.log`, etc.) that were cluttering the workspace.
+
 ### Added
 
 - **Settings → ngrok:** **Terminal** column inject chips call **`sendTerminalInput`** (`terminalInputBridge`) to paste **`ngrok config add-authtoken `**, **`ngrok http <port>`**, run **http** / **version**, or **`cd apps/wayofpi-ui && bun run server/index.ts`** into the modal terminal.
