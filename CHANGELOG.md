@@ -10,6 +10,19 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ### Added
 
+- **Phase 3 Wiring (Work Leader System):**
+  - **Real Services Integration:** Updated `WorkBoard.tsx`, `WorkTaskCard.tsx`, `WorkDocsView.tsx`, `WorkTeamView.tsx` to use real API services (replacing mocks):
+    - `kanbanService.ts` → `GET /api/portal/tasks`
+    - `notesService.ts` → `GET /api/portal/files`
+    - `tasksService.ts` → `GET/POST /api/portal/time`
+    - `driveService.ts` → `GET /api/portal/files`
+    - `boardMembersService.ts` → `GET /api/admin/users`
+  - **WorkApp.tsx:** Wired to real APIs with JWT auth from `localStorage.getItem("wop_token")`.
+  - **useAIPredictions Hook:** Created `hooks/useAIPredictions.ts` with `refreshPredictions()`, `refreshWorkerPerformance()`, `refreshProjectInsights()`, `generatePrediction()`.
+  - **Modal Components:** Created `Modal.tsx` and `ConfirmationModal.tsx` in `components/modals/` for kanban UI.
+  - **Server Fix:** Restored `server/index.ts` from parent commit (bb44eef^) and carefully re-applied Phase 2 changes (auth, APIs, tenantId) - fixed syntax errors.
+  - **Dev Mode:** Added `WOP_DEV_MODE=true` to npm scripts in `package.json` for proper WebSocket auth bypass.
+
 - **Work Leader Integrations (Phase 3):**
   - **Kanban System Integration**: Migrated and adapted a comprehensive Kanban board from reference projects to `apps/wayofpi-ui/src/components/work/kanban/`.
   - **Theme Alignment**: Reskinned all Kanban components (Board, Cards, Modals) with Way of Pi brand colors (`bg-[#252526]`, `border-[#ea580c]`, `text-[#cccccc]`).

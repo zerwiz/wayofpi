@@ -2387,6 +2387,9 @@ const server = Bun.serve<ServerWsData>({
 	async fetch(req, srv) {
 		const url = new URL(req.url);
 
+		// DEV MODE: Allow all WebSocket upgrades when WOP_DEV_MODE=true
+		const devMode = process.env.WOP_DEV_MODE === "true";
+
 		if (url.pathname === "/ws/terminal" && req.headers.get("upgrade") === "websocket") {
 			if (!terminalAllowed()) {
 				return new Response(
@@ -2405,10 +2408,20 @@ const server = Bun.serve<ServerWsData>({
 			return new Response("WebSocket upgrade failed", { status: 500 });
 		}
 
-                if (
+                 if (
                         url.pathname === "/ws" &&
                         req.headers.get("upgrade")?.toLowerCase() === "websocket"
                 ) {
+                        // In dev mode, allow WebSocket upgrades without auth
+                        if (!devMode) {
+                        	const authHeader = req.headers.get("Authorization");
+                        	const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+                        	const auth = token ? await verifyToken(token) : null;
+                        	if (!auth) {
+                        		return new Response("Unauthorized", { status: 401 });
+                        	}
+                        }
+                        
                         const upgraded = srv.upgrade(req, {
                                 data: {
                                         kind: "chat",
@@ -2424,8 +2437,8 @@ const server = Bun.serve<ServerWsData>({
                                         cumPromptTokens: 0,
                                         cumCompletionTokens: 0,
                                         wopSessionKey: null,
-					tenantId: auth?.tenantId || "unknown",
-					userId: auth?.userId || "unknown",
+					tenantId: devMode ? "dev-tenant" : auth?.tenantId || "unknown",
+					userId: devMode ? "dev-user" : auth?.userId || "unknown",
                                 } satisfies ChatWsData,
                         });
                         if (upgraded) return undefined as unknown as Response;

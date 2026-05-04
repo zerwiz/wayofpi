@@ -21,6 +21,7 @@ export default defineConfig({
       '/ws': {
         target: 'ws://127.0.0.1:3333',
         ws: true,
+        changeOrigin: true,
       },
     },
     hmr: {

@@ -48,7 +48,7 @@ This list tracks all remaining tasks for **Way of Pi** production readiness, pri
     - `WOP_CHAT_ENGINE=bundled`/`bun`: Always use Bun-native tools (no Pi dependency).
   - **Benefits:** Pi becomes authoritative tool executor with `registerTool`, `dispatch_agent`, extensions, and slash commands working inside Pi subprocess.
 
-## 🟠 Phase 3: Work Leader Integrations (Kanban & AI) (IN PROGRESS - AGENT WORKING)
+## 🟠 Phase 3: Work Leader Integrations (Kanban & AI) (IN PROGRESS - 6/9 COMPLETE)
 *Focus: Feature parity with reference projects and AI enhancement.*
 - [x] **Copy Kanban Code:** Copied 9 files from `/ref/kanban/` to `components/work/kanban/` (100K+ lines).
 - [x] **Reskin Colors:** Replaced kanban colors with Way of Pi theme (`bg-[#252526]`, `border-[#ea580c]`, `text-[#cccccc]`).

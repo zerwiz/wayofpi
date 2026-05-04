@@ -930,13 +930,13 @@ export const WorkTaskCard: React.FC<WorkTaskCardProps> = ({
     setShowChecklistForm(false);
   };
 
+  // Main component render
   if (!isOpen) return null;
 
   // In create mode, card will be null until the card is created
   // In edit mode, we need card
   if (!isCreateMode && !card) return null;
 
-  // const _displayCard = isCreateMode ? null : card;
   const displayData = isCreateMode || isEditing ? editedCard : card;
 
   return (
