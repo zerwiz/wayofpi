@@ -1,4 +1,4 @@
-import { PanelLeft, PanelRight } from "lucide-react";
+import { PanelLeft, PanelRight, FileText } from "lucide-react";
 
 /** Below shared MenuBar: sidebar toggles + connection (Simple layout only). */
 export function SimpleSecondaryToolbar({
@@ -8,6 +8,8 @@ export function SimpleSecondaryToolbar({
 	onToggleRight,
 	connected,
 	appearanceDark,
+	onSwitchToDocs,
+	indexingStatus,
 }: {
 	leftOpen: boolean;
 	rightOpen: boolean;
@@ -15,6 +17,8 @@ export function SimpleSecondaryToolbar({
 	onToggleRight: () => void;
 	connected: boolean;
 	appearanceDark: boolean;
+	onSwitchToDocs?: () => void;
+	indexingStatus?: "idle" | "indexing" | "ready";
 }) {
 	const bar = appearanceDark
 		? "border-b border-[#252526] bg-[#252526]"
@@ -24,6 +28,9 @@ export function SimpleSecondaryToolbar({
 		: "text-[#616161] hover:bg-[#e5e5e5] hover:text-[#333333]";
 	const activeR = appearanceDark ? "bg-[#ea580c]/25 text-[#fb923c]" : "bg-[#ea580c]/15 text-[#ea580c]";
 	const label = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
+
+	const indexingColor = indexingStatus === "ready" ? "bg-[#89d185]" : indexingStatus === "indexing" ? "bg-[#fbbf24]" : "bg-[#cca700]";
+	const indexingTitle = indexingStatus === "ready" ? "Workspace indexed" : indexingStatus === "indexing" ? "Indexing in progress..." : "Not indexed";
 
 	return (
 		<div className={`flex h-9 shrink-0 items-center justify-between px-2 ${bar}`}>
@@ -43,6 +50,20 @@ export function SimpleSecondaryToolbar({
 				<span className={`hidden text-xs font-medium sm:inline ${label}`}>
 					{connected ? "Online" : "Connecting…"}
 				</span>
+				{onSwitchToDocs && (
+					<button
+						type="button"
+						onClick={onSwitchToDocs}
+						className={`rounded p-1.5 transition-colors ${btn}`}
+						title="Switch to Docs mode"
+					>
+						<FileText size={18} className="text-[#fb923c]" />
+					</button>
+				)}
+				<div
+					className={`h-2 w-2 rounded-full ${indexingColor}`}
+					title={indexingTitle}
+				/>
 			</div>
 			<button
 				type="button"

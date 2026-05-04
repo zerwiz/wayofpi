@@ -118,12 +118,12 @@ export function readPlannerAgentBodySync(workspaceRoot: string): string | null {
 	return null;
 }
 
-export async function loadWorkspaceAgents(): Promise<{
+export async function loadWorkspaceAgents(tenantId: string = "default"): Promise<{
 	agents: AgentMeta[];
 	teams: Record<string, string[]>;
 	teamsPath: string | null;
 }> {
-	const folders = listWorkspaceFolders();
+	const folders = listWorkspaceFolders(tenantId);
 	const multi = folders.length > 1;
 	/** Lowercase agent name → meta; first scanned file wins (Pi `agent-team` rule). */
 	const byKey = new Map<string, AgentMeta>();
@@ -186,10 +186,10 @@ export function extractBodyAfterFrontmatter(raw: string): string {
 }
 
 /** First workspace match for agent `name` (same scan order as `loadWorkspaceAgents`). */
-export async function getAgentBodyByName(agentName: string): Promise<string | null> {
+export async function getAgentBodyByName(agentName: string, tenantId: string = "default"): Promise<string | null> {
 	const want = agentName.trim().toLowerCase();
 	if (!want) return null;
-	const folders = listWorkspaceFolders();
+	const folders = listWorkspaceFolders(tenantId);
 	for (const { path: root } of folders) {
 		for (const dir of agentScanRoots(root)) {
 			if (!existsSync(dir)) continue;

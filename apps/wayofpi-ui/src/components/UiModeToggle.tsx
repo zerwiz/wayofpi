@@ -1,4 +1,5 @@
 import type { UiMode } from "../hooks/useUiMode";
+import { FileText } from "lucide-react";
 
 /** Same control as in the technical `MenuBar` (IDE chrome). */
 export function UiModeToggle({
@@ -39,6 +40,17 @@ export function UiModeToggle({
 				title="Claw roadmap: autonomous-agent shell (same IDE chrome today; docs/WOP_CLAW_MODE_PLAN.md + WOP_CLAW_UI_PLAN.md)"
 			>
 				Claw
+			</button>
+			<button
+				type="button"
+				onClick={() => onUiModeChange("docs")}
+				className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
+					uiMode === "docs" ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
+				}`}
+				title="Docs mode: 3-panel layout with file tree, chat, and preview"
+			>
+				<FileText size={12} />
+				Docs
 			</button>
 		</div>
 	);

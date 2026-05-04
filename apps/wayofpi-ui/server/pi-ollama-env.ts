@@ -65,10 +65,10 @@ export function resolveOllamaHost(): string {
  * Prefer **`OLLAMA_MODEL`**, else first **`agent/settings.json`** (Ollama `defaultModel`) under any
  * configured workspace folder (primary first), else **`llama3`**.
  */
-export function resolveOllamaModelDefault(): string {
+export function resolveOllamaModelDefault(tenantId: string = "default"): string {
 	const env = process.env.OLLAMA_MODEL?.trim();
 	if (env) return env;
-	for (const { path: root } of listWorkspaceFolders()) {
+	for (const { path: root } of listWorkspaceFolders(tenantId)) {
 		const m = tryReadAgentSettingsDefaultModel(root);
 		if (m) return m;
 	}

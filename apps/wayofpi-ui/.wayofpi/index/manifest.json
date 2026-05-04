@@ -1,0 +1,2125 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": ".env.sample",
+      "size": 6078,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": ".gitignore",
+      "size": 234,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": ".ngrok-authtoken.local.example",
+      "size": 638,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777894998590-c-ql0i7dd.jsonl",
+      "size": 204,
+      "mtimeMs": 1777895279286
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777896873869-c-1rb2wij.jsonl",
+      "size": 204,
+      "mtimeMs": 1777896881542
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777897388668-c-v95kq73.jsonl",
+      "size": 204,
+      "mtimeMs": 1777897453682
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777897517991-c-o23b851.jsonl",
+      "size": 204,
+      "mtimeMs": 1777897543539
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897050573-d-q8mth35.jsonl",
+      "size": 204,
+      "mtimeMs": 1777897058236
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897388668-d-in0vuet.jsonl",
+      "size": 204,
+      "mtimeMs": 1777897457999
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897517991-d-xdrlhsh.jsonl",
+      "size": 204,
+      "mtimeMs": 1777897557250
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897567289-d-jr9s3x3.jsonl",
+      "size": 204,
+      "mtimeMs": 1777897783606
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777898752375-d-nwhekdz.jsonl",
+      "size": 204,
+      "mtimeMs": 1777898760649
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777890724162-s-l6aklwh.jsonl",
+      "size": 1242,
+      "mtimeMs": 1777890943144
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777893381469-s-p607orz.jsonl",
+      "size": 206,
+      "mtimeMs": 1777894997889
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777894998590-s-w2xbovj.jsonl",
+      "size": 1011,
+      "mtimeMs": 1777895348599
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777895350982-s-qsmh55l.jsonl",
+      "size": 206,
+      "mtimeMs": 1777895351149
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777895514241-s-77b26tk.jsonl",
+      "size": 206,
+      "mtimeMs": 1777895514418
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777895970477-s-sh41g6m.jsonl",
+      "size": 206,
+      "mtimeMs": 1777895970634
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896873868-s-sq1y0t5.jsonl",
+      "size": 206,
+      "mtimeMs": 1777896944387
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896958413-s-s8dmjhv.jsonl",
+      "size": 206,
+      "mtimeMs": 1777896958622
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896991912-s-7rtppjm.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897046867
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896991913-s-7m1g9ya.jsonl",
+      "size": 206,
+      "mtimeMs": 1777896992113
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897005054-s-ktu5124.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897005232
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897046809-s-3li92xp.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897046996
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897050573-s-fe7qqjg.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897050750
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897241760-s-i29z2i6.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897412224
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897241775-s-7eue18b.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897353660
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897379639-s-yus30ye.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897379826
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897388668-s-7m9o85i.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897412338
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897517991-s-z0pgytq.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897518181
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897562322-s-os38k64.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897783464
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897567289-s-sdvwmai.jsonl",
+      "size": 206,
+      "mtimeMs": 1777897567458
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777898752375-s-x42ntpt.jsonl",
+      "size": 206,
+      "mtimeMs": 1777898752528
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777898755408-s-jn2up8x.jsonl",
+      "size": 206,
+      "mtimeMs": 1777898755675
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775884819707-0lq5n9x.jsonl",
+      "size": 197,
+      "mtimeMs": 1775884819000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775884828469-o2mrtqn.jsonl",
+      "size": 197,
+      "mtimeMs": 1775884828000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775884851201-wrjx7go.jsonl",
+      "size": 197,
+      "mtimeMs": 1775885099000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775956306884-fdq14tr.jsonl",
+      "size": 197,
+      "mtimeMs": 1775956746000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777894998590-t-1xx9y0w.jsonl",
+      "size": 209,
+      "mtimeMs": 1777895280235
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777896873869-t-2mhvnz6.jsonl",
+      "size": 209,
+      "mtimeMs": 1777896883142
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777897388668-t-cw2yx7b.jsonl",
+      "size": 209,
+      "mtimeMs": 1777897454739
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777897517991-t-y9ff31m.jsonl",
+      "size": 209,
+      "mtimeMs": 1777897556044
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777897567289-t-isvy2he.jsonl",
+      "size": 209,
+      "mtimeMs": 1777897597149
+    },
+    {
+      "path": "bun.lock",
+      "size": 133410,
+      "mtimeMs": 1777900489759
+    },
+    {
+      "path": "deps/wopi.desktop",
+      "size": 292,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "docker-compose.yml",
+      "size": 430,
+      "mtimeMs": 1777900546010
+    },
+    {
+      "path": "Dockerfile",
+      "size": 751,
+      "mtimeMs": 1777900541487
+    },
+    {
+      "path": "electron/build/generate-macos-icns.sh",
+      "size": 1114,
+      "mtimeMs": 1775949437000
+    },
+    {
+      "path": "electron/electron-main.mjs",
+      "size": 12525,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "electron/preload.mjs",
+      "size": 1376,
+      "mtimeMs": 1775949264000
+    },
+    {
+      "path": "electron/wait-prod.mjs",
+      "size": 848,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "index.html",
+      "size": 476,
+      "mtimeMs": 1775871543000
+    },
+    {
+      "path": "package-lock.json",
+      "size": 203221,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "package.json",
+      "size": 2617,
+      "mtimeMs": 1777900499839
+    },
+    {
+      "path": "postcss.config.js",
+      "size": 75,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "public/wayofpi-icon.svg",
+      "size": 1228,
+      "mtimeMs": 1775876814000
+    },
+    {
+      "path": "README.md",
+      "size": 23065,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/.pi/db/.keep",
+      "size": 0,
+      "mtimeMs": 1777904502899
+    },
+    {
+      "path": "server/.pi/db/wayofpi.sqlite",
+      "size": 4096,
+      "mtimeMs": 1777904502902
+    },
+    {
+      "path": "server/.pi/db/wayofpi.sqlite-shm",
+      "size": 32768,
+      "mtimeMs": 1777904502903
+    },
+    {
+      "path": "server/.pi/db/wayofpi.sqlite-wal",
+      "size": 387312,
+      "mtimeMs": 1777904502904
+    },
+    {
+      "path": "server/agents.ts",
+      "size": 6242,
+      "mtimeMs": 1777900372509
+    },
+    {
+      "path": "server/auth.ts",
+      "size": 575,
+      "mtimeMs": 1777899979678
+    },
+    {
+      "path": "server/chat-context-budget.ts",
+      "size": 4126,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/chat-orchestrator-tools.ts",
+      "size": 16345,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/chat-slash-commands.ts",
+      "size": 9476,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/chat-usage.ts",
+      "size": 3956,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/chat.ts",
+      "size": 10250,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-automation-status.ts",
+      "size": 1741,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-mission-events.ts",
+      "size": 2704,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-schedule-executor.ts",
+      "size": 4152,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-scheduler.ts",
+      "size": 2951,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-schedules-store.ts",
+      "size": 6116,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-telegram-status copy.ts",
+      "size": 2791,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/claw-telegram-status.ts",
+      "size": 2791,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "server/claw-webhook-store.ts",
+      "size": 2865,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/claw-workspace-root.ts",
+      "size": 3774,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/db.ts",
+      "size": 1666,
+      "mtimeMs": 1777899969420
+    },
+    {
+      "path": "server/diagnostics.ts",
+      "size": 17682,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/git.ts",
+      "size": 8365,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/github-connection.ts",
+      "size": 4066,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/index.ts",
+      "size": 83960,
+      "mtimeMs": 1777904377034
+    },
+    {
+      "path": "server/init-db.ts",
+      "size": 1007,
+      "mtimeMs": 1777904502876
+    },
+    {
+      "path": "server/llm-models.ts",
+      "size": 2014,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/native-file-dialog.ts",
+      "size": 4806,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/ngrok-binary.ts",
+      "size": 1342,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/ngrok-inspector.ts",
+      "size": 1950,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/ngrok-tunnel-manager.ts",
+      "size": 13171,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/orchestrator-dispatch-intent.ts",
+      "size": 5017,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/orchestrator-git-tools.ts",
+      "size": 17831,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/orchestrator-tools-exec.ts",
+      "size": 20728,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/package-scripts.ts",
+      "size": 584,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/paths.ts",
+      "size": 1727,
+      "mtimeMs": 1777900163584
+    },
+    {
+      "path": "server/pi-agent-runtime.ts",
+      "size": 5688,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/pi-binary.ts",
+      "size": 3174,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/pi-json-mode-chat.ts",
+      "size": 7055,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/pi-ollama-env.ts",
+      "size": 3140,
+      "mtimeMs": 1777900555238
+    },
+    {
+      "path": "server/plans-catalog.ts",
+      "size": 2282,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/schema.sql",
+      "size": 9492,
+      "mtimeMs": 1777904463659
+    },
+    {
+      "path": "server/session-prompts.ts",
+      "size": 17983,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/share-url-hints.ts",
+      "size": 1883,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/tcp-probe.ts",
+      "size": 665,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/teams-yaml-mutate.ts",
+      "size": 6806,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/terminal-ws.ts",
+      "size": 8324,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/tool-log-broadcast.ts",
+      "size": 1002,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/tree.ts",
+      "size": 4581,
+      "mtimeMs": 1777900323654
+    },
+    {
+      "path": "server/tunnel-gate.ts",
+      "size": 11190,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "server/ui-views-catalog.ts",
+      "size": 5977,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/web-manifest.ts",
+      "size": 2834,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/wop-session-jsonl.ts",
+      "size": 5075,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/workspace-file-mime.ts",
+      "size": 429,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/workspace-index.ts",
+      "size": 17697,
+      "mtimeMs": 1777891487206
+    },
+    {
+      "path": "server/workspace-problems.ts",
+      "size": 7109,
+      "mtimeMs": 1776548163000
+    },
+    {
+      "path": "server/workspace-state.ts",
+      "size": 9594,
+      "mtimeMs": 1777900151094
+    },
+    {
+      "path": "shared/chat-usage.ts",
+      "size": 3956,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "shared/claw-automation-status.ts",
+      "size": 1741,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-mission-events.ts",
+      "size": 2704,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-schedule-cron.ts",
+      "size": 3085,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-schedule-executor.ts",
+      "size": 4152,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-scheduler.ts",
+      "size": 2951,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-schedules-store.ts",
+      "size": 6116,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-schedules-types.ts",
+      "size": 1096,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-telegram-status copy.ts",
+      "size": 4179,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-telegram-status.ts",
+      "size": 1829,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-webhook-store.ts",
+      "size": 2865,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/claw-workspace-root.ts",
+      "size": 3774,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/code-workspace-file.ts",
+      "size": 2236,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "shared/session-log-metadata.ts",
+      "size": 3380,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/api/client.ts",
+      "size": 1302,
+      "mtimeMs": 1777902384294
+    },
+    {
+      "path": "src/api/nativeDialog.ts",
+      "size": 1252,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/api/workspace.ts",
+      "size": 727,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/App.tsx",
+      "size": 160067,
+      "mtimeMs": 1777901998731
+    },
+    {
+      "path": "src/App.tsx.backup-1",
+      "size": 176905,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/AppContainer.tsx",
+      "size": 1750,
+      "mtimeMs": 1777373251341
+    },
+    {
+      "path": "src/apps ref 2.md",
+      "size": 9913,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/claw/clawUiModules.ts",
+      "size": 2678,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/claw/clawUserUiModules.ts",
+      "size": 716,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/ActivityBar.tsx",
+      "size": 1626,
+      "mtimeMs": 1777887820564
+    },
+    {
+      "path": "src/components/AgentPermissionsModal.tsx",
+      "size": 5796,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/AgentTeamPulseGrid.tsx",
+      "size": 11475,
+      "mtimeMs": 1775953438000
+    },
+    {
+      "path": "src/components/ai-model-dropdown.tsx",
+      "size": 2722,
+      "mtimeMs": 1776890445000
+    },
+    {
+      "path": "src/components/ChatPanel.tsx",
+      "size": 49928,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/ChatQueueModal.tsx",
+      "size": 6101,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/components/claw/ClawApp.tsx",
+      "size": 37593,
+      "mtimeMs": 1776880648000
+    },
+    {
+      "path": "src/components/claw/ClawChannelsView.tsx",
+      "size": 22159,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/claw/ClawChatView.tsx",
+      "size": 22188,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/claw/ClawHelpModal.tsx",
+      "size": 40953,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/claw/ClawMissionView.tsx",
+      "size": 25190,
+      "mtimeMs": 1775960525000
+    },
+    {
+      "path": "src/components/claw/ClawNavRail.tsx",
+      "size": 3691,
+      "mtimeMs": 1775949264000
+    },
+    {
+      "path": "src/components/claw/ClawScheduleMonthCalendar.tsx",
+      "size": 9400,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/claw/ClawSchedulesView.tsx",
+      "size": 35470,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/claw/ClawSessionSidebar.tsx",
+      "size": 7259,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/claw/ClawSessionStrip.tsx",
+      "size": 3246,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/claw/ClawWorkspaceCard.tsx",
+      "size": 7297,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/claw/ClawWorkspaceOnboardingModal.tsx",
+      "size": 7102,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/CommandPalette.tsx",
+      "size": 3564,
+      "mtimeMs": 1777887810538
+    },
+    {
+      "path": "src/components/ContextUsageRing.tsx",
+      "size": 2068,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/components/DockRegionTitleBar.tsx",
+      "size": 1281,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/components/DockSplitHandle.tsx",
+      "size": 2728,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/dockToolAddMenu.tsx",
+      "size": 12025,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/docs/DocsApp.tsx",
+      "size": 6233,
+      "mtimeMs": 1777893380932
+    },
+    {
+      "path": "src/components/docs/DocumentEvaluationPanel.tsx",
+      "size": 7565,
+      "mtimeMs": 1777901061422
+    },
+    {
+      "path": "src/components/docs/index.ts",
+      "size": 69,
+      "mtimeMs": 1777901075598
+    },
+    {
+      "path": "src/components/documenthandler/Chat.tsx",
+      "size": 4524,
+      "mtimeMs": 1777893296032
+    },
+    {
+      "path": "src/components/documenthandler/ChatExplorer.tsx",
+      "size": 1599,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/ChatMessages.tsx",
+      "size": 1907,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/ChatPanel.tsx",
+      "size": 5269,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/context/DocumentHandlerContext.tsx",
+      "size": 5133,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/FileExplorer.tsx",
+      "size": 8839,
+      "mtimeMs": 1777896845154
+    },
+    {
+      "path": "src/components/documenthandler/FileIcons.tsx",
+      "size": 2097,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/FileItem.tsx",
+      "size": 2274,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/hooks/useChatMessages.ts",
+      "size": 756,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/hooks/useDocumentHandler.ts",
+      "size": 1709,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/hooks/useFileExplorer.ts",
+      "size": 2455,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/index.ts",
+      "size": 124,
+      "mtimeMs": 1777893296032
+    },
+    {
+      "path": "src/components/documenthandler/ListGridToggle.tsx",
+      "size": 1308,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/PageControls.tsx",
+      "size": 2469,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/PreviewContent.tsx",
+      "size": 2233,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/PreviewFooter.tsx",
+      "size": 819,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/PreviewHeader.tsx",
+      "size": 756,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/PreviewModal.tsx",
+      "size": 3743,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/SearchBar.tsx",
+      "size": 958,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/SortControls.tsx",
+      "size": 1417,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/styles/ChatExplorer.css",
+      "size": 11455,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/types/documenthandler.types.ts",
+      "size": 621,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/documenthandler/ZoomControls.tsx",
+      "size": 1733,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/EditorFindBar.tsx",
+      "size": 2361,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/components/EmbeddedTerminal.tsx",
+      "size": 5151,
+      "mtimeMs": 1777888727003
+    },
+    {
+      "path": "src/components/ExplorerSidebar.tsx",
+      "size": 10180,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/FileChangeReview.tsx",
+      "size": 8453,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/components/FileMenuContent.tsx",
+      "size": 10413,
+      "mtimeMs": 1777888727004
+    },
+    {
+      "path": "src/components/FileTree.tsx",
+      "size": 13991,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/GitExplorerStatusBadge.tsx",
+      "size": 7655,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/GithubManageSettingsCard.tsx",
+      "size": 11665,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/hermes/HermesFileBrowser.tsx",
+      "size": 13785,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/hermes/HermesTerminalView.tsx",
+      "size": 6459,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/HonchoSettingsModal.tsx",
+      "size": 9420,
+      "mtimeMs": 1775941380000
+    },
+    {
+      "path": "src/components/HostDoctorModal.tsx",
+      "size": 25179,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/HostDoctorWorkspaceFileEditor.tsx",
+      "size": 5458,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/HowToUseModal.tsx",
+      "size": 47530,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/IndexingDocsModal.tsx",
+      "size": 14408,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/InstallDebuggersModal.tsx",
+      "size": 8388,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/LaunchConfigAddModal.tsx",
+      "size": 3260,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/LlmFixModal.tsx",
+      "size": 5782,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/MarkdownPreviewPane.tsx",
+      "size": 4290,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/components/MenuBar.tsx",
+      "size": 121276,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/menus/EditMenu.tsx",
+      "size": 3053,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/menus/FileMenu.tsx",
+      "size": 4053,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/menus/GoMenu.tsx",
+      "size": 4477,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/menus/HelpMenu.tsx",
+      "size": 1566,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/menus/MenuBar.tsx",
+      "size": 2441,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/menus/RunMenu.tsx",
+      "size": 5663,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/menus/ViewMenu.tsx",
+      "size": 4175,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/MermaidPreviewPane.tsx",
+      "size": 2073,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/components/MitLicenseModal.tsx",
+      "size": 3821,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/chrome/MobileChrome.tsx",
+      "size": 1420,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/claw/ClawMobileTabBar.tsx",
+      "size": 4089,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/index.ts",
+      "size": 348,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/MobileChatExplorer.tsx",
+      "size": 5804,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/README.md",
+      "size": 1320,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/simple/SimpleMobileTabBar.tsx",
+      "size": 3336,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/technical/MobileTechnicalShell.tsx",
+      "size": 904,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/mobile/useShellMobile.ts",
+      "size": 2289,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/modals/HowToUseModal.tsx",
+      "size": 10876,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ModelSelectorModal.tsx",
+      "size": 4997,
+      "mtimeMs": 1776886454000
+    },
+    {
+      "path": "src/components/NewAgentModal.tsx",
+      "size": 4983,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/NewPlanFileModal.tsx",
+      "size": 4704,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/NewWorkspaceFileModal.tsx",
+      "size": 4483,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/NgrokSettingsModal.tsx",
+      "size": 62159,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/PanelDockBand.tsx",
+      "size": 9204,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/ProblemsPanelBody.tsx",
+      "size": 11453,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/components/ProviderConfigEditor.tsx",
+      "size": 8271,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/RestartServerModal.tsx",
+      "size": 9324,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/simple/SimpleApp.tsx",
+      "size": 38569,
+      "mtimeMs": 1777895655286
+    },
+    {
+      "path": "src/components/simple/SimpleChatView.tsx",
+      "size": 37425,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/simple/SimpleFilePanel.tsx",
+      "size": 12682,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/simple/SimpleFileTree.tsx",
+      "size": 14474,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/simple/SimpleModelsView.tsx",
+      "size": 24597,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/simple/SimpleNavRail.tsx",
+      "size": 3559,
+      "mtimeMs": 1777893255068
+    },
+    {
+      "path": "src/components/simple/SimplePlanWorkspacePane.tsx",
+      "size": 3398,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/components/simple/SimpleProjectsView.tsx",
+      "size": 5718,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/simple/SimpleRightPanel.tsx",
+      "size": 6896,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/simple/SimpleRunScriptsModal.tsx",
+      "size": 4756,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/simple/SimpleSecondaryToolbar.tsx",
+      "size": 2548,
+      "mtimeMs": 1777895584518
+    },
+    {
+      "path": "src/components/simple/SimpleSettingsView.tsx",
+      "size": 11237,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/simple/SimpleTeamView.tsx",
+      "size": 21426,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/StatusBar.tsx",
+      "size": 15940,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/StripFilePreview.tsx",
+      "size": 2419,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/components/TeamsGuiEditorModal.tsx",
+      "size": 20332,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/technical/CommandPalette.tsx",
+      "size": 3564,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/DebugPanel.tsx",
+      "size": 1031,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/PlanReview.tsx",
+      "size": 1069,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/TechnicalChatPanel.tsx",
+      "size": 3684,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/TechnicalEditorColumn.tsx",
+      "size": 3584,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/TechnicalPrimarySidebar.tsx",
+      "size": 678,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/TechnicalSidePanels.tsx",
+      "size": 41719,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/TechnicalWorkspaceGrid.tsx",
+      "size": 26890,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/technical/TerminalSettingsSection.tsx",
+      "size": 7875,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/TechnicalEditorColumn.tsx",
+      "size": 3571,
+      "mtimeMs": 1777888727004
+    },
+    {
+      "path": "src/components/TechnicalPrimarySidebar.tsx",
+      "size": 678,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/TechnicalSidePanels.tsx",
+      "size": 41688,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/TechnicalWorkspaceGrid.tsx",
+      "size": 24044,
+      "mtimeMs": 1777888727004
+    },
+    {
+      "path": "src/components/terminal/TerminalMenu.tsx",
+      "size": 2804,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/TerminalSettingsSection.tsx",
+      "size": 7863,
+      "mtimeMs": 1777888727004
+    },
+    {
+      "path": "src/components/ToolPanelBody.tsx",
+      "size": 5312,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/components/ui/Badge.d.ts",
+      "size": 628,
+      "mtimeMs": 1776888898000
+    },
+    {
+      "path": "src/components/ui/Badge.tsx",
+      "size": 1420,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ui/button.css",
+      "size": 271,
+      "mtimeMs": 1776888571000
+    },
+    {
+      "path": "src/components/ui/Button.d.ts",
+      "size": 455,
+      "mtimeMs": 1776888887000
+    },
+    {
+      "path": "src/components/ui/Button.tsx",
+      "size": 1691,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ui/Card.tsx",
+      "size": 1747,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ui/CodeArea.tsx",
+      "size": 7466,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ui/DropdownMenu.d.ts",
+      "size": 2534,
+      "mtimeMs": 1776889383000
+    },
+    {
+      "path": "src/components/ui/DropdownMenu.tsx",
+      "size": 2679,
+      "mtimeMs": 1776890008000
+    },
+    {
+      "path": "src/components/ui/index.ts",
+      "size": 35,
+      "mtimeMs": 1776888566000
+    },
+    {
+      "path": "src/components/ui/Input.d.ts",
+      "size": 392,
+      "mtimeMs": 1776888872000
+    },
+    {
+      "path": "src/components/ui/Input.tsx",
+      "size": 1269,
+      "mtimeMs": 1776888490000
+    },
+    {
+      "path": "src/components/ui/Label.d.ts",
+      "size": 488,
+      "mtimeMs": 1776888866000
+    },
+    {
+      "path": "src/components/ui/Label.tsx",
+      "size": 917,
+      "mtimeMs": 1776888417000
+    },
+    {
+      "path": "src/components/ui/Overview.tsx",
+      "size": 22535,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ui/PlanReview.tsx",
+      "size": 14527,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/components/ui/ScrollArea.d.ts",
+      "size": 430,
+      "mtimeMs": 1776888779000
+    },
+    {
+      "path": "src/components/ui/ScrollArea.tsx",
+      "size": 1490,
+      "mtimeMs": 1776888280000
+    },
+    {
+      "path": "src/components/ui/Scrollbar.tsx",
+      "size": 740,
+      "mtimeMs": 1776888346000
+    },
+    {
+      "path": "src/components/ui/Textarea.d.ts",
+      "size": 440,
+      "mtimeMs": 1776888879000
+    },
+    {
+      "path": "src/components/ui/Textarea.tsx",
+      "size": 1225,
+      "mtimeMs": 1776888566000
+    },
+    {
+      "path": "src/components/UiModeToggle.tsx",
+      "size": 1815,
+      "mtimeMs": 1777896991794
+    },
+    {
+      "path": "src/components/work/index.ts",
+      "size": 37,
+      "mtimeMs": 1777901075595
+    },
+    {
+      "path": "src/components/work/kanban/BoardSettingsModal.tsx",
+      "size": 20182,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/PushTaskListToKanbanModal.tsx",
+      "size": 15204,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/PushToKanbanModal.tsx",
+      "size": 23688,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/PushWorkflowToKanbanModal.tsx",
+      "size": 19642,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/WorkBoardSelector.tsx",
+      "size": 14946,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/WorkDocsView.tsx",
+      "size": 11090,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/WorkFilesView.tsx",
+      "size": 14953,
+      "mtimeMs": 1777904713669
+    },
+    {
+      "path": "src/components/work/kanban/WorkTaskCard.tsx",
+      "size": 100367,
+      "mtimeMs": 1777904713670
+    },
+    {
+      "path": "src/components/work/kanban/WorkTeamView.tsx",
+      "size": 14031,
+      "mtimeMs": 1777904713670
+    },
+    {
+      "path": "src/components/work/WorkApp.tsx",
+      "size": 11708,
+      "mtimeMs": 1777903185389
+    },
+    {
+      "path": "src/components/WorkspaceAgentTeamPane.tsx",
+      "size": 9102,
+      "mtimeMs": 1775953438000
+    },
+    {
+      "path": "src/components/WorkspaceCellDropSurface.tsx",
+      "size": 3061,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/components/WorkspaceDropOverlay.tsx",
+      "size": 954,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/components/WorkspaceGridLayoutPicker.tsx",
+      "size": 3271,
+      "mtimeMs": 1777888727004
+    },
+    {
+      "path": "src/components/WorkspacePane.tsx",
+      "size": 42333,
+      "mtimeMs": 1777887820565
+    },
+    {
+      "path": "src/components/WorkspaceSvgPreview.tsx",
+      "size": 600,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/components/WorkspaceTextBuffer.tsx",
+      "size": 31810,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/constants/mitLicenseText.ts",
+      "size": 1196,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/constants/piModelConfigPaths.ts",
+      "size": 683,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/constants/workspaceEditorChrome.ts",
+      "size": 1169,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/context/WorkspaceStaticAnalysisContext.tsx",
+      "size": 1418,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/extentions/agent-team.ts",
+      "size": 61625,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/extentions/damage-control-rules.yaml",
+      "size": 8707,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/hooks/useAgents.ts",
+      "size": 886,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/hooks/useClawAutomationStatus.ts",
+      "size": 2433,
+      "mtimeMs": 1775960525000
+    },
+    {
+      "path": "src/hooks/useClawHostFileTree.ts",
+      "size": 2392,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/hooks/useClawMissionEvents.ts",
+      "size": 875,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/hooks/useClawSchedules.ts",
+      "size": 7649,
+      "mtimeMs": 1775960525000
+    },
+    {
+      "path": "src/hooks/useClawTelegramStatus.ts",
+      "size": 3018,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/hooks/useClawWorkspace.ts",
+      "size": 7533,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/hooks/useDebouncedUndoRedo.ts",
+      "size": 2329,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/hooks/useFileEditor.ts",
+      "size": 5316,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/hooks/useGithubConnection.ts",
+      "size": 1225,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/hooks/useLlmModels.ts",
+      "size": 1137,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/hooks/useLocalToday.ts",
+      "size": 1256,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/hooks/useMaxWidthMediaQuery.ts",
+      "size": 652,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/hooks/usePackageScripts.ts",
+      "size": 724,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/hooks/usePlanHandoffSelection.ts",
+      "size": 2795,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/hooks/useRunMenuDebugState.ts",
+      "size": 955,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/hooks/useServerConfig.ts",
+      "size": 5892,
+      "mtimeMs": 1775960525000
+    },
+    {
+      "path": "src/hooks/useSimpleChatWorkspaceLayout.ts",
+      "size": 1770,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/hooks/useSimplePreferences.ts",
+      "size": 3411,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/hooks/useTerminalUiPreferences.ts",
+      "size": 1414,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/hooks/useUiMode.ts",
+      "size": 1434,
+      "mtimeMs": 1777902118664
+    },
+    {
+      "path": "src/hooks/useUiViewsCatalog.ts",
+      "size": 1009,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/hooks/useWayOfPiSession.ts",
+      "size": 43939,
+      "mtimeMs": 1777902431403
+    },
+    {
+      "path": "src/hooks/useWebManifest.ts",
+      "size": 1181,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/hooks/useWorkspaceStaticAnalysis.ts",
+      "size": 3037,
+      "mtimeMs": 1775949264000
+    },
+    {
+      "path": "src/hooks/useWorkspaceTree.ts",
+      "size": 2884,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/index.css",
+      "size": 3396,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/lib/chatAttachment.ts",
+      "size": 466,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/lib/flattenFilePaths.ts",
+      "size": 375,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/lib/parseMessageSegments.ts",
+      "size": 1596,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/lib/SessionManagerClient.ts",
+      "size": 2939,
+      "mtimeMs": 1777373251340
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "size": 118,
+      "mtimeMs": 1776888534000
+    },
+    {
+      "path": "src/logs/index.tsx",
+      "size": 269,
+      "mtimeMs": 1777888693927
+    },
+    {
+      "path": "src/logs/LogsPanel.tsx",
+      "size": 2309,
+      "mtimeMs": 1777377292987
+    },
+    {
+      "path": "src/logs/TerminalBuffer.jsx",
+      "size": 1276,
+      "mtimeMs": 1777887848378
+    },
+    {
+      "path": "src/logs/TerminalBuffer.tsx",
+      "size": 2271,
+      "mtimeMs": 1777376912532
+    },
+    {
+      "path": "src/logs/TerminalInput.jsx",
+      "size": 6312,
+      "mtimeMs": 1777887848378
+    },
+    {
+      "path": "src/logs/TerminalInput.tsx",
+      "size": 2466,
+      "mtimeMs": 1777376971238
+    },
+    {
+      "path": "src/logs/TerminalRow.jsx",
+      "size": 1678,
+      "mtimeMs": 1777887848378
+    },
+    {
+      "path": "src/logs/TerminalRow.tsx",
+      "size": 2690,
+      "mtimeMs": 1777376844184
+    },
+    {
+      "path": "src/main.tsx",
+      "size": 285,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/pages/hermes/HermesPage.tsx",
+      "size": 4950,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/pages/hermes/types/hermes.ts",
+      "size": 4721,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/pages/index.ts",
+      "size": 47,
+      "mtimeMs": 1777901075590
+    },
+    {
+      "path": "src/pages/WorkerPortal.tsx",
+      "size": 10744,
+      "mtimeMs": 1777903206280
+    },
+    {
+      "path": "src/ReferenceApp.tsx",
+      "size": 204843,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/shared/code-workspace-file.ts",
+      "size": 507,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "src/types/fileMenu.ts",
+      "size": 1095,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/types/hostDoctor.ts",
+      "size": 1177,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/types/technicalShell.ts",
+      "size": 2233,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/types/tree.ts",
+      "size": 691,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/types/uiViewsCatalog.ts",
+      "size": 671,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/types/workspaceEditor.ts",
+      "size": 7953,
+      "mtimeMs": 1777888731534
+    },
+    {
+      "path": "src/types/workspaceFile.ts",
+      "size": 514,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/types/workspaceIndex.ts",
+      "size": 863,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/types/workspaceProblems.ts",
+      "size": 432,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/agentPermissionsStorage.ts",
+      "size": 3076,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/chatComposerInjectBus.ts",
+      "size": 629,
+      "mtimeMs": 1775949264000
+    },
+    {
+      "path": "src/utils/chatErrorModelHint.ts",
+      "size": 1067,
+      "mtimeMs": 1775876814000
+    },
+    {
+      "path": "src/utils/chatQueueTranscript.ts",
+      "size": 3548,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/chatSlashAutocomplete.ts",
+      "size": 2519,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/chromePreferences.ts",
+      "size": 1739,
+      "mtimeMs": 1777888731534
+    },
+    {
+      "path": "src/utils/clawScheduleCronDay.ts",
+      "size": 1906,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/clawScheduleDayMatch.ts",
+      "size": 961,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/clawTelegramSetupPrompt.ts",
+      "size": 872,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/clawWorkspaceOnboardingStorage.ts",
+      "size": 1385,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/clawWorkspaceTemplates.ts",
+      "size": 9719,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/codeWorkspaceFile.ts",
+      "size": 159,
+      "mtimeMs": 1777888731534
+    },
+    {
+      "path": "src/utils/dataTransferTypes.ts",
+      "size": 324,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/dockChrome.ts",
+      "size": 875,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/editorPreferences.ts",
+      "size": 397,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/editorSelection.ts",
+      "size": 5994,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/editorSyntaxHighlight.ts",
+      "size": 3680,
+      "mtimeMs": 1777896460079
+    },
+    {
+      "path": "src/utils/editorTextComments.ts",
+      "size": 2967,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/fileDiffHunks.ts",
+      "size": 3715,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/filterTreeByQuery.ts",
+      "size": 816,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/flattenTree.ts",
+      "size": 2302,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/gitStatusUi.ts",
+      "size": 2953,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/launchJsonMutate.ts",
+      "size": 2874,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/localCalendarDate.ts",
+      "size": 3226,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/panelDockLayout.ts",
+      "size": 18292,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/piSettingsJson.ts",
+      "size": 1030,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/planHandoffPersistence.ts",
+      "size": 1143,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/planModeArtifacts.ts",
+      "size": 1106,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/planModeComposerTemplates.ts",
+      "size": 774,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/planModeHeuristics.ts",
+      "size": 785,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/planModeWorkspace.ts",
+      "size": 676,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/posixPath.ts",
+      "size": 921,
+      "mtimeMs": 1775876814000
+    },
+    {
+      "path": "src/utils/showModelThinkingPreference.ts",
+      "size": 864,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/simpleWorkspaceLayoutStorage.ts",
+      "size": 3036,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/sortTreeNodes.ts",
+      "size": 502,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/teamsYaml.ts",
+      "size": 1280,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/technicalLayoutStorage.ts",
+      "size": 5581,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/terminalInputBridge.ts",
+      "size": 511,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/terminalRunCommands.ts",
+      "size": 1515,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/terminalUiPreferences.ts",
+      "size": 1677,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/tokenMeterFormat.ts",
+      "size": 602,
+      "mtimeMs": 1775876814000
+    },
+    {
+      "path": "src/utils/wayofpiDevApiWarmup.ts",
+      "size": 3236,
+      "mtimeMs": 1775957615000
+    },
+    {
+      "path": "src/utils/workspaceAgentDisplay.ts",
+      "size": 976,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/workspaceChatAgentPicker.ts",
+      "size": 1081,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/workspaceDiskPath.ts",
+      "size": 1831,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/workspaceDropZones.ts",
+      "size": 1276,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/utils/workspaceEditorChrome.ts",
+      "size": 493,
+      "mtimeMs": 1775940499000
+    },
+    {
+      "path": "src/utils/workspaceFilePreview.ts",
+      "size": 1703,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "src/utils/workspaceGridStorage.ts",
+      "size": 12345,
+      "mtimeMs": 1775876814000
+    },
+    {
+      "path": "src/utils/workspaceRecent.ts",
+      "size": 713,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "size": 1082,
+      "mtimeMs": 1775887309000
+    },
+    {
+      "path": "tailwind.config.js",
+      "size": 164,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "tsconfig.app.json",
+      "size": 727,
+      "mtimeMs": 1777902184819
+    },
+    {
+      "path": "tsconfig.json",
+      "size": 107,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "tsconfig.node.json",
+      "size": 287,
+      "mtimeMs": 1775866362000
+    },
+    {
+      "path": "tsconfig.tsbuildinfo",
+      "size": 59,
+      "mtimeMs": 1776875653000
+    },
+    {
+      "path": "vite.config.ts",
+      "size": 718,
+      "mtimeMs": 1777895348163
+    }
+  ]
+}

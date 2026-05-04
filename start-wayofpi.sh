@@ -82,9 +82,10 @@ pkill -9 -f "wayofpi-ui" 2>/dev/null || true
 pkill -9 -f "concurrently" 2>/dev/null || true
 pkill -9 -f "vite" 2>/dev/null || true
 pkill -9 -f "node.*server" 2>/dev/null || true
+pkill -9 -f "electron" 2>/dev/null || true
 sleep 1
 
-echo "Starting Way of Pi servers..."
+echo "Preparing Way of Pi..."
 
 # Check bun
 if ! command -v bun >/dev/null 2>&1; then
@@ -102,27 +103,33 @@ else
 fi
 
 # Start servers
-echo "Starting servers at: http://localhost:5173/"
-set +e
-bun run dev &
-DEV_PID=$!
+if [[ "$1" == "--web" ]] || [[ "$WOP_USE_ELECTRON" == "0" ]]; then
+	echo "Starting servers at: http://localhost:5173/"
+	set +e
+	bun run dev &
+	DEV_PID=$!
 
-# Wait for UI ready
-echo "Waiting for UI to be ready..."
-for i in {1..30}; do
-	if curl -sf -o /dev/null "http://localhost:5173/" 2>/dev/null; then
-		echo "✓ UI ready at http://localhost:5173/"
-		break
+	# Wait for UI ready
+	echo "Waiting for UI to be ready..."
+	for i in {1..30}; do
+		if curl -sf -o /dev/null "http://localhost:5173/" 2>/dev/null; then
+			echo "✓ UI ready at http://localhost:5173/"
+			break
+		fi
+		sleep 0.5
+	done || echo "⚠ UI not ready in 15s"
+
+	# Check if dev still running
+	if kill -0 "$DEV_PID" 2>/dev/null; then
+		echo "=== Servers running (PID: $DEV_PID) ==="
+		echo "Logs will be visible below. Press Ctrl+C to stop."
+		wait "$DEV_PID"
+	else
+		echo "⚠ Server process exited"
+		exit 1
 	fi
-	sleep 0.5
-done || echo "⚠ UI not ready in 15s"
-
-# Check if dev still running
-if kill -0 "$DEV_PID" 2>/dev/null; then
-	echo "=== Servers running (PID: $DEV_PID) ==="
-	echo "Logs will be visible below. Press Ctrl+C to stop."
-	wait "$DEV_PID"
 else
-	echo "⚠ Server process exited"
-	exit 1
+	echo "Starting Way of Pi Electron..."
+	set +e
+	exec bun run electron:dev
 fi

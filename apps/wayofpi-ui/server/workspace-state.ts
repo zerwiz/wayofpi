@@ -18,7 +18,7 @@ export interface WorkspaceFolderEntry {
 /** Captured at process start (before any UI switch). */
 let frozenInitialPath = "";
 
-let folders: WorkspaceFolderEntry[] = [];
+const tenantFolders = new Map<string, WorkspaceFolderEntry[]>();
 
 function syncRealpath(abs: string): string {
 	try {
@@ -51,7 +51,7 @@ export function initWorkspaceFoldersFromEnv(): void {
 	const start = normalize(resolve(raw || process.cwd()));
 	const real = syncRealpath(start);
 	frozenInitialPath = real;
-	folders = uniqueLabelsFor([real]);
+	tenantFolders.set("default", uniqueLabelsFor([real]));
 }
 
 initWorkspaceFoldersFromEnv();
@@ -60,12 +60,32 @@ export function getFrozenInitialWorkspacePath(): string {
 	return frozenInitialPath;
 }
 
-export function listWorkspaceFolders(): WorkspaceFolderEntry[] {
+export function listWorkspaceFolders(tenantId: string = "default"): WorkspaceFolderEntry[] {
+	const folders = tenantFolders.get(tenantId) || uniqueLabelsFor([frozenInitialPath]);
 	return folders.map((f) => ({ ...f }));
 }
 
-export function getPrimaryWorkspacePath(): string {
-	return folders[0]?.path ?? frozenInitialPath;
+export function getPrimaryWorkspacePath(tenantId: string = "default"): string {
+	// Validate tenantId (prevent path traversal)
+	if (!tenantId || tenantId.includes("..") || tenantId.includes(sep)) {
+		throw new Error("Invalid tenant ID");
+	}
+	
+	// Get base workspace from env or default
+	const baseWorkspace = process.env.WOP_WORKSPACE_ROOT 
+		|| frozenInitialPath 
+		|| "/home/zerwiz/CodeP/Way of pi/workspace";
+	
+	// Tenant isolation: each tenant gets subdirectory
+	const tenantWorkspace = resolve(baseWorkspace, tenantId);
+	
+	// Ensure path stays within base (trailing sep is critical!)
+	const baseNorm = resolve(baseWorkspace) + sep;
+	if (!tenantWorkspace.startsWith(baseNorm) && tenantWorkspace !== baseNorm.slice(0, -1)) {
+		throw new Error("Path traversal detected");
+	}
+	
+	return tenantWorkspace;
 }
 
 function isSwitchAllowed(): boolean {
@@ -90,7 +110,8 @@ function isInsideRoot(root: string, target: string): boolean {
  * Single-folder: `rel` is relative to that folder.
  * Multi-root: `rel` is `label/rest`.
  */
-export function resolveUnderWorkspace(relRaw: string): string | null {
+export function resolveUnderWorkspace(relRaw: string, tenantId: string = "default"): string | null {
+	const folders = tenantFolders.get(tenantId) || uniqueLabelsFor([frozenInitialPath]);
 	const trimmed = relRaw.replace(/^[/\\]+/, "");
 	if (!trimmed || trimmed === "." || trimmed.includes("..")) return null;
 
@@ -145,55 +166,57 @@ export async function assertFile(absInput: string): Promise<string> {
 	return syncRealpath(abs);
 }
 
-export async function setWorkspaceFoldersAbs(absPaths: string[]): Promise<void> {
+export async function setWorkspaceFoldersAbs(absPaths: string[], tenantId: string = "default"): Promise<void> {
 	if (absPaths.length === 0) throw new Error("At least one folder path is required");
 	const resolved: string[] = [];
 	for (const p of absPaths) {
 		resolved.push(await assertDirectory(p));
 	}
-	folders = uniqueLabelsFor(resolved);
+	tenantFolders.set(tenantId, uniqueLabelsFor(resolved));
 }
 
-export async function openFolder(absDir: string): Promise<void> {
+export async function openFolder(absDir: string, tenantId: string = "default"): Promise<void> {
 	const dir = await assertDirectory(absDir);
-	folders = uniqueLabelsFor([dir]);
+	tenantFolders.set(tenantId, uniqueLabelsFor([dir]));
 }
 
-export async function addFolder(absDir: string): Promise<void> {
+export async function addFolder(absDir: string, tenantId: string = "default"): Promise<void> {
 	const dir = await assertDirectory(absDir);
+	const folders = tenantFolders.get(tenantId) || uniqueLabelsFor([frozenInitialPath]);
 	const paths = [...folders.map((f) => f.path)];
 	if (paths.some((p) => p === dir)) throw new Error("Folder is already in the workspace");
 	paths.push(dir);
-	folders = uniqueLabelsFor(paths);
+	tenantFolders.set(tenantId, uniqueLabelsFor(paths));
 }
 
-export function removeFolderByLabel(label: string): void {
+export function removeFolderByLabel(label: string, tenantId: string = "default"): void {
 	if (!isSwitchAllowed()) {
 		throw new Error("Workspace switching is disabled.");
 	}
+	const folders = tenantFolders.get(tenantId) || [];
 	const next = folders.filter((f) => f.label !== label);
 	if (next.length === folders.length) throw new Error("Unknown folder label");
 	if (next.length === 0) {
-		folders = uniqueLabelsFor([frozenInitialPath]);
+		tenantFolders.set(tenantId, uniqueLabelsFor([frozenInitialPath]));
 		return;
 	}
-	folders = uniqueLabelsFor(next.map((f) => f.path));
+	tenantFolders.set(tenantId, uniqueLabelsFor(next.map((f) => f.path)));
 }
 
-export function resetWorkspaceToInitial(): void {
+export function resetWorkspaceToInitial(tenantId: string = "default"): void {
 	if (!isSwitchAllowed()) {
 		throw new Error("Workspace switching is disabled.");
 	}
-	folders = uniqueLabelsFor([frozenInitialPath]);
+	tenantFolders.set(tenantId, uniqueLabelsFor([frozenInitialPath]));
 }
 
 /**
  * Open a file's containing folder as the only root; returns path relative to new root for editor selection.
  */
-export async function openFileInWorkspace(absFile: string): Promise<string> {
+export async function openFileInWorkspace(absFile: string, tenantId: string = "default"): Promise<string> {
 	const file = await assertFile(absFile);
 	const dir = syncRealpath(dirname(file));
-	folders = uniqueLabelsFor([dir]);
+	tenantFolders.set(tenantId, uniqueLabelsFor([dir]));
 	const rel = relative(dir, file).replace(/\\/g, "/");
 	if (!rel || rel.startsWith("..")) throw new Error("Could not resolve file under workspace");
 	return rel;
@@ -202,6 +225,7 @@ export async function openFileInWorkspace(absFile: string): Promise<string> {
 export async function loadFoldersFromWorkspaceJson(
 	raw: unknown,
 	workspaceFileAbsPath: string,
+	tenantId: string = "default",
 ): Promise<void> {
 	if (!isSwitchAllowed()) {
 		throw new Error("Workspace switching is disabled.");
@@ -224,14 +248,14 @@ export async function loadFoldersFromWorkspaceJson(
 	for (const p of paths) {
 		resolved.push(await assertDirectory(p));
 	}
-	folders = uniqueLabelsFor(resolved);
+	tenantFolders.set(tenantId, uniqueLabelsFor(resolved));
 }
 
 /**
  * Writes a `.code-workspace` JSON file (VS Code / Cursor layout) for the **current** in-memory folder list.
  * Folder paths in the file are relative to the directory containing the workspace file when possible.
  */
-export async function saveCodeWorkspaceFileToPath(absInput: string): Promise<void> {
+export async function saveCodeWorkspaceFileToPath(absInput: string, tenantId: string = "default"): Promise<void> {
 	if (!isSwitchAllowed()) {
 		throw new Error("Workspace switching is disabled (set WOP_ALLOW_WORKSPACE_SWITCH unset or 1).");
 	}
@@ -239,6 +263,6 @@ export async function saveCodeWorkspaceFileToPath(absInput: string): Promise<voi
 	if (!abs) throw new Error("Invalid path");
 	const parent = dirname(abs);
 	await mkdir(parent, { recursive: true });
-	const payload = buildCodeWorkspacePayload(listWorkspaceFolders(), parent);
+	const payload = buildCodeWorkspacePayload(listWorkspaceFolders(tenantId), parent);
 	await writeFile(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }

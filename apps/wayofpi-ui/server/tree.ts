@@ -98,13 +98,13 @@ async function gitRootStates(folders: WorkspaceFolderEntry[]): Promise<Workspace
 	return roots;
 }
 
-export async function buildWorkspaceTree(): Promise<{
+export async function buildWorkspaceTree(tenantId: string = "default"): Promise<{
 	root: string;
 	nodes: TreeNode[];
 	folders: WorkspaceFolderEntry[];
 	git: WorkspaceGitState;
 }> {
-	const list = listWorkspaceFolders();
+	const list = listWorkspaceFolders(tenantId);
 	const git: WorkspaceGitState = { roots: await gitRootStates(list) };
 
 	if (list.length === 1) {

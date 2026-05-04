@@ -36,6 +36,9 @@ import { MenuBar } from "./components/MenuBar";
 import { SimpleApp } from "./components/simple/SimpleApp";
 import type { SimpleTabId } from "./components/simple/SimpleNavRail";
 import { ClawApp } from "./components/claw/ClawApp";
+import { DocsApp } from "./components/docs/DocsApp";
+import { WorkApp } from "./components/work";
+import { WorkerPortal } from "./pages/WorkerPortal";
 import { ClawHelpModal, type ClawHelpSectionId } from "./components/claw/ClawHelpModal";
 import type { ClawTabId } from "./components/claw/ClawNavRail";
 import "./claw/clawUserUiModules";
@@ -258,7 +261,13 @@ function languageFromPath(path: string | null): string {
 	return map[ext] ?? "Plain Text";
 }
 
+const isPortal = window.location.pathname === "/portal" || window.location.pathname.startsWith("/portal/");
+
 export default function App() {
+	if (isPortal) {
+		return <WorkerPortal />;
+	}
+
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
 	/** IDE-style shell (Technical or Claw); Simple uses `SimpleApp`. */
 	const technical = uiMode !== "simple";
@@ -4426,6 +4435,27 @@ description:
 					onNewPlanFile={() => void handleNewPlanFile()}
 					newPlanFileDisabled={!workspaceOperational}
 					viewTechnical={viewTechnicalOptions}
+				/>
+			) : uiMode === "docs" ? (
+				<DocsApp
+					uiMode={uiMode}
+					setUiMode={setUiMode}
+					nodes={nodes}
+					treeLoading={treeLoading}
+					treeError={treeError}
+					refreshTree={refresh}
+					selectedPath={selectedPath}
+					setSelectedPath={setSelectedPath}
+					rows={session.rows}
+					streaming={session.streaming}
+					connected={session.connected}
+					sendChat={session.sendChat}
+					stop={session.stop}
+				/>
+			) : uiMode === "work" ? (
+				<WorkApp
+					uiMode={uiMode}
+					setUiMode={setUiMode}
 				/>
 			) : (
 				<div className="flex h-8 shrink-0 items-center gap-2 border-b border-[#252526] bg-[#2d2d2d] px-2">

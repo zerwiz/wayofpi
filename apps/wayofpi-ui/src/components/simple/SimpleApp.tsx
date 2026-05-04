@@ -707,6 +707,8 @@ export function SimpleApp({
 						onToggleRight={() => setRightOpen((v) => !v)}
 						connected={connected}
 						appearanceDark={appearanceDark}
+						onSwitchToDocs={() => setUiMode("docs")}
+						indexingStatus={treeLoading ? "indexing" : treeError ? "idle" : "ready"}
 					/>
 
 					<div className="flex min-h-0 flex-1 overflow-hidden">

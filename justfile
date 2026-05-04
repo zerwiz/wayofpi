@@ -13,13 +13,13 @@ wop-upstream-sync *args:
 # Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofpi-ui `npm run dev`
 wayofpi-full:
     set -euo pipefail
-    exec "{{justfile_directory()}}/start-wayofpi.sh"
+    exec "{{justfile_directory()}}/start-wayofpi.sh --web"
 
 # Way of Pi web shell in an Electron window (same stack as wayofpi-full; no default browser open)
 wayofpi-electron:
     #!/usr/bin/env bash
     set -euo pipefail
-    cd "{{justfile_directory()}}/apps/wayofpi-ui" && bun run electron:dev
+    exec "{{justfile_directory()}}/start-wayofpi-electron.sh"
 
 # g1
 

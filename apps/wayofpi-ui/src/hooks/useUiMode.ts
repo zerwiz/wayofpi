@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type UiMode = "simple" | "technical" | "claw";
+export type UiMode = "simple" | "technical" | "claw" | "docs" | "work";
 
 const STORAGE_KEY = "wayofpi.uiMode";
 
@@ -34,7 +34,7 @@ export function useUiMode() {
 
 	const toggleMode = useCallback(() => {
 		setModeState((m) => {
-			const next: UiMode = m === "simple" ? "technical" : m === "technical" ? "claw" : "simple";
+			const next: UiMode = m === "simple" ? "technical" : m === "technical" ? "claw" : m === "claw" ? "docs" : m === "docs" ? "work" : "simple";
 			try {
 				localStorage.setItem(STORAGE_KEY, next);
 			} catch {
@@ -44,5 +44,13 @@ export function useUiMode() {
 		});
 	}, []);
 
-	return { mode, setMode, toggleMode, isTechnical: mode === "technical", isClaw: mode === "claw" };
+	/** Switch directly to docs mode. */
+	const switchToDocs = useCallback(() => {
+		setModeState("docs");
+		try {
+			localStorage.setItem(STORAGE_KEY, "docs");
+		} catch { /* ignore */ }
+	}, []);
+
+	return { mode, setMode, toggleMode, switchToDocs, isTechnical: mode === "technical", isClaw: mode === "claw", isDocs: mode === "docs", isWork: mode === "work" };
 }

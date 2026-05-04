@@ -78,7 +78,7 @@ const CHAT_MODE_STORAGE_KEY = "wayofpi.chatMode";
 const CHAT_AGENT_STORAGE_KEY = "wayofpi.chatAgent";
 
 /** UI shell surface: each gets its own chat tabs, transcript, JSONL session key prefix, and persisted mode/agent. */
-export type ChatSessionSurfaceId = "simple" | "technical" | "claw";
+export type ChatSessionSurfaceId = "simple" | "technical" | "claw" | "docs" | "work";
 
 export type ChatSessionMode = "build" | "plan";
 
@@ -281,8 +281,11 @@ function createInitialSurface(surface: ChatSessionSurfaceId, salt: string): Surf
 }
 
 function wsUrl(): string {
-	const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-	return `${proto}//${window.location.host}/ws`;
+	const proto = location.protocol === "https:" ? "wss:" : "ws:";
+	const host = location.host;
+	const token = typeof window !== "undefined" ? localStorage.getItem("wop_token") : null;
+	const authSuffix = token ? `?token=${encodeURIComponent(token)}` : "";
+	return `${proto}//${host}/ws${authSuffix}`;
 }
 
 /**
@@ -308,12 +311,14 @@ export function useWayOfPiSession(
 		simple: createInitialSurface("simple", "s"),
 		technical: createInitialSurface("technical", "t"),
 		claw: createInitialSurface("claw", "c"),
+		docs: createInitialSurface("docs", "d"),
 	}));
 	const surfacesRef = useRef(surfaces);
 	surfacesRef.current = surfaces;
 
-	const slice = surfaces[surfaceId];
-	const { chatTabs, activeChatTabId, rowsByTab, chatMode, chatAgentName } = slice;
+	// Safe access - if surfaceId is missing (HMR edge case), use fallback
+	const safeSlice = surfaces[surfaceId] ?? createInitialSurface(surfaceId, surfaceId && surfaceId[0] ? surfaceId[0] : 'x');
+	const { chatTabs, activeChatTabId, rowsByTab, chatMode, chatAgentName } = safeSlice;
 	const rows = rowsByTab[activeChatTabId] ?? [];
 
 	const [connected, setConnected] = useState(false);
@@ -351,11 +356,11 @@ export function useWayOfPiSession(
 	const chatTabsRef = useRef(chatTabs);
 
 	useEffect(() => {
-		activeChatTabIdRef.current = slice.activeChatTabId;
-		rowsByTabRef.current = slice.rowsByTab;
-		chatTabsRef.current = slice.chatTabs;
-		chatAgentNameRef.current = slice.chatAgentName;
-	}, [slice.activeChatTabId, slice.rowsByTab, slice.chatTabs, slice.chatAgentName]);
+		activeChatTabIdRef.current = safeSlice.activeChatTabId;
+		rowsByTabRef.current = safeSlice.rowsByTab;
+		chatTabsRef.current = safeSlice.chatTabs;
+		chatAgentNameRef.current = safeSlice.chatAgentName;
+	}, [safeSlice.activeChatTabId, safeSlice.rowsByTab, safeSlice.chatTabs, safeSlice.chatAgentName]);
 	useEffect(() => {
 		dispatchTurnAgentRef.current = dispatchTurnAgent;
 	}, [dispatchTurnAgent]);

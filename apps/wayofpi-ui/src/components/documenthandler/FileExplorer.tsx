@@ -5,6 +5,9 @@ import {
   FileCode2,
   FileJson,
   File as FileIcon,
+  Copy,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import type { TreeNode } from "../../types/tree";
@@ -63,6 +66,54 @@ export function FileExplorer({
   error,
 }: FileExplorerProps) {
   const [collapsedDirs, setCollapsedDirs] = useState<Set<string>>(new Set());
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    path: string;
+    isDir: boolean;
+  } | null>(null);
+
+  const closeContextMenu = () => setContextMenu(null);
+
+  const handleContextMenu = (e: React.MouseEvent, path: string, isDir: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY, path, isDir });
+  };
+
+  const handleCopyPath = () => {
+    if (!contextMenu) return;
+    navigator.clipboard.writeText(contextMenu.path).catch(() => {});
+    closeContextMenu();
+  };
+
+  const handleRename = () => {
+    if (!contextMenu) return;
+    const oldPath = contextMenu.path;
+    const newName = prompt("Rename to:", oldPath.split("/").pop() || "");
+    if (newName && newName.trim()) {
+      const parentDir = oldPath.substring(0, oldPath.lastIndexOf("/"));
+      const newPath = parentDir ? `${parentDir}/${newName.trim()}` : newName.trim();
+      fetch("/api/fs/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: oldPath, destination: newPath }),
+      }).catch(() => {});
+    }
+    closeContextMenu();
+  };
+
+  const handleDelete = () => {
+    if (!contextMenu) return;
+    if (confirm(`Delete ${contextMenu.isDir ? "directory" : "file"} "${contextMenu.path}"?`)) {
+      fetch("/api/fs/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: contextMenu.path }),
+      }).catch(() => {});
+    }
+    closeContextMenu();
+  };
 
   const title = appearanceDark ? "text-[#cccccc]" : "text-[#333333]";
   const subC = appearanceDark ? "text-[#858585]" : "text-[#616161]";
@@ -97,6 +148,57 @@ export function FileExplorer({
 
   return (
     <div className={`file-explorer flex h-full flex-col ${mainBg}`}>
+      {contextMenu && (
+        <div
+          className="fixed z-50 min-w-[160px] rounded-md border py-1 shadow-lg"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            backgroundColor: appearanceDark ? '#252526' : 'white',
+            borderColor: appearanceDark ? '#3c3c3c' : '#e5e5e5',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={handleCopyPath}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#3c3c3c] ${
+              appearanceDark ? 'text-[#cccccc]' : 'text-[#333333]'
+            }`}
+          >
+            <Copy size={14} />
+            Copy path
+          </button>
+          {!contextMenu.isDir && (
+            <button
+              type="button"
+              onClick={handleRename}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#3c3c3c] ${
+                appearanceDark ? 'text-[#cccccc]' : 'text-[#333333]'
+              }`}
+            >
+              <Pencil size={14} />
+              Rename
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleDelete}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-red-900/30 ${
+              appearanceDark ? 'text-red-400' : 'text-red-600'
+            }`}
+          >
+            <Trash2 size={14} />
+            Delete
+          </button>
+        </div>
+      )}
+      {contextMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={closeContextMenu}
+        />
+      )}
       <div
         className={`flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3 ${sectionBorder}`}
       >
@@ -129,6 +231,7 @@ export function FileExplorer({
                   onClick={() =>
                     isDir ? toggleDir(node.path) : onSelectFile(node.path)
                   }
+                  onContextMenu={(e) => handleContextMenu(e, node.path, isDir)}
                   className={`flex items-center gap-2 rounded px-2 py-1 text-left transition-colors ${
                     isSelected ? selectedBg : itemHover
                   }`}

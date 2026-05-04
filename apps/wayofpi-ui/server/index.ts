@@ -118,6 +118,8 @@ import {
 	saveGithubCredentials,
 	verifyGithubToken,
 } from "./github-connection";
+import { db } from "./db";
+import { createToken, verifyToken } from "./auth";
 
 // Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
 // In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
@@ -168,6 +170,8 @@ type ChatWsData = {
 	cumCompletionTokens: number;
 	/** Client chat tab id — persists transcript under `agent/sessions/wayofpi-chat-*.jsonl`. */
 	wopSessionKey: string | null;
+	tenantId: string;
+	userId: string;
 };
 
 type ServerWsData = ChatWsData | TerminalWsData;
@@ -188,7 +192,7 @@ function applyLeadFromCache(
 		null;
 	let plannerBody: string | null = null;
 	if (data.chatMode === "plan" && agentNameLower !== "planner") {
-		plannerBody = readPlannerAgentBodySync(getPrimaryWorkspacePath());
+		plannerBody = readPlannerAgentBodySync(getPrimaryWorkspacePath(data.tenantId));
 	}
 	const piJson = shouldUsePiJsonChat();
 	applyLeadSystem(data.messages, {
@@ -241,7 +245,7 @@ function effectiveChatModelId(data: ChatWsData): string {
 	if (provider === "openrouter") {
 		return (data.openrouterModel || process.env.OPENROUTER_MODEL || "openrouter/auto").trim();
 	}
-	return (data.ollamaModel || resolveOllamaModelDefault()).trim();
+	return (data.ollamaModel || resolveOllamaModelDefault(data.tenantId)).trim();
 }
 
 function sendChatUsageMeter(
@@ -431,7 +435,7 @@ async function applySlashMutations(
 	if (mutation.setAgentName !== undefined) {
 		const name = mutation.setAgentName;
 		if (name) {
-			const body = await getAgentBodyByName(name);
+			const body = await getAgentBodyByName(name, ws.data.tenantId);
 			data.agentName = name;
 			data.cachedAgentBody = body ?? null;
 		} else {
@@ -648,7 +652,7 @@ async function runChatTurn(
 			let result: StreamChatResult;
 			if (usePiChat) {
 				const o = await runPiChatTurn({
-					cwd: getPrimaryWorkspacePath(),
+					cwd: getPrimaryWorkspacePath(data.tenantId),
 					messages: data.messages,
 					onDelta: (delta) => {
 						full += delta;
@@ -873,6 +877,84 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		});
 	}
 
+	if (p === "/api/login" && req.method === "POST") {
+		let body: { username?: string; password?: string };
+		try {
+			body = (await req.json()) as { username?: string; password?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const { username, password } = body;
+		if (!username || !password) {
+			return json({ error: "Username and password required" }, 400);
+		}
+
+		const user = db.query("SELECT * FROM users WHERE username = ?").get(username) as any;
+		if (!user || !(await Bun.password.verify(password, user.password_hash))) {
+			return json({ error: "Invalid credentials" }, 401);
+		}
+
+		const token = await createToken(user.id, user.tenant_id);
+		return json({
+			token,
+			user: {
+				id: user.id,
+				username: user.username,
+				role: user.role,
+				tenantId: user.tenant_id,
+			},
+		});
+	}
+
+	// Worker Portal login (ID + PIN)
+	if (p === "/api/portal/login" && req.method === "POST") {
+		let body: { workerId?: string; pin?: string };
+		try {
+			body = (await req.json()) as { workerId?: string; pin?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		const { workerId, pin } = body;
+		if (!workerId || !pin) {
+			return json({ error: "Worker ID and PIN required" }, 400);
+		}
+
+		const user = db.query("SELECT * FROM users WHERE username = ? AND pin = ?").get(workerId, pin) as any;
+		if (!user) {
+			return json({ error: "Invalid credentials" }, 401);
+		}
+
+		const token = await createToken(user.id, user.tenant_id);
+		return json({
+			token,
+			user: {
+				id: user.id,
+				username: user.username,
+				role: user.role,
+				tenantId: user.tenant_id,
+			},
+		});
+	}
+
+	// Auth check for all other /api routes
+	const authHeader = req.headers.get("Authorization");
+	const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+	let auth = token ? await verifyToken(token) : null;
+
+	// DEV MODE: Allow requests without auth when WOP_DEV_MODE=true
+	const isDevMode = process.env.WOP_DEV_MODE === "true";
+	const isPublicRoute = p === "/api/manifest" || p === "/api/config" || p === "/api/health";
+
+	if (!auth && !isDevMode) {
+		if (!isPublicRoute) {
+			return json({ error: "Unauthorized" }, 401);
+		}
+	}
+	// In dev mode, create a fake auth for compatibility
+	if (!auth && isDevMode) {
+		auth = { userId: "dev-user", tenantId: "dev-tenant" };
+	}
+
 	if (p === "/api/health") {
 		return json({
 			ok: true,
@@ -947,6 +1029,151 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ ok: false, error: message }, 500);
+		}
+	}
+
+	// Worker Portal APIs
+	if (p === "/api/portal/me" && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		const user = db.query("SELECT id, username, role, tenant_id FROM users WHERE id = ?").get(auth.userId) as any;
+		if (!user) return json({ error: "User not found" }, 404);
+		return json({ id: user.id, username: user.username, role: user.role, tenantId: user.tenant_id });
+	}
+
+	if (p === "/api/portal/tasks" && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		try {
+			const tasks = db.query(`
+				SELECT t.*, p.name as project_name
+				FROM tasks t
+				LEFT JOIN projects p ON t.project_id = p.id
+				WHERE t.tenant_id = ? AND t.assigned_to = ?
+				ORDER BY t.due_date ASC, t.created_at DESC
+			`).all(auth.tenantId, auth.userId) as any[];
+			return json(tasks || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch tasks", details: message }, 500);
+		}
+	}
+
+	if (p === "/api/portal/files" && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		try {
+			const files = db.query(`
+				SELECT *
+				FROM workspace_files
+				WHERE tenant_id = ?
+				ORDER BY created_at DESC
+			`).all(auth.tenantId) as any[];
+			return json(files || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch files", details: message }, 500);
+		}
+	}
+
+	if (p === "/api/portal/time" && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		try {
+			const entries = db.query(`
+				SELECT te.*, t.title as task_title, p.name as project_name
+				FROM time_entries te
+				LEFT JOIN tasks t ON te.task_id = t.id
+				LEFT JOIN projects p ON te.project_id = p.id
+				WHERE te.tenant_id = ? AND te.user_id = ?
+				ORDER BY te.date DESC, te.created_at DESC
+				LIMIT 100
+			`).all(auth.tenantId, auth.userId) as any[];
+			return json(entries || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch time entries", details: message }, 500);
+		}
+	}
+
+	if (p === "/api/portal/time" && req.method === "POST") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		let body: { hours?: number; project?: string; date?: string; taskId?: string; description?: string; drawingRef?: string };
+		try {
+			body = (await req.json()) as { hours?: number; project?: string; date?: string; taskId?: string; description?: string; drawingRef?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+
+		if (!body.hours || !body.project || !body.date) {
+			return json({ error: "Missing required fields: hours, project, date" }, 400);
+		}
+
+		try {
+			const id = `time_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+			const result = db.query(`
+				INSERT INTO time_entries (id, tenant_id, user_id, project_id, task_id, date, hours, description, drawing_ref, status)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+			`).run(id, auth.tenantId, auth.userId, body.project, body.taskId || null, body.date, body.hours, body.description || null, body.drawingRef || null);
+
+			if (result.changes === 0) {
+				return json({ error: "Failed to save time entry" }, 500);
+			}
+
+			return json({ ok: true, id });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to save time entry", details: message }, 500);
+		}
+	}
+
+	if (p.startsWith("/api/portal/download/") && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+
+		const fileId = p.split("/").pop();
+		if (!fileId) return json({ error: "File ID required" }, 400);
+
+		try {
+			// Get file info from DB (tenant-scoped)
+			const file = db.query("SELECT * FROM workspace_files WHERE id = ? AND tenant_id = ?")
+				.get(fileId, auth.tenantId) as any;
+
+			if (!file) return json({ error: "File not found" }, 404);
+
+			// Build safe path within tenant workspace
+			const workspaceRoot = getPrimaryWorkspacePath({ tenantId: auth.tenantId });
+			const safePath = resolve(workspaceRoot, file.file_path);
+
+			// Ensure path is within workspace
+			if (!safePath.startsWith(workspaceRoot)) {
+				return json({ error: "Invalid file path" }, 403);
+			}
+
+			// Check if file exists
+			const fileInfo = stat(safePath);
+			if (!fileInfo.isFile) {
+				return json({ error: "File not found on disk" }, 404);
+			}
+
+			// Update download count
+			db.query("UPDATE workspace_files SET download_count = download_count + 1 WHERE id = ?")
+				.run(fileId);
+
+			// Log audit
+			db.query(`
+				INSERT INTO audit_logs (tenant_id, user_id, action, resource_type, resource_id, details_json)
+				VALUES (?, ?, 'FILE_DOWNLOAD', 'file', ?, ?)
+			`).run(auth.tenantId, auth.userId, fileId, JSON.stringify({ path: file.file_path }));
+
+			// Return file
+			const fileContent = readFile(safePath);
+			return new Response(fileContent, {
+				headers: {
+					"Content-Type": file.mime_type || "application/octet-stream",
+					"Content-Disposition": `attachment; filename="${file.file_path.split("/").pop()}"`,
+					"Content-Length": fileInfo.size.toString(),
+				}
+			});
+
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to download file", details: message }, 500);
 		}
 	}
 
@@ -1056,8 +1283,8 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/workspace" && req.method === "GET") {
 		return json({
-			root: getPrimaryWorkspacePath(),
-			folders: listWorkspaceFolders(),
+			root: getPrimaryWorkspacePath(auth?.tenantId),
+			folders: listWorkspaceFolders(auth?.tenantId),
 			switchAllowed: workspaceSwitchAllowed(),
 			initialRoot: getFrozenInitialWorkspacePath(),
 		});
@@ -1077,7 +1304,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/workspace/problems/run" && req.method === "POST") {
 		try {
-			const root = getPrimaryWorkspacePath();
+			const root = getPrimaryWorkspacePath(auth?.tenantId);
 			const result = await runWorkspaceProblemsAnalysis(root);
 			lastWorkspaceProblems = result;
 			broadcastToolLog(
@@ -1219,49 +1446,58 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		const op = String(body.op ?? "");
 		try {
 			if (op === "open_folder") {
-				const p = String(body.path ?? "").trim();
-				if (!p) return json({ error: "path required" }, 400);
-				await openFolder(p);
-				broadcastToolLog("INFO", "cd", `workspace open_folder ${p.length > 160 ? `${p.slice(0, 157)}…` : p}`);
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+			        const p = String(body.path ?? "").trim();
+			        if (!p) return json({ error: "path required" }, 400);
+			        await openFolder(p, auth?.tenantId);
+			        broadcastToolLog("INFO", "cd", `workspace open_folder ${p.length > 160 ? `${p.slice(0, 157)}…` : p}`);
+			        // Trigger indexing for the new folder
+			        void syncWorkspaceIndex().then((res) => {
+			                broadcastToolLog("INFO", "index", `open_folder sync: files=${res.state.fileCount} merkle=${res.state.merkleRoot}`);
+			        }).catch(() => {});
+			        return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
 			if (op === "add_folder") {
-				const p = String(body.path ?? "").trim();
-				if (!p) return json({ error: "path required" }, 400);
-				await addFolder(p);
-				broadcastToolLog("INFO", "cd", `workspace add_folder ${p.length > 160 ? `${p.slice(0, 157)}…` : p}`);
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+			        const p = String(body.path ?? "").trim();
+			        if (!p) return json({ error: "path required" }, 400);
+			        await addFolder(p, auth?.tenantId);
+			        broadcastToolLog("INFO", "cd", `workspace add_folder ${p.length > 160 ? `${p.slice(0, 157)}…` : p}`);
+			        // Trigger indexing when adding a folder
+			        void syncWorkspaceIndex().then((res) => {
+			                broadcastToolLog("INFO", "index", `add_folder sync: files=${res.state.fileCount} merkle=${res.state.merkleRoot}`);
+			        }).catch(() => {});
+			        return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
+
 			if (op === "remove_folder") {
 				const label = String(body.label ?? "").trim();
 				if (!label) return json({ error: "label required" }, 400);
-				removeFolderByLabel(label);
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+				removeFolderByLabel(label, auth?.tenantId);
+				return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
 			if (op === "save_code_workspace_file") {
 				const filePath = String(body.path ?? "").trim();
 				if (!filePath) return json({ error: "path required" }, 400);
-				await saveCodeWorkspaceFileToPath(filePath);
+				await saveCodeWorkspaceFileToPath(filePath, auth?.tenantId);
 				broadcastToolLog(
 					"INFO",
 					"write",
 					`workspace save_code_workspace_file ${filePath.length > 200 ? `${filePath.slice(0, 197)}…` : filePath}`,
 				);
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+				return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
 			if (op === "close_workspace" || op === "reset_workspace") {
-				resetWorkspaceToInitial();
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+				resetWorkspaceToInitial(auth?.tenantId);
+				return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
 			if (op === "open_file") {
 				const p = String(body.path ?? "").trim();
 				if (!p) return json({ error: "path required" }, 400);
-				const selectPath = await openFileInWorkspace(p);
+				const selectPath = await openFileInWorkspace(p, auth?.tenantId);
 				broadcastToolLog("INFO", "read", `workspace open_file ${p.length > 200 ? `${p.slice(0, 197)}…` : p}`);
 				return json({
 					ok: true,
-					folders: listWorkspaceFolders(),
-					root: getPrimaryWorkspacePath(),
+					folders: listWorkspaceFolders(auth?.tenantId),
+					root: getPrimaryWorkspacePath(auth?.tenantId),
 					selectPath,
 				});
 			}
@@ -1272,8 +1508,12 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				}
 				const paths = pathsRaw.map((item) => String(item ?? "").trim()).filter(Boolean);
 				if (paths.length === 0) return json({ error: "No valid paths" }, 400);
-				await setWorkspaceFoldersAbs(paths);
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+				await setWorkspaceFoldersAbs(paths, auth?.tenantId);
+				// Trigger indexing
+				void syncWorkspaceIndex().then((res) => {
+					broadcastToolLog("INFO", "index", `apply_folders sync: files=${res.state.fileCount} merkle=${res.state.merkleRoot}`);
+				}).catch(() => {});
+				return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
 			if (op === "from_code_workspace_file") {
 				const filePath = String(body.workspaceFilePath ?? "").trim();
@@ -1281,8 +1521,12 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				if (!filePath || rawJson === undefined) {
 					return json({ error: "workspaceFilePath and json required" }, 400);
 				}
-				await loadFoldersFromWorkspaceJson(rawJson, filePath);
-				return json({ ok: true, folders: listWorkspaceFolders(), root: getPrimaryWorkspacePath() });
+				await loadFoldersFromWorkspaceJson(rawJson, filePath, auth?.tenantId);
+				// Trigger indexing
+				void syncWorkspaceIndex().then((res) => {
+					broadcastToolLog("INFO", "index", `load_workspace sync: files=${res.state.fileCount} merkle=${res.state.merkleRoot}`);
+				}).catch(() => {});
+				return json({ ok: true, folders: listWorkspaceFolders(auth?.tenantId), root: getPrimaryWorkspacePath(auth?.tenantId) });
 			}
 			return json({ error: `Unknown op: ${op}` }, 400);
 		} catch (e) {
@@ -1314,7 +1558,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		const piEngineLive = shouldUsePiJsonChat();
 		const piBackendRequested = engineMode === "pi" || engineMode === "auto";
 		const piBinaryResolved = resolvePiBinaryPath() != null;
-		const workspaceDotPiPresent = existsSync(join(getPrimaryWorkspacePath(), ".pi"));
+		const workspaceDotPiPresent = existsSync(join(getPrimaryWorkspacePath(auth?.tenantId), ".pi"));
 		const wantClawTree = url.searchParams.get("clawTree") === "1";
 		let clawHostTree: Awaited<ReturnType<typeof buildClawHostTree>> | undefined;
 		if (wantClawTree) {
@@ -1501,12 +1745,12 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	}
 
 	if (p === "/api/ui/views" && req.method === "GET") {
-		const data = await readUiViewsCatalog(getPrimaryWorkspacePath());
+		const data = await readUiViewsCatalog(getPrimaryWorkspacePath(auth?.tenantId));
 		return json(data);
 	}
 
 	if (p === "/api/ui/views/seed" && req.method === "POST") {
-		const r = await seedUiViewsCatalogIfMissing(getPrimaryWorkspacePath());
+		const r = await seedUiViewsCatalogIfMissing(getPrimaryWorkspacePath(auth?.tenantId));
 		return json({ ok: true, created: r.created, path: r.path });
 	}
 
@@ -1566,7 +1810,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/agents" && req.method === "GET") {
 		try {
-			const data = await loadWorkspaceAgents();
+			const data = await loadWorkspaceAgents(auth!.tenantId);
 			return json(data);
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
@@ -1604,7 +1848,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		if (!/^[a-zA-Z0-9_-]+$/.test(script)) return json({ error: "Invalid script name" }, 400);
 		const scripts = await readPackageScripts();
 		if (!scripts || !(script in scripts)) return json({ error: "Script not in package.json" }, 400);
-		const cwd = getWorkspaceRoot();
+		const cwd = getWorkspaceRoot(auth?.tenantId);
 		broadcastToolLog("INFO", "bash", `bun run ${script} (cwd ${cwd.length > 80 ? `${cwd.slice(0, 77)}…` : cwd})`);
 		try {
 			const proc = Bun.spawn(["bun", "run", script], {
@@ -1629,7 +1873,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 
 	if (p === "/api/tree" && req.method === "GET") {
 		try {
-			const { root, nodes, folders, git } = await buildWorkspaceTree();
+			const { root, nodes, folders, git } = await buildWorkspaceTree(auth?.tenantId);
 			return json({
 				root,
 				nodes,
@@ -1652,7 +1896,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			return json({ ok: false as const, error: "Invalid JSON" });
 		}
 		const rel = String(body.path ?? "").trim();
-		const abs = safeResolveUnderWorkspace(rel);
+		const abs = safeResolveUnderWorkspace(rel, auth?.tenantId);
 		if (!abs) return json({ ok: false as const, error: "Invalid path" });
 		if (body.all === true) {
 			const result = await gitStageAllFromAbsolutePath(abs);
@@ -1795,7 +2039,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		if (toDirRel.includes("..")) {
 			return json({ error: "Invalid toDir" }, 400);
 		}
-		if (listWorkspaceFolders().length > 1 && !toDirRel) {
+		if (listWorkspaceFolders(auth?.tenantId).length > 1 && !toDirRel) {
 			return json({ error: "Drop onto a folder (multi-root workspace has no single root)." }, 400);
 		}
 		const fromAbs = resolveWorkspaceOrClawAbs(fromRel);
@@ -1910,6 +2154,323 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		}
 	}
 
+	// ============================================
+	// SUPER ADMIN ENDPOINTS (Phase 2)
+	// ============================================
+
+	// Helper: Check if user is SUPER_ADMIN
+	const requireSuperAdmin = (auth: any) => {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		if (auth.role !== "SUPER_ADMIN") return json({ error: "Forbidden: Requires SUPER_ADMIN role" }, 403);
+		return null;
+	};
+
+	// GET /api/admin/tenants - List all tenants
+	if (p === "/api/admin/tenants" && req.method === "GET") {
+		const forbidden = requireSuperAdmin(auth);
+		if (forbidden) return forbidden;
+		try {
+			const tenants = db.query("SELECT *, (SELECT COUNT(*) FROM users WHERE tenant_id = tenants.id) as user_count FROM tenants ORDER BY created_at DESC").all() as any[];
+			return json(tenants || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch tenants", details: message }, 500);
+		}
+	}
+
+	// POST /api/admin/tenants - Create new tenant
+	if (p === "/api/admin/tenants" && req.method === "POST") {
+		const forbidden = requireSuperAdmin(auth);
+		if (forbidden) return forbidden;
+		let body: { name?: string; slug?: string; subscription_tier?: string };
+		try {
+			body = (await req.json()) as { name?: string; slug?: string; subscription_tier?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		if (!body.name || !body.slug) return json({ error: "Missing required fields: name, slug" }, 400);
+		try {
+			const id = `tenant_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+			const result = db.query("INSERT INTO tenants (id, name, slug, subscription_tier) VALUES (?, ?, ?, ?)")
+				.run(id, body.name, body.slug, body.subscription_tier || 'free');
+			if (result.changes === 0) return json({ error: "Failed to create tenant" }, 500);
+			const tenant = db.query("SELECT * FROM tenants WHERE id = ?").get(id) as any;
+			return json({ ok: true, tenant });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to create tenant", details: message }, 500);
+		}
+	}
+
+	// GET /api/admin/stats - System statistics
+	if (p === "/api/admin/stats" && req.method === "GET") {
+		const forbidden = requireSuperAdmin(auth);
+		if (forbidden) return forbidden;
+		try {
+			const stats = {
+				tenants: (db.query("SELECT COUNT(*) as count FROM tenants WHERE active = 1").get() as any)?.count || 0,
+				users: (db.query("SELECT COUNT(*) as count FROM users WHERE active = 1").get() as any)?.count || 0,
+				projects: (db.query("SELECT COUNT(*) as count FROM projects").get() as any)?.count || 0,
+				tasks: (db.query("SELECT COUNT(*) as count FROM tasks").get() as any)?.count || 0,
+				time_entries: (db.query("SELECT COUNT(*) as count FROM time_entries").get() as any)?.count || 0,
+			};
+			return json(stats);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch stats", details: message }, 500);
+		}
+	}
+
+	// GET /api/admin/users - List all users (system-wide)
+	if (p === "/api/admin/users" && req.method === "GET") {
+		const forbidden = requireSuperAdmin(auth);
+		if (forbidden) return forbidden;
+		try {
+			const users = db.query(`
+				SELECT u.*, t.name as tenant_name
+				FROM users u
+				LEFT JOIN tenants t ON u.tenant_id = t.id
+				ORDER BY u.created_at DESC
+			`).all() as any[];
+			return json(users || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch users", details: message }, 500);
+		}
+	}
+
+	// ============================================
+	// CLIENT ROLE ENDPOINTS (Phase 2)
+	// ============================================
+
+	// Helper: Check if user is CLIENT or has permission to view client data
+	const requireClientAccess = (auth: any) => {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		// CLIENT role or LEADER can access (leaders may view as client)
+		if (auth.role !== "CLIENT" && auth.role !== "LEADER" && auth.role !== "SUPER_ADMIN") {
+			return json({ error: "Forbidden: Client access required" }, 403);
+		}
+		return null;
+	};
+
+	// GET /api/client/projects - List projects for client's tenant (read-only)
+	if (p === "/api/client/projects" && req.method === "GET") {
+		const forbidden = requireClientAccess(auth);
+		if (forbidden) return forbidden;
+		try {
+			const projects = db.query(`
+				SELECT p.*,
+				       (SELECT COUNT(*) FROM tasks WHERE project_id = p.id) as task_count,
+				       (SELECT COUNT(*) FROM tasks WHERE project_id = p.id AND status = 'complete') as completed_tasks
+				FROM projects p
+				WHERE p.tenant_id = ? AND p.status != 'draft'
+				ORDER BY p.created_at DESC
+			`).all(auth.tenantId) as any[];
+			return json(projects || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch projects", details: message }, 500);
+		}
+	}
+
+	// GET /api/client/projects/:id/progress - Get project progress
+	if (p.startsWith("/api/client/projects/") && p.endsWith("/progress") && req.method === "GET") {
+		const forbidden = requireClientAccess(auth);
+		if (forbidden) return forbidden;
+		const projectId = p.split("/")[4]; // /api/client/projects/:id/progress
+		try {
+			const project = db.query("SELECT * FROM projects WHERE id = ? AND tenant_id = ?")
+				.get(projectId, auth.tenantId) as any;
+			if (!project) return json({ error: "Project not found" }, 404);
+
+			const tasks = db.query(`
+				SELECT status, COUNT(*) as count
+				FROM tasks
+				WHERE project_id = ? AND tenant_id = ?
+				GROUP BY status
+			`).all(projectId, auth.tenantId) as any[];
+
+			const timeEntries = db.query(`
+				SELECT SUM(hours) as total_hours
+				FROM time_entries
+				WHERE project_id = ? AND tenant_id = ?
+			`).get(projectId, auth.tenantId) as any;
+
+			const progress = {
+				project: {
+					id: project.id,
+					name: project.name,
+					description: project.description,
+					status: project.status,
+					budget_allocated: project.budget_allocated,
+					budget_spent: project.budget_spent,
+				},
+				tasks_summary: tasks,
+				total_hours: timeEntries?.total_hours || 0,
+				completion_percentage: project.budget_allocated > 0
+					? Math.min(100, Math.round((project.budget_spent / project.budget_allocated) * 100))
+					: 0,
+			};
+			return json(progress);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch project progress", details: message }, 500);
+		}
+	}
+
+	// GET /api/client/drawings - List drawings/documents for client
+	if (p === "/api/client/drawings" && req.method === "GET") {
+		const forbidden = requireClientAccess(auth);
+		if (forbidden) return forbidden;
+		try {
+			const drawings = db.query(`
+				SELECT wf.*, p.name as project_name
+				FROM workspace_files wf
+				LEFT JOIN projects p ON wf.project_id = p.id
+				WHERE wf.tenant_id = ? AND wf.cad_type IN ('dwg', 'rvt', 'pdf', 'image')
+				ORDER BY wf.created_at DESC
+			`).all(auth.tenantId) as any[];
+			return json(drawings || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch drawings", details: message }, 500);
+		}
+	}
+
+	// POST /api/client/feedback - Submit feedback
+	if (p === "/api/client/feedback" && req.method === "POST") {
+		const forbidden = requireClientAccess(auth);
+		if (forbidden) return forbidden;
+		let body: { project_id?: string; rating?: number; comment?: string; category?: string };
+		try {
+			body = (await req.json()) as { project_id?: string; rating?: number; comment?: string; category?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		try {
+			const id = `feedback_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+			db.query(`
+				INSERT INTO audit_logs (tenant_id, user_id, action, resource_type, resource_id, details_json)
+				VALUES (?, ?, 'CLIENT_FEEDBACK', 'project', ?, ?)
+			`).run(auth.tenantId, auth.userId, body.project_id || null, JSON.stringify({
+				rating: body.rating,
+				comment: body.comment,
+				category: body.category,
+			}));
+			return json({ ok: true, id });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to submit feedback", details: message }, 500);
+		}
+	}
+
+	}
+
+	// ============================================
+	// MANIFEST-DRIVEN UI ENDPOINT (Phase 2)
+	// ============================================
+
+	// GET /api/manifest - Return dynamic UI configuration (commands, tools, features)
+	if (p === "/api/manifest" && req.method === "GET") {
+		try {
+			// Get user's role for permission-based manifest
+			const userRole = auth?.role || "ANONYMOUS";
+			const isSuperAdmin = userRole === "SUPER_ADMIN";
+			const isLeader = userRole === "LEADER" || isSuperAdmin;
+			const isWorker = userRole === "WORKER" || isLeader;
+			const isClient = userRole === "CLIENT" || isLeader;
+
+			const manifest = {
+				version: "1.0.0",
+				generated_at: new Date().toISOString(),
+				user: {
+					role: userRole,
+					tenant_id: auth?.tenantId || null,
+					user_id: auth?.userId || null,
+				},
+				// Available UI modes based on role
+				ui_modes: [
+					{ id: "simple", label: "Simple", icon: "MessageSquare", available: true },
+					{ id: "technical", label: "Technical", icon: "Terminal", available: true },
+					{ id: "claw", label: "Claw", icon: "Bot", available: true },
+					{ id: "docs", label: "Docs", icon: "FileText", available: isLeader || isSuperAdmin },
+					{ id: "work", label: "Work", icon: "Briefcase", available: isWorker || isLeader },
+				].filter(m => m.available),
+				// Command palette items (dynamically generated)
+				commands: [
+					{ id: "chat", label: "Chat", icon: "MessageSquare", category: "core", available: true },
+					{ id: "agents", label: "Agents", icon: "Bot", category: "core", available: true },
+					{ id: "workspace", label: "Workspace", icon: "FolderOpen", category: "core", available: true },
+					{ id: "settings", label: "Settings", icon: "Settings", category: "core", available: true },
+					{ id: "tasks", label: "Tasks", icon: "CheckSquare", category: "work", available: isWorker },
+					{ id: "time", label: "Time Tracking", icon: "Clock", category: "work", available: isWorker },
+					{ id: "files", label: "Files", icon: "File", category: "work", available: isWorker },
+					{ id: "team", label: "Team", icon: "Users", category: "leadership", available: isLeader },
+					{ id: "projects", label: "Projects", icon: "FolderKanban", category: "leadership", available: isLeader },
+					{ id: "ai_predictions", label: "AI Predictions", icon: "Brain", category: "leadership", available: isLeader },
+					{ id: "admin_tenants", label: "Manage Tenants", icon: "Building", category: "admin", available: isSuperAdmin },
+					{ id: "admin_users", label: "Manage Users", icon: "Users", category: "admin", available: isSuperAdmin },
+					{ id: "admin_stats", label: "System Stats", icon: "BarChart3", category: "admin", available: isSuperAdmin },
+					{ id: "client_projects", label: "My Projects", icon: "FolderOpen", category: "client", available: isClient },
+					{ id: "client_drawings", label: "Drawings", icon: "FileImage", category: "client", available: isClient },
+					{ id: "client_feedback", label: "Feedback", icon: "MessageSquarePlus", category: "client", available: isClient },
+				].filter(c => c.available),
+				// Tool lists (for agent tools, command palette, etc.)
+				tools: [
+					{ id: "read_file", label: "Read File", category: "file" },
+					{ id: "edit_file", label: "Edit File", category: "file" },
+					{ id: "write_file", label: "Write File", category: "file" },
+					{ id: "bash", label: "Bash", category: "system" },
+					{ id: "web_search", label: "Web Search", category: "web" },
+					{ id: "web_fetch", label: "Web Fetch", category: "web" },
+					{ id: "send_email", label: "Send Email", category: "communication" },
+					{ id: "whatsapp_send", label: "WhatsApp Send", category: "communication", available: isWorker },
+					{ id: "whatsapp_receive", label: "WhatsApp Receive", category: "communication", available: isWorker },
+					{ id: "time_log", label: "Log Time", category: "work", available: isWorker },
+					{ id: "task_create", label: "Create Task", category: "work", available: isLeader },
+					{ id: "task_assign", label: "Assign Task", category: "work", available: isLeader },
+					{ id: "ai_predict", label: "AI Prediction", category: "ai", available: isLeader },
+					{ id: "pdf_view", label: "PDF View", category: "view" },
+					{ id: "cad_view", label: "CAD View", category: "view", available: isLeader || isClient },
+					{ id: "audit_log", label: "Audit Log", category: "admin", available: isSuperAdmin },
+					{ id: "manage_tenant", label: "Manage Tenant", category: "admin", available: isSuperAdmin },
+				].filter(t => t.available === undefined || t.available),
+				// Feature flags
+				features: {
+					whatsapp_bot: isWorker || isLeader,
+					cad_support: isLeader || isClient,
+					ai_predictions: isLeader,
+					multi_tenancy: isSuperAdmin,
+					client_portal: isClient,
+					worker_portal: isWorker,
+					super_admin: isSuperAdmin,
+				},
+				// Navigation items (sidebar, bottom nav, etc.)
+				navigation: {
+					main: [
+						{ id: "chat", label: "Chat", icon: "MessageSquare", path: "/" },
+						{ id: "workspace", label: "Workspace", icon: "FolderOpen", path: "/workspace" },
+					],
+					portal: isWorker ? [
+						{ id: "portal_tasks", label: "My Tasks", icon: "CheckSquare", path: "/portal" },
+						{ id: "portal_time", label: "Time Log", icon: "Clock", path: "/portal" },
+						{ id: "portal_files", label: "Files", icon: "File", path: "/portal" },
+					] : [],
+					admin: isSuperAdmin ? [
+						{ id: "admin_dashboard", label: "Admin", icon: "ShieldCheck", path: "/admin" },
+					] : [],
+					client: isClient ? [
+						{ id: "client_dashboard", label: "Client", icon: "Eye", path: "/client" },
+					] : [],
+				},
+			};
+			return json(manifest);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to generate manifest", details: message }, 500);
+		}
+	}
+
 	return json({ error: "Not found" }, 404);
 }
 
@@ -1935,8 +2496,24 @@ const server = Bun.serve<ServerWsData>({
 	async fetch(req, srv) {
 		const url = new URL(req.url);
 
-		if (url.pathname === "/ws/terminal" && req.headers.get("upgrade") === "websocket") {
-			if (!terminalAllowed()) {
+	const isWs = req.headers.get("upgrade")?.toLowerCase() === "websocket";
+		const authHeader = req.headers.get("Authorization") || url.searchParams.get("token");
+		const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+	const auth = token ? await verifyToken(token) : null;
+
+	// DEV MODE: Skip auth for WebSocket upgrades when WOP_DEV_MODE=true
+	const devMode = process.env.WOP_DEV_MODE?.trim().toLowerCase() === "true";
+	if (!auth && !devMode) {
+		if (url.pathname === "/ws/terminal" || url.pathname === "/ws") {
+			return new Response("Unauthorized", { status: 401 });
+		}
+	}
+
+	if (url.pathname === "/ws/terminal" && isWs) {
+		if (!auth && !devMode) {
+			return new Response("Unauthorized", { status: 401 });
+		}
+		if (!terminalAllowed()) {
 				return new Response(
 					"Terminal disabled. Set WOP_ALLOW_TERMINAL=1 on the server and restart. This exposes a real host shell (security-sensitive).",
 					{ status: 403 },
@@ -1953,27 +2530,32 @@ const server = Bun.serve<ServerWsData>({
 			return new Response("WebSocket upgrade failed", { status: 500 });
 		}
 
-                if (
-                        url.pathname === "/ws" &&
-                        req.headers.get("upgrade")?.toLowerCase() === "websocket"
-                ) {
-                        const upgraded = srv.upgrade(req, {
-                                data: {
-                                        kind: "chat",
-                                        messages: [] as ChatMessage[],
-                                        busy: false,
-                                        pendingChatQueue: [],
-                                        ollamaModel: undefined,
-                                        openrouterModel: undefined,
-                                        chatMode: "build",
-                                        agentName: null,
-                                        cachedAgentBody: null,
-                                        chatAbort: null,
-                                        cumPromptTokens: 0,
-                                        cumCompletionTokens: 0,
-                                        wopSessionKey: null,
-                                } satisfies ChatWsData,
-                        });
+                        if (
+                                url.pathname === "/ws" &&
+                                isWs
+                        ) {
+				if (!auth) {
+					return new Response("Unauthorized", { status: 401 });
+				}
+                                const upgraded = srv.upgrade(req, {
+                                        data: {
+                                                kind: "chat",
+                                                messages: [] as ChatMessage[],
+                                                busy: false,
+                                                pendingChatQueue: [],
+                                                ollamaModel: undefined,
+                                                openrouterModel: undefined,
+                                                chatMode: "build",
+                                                agentName: null,
+                                                cachedAgentBody: null,
+                                                chatAbort: null,
+                                                cumPromptTokens: 0,
+                                                cumCompletionTokens: 0,
+                                                wopSessionKey: null,
+						tenantId: auth.tenantId,
+						userId: auth.userId,
+                                        } satisfies ChatWsData,
+                                });
                         if (upgraded) return undefined as unknown as Response;
                         return new Response("WebSocket upgrade failed", { status: 500 });
                 }
@@ -2127,7 +2709,7 @@ const server = Bun.serve<ServerWsData>({
 						? null
 						: String(raw).trim();
 				if (nextName) {
-					const body = await getAgentBodyByName(nextName);
+					const body = await getAgentBodyByName(nextName, ws.data.tenantId);
 					if (!body) {
 						ws.send(
 							JSON.stringify({

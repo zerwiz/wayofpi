@@ -8,14 +8,133 @@ Earlier work is not backfilled; entries start from when this file was added.
 
 ## [Unreleased]
 
+### Added
+
+- **Work Leader Integrations (Phase 3):**
+  - **Kanban System Integration**: Migrated and adapted a comprehensive Kanban board from reference projects to `apps/wayofpi-ui/src/components/work/kanban/`.
+  - **Theme Alignment**: Reskinned all Kanban components (Board, Cards, Modals) with Way of Pi brand colors (`bg-[#252526]`, `border-[#ea580c]`, `text-[#cccccc]`).
+  - **Work Board**: Integrated `WorkBoard.tsx` into the `WorkApp` Tasks tab, enabling drag-and-drop task management.
+  - **Task Detail View**: Refactored `WorkTaskCard.tsx` (2244 lines) to support the new theme and interface with `mockKanbanService`, `mockTasksService`, and `mockDriveService`.
+  - **Docs & Team Views**: Adapted `WorkDocsView.tsx` for planning document management and `WorkTeamView.tsx` for worker roster and role management within the board.
+
+- **Headless Pi Spine (Phase 2):** Transition tool execution to authoritative Pi CLI (`--mode json`):
+  - **Pi Tool Execution** (`orchestrator-tools-exec.ts`):
+    - Added `executeToolViaPi()` - runs tools via `pi --mode json --tool <name> --args '<json>'`.
+    - Added `isPiToolExecutionEnabled()` - checks `WOP_CHAT_ENGINE` env var (`pi` = always, `auto` = check PATH, `bundled`/`bun` = never).
+    - Modified `executeOrchestratorTool()` to delegate to Pi CLI when headless mode is enabled.
+  - **Behavior:**
+    - `WOP_CHAT_ENGINE=pi`: Always use Pi CLI for tool execution.
+    - `WOP_CHAT_ENGINE=auto` (default): Use Pi if `pi` resolves on PATH, else fall back to Bun-native tools.
+    - `WOP_CHAT_ENGINE=bundled`/`bun`: Always use Bun-native tools (no Pi dependency).
+  - **Benefits:** Pi becomes authoritative tool executor with `registerTool`, `dispatch_agent`, extensions, and slash commands working inside Pi subprocess.
+
+- **Manifest-Driven UI (Phase 2):** Fetch command palette and tool lists dynamically via `GET /api/manifest`:
+  - **API Endpoint** (`server/index.ts`): Returns dynamic UI configuration based on user role (ANONYMOUS, WORKER, LEADER, CLIENT, SUPER_ADMIN):
+    - `ui_modes`: Available UI modes (simple, technical, claw, docs, work) filtered by role.
+    - `commands`: Command palette items (chat, agents, workspace, settings, tasks, time, files, team, projects, etc.) filtered by role.
+    - `tools`: Tool lists (read_file, edit_file, bash, web_search, whatsapp_send, time_log, task_create, ai_predict, etc.) filtered by role.
+    - `features`: Feature flags (whatsapp_bot, cad_support, ai_predictions, multi_tenancy, client_portal, etc.).
+    - `navigation`: Navigation items for main, portal, admin, client sections based on role.
+  - **Role-Based Filtering**: ANONYMOUS sees core commands only; WORKER sees work-related; LEADER sees leadership tools; CLIENT sees client views; SUPER_ADMIN sees admin tools.
+
+- **Client Role UI (Phase 2):** Stakeholder view for project progress, drawings, and feedback reporting:
+  - **API Endpoints** (`server/index.ts`):
+    - `GET /api/client/projects` - List projects for client's tenant (read-only, excludes drafts).
+    - `GET /api/client/projects/:id/progress` - Get project progress (tasks summary, hours, budget, completion %).
+    - `GET /api/client/drawings` - List drawings/documents (CAD files: .dwg, .rvt, .pdf, images).
+    - `POST /api/client/feedback` - Submit feedback (rating, comment, category) logged to audit_logs.
+  - **UI Page** (`pages/ClientDashboard.tsx`):
+    - Project selector with progress overview (completion %, budget spent, hours, tasks).
+    - Drawings tab with file listing (type badges: dwg=blue, rvt=purple, pdf=red).
+    - Feedback tab with star rating (1-5), category selector, comment form.
+    - Way of Pi color scheme (`bg-[#252526]`, `border-[#ea580c]`, `text-[#cccccc]`).
+
+- **Mobile UI Verification Section (TODO.md):** Added comprehensive mobile UI verification checklist to `plans/productionready/TODO.md`:
+  - References `plans/mobile/README.md` and `plans/mobile/Comprehensive-Mobile-Implementation-Plan.md` (1255 lines).
+  - Covers all Phase 1-4 features requiring mobile UI support.
+  - 5 Tracks overview: Shared foundations, Claw mobile, Simple mobile, Technical mobile, PWA + offline, Polish + performance.
+  - Mobile testing checklist from `plans/mobile/README.md` (entry via `?shell=mobile` or `/m` path).
+  - Current mobile state: `MobileChrome.tsx`, `ClawMobileTabBar.tsx`, `SimpleMobileTabBar.tsx`, `MobileTechnicalShell.tsx` (stub).
+
+- **Database Optimization (Phase 4):** Verified production-ready SQLite configuration in `schema.sql`:
+  - WAL mode enabled (`PRAGMA journal_mode = WAL;`) for concurrent reads (line 5).
+  - 8 performance indexes added: `idx_users_tenant_role`, `idx_users_phone`, `idx_projects_tenant`, `idx_tasks_tenant`, `idx_tasks_project`, `idx_tasks_assignee`, `idx_tasks_status`, `idx_time_user_date`, `idx_time_status`, `idx_audit_tenant_time`.
+  - Foreign key constraints enabled (`PRAGMA foreign_keys = ON;`).
+  - Synchronous mode set to NORMAL for balance of safety and speed.
+
+- **Super Admin Dashboard (Phase 2):** System-wide management console for SUPER_ADMIN users:
+  - **API Endpoints** (`server/index.ts`):
+    - `GET /api/admin/tenants` - List all tenants with user counts (requires SUPER_ADMIN role).
+    - `POST /api/admin/tenants` - Create new tenant (name, slug, subscription_tier).
+    - `GET /api/admin/stats` - System statistics (tenants, users, projects, tasks, time entries).
+    - `GET /api/admin/users` - List all users system-wide with tenant names.
+  - **UI Page** (`pages/SuperAdminDashboard.tsx`):
+    - System statistics cards (5 metrics).
+    - Tenant management tab (create, view, subscription tiers).
+    - Users overview tab (all users with roles, tenant names, status).
+    - Stats tab with visual icons.
+    - Way of Pi color scheme (`bg-[#252526]`, `border-[#ea580c]`, `text-[#cccccc]`).
+
+- **Worker Portal APIs (Phase 2):** Implemented real database queries for all Worker Portal endpoints in `server/index.ts`:
+  - `/api/portal/tasks` - Fetches tasks assigned to worker with project names (tenant-scoped, ordered by due date).
+  - `/api/portal/files` - Lists workspace files from `workspace_files` table (tenant-scoped, created_at DESC).
+  - `/api/portal/time` GET - Retrieves worker's time entries with task/project info (limit 100, ordered by date DESC).
+  - `/api/portal/time` POST - Saves new time entries to DB (validates required fields, supports task/drawing references).
+  - `/api/portal/download/:fileId` - Secure file downloads with path validation (ensures files stay within tenant workspace), updates download count, logs audit entry.
+  - `/api/portal/me` - Returns authenticated user details (id, username, role, tenantId) from users table.
+
+- **User Profile Page:** Added requirement for personalized profile management where users can update details, change security credentials (PIN/password), and manage preferences.
+- **Production Distribution Plan:** Created `plans/PRODUCTION_AUTH_TENANCY_WORKLEADER_ALIGNMENT.md` - a comprehensive roadmap for one-click cross-platform installation, multi-tenancy, and cloud/host deployment options.
+- **Multi-Tenancy Core:** Refactored server-side workspace state to support isolated `tenantId` mappings. All file and agent operations are now scoped by organization.
+- **JWT Authentication:** Implemented secure login/registration system using `jose`. Added middleware to protect REST and WebSocket endpoints.
+- **Flexible Deployment:** Added production `Dockerfile` and `docker-compose.yml` for cloud deployments. Refactored server to run either locally (SQLite/Ollama) or in the cloud (PostgreSQL/Centralized AI).
+- **Desktop Packaging:** Integrated `electron-builder` into `apps/wayofpi-ui/package.json` to generate native `.dmg`, `.exe`, and `.AppImage` binaries. Added `npm run pack` script.
+- **One-Click Installers:** Created `scripts/install.sh` (Unix) and `scripts/install.ps1` (Windows) to automate the entire setup process for non-technical users, including Ollama and model retrieval.
+- **Two-Tier Login System:** Defined "Simple Login" (ID + PIN) for Workers and "Secure Login" (JWT) for Project Leaders, aligned with the Work Leader System.
+
+### Added
+
+- **Docs UI mode:** New standalone `"docs"` UI mode (3-panel layout: file tree | chat | preview) with `docs/DocsApp.tsx`, added to `UiMode` and `ChatSessionSurfaceId` types. Toggle cycle: `simple → technical → claw → docs → simple`. Docs button added to `UiModeToggle` header.
+- **WhatsApp/Telegram separation:** Moved `plans/WHATSAPP_PI_CLAW_INTEGRATION_SPEC.md` to `plans/` root. Added **Timed Messages** feature for project managers: automated daily messages to employees' phones via WhatsApp/Telegram with "what to do today" (pulls from Work mode). Claw Contacts tab gets "Timed Messages" section.
+- **Work Leader System:** Created `plans/WORK_LEADER_SYSTEM_PLAN.md` - unified ecosystem connecting:
+  - Docs Mode (document evaluation + sharing to workers via shared-info/ folder)
+  - Time Management (Work mode: time tracking, task assignment, approval workflow)
+  - WhatsApp/Telegram automation (timed messages, document notifications, Claw chat from phones)
+  - **Two WhatsApp Bots:** @WorkTimeBot (workers) + @WorkLeaderClaw (leader) - separate numbers, different toolsets
+  - **Construction Workers Support:** PDF/blueprint viewing, CAD files (.dwg, .rvt), drawing-linked time entries
+  - **Worker Portal (Login System):** Web portal where workers login with ID+PIN, download files/folders, log time (alternative to WhatsApp)
+  - Claw integration (workers request docs via chat, leader shares info in specialized folder)
+  - Full workflow automations (plan → tasks → time entries → notifications)
+- **Time Management View:** `plans/WOP_TIME_MANAGEMENT_PLAN.md` - new `"work"` UI mode for workers to submit time/tasks, leaders to approve/manage.
+- **Docs Mode Improvements:** `plans/WOP_DOCS_MODE_IMPROVEMENTS.md` - redesign Docs mode for project managers (document browser, markdown viewer, PM-focused chat).
+- **WhatsApp Plan:** `plans/WOP_WHATSAPP_PLAN.md` (in `docs/wayofpi/`) - detailed WhatsApp integration with `whatsapp-pi` extension.
+- **Pi Integration in Docker:** `plans/PI_INTEGRATION_DOCKER_PLAN.md` - install Pi (`www.pi.dev`) via `npm install -g @mariozechner/pi-coding-agent` in Docker, run as non-root user (UID 1001), integrate with Work Leader System.
+- **Production Readiness:** `plans/PRODUCTION_READINESS_PLAN.md` - complete cross-platform distribution (curl | bash, Electron Builder, Docker/VM) with multi-tenancy + auth.
+- **UI Components Created:**
+  - `pages/WorkerPortal.tsx` - Worker login (ID+PIN) + dashboard (tasks, files, time entries)
+  - `components/work/WorkApp.tsx` - Time management UI (time entries, tasks, contacts, leader/worker toggle)
+  - `components/docs/DocumentEvaluationPanel.tsx` - Document evaluation (checklist, notes, approval/rejection, share to workers)
+- **Simple secondary toolbar:** Indexing status dot + "Docs" button (`FileText` icon) to switch to docs mode. `SimpleSecondaryToolbar` now accepts `onSwitchToDocs` and `indexingStatus` props.
+- **File tree context menu:** Right-click menu in `FileExplorer` with Copy path (clipboard), Rename (`POST /api/fs/move`), Delete (`POST /api/fs/delete`). Imports: `Copy, Pencil, Trash2` from `lucide-react`.
+- **Editable file types:** `EDITABLE_EXTENSIONS` set + `isFileEditable()` in `server/paths.ts` (supports md, txt, doc, pdf, js, ts, py, json, etc.).
+- **Docs UI plan:** `plans/PLAN-DOCS-UI.md` with full specification.
+- **Docs mode improvements plan:** `docs/WOP_DOCS_MODE_IMPROVEMENTS.md` - redesign Docs mode for project managers (document browser, markdown viewer, simplified PM chat).
+- **Time management view plan:** `docs/WOP_TIME_MANAGEMENT_PLAN.md` - new `"work"` UI mode for time tracking and task management (workers submit time/tasks, leaders approve/manage).
+- **Project structure doc:** `docs/STRUCTURE.md` with 3-level project structure and descriptions.
+
 ### Fixed
 
 - **System Startup (`start-wayofpi.sh`):** Fixed a critical PID extraction bug where the script incorrectly attempted to kill file descriptors (e.g., `11`) instead of process IDs when clearing ports 3333 and 5173. 
 - **System Persistence (`start-wayofpi.sh`):** Added `wait "$DEV_PID"` to prevent background servers from being terminated by `SIGHUP` when the startup script finishes.
 - **Justfile Targets:** Restored the missing `wayofpi-full` target name and updated both `wayofpi-full` and `wayofpi-electron` to use the correct startup commands and scripts.
+- **Linux Launcher (`linux/wayofpi-launch.sh`):** Removed a redundant port check that was blocking the app from starting when stale processes were present; `start-wayofpi.sh` now handles all cleanup automatically.
+- **UI Code Editor:** Fixed `highlight.js` deprecation warnings by removing `.js` extensions from language imports.
 
 ### Added
 
+- **Electron-First Startup:** Refactored `start-wayofpi.sh` to default to Electron mode for a native desktop experience. Added a `--web` flag for the optional browser view.
+- **Dedicated Electron Script:** Created `start-wayofpi-electron.sh` to explicitly launch the Electron shell.
+- **Startup & Connectivity Guide:** Added **[docs/STARTUP_GUIDE.md](docs/STARTUP_GUIDE.md)** covering local startup, LAN access, and internet reachability via ngrok.
 - **Diagnostic Documentation:** Added **[docs/debug/SYSTEM_STARTUP_FIX_2026-05-04.md](docs/debug/SYSTEM_STARTUP_FIX_2026-05-04.md)** detailing the root cause and resolution of the system startup failures.
 
 ### Removed

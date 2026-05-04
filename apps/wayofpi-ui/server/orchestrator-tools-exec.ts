@@ -41,6 +41,80 @@ export type OrchestratorToolResult = {
 let orchestratorToolsRuntimeOverride: boolean | undefined;
 let orchestratorBashRuntimeOverride: boolean | undefined;
 
+/**
+ * Headless Pi Spine - Execute tools via Pi CLI with --mode json
+ * When enabled (WOP_CHAT_ENGINE=pi or auto with pi on PATH), tool calls
+ * are executed by Pi instead of Bun-native implementations.
+ */
+export async function executeToolViaPi(
+	toolName: string,
+	args: Record<string, unknown>,
+	workspacePath: string
+): Promise<OrchestratorToolResult> {
+	const piBinary = process.env.WOP_PI_BINARY || "pi";
+	const timeoutMs = 30_000; // 30s timeout for Pi tool execution
+
+	try {
+		// Build Pi command: pi --mode json --tool <name> --args '<json>'
+		const argsJson = JSON.stringify(args);
+		const proc = Bun.spawn(
+			[piBinary, "--mode", "json", "--tool", toolName, "--args", argsJson],
+			{
+				cwd: workspacePath,
+				stdout: "pipe",
+				stderr: "pipe",
+				timeout: timeoutMs,
+			}
+		);
+
+		const output = await new Response(proc.stdout).text();
+		const stderr = await new Response(proc.stderr).text();
+		const exitCode = await proc.exited;
+
+		if (exitCode !== 0) {
+			return {
+				output: `Pi tool execution failed (exit ${exitCode}): ${stderr || output}`,
+			};
+		}
+
+		// Parse Pi's JSON output
+		try {
+			const result = JSON.parse(output);
+			return {
+				output: result.output || output,
+				agentsCatalogChanged: result.agentsCatalogChanged,
+				workspaceFileWritten: result.workspaceFileWritten,
+			};
+		} catch {
+			// If not JSON, return raw output
+			return { output };
+		}
+	} catch (e) {
+		const message = e instanceof Error ? e.message : String(e);
+		return { output: `Pi tool execution error: ${message}` };
+	}
+}
+
+/**
+ * Check if headless Pi mode is active for tool execution.
+ * Returns true when WOP_CHAT_ENGINE=pi or auto with pi resolvable.
+ */
+export function isPiToolExecutionEnabled(): boolean {
+	const engine = process.env.WOP_CHAT_ENGINE?.trim().toLowerCase();
+	if (engine === "pi") return true;
+	if (engine === "bundled" || engine === "bun") return false;
+	// auto mode: check if pi is on PATH
+	if (engine === "auto" || !engine) {
+		try {
+			const proc = Bun.spawn(["which", "pi"], { stdout: "pipe" });
+			return proc.exited === 0;
+		} catch {
+			return false;
+		}
+	}
+	return false;
+}
+
 export type OrchestratorGateRuntimePatch = {
 	/** Set **`true`/`false`** for this process; **`null`** clears override so **`WOP_*`** env applies again. */
 	orchestratorTools?: boolean | null;
@@ -295,7 +369,11 @@ async function toolBash(command: string): Promise<string> {
 }
 
 /**
- * Run one Pi-named orchestrator tool (workspace-jailed). Results are plain text for the model.
+ * Run one Pi-named orchestrator tool (workspace-jailed).
+ * Results are plain text for the model.
+ *
+ * When `isPiToolExecutionEnabled()` is true (WOP_CHAT_ENGINE=pi or auto with pi on PATH),
+ * tool execution is delegated to Pi CLI via `executeToolViaPi()` for authoritative tool execution.
  */
 export async function executeOrchestratorTool(name: string, argsJson: string): Promise<OrchestratorToolResult> {
 	let args: Record<string, unknown> = {};
@@ -303,6 +381,13 @@ export async function executeOrchestratorTool(name: string, argsJson: string): P
 		args = JSON.parse(argsJson || "{}") as Record<string, unknown>;
 	} catch {
 		return { output: "Invalid JSON in tool arguments." };
+	}
+
+	// HEADLESS PI SPINE: Delegate to Pi CLI when enabled
+	if (isPiToolExecutionEnabled()) {
+		const workspacePath = getPrimaryWorkspacePath();
+		broadcastToolLog("INFO", "pi-tool", `${name} → Pi CLI (--mode json)`);
+		return await executeToolViaPi(name, args, workspacePath);
 	}
 
 	switch (name) {

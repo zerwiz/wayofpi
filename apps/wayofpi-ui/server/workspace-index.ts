@@ -51,12 +51,11 @@ export type WorkspaceIndexOptions = {
 };
 
 export const DEFAULT_WORKSPACE_INDEX_OPTIONS: WorkspaceIndexOptions = {
-	indexNewFolders: true,
-	instantGrepIndex: true,
-	attachSummaryToChat: false,
-	autoSyncIntervalMinutes: 0,
+        indexNewFolders: true,
+        instantGrepIndex: true,
+        attachSummaryToChat: true,
+        autoSyncIntervalMinutes: 0,
 };
-
 export type WorkspaceIndexFileEntry = {
 	path: string;
 	size: number;
@@ -410,40 +409,51 @@ export type WorkspaceIndexSyncResult = {
 	options: WorkspaceIndexOptions;
 };
 
-export async function syncWorkspaceIndex(): Promise<WorkspaceIndexSyncResult> {
-	const root = workspaceRoot();
-	const options = await readWorkspaceIndexOptions();
-	const git = await loadIgnoreFile(".gitignore");
-	const cursor = await loadIgnoreFile(".cursorignore");
-	const counter = { n: 0, truncated: false };
-	const entries = await walkIndexedFiles(root, git, cursor, counter);
-	entries.sort((a, b) => a.path.localeCompare(b.path));
-	const samplePaths = entries.slice(0, SAMPLE_PATHS).map((e) => e.path);
-	const merkleRoot = merkleRootFromEntries(entries);
-	const state: WorkspaceIndexStateFile = {
-		version: INDEX_VERSION,
-		syncedAt: new Date().toISOString(),
-		fileCount: entries.length,
-		truncated: counter.truncated,
-		merkleRoot,
-		samplePaths,
-	};
-	await mkdir(indexDirAbs(), { recursive: true });
-	await writeFile(stateJsonPath(), JSON.stringify(state, null, 2), "utf8");
-	await writeFile(manifestJsonPath(), JSON.stringify({ version: INDEX_VERSION, files: entries }, null, 2), "utf8");
-	if (options.instantGrepIndex) {
-		const lines = entries.map((e) => e.path).join("\n");
-		await writeFile(grepPathsPath(), `${lines}\n`, "utf8");
-	} else {
-		try {
-			await rm(grepPathsPath(), { force: true });
-		} catch {
-			/* ok */
-		}
-	}
-	return { ok: true, state, options };
-}
+let _isSyncing = false;
 
+export async function syncWorkspaceIndex(): Promise<WorkspaceIndexSyncResult> {
+        if (_isSyncing) {
+                // If already syncing, we return the current options but this call is a no-op for actual syncing.
+                // In a more robust system, we might queue the next sync.
+                return { ok: false, state: (await getWorkspaceIndexStatus()).state!, options: await readWorkspaceIndexOptions() };
+        }
+        _isSyncing = true;
+        try {
+                const root = workspaceRoot();
+                const options = await readWorkspaceIndexOptions();
+                const git = await loadIgnoreFile(".gitignore");
+                const cursor = await loadIgnoreFile(".cursorignore");
+                const counter = { n: 0, truncated: false };
+                const entries = await walkIndexedFiles(root, git, cursor, counter);
+                entries.sort((a, b) => a.path.localeCompare(b.path));
+                const samplePaths = entries.slice(0, SAMPLE_PATHS).map((e) => e.path);
+                const merkleRoot = merkleRootFromEntries(entries);
+                const state: WorkspaceIndexStateFile = {
+                        version: INDEX_VERSION,
+                        syncedAt: new Date().toISOString(),
+                        fileCount: entries.length,
+                        truncated: counter.truncated,
+                        merkleRoot,
+                        samplePaths,
+                };
+                await mkdir(indexDirAbs(), { recursive: true });
+                await writeFile(stateJsonPath(), JSON.stringify(state, null, 2), "utf8");
+                await writeFile(manifestJsonPath(), JSON.stringify({ version: INDEX_VERSION, files: entries }, null, 2), "utf8");
+                if (options.instantGrepIndex) {
+                        const lines = entries.map((e) => e.path).join("\n");
+                        await writeFile(grepPathsPath(), `${lines}\n`, "utf8");
+                } else {
+                        try {
+                                await rm(grepPathsPath(), { force: true });
+                        } catch {
+                                /* ok */
+                        }
+                }
+                return { ok: true, state, options };
+        } finally {
+                _isSyncing = false;
+        }
+}
 export async function clearWorkspaceIndex(): Promise<void> {
 	try {
 		await rm(indexDirAbs(), { recursive: true, force: true });
@@ -520,10 +530,15 @@ function startAutoSync(intervalMinutes: number, onSync?: OnAutoSyncCallback): vo
 /** Read saved options and (re)start or stop the auto-sync timer accordingly.
  *  Call this once at server startup, and again after each options patch. */
 export async function applyAutoSync(onSync?: OnAutoSyncCallback): Promise<void> {
-	const opts = await readWorkspaceIndexOptions();
-	startAutoSync(opts.autoSyncIntervalMinutes, onSync);
+        const opts = await readWorkspaceIndexOptions();
+        // Trigger an initial sync if requested (usually at startup)
+        void syncWorkspaceIndex()
+                .then((result) => {
+                        if (result.ok) onSync?.(result);
+                })
+                .catch(() => {});
+        startAutoSync(opts.autoSyncIntervalMinutes, onSync);
 }
-
 // ---------------------------------------------------------------------------
 
 /** Sync read for chat lead assembly (must stay small). */
