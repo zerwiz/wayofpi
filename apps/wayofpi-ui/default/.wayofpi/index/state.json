@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "syncedAt": "2026-05-04T18:36:17.454Z",
-  "fileCount": 13,
+  "syncedAt": "2026-05-04T18:48:38.457Z",
+  "fileCount": 19,
   "truncated": false,
-  "merkleRoot": "22db2f7bc3a3dce9",
+  "merkleRoot": "dfd358e22d52aec4",
   "samplePaths": [
     "agent/sessions/wayofpi-chat-claw.t-1777919040410-c-r6ep0rt.jsonl",
     "agent/sessions/wayofpi-chat-claw.t-1777919087912-c-6bc79et.jsonl",
@@ -15,8 +15,14 @@
     "agent/sessions/wayofpi-chat-claw.t-1777919344587-c-9eedh5w.jsonl",
     "agent/sessions/wayofpi-chat-claw.t-1777919599015-c-4beucfz.jsonl",
     "agent/sessions/wayofpi-chat-claw.t-1777919599141-c-r0zox5h.jsonl",
+    "agent/sessions/wayofpi-chat-claw.t-1777919781002-c-xejltzn.jsonl",
+    "agent/sessions/wayofpi-chat-claw.t-1777919781103-c-6mvft3p.jsonl",
+    "agent/sessions/wayofpi-chat-claw.t-1777920497542-c-ehmlnif.jsonl",
+    "agent/sessions/wayofpi-chat-claw.t-1777920497685-c-3cnqv2k.jsonl",
     "agent/sessions/wayofpi-chat-docs.t-1777919599141-d-9pnv8l2.jsonl",
+    "agent/sessions/wayofpi-chat-docs.t-1777919781103-d-zylpxnd.jsonl",
     "agent/sessions/wayofpi-chat-simple.t-1777919599141-s-znv92np.jsonl",
+    "agent/sessions/wayofpi-chat-simple.t-1777919781103-s-g64i37d.jsonl",
     "agent/sessions/wayofpi-chat-technical.t-1777919599141-t-cl9weh1.jsonl"
   ]
 }

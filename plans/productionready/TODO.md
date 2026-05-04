@@ -62,11 +62,9 @@ This list tracks all remaining tasks for **Way of Pi** production readiness, pri
   - `services/boardMembersService.ts` - uses `/api/admin/users` (GET)
   - `services/developmentWorkflowService.ts` - uses `/api/portal/tasks` (grouped by status)
 - [x] **Updated Imports:** `WorkTaskCard.tsx`, `WorkDocsView.tsx`, `WorkTeamView.tsx` now use real services.
-- [x] **useAIPredictions Hook:** Created `hooks/useAIPredictions.ts`:
-  - `refreshPredictions()` - Analyzes `/api/client/projects` + `/api/client/projects/:id/progress`
-  - `refreshWorkerPerformance()` - Analyzes `/api/admin/users` + `/api/portal/time`
-  - `refreshProjectInsights(projectId)` - Analyzes project progress + drawings
-  - `generatePrediction(projectId, docContent)` - Sends doc to Pi for analysis (placeholder)
+- [x] **useAIPredictions Hook:** Created `hooks/useAIPredictions.ts` with `refreshPredictions()`, `refreshWorkerPerformance()`, `refreshProjectInsights()`, `generatePrediction()`.
+- [x] **Modal Components:** Created `Modal.tsx` and `ConfirmationModal.tsx` in `components/modals/` for kanban UI.
+- [x] **WorkApp Wiring:** Updated `WorkApp.tsx` to fetch data from real APIs (`/api/portal/time`, `/api/portal/tasks`, `/api/admin/users`).
 - [ ] **WorkTaskCard UI:** Wire real API data to 2244-line component (kanbanService, notesService, tasksService connected).
 - [ ] **WorkDocsView UI:** Wire real API data to 273-line component (notesService connected).
 - [ ] **WorkTeamView UI:** Wire real API data to 374-line component (boardMembersService connected).
