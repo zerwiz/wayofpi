@@ -110,6 +110,7 @@ export function WorkBoard() {
   const [_driveFolderPath, setDriveFolderPath] = useState<DriveFile[]>([]);
   const [_showConnectFileModal, _setShowConnectFileModal] = useState(false);
   const [_fileToConnect, _setFileToConnect] = useState<DriveFile | null>(null);
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
   const { showToast } = useToast();
   const columnMenuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const cardMenuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -2431,8 +2432,56 @@ export function WorkBoard() {
                         <input
                           type="checkbox"
                           className="w-4 h-4 rounded border-[#3c3c3c] bg-[#252526] text-orange-600 focus:ring-orange-500"
-                          onChange={() => {
-                            // TODO: Select all cards
+                          onChange={async () => {
+                            const allCards = Array.from(cards.values());
+                            const filteredCards = allCards.filter((c) => {
+                              if (searchQuery && !c.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+                                return false;
+                              }
+                              if (selectedDevelopmentWorkflowId && c.metadata?.developmentWorkflowId !== selectedDevelopmentWorkflowId) {
+                                return false;
+                              }
+                              if (selectedDevelopmentPhase && c.metadata?.developmentPhase !== selectedDevelopmentPhase) {
+                                return false;
+                              }
+                              if (selectedNSRFolder && c.metadata?.nsrFolder !== selectedNSRFolder) {
+                                return false;
+                              }
+                              if (selectedWorkflowTrack && c.metadata?.workflowTrack !== selectedWorkflowTrack) {
+                                return false;
+                              }
+                              if (selectedWorkflowId && c.metadata?.workflowId !== selectedWorkflowId) {
+                                return false;
+                              }
+                              if (selectedEnterprisePhase && c.metadata?.enterprisePhase !== selectedEnterprisePhase) {
+                                return false;
+                              }
+                              return true;
+                            });
+                            if (e.target.checked) {
+                              setSelectedCardIds(["all"]);
+                              const now = new Date();
+                              filteredCards.forEach((card) => {
+                                kanbanService.updateCard(currentBoardId, card.id, {
+                                  metadata: {
+                                    completed: true,
+                                    updatedAt: now,
+                                  },
+                                })
+                                  .catch(console.error);
+                              });
+                            } else {
+                              setSelectedCardIds([]);
+                              filteredCards.forEach((card) => {
+                                kanbanService.updateCard(currentBoardId, card.id, {
+                                  metadata: {
+                                    completed: false,
+                                    updatedAt: now,
+                                  },
+                                })
+                                  .catch(console.error);
+                              });
+                            }
                           }}
                         />
               </div>
@@ -2496,9 +2545,12 @@ export function WorkBoard() {
                         <input
                           type="checkbox"
                           checked={card.completed || false}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             e.stopPropagation();
-                            // TODO: Toggle completion
+                            const now = new Date();
+                            const updatedCard: Partial<BoardCard> = { metadata: { completed: !card.completed, updatedAt: now } };
+                            await kanbanService.updateCard(currentBoardId, card.id, updatedCard);
+                            setCards(new Map(Object.entries(Array.from(cards.values()).filter((c) => c.id !== card.id).concat([updatedCard]))));
                           }}
                           className="w-4 h-4 rounded border-[#3c3c3c] bg-[#252526] text-orange-600 focus:ring-orange-500"
                           onClick={(e) => e.stopPropagation()}

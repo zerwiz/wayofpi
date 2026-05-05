@@ -20,15 +20,33 @@ Way of pi/
 │   │   ├── src/                   # Server source code
 │   │   ├── index.js               # Entry point
 │   │   └── package.json
-│   └── wayofpi-ui/                # Electron + Vite + React frontend
-│       ├── agent/                  # UI agent definitions
-│       ├── electron/               # Electron main process
-│       ├── server/                 # UI dev server
-│       ├── src/                    # React source (components, hooks, panes)
-│       ├── shared/                 # Shared types/utils
-│       ├── public/                 # Static assets
-│       ├── scripts/                # UI utility scripts
-│       └── deps/                   # UI dependencies
+│   ├── wayofpi-ui/                # Electron + Vite + React frontend
+│   │   ├── agent/                  # UI agent definitions
+│   │   ├── electron/               # Electron main process
+│   │   ├── server/                 # UI dev server
+│   │   ├── src/                    # React source (components, hooks, panes)
+│   │   ├── shared/                 # Shared types/utils
+│   │   ├── public/                 # Static assets
+│   │   ├── scripts/                # UI utility scripts
+│   │   └── deps/                   # UI dependencies
+│   ├── workerportal/               # Worker portal (work-button implementation)
+│   │   ├── .env.example
+│   │   ├── index.html
+│   │   ├── README.md
+│   │   ├── WORK_BUTTON.css
+│   │   ├── WORK_BUTTON.tsx
+│   │   ├── workerportal.tsx
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── PortalAuth.tsx
+│   │   │   │   ├── PortalHeader.tsx
+│   │   │   │   └── PortalNavigation.tsx
+│   │   │   └── pages/
+│   │   │       └── TimeEntriesPage.tsx
+│   │   └── deploy/
+│   │       └── wayofpi-sqlite-init.sql
+│   └── mandelbrot.html             # Mandelbrot set visualization
 ├── build-release.sh                # Debian/Release build script
 ├── bun.lock                        # Bun lockfile
 ├── Calculator                      # Compiled calculator binary
@@ -345,24 +363,19 @@ plans/
 │       └── TODO.md
 ├── projects/                       # Project-specific plans
 │   ├── scout-findings-documentation.md
-│   └── work-button-improvements/
+│   └── work-button-improvements/     # Planning docs only (implementation in apps/workerportal/)
 │       ├── 01-PLAN.md
 │       ├── 02-NAVIGATION-ARCHITECTURE.md
 │       ├── 03-WORKER-PORTAL-DEMO-MODE.md
 │       ├── 04_WHATSAPP_INTEGRATION_PLAN.md
 │       ├── DEPLOYMENT.md
-│       ├── deploy/
-│       │   └── wayofpi-sqlite-init.sql
 │       ├── IMPLEMENTATION-COMPLETE.md
 │       ├── mobile/
 │       │   └── RESPONSIVE-VIEW-SPEC.md
 │       ├── NGROK_SETUP.md
-│       ├── ref/
+│       ├── ref/                       # Reference docs
 │       ├── TODO.md
-│       ├── VPS_SETUP.md
-│       ├── WORK_BUTTON.css
-│       ├── WORK_BUTTON.tsx
-│       └── workerportal/
+│       └── VPS_SETUP.md
 └── refactoring/                    # Refactoring plans
     ├── PHASE-1-COMPLETION.md
     ├── PLAN-20250311-app-component-split.md
