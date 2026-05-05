@@ -7,7 +7,7 @@ const STORAGE_KEY = "wayofpi.uiMode";
 function readStored(): UiMode {
 	try {
 		const v = localStorage.getItem(STORAGE_KEY);
-		if (v === "technical" || v === "simple" || v === "claw") return v;
+		if (v === "technical" || v === "simple" || v === "claw" || v === "docs" || v === "work") return v;
 	} catch {
 		/* ignore */
 	}

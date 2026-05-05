@@ -2,6 +2,60 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.20.05] - 2026-05-05
+
+### Fixed
+- **[SERVER] tree.ts**: Increased `MAX_NODES` from 4000 to 150000 and `MAX_DEPTH` from 14 to 20 to show ALL files/folders in workspace
+- **[SERVER] tree.ts**: Fix for workspaces with >4000 files not showing all files in Simple/Technical modes
+
+### Changed  
+- **[SERVER] tree.ts**: Updated limits to handle large workspaces (100K+ files, 10K+ dirs)
+
+### Added
+- **[DEVELOPERS] Specialized Roles**: Created comprehensive developer roles guide in `/home/zerwiz/CodeP/Way of pi/pip/.pi/agents/wayofpiagents/WAYOFPI_DEVELOPER_ROLES.md`
+- **[DEVELOPERS] Electron Developer**: Created `wayofpi-electron-developer` - Electron internals, main/renderer processes, IPC, native features
+- **[DEVELOPERS] API Developer**: Created `wayofpi-api-developer` - REST/GraphQL APIs, webhooks, authentication, API design
+- **[DEVELOPERS] Storage Developer**: Created `wayofpi-storage-developer` - Database design, IndexedDB, localStorage, data persistence, migrations
+- **[DEVELOPERS] Accessibility Developer**: Created `wayofpi-a11y-developer` - WCAG 2.1 AA, ARIA, keyboard navigation, screen reader testing
+- **[DEVELOPERS] Performance Developer**: Created `wayofpi-performance-developer` - Bundle size, rendering speed, memory optimization, Core Web Vitals
+- **[DEVELOPERS] Security Developer**: Created `wayofpi-security-developer` - OWASP, vulnerability scanning, security audits, authentication
+- **[DEVELOPERS] Testing Developer**: Created `wayofpi-testing-developer` - Unit tests, integration tests, E2E, code coverage, test infrastructure
+- **[DEVELOPERS] CLI Developer**: Created `wayofpi-cli-developer` - Bash scripts, terminal commands, CLI tools, script automation
+- **[DEVELOPERS] Integration Developer**: Created `wayofpi-integration-developer` - Third-party APIs, webhooks, external services
+- **[DEVELOPERS] Rules Developer**: Created `wayofpi-rules-developer` - Business logic, validation, enforcement policies
+- **[DEVELOPERS] Orchestration Developer**: Created `wayofpi-orchestration-developer` - Agent workflows, teams, pipelines, automation
+- **[DEVELOPERS] Documentation Developer**: Created `wayofpi-documentation-developer` - README generation, API docs, tutorials
+
+### Changed
+- **[DEVELOPERS] Agent Configuration**: All Way of Pi developers now reference root path `~/Way of pi` via `WAYOFPI_ROOT` environment variable
+- **[DEVELOPERS] Agent Paths**: Hard-coded file paths replaced with environment variable `$(WAYOFPI_ROOT)/` for cross-platform compatibility
+
+## [0.20.04] - 2026-05-05
+
+### Added
+- **[UI] Docs Mode**: File tree now filters to show only document files (.md, .txt, .doc, .docx, .pdf)
+- **[UI] Docs Mode**: Added quick action buttons: "Summarize", "Action Items", "Review" for document Q&A
+- **[UI] Docs Mode**: Added document status badges (Draft, Review, Approved) with automatic detection from content
+- **[UI] Docs Mode**: Status detection reads file content to determine status from markdown frontmatter
+
+### Changed
+- **[UI] Docs Mode**: Renamed file tree header from "Files" to "Documents" for clarity
+- **[UI] Docs Mode**: Improved status badge display in header with icon and color coding
+
+## [0.20.03] - 2026-05-05
+
+### Added
+- **[UI] Navigation.tsx**: Created unified navigation component with Primary Nav (Simple, Technical, Claw, Docs, Work) and Context-Aware Nav (Portal, Client, Admin, Profile) with role-based visibility
+- **[DEPLOY] host-for-demo.sh**: Created startup script for local hosting with optional ngrok tunnel for client demos
+- **[CONFIG] .env.example**: Added template with INSTANCE_ID, PIN, DB_FILE, PORT for multi-instance deployment
+
+### Fixed
+- **[UI] useUiMode.ts**: Fixed `readStored()` to properly handle 'docs' and 'work' modes, preventing fallback to "simple" on page reload
+- **[UI] App.tsx**: Added Navigation component import for unified nav integration
+
+### Changed
+- **[TODO] work-button-improvements**: Completed Phase 1 navigation integration tasks from 01-PLAN.md
+
 ## [0.20.02] - 2026-05-05
 
 ### Fixed

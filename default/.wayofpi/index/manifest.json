@@ -1,4 +1,370 @@
 {
   "version": 1,
-  "files": []
+  "files": [
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777992655138-c-dyh4nr9.jsonl",
+      "size": 196,
+      "mtimeMs": 1778000699638
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777994617083-c-z9vax2n.jsonl",
+      "size": 196,
+      "mtimeMs": 1777994619119
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777996986299-c-1jdyduf.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005331488
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1778000702758-c-xlojfm8.jsonl",
+      "size": 196,
+      "mtimeMs": 1778000702850
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1778005360599-c-mjl15ny.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005633596
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1778006024857-c-a0c1rlf.jsonl",
+      "size": 196,
+      "mtimeMs": 1778006025081
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777992655138-d-ie3lt0j.jsonl",
+      "size": 196,
+      "mtimeMs": 1778000695523
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778000708560-d-d199y97.jsonl",
+      "size": 196,
+      "mtimeMs": 1778000713788
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005234421-d-q6dd60n.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005283598
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005360599-d-qlbtzxr.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005704535
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005710182-d-af9zcrm.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005712010
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005717665-d-01iizem.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005717718
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005718914-d-iiqy789.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005719186
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005721414-d-gq5xm67.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005721456
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005723244-d-bdakwpx.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005723502
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005724714-d-kfriv60.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005724752
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1778005725842-d-f8hampv.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005726111
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985660718-s-pu846y2.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985660883
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985660843-s-dmb2bie.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985661087
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985912973-s-tyux6hm.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985913035
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985919523-s-cqey26q.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985919561
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985928743-s-40qladl.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985928779
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985953569-s-5evgcbf.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985953627
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985954631-s-t52xc3l.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985954875
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777985958651-s-hcxj7rn.jsonl",
+      "size": 198,
+      "mtimeMs": 1777985958718
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986187036-s-4hh83ug.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986187110
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986194471-s-cmhy7fr.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986194538
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986198887-s-ad1cnpg.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986198947
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986200577-s-tgyjh1u.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986200632
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986204077-s-j0kdm7c.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986204136
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986420308-s-yaw2yd8.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986420367
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986422753-s-z90o4vk.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986423010
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777986481114-s-komnino.jsonl",
+      "size": 198,
+      "mtimeMs": 1777986481196
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777987161101-s-kpc9efp.jsonl",
+      "size": 198,
+      "mtimeMs": 1777987161144
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777987170588-s-fjentxr.jsonl",
+      "size": 198,
+      "mtimeMs": 1777987170787
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777988568397-s-k336akx.jsonl",
+      "size": 198,
+      "mtimeMs": 1777988568444
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777988570328-s-8an7jhz.jsonl",
+      "size": 198,
+      "mtimeMs": 1777988570505
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777988913165-s-7q72gnv.jsonl",
+      "size": 198,
+      "mtimeMs": 1777988913234
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777988944531-s-g3kp9za.jsonl",
+      "size": 198,
+      "mtimeMs": 1777988944673
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777988958478-s-lwvroe7.jsonl",
+      "size": 198,
+      "mtimeMs": 1777988958537
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777988965739-s-ov1u0k8.jsonl",
+      "size": 198,
+      "mtimeMs": 1777988965794
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777992502277-s-3bekw2w.jsonl",
+      "size": 198,
+      "mtimeMs": 1777992502461
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777992650287-s-8nfosrq.jsonl",
+      "size": 198,
+      "mtimeMs": 1777992650390
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777992655138-s-e6vcyhk.jsonl",
+      "size": 297,
+      "mtimeMs": 1778000692809
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1778000702758-s-mlbgbp0.jsonl",
+      "size": 198,
+      "mtimeMs": 1778000708000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1778000708559-s-ujzli53.jsonl",
+      "size": 198,
+      "mtimeMs": 1778004718695
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1778005234420-s-lf31l31.jsonl",
+      "size": 198,
+      "mtimeMs": 1778005234520
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1778005725842-s-ec225eh.jsonl",
+      "size": 198,
+      "mtimeMs": 1778005856700
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1778006024959-s-kk3gnv0.jsonl",
+      "size": 198,
+      "mtimeMs": 1778006025213
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777988913165-t-nnqwxhu.jsonl",
+      "size": 201,
+      "mtimeMs": 1777988967120
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777988967325-t-9vq7ku1.jsonl",
+      "size": 201,
+      "mtimeMs": 1777988967449
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777988969085-t-c9fh9dk.jsonl",
+      "size": 201,
+      "mtimeMs": 1777988969110
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777992472987-t-qno8fj8.jsonl",
+      "size": 201,
+      "mtimeMs": 1777992473257
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777992475631-t-36kbax9.jsonl",
+      "size": 201,
+      "mtimeMs": 1777992475683
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777992499565-t-nk47h0j.jsonl",
+      "size": 201,
+      "mtimeMs": 1777992499615
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777992502277-t-msij406.jsonl",
+      "size": 201,
+      "mtimeMs": 1777994611634
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777992655138-t-weia7wk.jsonl",
+      "size": 201,
+      "mtimeMs": 1777997170734
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777994613011-t-2jold6c.jsonl",
+      "size": 201,
+      "mtimeMs": 1777994613038
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777994614997-t-90z1mi8.jsonl",
+      "size": 201,
+      "mtimeMs": 1777994615021
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777994617083-t-qsp3oi6.jsonl",
+      "size": 201,
+      "mtimeMs": 1777994617200
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1778005360599-t-62yneu6.jsonl",
+      "size": 201,
+      "mtimeMs": 1778005706044
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1778005708556-t-lza4tyc.jsonl",
+      "size": 201,
+      "mtimeMs": 1778005708608
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1778005725842-t-zmjsd5u.jsonl",
+      "size": 201,
+      "mtimeMs": 1778005800515
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777985954631-w-gh0ef3q.jsonl",
+      "size": 196,
+      "mtimeMs": 1777985956486
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777986420308-w-mm4vz84.jsonl",
+      "size": 196,
+      "mtimeMs": 1777986422313
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777986422753-w-gae9ajr.jsonl",
+      "size": 196,
+      "mtimeMs": 1777986426032
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777987161101-w-r21da41.jsonl",
+      "size": 196,
+      "mtimeMs": 1777987170310
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777987170588-w-92pl908.jsonl",
+      "size": 196,
+      "mtimeMs": 1777987173325
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777992499565-w-sdotfge.jsonl",
+      "size": 196,
+      "mtimeMs": 1777992501921
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777992650287-w-1bjdsdw.jsonl",
+      "size": 196,
+      "mtimeMs": 1777992654415
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1777992655138-w-noz746o.jsonl",
+      "size": 196,
+      "mtimeMs": 1777997012184
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1778005708557-w-dtdhda1.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005709891
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-work.t-1778005710182-w-6tclrq2.jsonl",
+      "size": 196,
+      "mtimeMs": 1778005710436
+    }
+  ]
 }

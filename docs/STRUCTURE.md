@@ -10,15 +10,11 @@ Way of Pi is a Pi coding agent playground with extensions, agents, skills, and a
 
 ```
 Way of pi/
-├── agent/                          # Agent session JSONL files (chat logs by mode)
-│   └── sessions/
-│       ├── wayofpi-chat-claw.*.jsonl
-│       ├── wayofpi-chat-simple.*.jsonl
-│       └── wayofpi-chat-technical.*.jsonl
+├── agent/                          # Agent session JSONL files (may be empty)
+│   └── sessions/                   # (may be empty)
 ├── agent-sessions/                 # Legacy agent sessions (empty)
 ├── AGENTS.md                       # Orchestrator agent config & project rules
 ├── apps/                           # Applications
-│   ├── mandelbrot.html             # Mandelbrot set visualization
 │   ├── wayofpi-server/             # Bun-based API/WS backend
 │   │   ├── bundled/               # Bundled output
 │   │   ├── src/                   # Server source code
@@ -37,6 +33,7 @@ Way of pi/
 ├── bun.lock                        # Bun lockfile
 ├── Calculator                      # Compiled calculator binary
 ├── Calculator.c                    # C calculator source
+├── CHANGELOG copy.md               # Copy of project changelog
 ├── CHANGELOG.md                    # Project changelog (88KB, comprehensive)
 ├── chronicle/                      # Chronicle ledger for session tracking
 │   └── ledger.json
@@ -45,13 +42,18 @@ Way of pi/
 │   ├── build/                     # Build output
 │   ├── codedir/                   # Packaged code layout
 │   └── source/debian/             # Debian control files
+├── default/                        # Default configuration files
+├── docker/                         # Docker-related files
 ├── docs/                           # Project documentation (see § docs/ below)
 ├── doctor.sh                       # Diagnostics script for Pi environment
 ├── done/                           # Ralph Wiggum completed tickets
 │   └── TEST-ALL-TOOLS.txt
 ├── .env                            # Environment variables (secrets, API keys)
+├── .env.example                    # Environment sample (version 2)
 ├── .env.sample                     # Sample env file
-├── full_server_index.ts.tmp        # Temp server index (generated)
+├── extensions -> .pi/extensions     # Symlink to Pi extensions
+├── .gitignore                      # Git ignore rules
+├── .gitmodules                     # Git submodules config
 ├── hooks/                          # Custom React hooks (useAgents, useServerConfig)
 ├── hooks-alongside/                # Extended hooks (mobile, workspace, views)
 ├── images/                         # Project images (logo, icon)
@@ -66,9 +68,10 @@ Way of pi/
 │   ├── wayofpi-launch.sh          # Launcher script
 │   └── install-wayofpi-menuitem.sh
 ├── node_modules/                   # NPM dependencies
-├── PI-COMMANDS.md                  # Pi slash commands reference
+├── package-lock.json               # NPM lockfile
 ├── pienv                           # Pi environment loader
-├── PI_VS_OPEN_CODE.md              # Comparison: Pi vs OpenCode
+├── PI-COMMANDS.md                  # Pi slash commands reference
+├── pip/                            # Pip-related files
 ├── planning.md                     # High-level planning notes
 ├── plans/                          # Project plans & specs (see § plans/ below)
 ├── README.md                       # Root readme (Kilo component docs)
@@ -83,12 +86,14 @@ Way of pi/
 ├── startup-scripts/                # Auto-start scripts
 │   └── auto-start-pty-server.sh
 ├── start-wayofpi.sh                # Main startup script (Electron + server)
+├── start-wayofpi-electron.sh       # Electron startup script
+├── start-wayofpi-ui.sh -> start-wayofpi.sh  # Symlink to main startup script
 ├── storage/                        # Runtime storage
 │   ├── config.json                 # Stored config
 │   ├── last-extension.json         # Last used extension
-│   ├── reviewer/                   # Reviewer agent data
 │   └── sessions/                   # Session JSON files
 ├── SYSTEM.md                       # System architecture & conduct rules
+├── test_agents.ts                  # Test agents file
 ├── theme-lib/                      # Theme utilities
 │   └── themeMap.ts
 ├── THEME.md                        # Theme documentation
@@ -115,26 +120,74 @@ Way of pi/
 
 ```
 .pi/
-├── agents/                         # Agent definitions (.ts files)
-├── extensions/                     # Pi extensions (shims to ref/extensions/)
+├── agent/                          # Pi agent runtime
+│   ├── auth.json                   # Authentication config
+│   ├── bin/                       # Agent binaries/scripts
+│   ├── extensions/                # Agent extensions
+│   ├── git/                       # Git integration
+│   ├── models.json                # Model configurations
+│   ├── run-history.jsonl          # Run history log
+│   ├── sessions/                  # Session files
+│   └── settings.json             # Agent settings
+├── agents/                         # Agent definitions
+│   ├── fluent/                    # Fluent agent
+│   ├── local/                     # Local agents
+│   ├── protected/                 # Protected agents
+│   ├── wop-agents/               # Way of Pi agents
+│   ├── package.json               # Agents package config
+│   └── teams.yaml                 # Agent teams config
+├── agent-sessions/                # Legacy agent sessions
+├── chronicle/                      # Chronicle ledger
+│   └── ledger.json
+├── damage-control-core/           # Damage control core files
+│   ├── extension.ts
+│   ├── file-system.ts
+│   ├── package.json
+│   └── README.md
+├── damage-control-rules.yaml      # Damage control rules (symlink target)
+├── db/                             # Database files
+│   └── wayofpi.sqlite
+├── extensions/                     # Pi extensions
+│   ├── find-hardcoded-paths.sh
+│   ├── fluent/                    # Fluent extensions
+│   ├── local/                     # Local extensions
+│   ├── protected/                 # Protected extensions
+│   └── util/                      # Utility extensions
+├── node_modules/                   # Node modules for .pi/
+│   └── @walrus/                   # Walrus package
+├── prompts/                        # Prompt templates
+│   └── code-review.md
+├── rules/                          # Pi rules
+│   ├── developer-rules.md
+│   ├── rules-commands.md
+│   ├── scripts/                   # Rule scripts
+│   └── securitypolicy.md
+├── scripts/                        # Pi scripts
+│   └── reorganize-pi-dev.sh
 ├── settings.json                   # Pi settings (extension enable/disable)
 ├── skills/                         # Skills (SKILL.md packages)
+│   ├── bowser/                    # Bowser skill
+│   ├── context-loader/            # Context loader skill
+│   ├── find-skills/               # Find skills utility
+│   ├── github/                    # GitHub skill
+│   ├── indexer/                   # Indexer skill
+│   ├── ralph/                     # Ralph skill
+│   ├── rules-lookup/              # Rules lookup skill
+│   └── tools/                     # Tools skill
 ├── storage/                        # Pi storage
-│   ├── sessions/                   # Auto-saved session JSONs (huge, gitignored)
-│   └── config.json
-├── themes/                         # UI themes (catppuccin, dracula, gruvbox, etc.)
-│   ├── catppuccin-mocha.json
-│   ├── cyberpunk.json
-│   ├── dracula.json
-│   ├── everforest.json
-│   ├── gruvbox.json
-│   ├── midnight-ocean.json
-│   ├── nord.json
-│   ├── ocean-breeze.json
-│   ├── rose-pine.json
-│   ├── synthwave.json
-│   └── tokyo-night.json
-└── tilldone-checklist.md           # TillDone checklist (runtime copy)
+│   └── sessions/                   # Session JSONs (gitignored)
+└── themes/                         # UI themes
+    ├── catppuccin-mocha.json
+    ├── cyberpunk.json
+    ├── dracula.json
+    ├── everforest.json
+    ├── gruvbox.json
+    ├── midnight-ocean.json
+    ├── nord.json
+    ├── ocean-breeze.json
+    ├── rose-pine.json
+    ├── synthwave.json
+    └── tokyo-night.json
 ```
 
 ---
@@ -145,23 +198,7 @@ Way of pi/
 docs/
 ├── README.md                       # Docs hub: table of all documents
 ├── STRUCTURE.md                    # This file - full project structure
-├── REPO_INDEX.md                   # Repo map: folders, paths, apps
-├── SYSTEM.md                       # Session memory, skills, extensions, rules
-├── AGENTS.md                       # Agent definitions & scan paths
-├── AGENT_TEAMS.md                   # Agent-team extension docs
-├── AGENT_MEMORY.md                  # Session memory guide
-├── EXTENSIONS.md                   # Extension model & inventory
-├── SKILLS.md                       # Skills discovery & inventory
-├── TOOLS.md                        # Tools: built-in & extension-registered
-├── TUI.md                          # Terminal UI keybindings
-├── CONCEPTS.md                     # Skills vs agents vs extensions vs tools
-├── PLAYGROUND.md                   # Pi playground modes (FULL vs project-scoped)
-├── HOW_TO_USE_AGENTS.md            # Practical agent usage guide
-├── HOW_TO_USE_EXTENSIONS.md        # Practical extensions usage guide
-├── HOW_TO_USE_SKILLS.md           # Practical skills usage guide
-├── HOW_TO_USE_TOOLS.md             # Practical tools usage guide
-├── commands/
-│   └── REFERENCE.md                # Slash command reference
+├── STARTUP_GUIDE.md                # Startup and usage guide
 ├── debug/                          # Debug logs & status docs
 │   ├── 04-23-paths-debugging-log.md
 │   ├── CURRENT-STATUS-CONTROL.md
@@ -182,71 +219,62 @@ docs/
 │   ├── HONCHO_INTEGRATION.md
 │   ├── HONCHO_LOCAL_AI.md
 │   └── HONCHO_OPERATIONS.md
-├── pi/                             # Pi-specific docs
-│   ├── AGENT_MEMORY.md
-│   ├── AGENTS.md
-│   ├── AGENT_TEAMS.md
-│   ├── all-shortcuts.md
-│   ├── CLAUDE_CODE_VS_PI_GAPS.md
-│   ├── COMPARISON.md
-│   ├── PI_LOCAL_AI.md
-│   ├── SKILLS.md
-│   └── TOOLS.md
-├── specs/                          # Spec references
-│   ├── agent-forge.md
-│   ├── AGENTS.md
-│   ├── agent-workflow.md
-│   ├── damage-control.md
-│   ├── fd-intro.md
-│   ├── github-management.md
-│   └── pi-pi.md
-├── wayofpi/                        # Way of Pi product docs (see § Way of Pi Docs below)
-├── WOP_PLANNING.md                 # Planning hub
-├── WOP_PRODUCT_OVERVIEW.md         # Product overview & onboarding
-├── WOP_PRODUCT_CAPABILITIES.md     # Product capabilities matrix
-├── WOP_COMBINED_BUILD_TODO.md      # Combined build TODO
-├── WOP_STANDALONE_SYSTEM_PLAN.md   # Way of Pi product plan
-├── WOP_PI_BACKEND_WIRING_PLAN.md   # Web UI → Pi backend wiring
-├── WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md  # Token/context discipline
-├── WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md
-├── WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md
-├── IDE_EXPLORER_PARITY.md          # Explorer/IDE shell comparison
-├── WOP_CODE_EDITOR_LINE_NUMBERS.md
-├── WOP_GENERATED_FILES_AND_LINE_PARITY.md
-├── WOP_TECHNICAL_UI.md             # wayofpi-ui technical shell
-├── WOP_MOBILE_UI_PLAN.md           # Mobile UI plan
-├── WOP_ORCHESTRATION_EXTENSIONS_PANEL.md
-├── WOP_MODULAR_DOCKS_PLAN.md       # Modular docks roadmap
-├── WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md
-├── WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md
-├── WOP_WORKSPACE_AGENTS_UI_PLAN.md
-├── WOP_BUILD_PLAN_MODE.md          # Build vs Plan mode
-├── WOP_CLAW_MODE_PLAN.md           # Claw mode plan
-├── WOP_CLAW_UI_PLAN.md             # Claw UI plan
-├── WOP_TELEGRAM_PLAN.md            # Telegram bot plan
-├── WOP_MENU_BAR_BACKLOG.md
-├── WOP_NAMESPACE.md                # WOP_* namespace docs
-├── WOP_NGROK.md                    # ngrok tunnel docs
-├── WOP_UI_MANIFEST.md              # UI manifest strategy
-├── WOP_MULTI_AGENT_WEBSOCKET.md    # Orchestration WS contract
-├── WOP_SAFE_CUSTOMIZATION.md       # Safe customization pipeline
-├── WOP_UPSTREAM_SYNC.md            # Upstream sync process
-├── WOP_OPEN_TODOS.md               # Way of Pi backlog
-├── PLAN_AGENT_MODEL_ROUTING.md     # Auto agent/model fit
-├── PLAN_AWESOME_CODEX_SUBAGENTS.md # Codex subagents port plan
-├── SUPERPOWERS_BUILD_MAP.md        # Superpowers → Pi mapping
-├── SUPERPOWERS_TODO.md             # Superpowers implementation TODO
-├── EVALUATION_AGENT_TEAM_SESSION_2026-03-25.md
-├── OpenRouterInfo.md
-├── sessionmemory.md
-├── sessions.md                     # Legacy session-saver doc
-├── subagents-implementation-guide.md
-├── subagents-overview.md
-├── executive-verdict.md
-├── terminal-close-button-fix.md
-└── PI_CODING_AGENT_GUIDE.md        # (in various locations)
+└── old/                            # Archived documentation
+    ├── commands/
+    │   └── REFERENCE.md            # Slash command reference
+    ├── pi/                         # Pi-specific docs (archived)
+    │   ├── AGENT_MEMORY.md
+    │   ├── AGENTS.md
+    │   ├── AGENT_TEAMS.md
+    │   ├── all-shortcuts.md
+    │   ├── CLAUDE_CODE_VS_PI_GAPS.md
+    │   ├── COMPARISON.md
+    │   ├── PI_LOCAL_AI.md
+    │   ├── SKILLS.md
+    │   └── TOOLS.md
+    ├── specs/                      # Spec references (archived)
+    │   ├── agent-forge.md
+    │   ├── AGENTS.md
+    │   ├── agent-workflow.md
+    │   ├── damage-control.md
+    │   ├── fd-intro.md
+    │   ├── github-management.md
+    │   └── pi-pi.md
+    └── wayofpi/                    # Way of Pi product docs (archived)
+        ├── CABA.md
+        ├── WAY_OF_PI_INTRODUCTION.md
+        ├── WOP_BUILD_PLAN_MODE.md
+        ├── WOP_CLAW_MODE_PLAN.md
+        ├── WOP_CLAW_UI_PLAN.md
+        ├── WOP_CODE_EDITOR_LINE_NUMBERS.md
+        ├── WOP_COMBINED_BUILD_TODO.md
+        ├── WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md
+        ├── WOP_GENERATED_FILES_AND_LINE_PARITY.md
+        ├── WOP_MENU_BAR_BACKLOG.md
+        ├── WOP_MOBILE_UI_PLAN.md
+        ├── WOP_MODULAR_DOCKS_PLAN.md
+        ├── WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md
+        ├── WOP_MULTI_AGENT_WEBSOCKET.md
+        ├── WOP_NAMESPACE.md
+        ├── WOP_NGROK.md
+        ├── WOP_OPEN_TODOS.md
+        ├── WOP_ORCHESTRATION_EXTENSIONS_PANEL.md
+        ├── WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md
+        ├── WOP_PI_BACKEND_WIRING_PLAN.md
+        ├── WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md
+        ├── WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md
+        ├── WOP_PLANNING.md
+        ├── WOP_PRODUCT_CAPABILITIES.md
+        ├── WOP_PRODUCT_OVERVIEW.md
+        ├── WOP_SAFE_CUSTOMIZATION.md
+        ├── WOP_SIMPLE_UI_VIEWS.md
+        ├── WOP_STANDALONE_SYSTEM_PLAN.md
+        ├── WOP_TECHNICAL_UI.md
+        ├── WOP_TELEGRAM_PLAN.md
+        ├── WOP_UI_MANIFEST.md
+        ├── WOP_UPSTREAM_SYNC.md
+        └── WOP_WORKSPACE_AGENTS_UI_PLAN.md
 ```
-
 ---
 
 ## `plans/` Directory - Project Plans
@@ -254,40 +282,87 @@ docs/
 ```
 plans/
 ├── README.md (in subdirs)
-├── ChatExplorer.md                 # Chat explorer plan
-├── DOCUMENTATION_TRACKER.md        # Docs tracking
-├── ModalDropdownFixPlan.md         # Modal/dropdown fix plan
-├── PI_CODING_AGENT_GUIDE.md        # Coding agent guide
-├── PLAN-20250311-chat-image-clipboard.md
-├── PLAN-20250311-GIT-PUSH-SYSTEM-MARKUP.md
-├── PLAN-20250311-UI-fixes-updated.md
-├── PLAN-20260311-git-file-explorer-reset-issue.md
-├── PLAN-20260326-gh-management-tool.md
-├── PLAN-20260411-connect-telegram.md
-├── PLAN-20260412-herrmes-full-intergration.md
-├── PLAN-RALPH-TICKET-FUNCTION.md  # Ralph ticket system
-├── PTY_AUTO_START_INTEGRATION.md   # PTY auto-start
-├── PTY_SERVER_AUTO_START_COMPLETE.md
-├── README_TERMINAL_PTY.md
-├── Sessionmemoryupdate.md          # Session memory update plan
-├── session saver and compaction.md
-├── sqlmemoryplan.md                # SQL memory plan
-├── System-Architecture.md         # System architecture plan
-├── TERMINAL_IMPLEMENTATION_SUMMARY.md
-├── TERMINAL_USAGE_GUIDE.md
-├── TERMINAL_VIEW_FIX_DOCUMENTATION.md
 ├── claw/                           # Claw-specific plans
-│   ├── pi-schedule-prompt-integration-spec.md
-│   └── whatsapp-pi-claw-integration-spec.md
+│   └── pi-schedule-prompt-integration-spec.md
 ├── grid-chooser-fix/              # Grid chooser fix
 │   └── grid-chooser-issue-plan.md
 ├── mobile/                         # Mobile implementation
 │   ├── Comprehensive-Mobile-Implementation-Plan.md
 │   └── README.md
-├── pi/plans/                       # Pi-specific plans
+├── old/                            # Archived plans
+│   ├── ChatExplorer.md
+│   ├── DOCUMENTATION_TRACKER.md
+│   ├── EXTENSION_FIX_PLAN.md
+│   ├── ModalDropdownFixPlan.md
+│   ├── PI_CODING_AGENT_GUIDE.md
+│   ├── PI_EXTENSION_STRATEGY_NEW.md
+│   ├── PLAN-20250311-chat-image-clipboard.md
+│   ├── PLAN-20250311-GIT-PUSH-SYSTEM-MARKUP.md
+│   ├── PLAN-20250311-UI-fixes-updated.md
+│   ├── PLAN-20260311-git-file-explorer-reset-issue.md
+│   ├── PLAN-20260326-gh-management-tool.md
+│   ├── PLAN-20260411-connect-telegram.md
+│   ├── PLAN-20260412-herrmes-full-intergration.md
+│   ├── PLAN-DOCS-UI.md
+│   ├── PLAN-RALPH-TICKET-FUNCTION.md
+│   ├── PTY_AUTO_START_INTEGRATION.md
+│   ├── PTY_SERVER_AUTO_START_COMPLETE.md
+│   ├── README_TERMINAL_PTY.md
+│   ├── Sessionmemoryupdate.md
+│   ├── session saver and compaction.md
+│   ├── sqlmemoryplan.md
+│   ├── System-Architecture.md
+│   ├── TERMINAL_IMPLEMENTATION_SUMMARY.md
+│   ├── TERMINAL_USAGE_GUIDE.md
+│   └── TERMINAL_VIEW_FIX_DOCUMENTATION.md
+├── pip/                            # Pip-specific plans
+│   ├── ARCHITECTURE.md
+│   ├── INTEGRATION.md
+│   ├── README.md
+│   └── TODO.md
+├── pi/plans/                       # Pi-specific plans (legacy path)
 │   ├── IMPLEMENTATION_STEPS.md
 │   ├── Memory-Context-Management.md
 │   └── PLAN_RULE_SYSTEM.md
+├── productionready/                # Production readiness plans
+│   ├── hosting/
+│   │   └── URGENT_DEPLOY_CLIENT_DEMO.md
+│   ├── investigation/
+│   │   └── HERMES_PAGE_NOT_VISIBLE.md
+│   └── reference/
+│       ├── APPLICATION_LAUNCH_GUIDE.md
+│       ├── GIT_WORKFLOW.md
+│       ├── INDEX.md
+│       ├── KANBAN_REUSE_PLAN.md
+│       ├── PHASE1_IMPLEMENTATION.md
+│       ├── PHASE_1_SECURITY_DATA_GUIDE.md
+│       ├── PI_INTEGRATION_DOCKER_PLAN.md
+│       ├── PI_VERSION_MANAGEMENT.md
+│       ├── PRODUCTION_AUTH_TENANCY_WORKLEADER_ALIGNMENT.md
+│       ├── PRODUCTION_READY_GUIDE.md
+│       ├── SAFE_UPDATE_GUIDE.md
+│       ├── TECH_STACK.md
+│       └── TODO.md
+├── projects/                       # Project-specific plans
+│   ├── scout-findings-documentation.md
+│   └── work-button-improvements/
+│       ├── 01-PLAN.md
+│       ├── 02-NAVIGATION-ARCHITECTURE.md
+│       ├── 03-WORKER-PORTAL-DEMO-MODE.md
+│       ├── 04_WHATSAPP_INTEGRATION_PLAN.md
+│       ├── DEPLOYMENT.md
+│       ├── deploy/
+│       │   └── wayofpi-sqlite-init.sql
+│       ├── IMPLEMENTATION-COMPLETE.md
+│       ├── mobile/
+│       │   └── RESPONSIVE-VIEW-SPEC.md
+│       ├── NGROK_SETUP.md
+│       ├── ref/
+│       ├── TODO.md
+│       ├── VPS_SETUP.md
+│       ├── WORK_BUTTON.css
+│       ├── WORK_BUTTON.tsx
+│       └── workerportal/
 └── refactoring/                    # Refactoring plans
     ├── PHASE-1-COMPLETION.md
     ├── PLAN-20250311-app-component-split.md
@@ -296,7 +371,11 @@ plans/
         └── verification/
             ├── COMPONENT_EXTRACTION_VERIFICATION.md
             └── components/menus/
-                ├── EditMenu.tsx, FileMenu.tsx, GoMenu.tsx, RunMenu.tsx, ViewMenu.tsx
+                ├── EditMenu.tsx
+                ├── FileMenu.tsx
+                ├── GoMenu.tsx
+                ├── RunMenu.tsx
+                └── ViewMenu.tsx
 ```
 
 ---
@@ -305,9 +384,12 @@ plans/
 
 ```
 ref/
+├── agent-team.ts                  # Agent team reference implementation
+├── calendar/                      # Calendar components
+│   ├── CalendarGrid.tsx
+│   ├── EventDetails.tsx
+│   └── EventEditor.tsx
 ├── context-local-hints.ts          # Context hint utilities
-├── session-memory.ts              # Session memory reference implementation
-├── session-replay.ts              # Session replay reference
 ├── extensions/                     # Reference extensions (28 files)
 │   ├── agent-chain.ts             # Chain multiple agents
 │   ├── agent-dir-scan.ts          # Scan agent directories
@@ -337,24 +419,81 @@ ref/
 │   ├── tool-counter-widget.ts     # Tool counter widget
 │   ├── web-tools.ts               # Web tools (fetch, search)
 │   └── workspace-boundary.ts      # Workspace boundary enforcement
+├── kanban/                        # Kanban board components
+│   ├── BoardDocsView.tsx
+│   ├── BoardDriveView.tsx
+│   ├── BoardMembers.tsx
+│   ├── BoardSelector.tsx
+│   ├── BoardSettingsModal.tsx
+│   ├── CardView.tsx
+│   ├── Kanban.tsx
+│   ├── PushTaskListToKanbanModal.tsx
+│   ├── PushToKanbanModal.tsx
+│   └── PushWorkflowToKanbanModal.tsx
 ├── piwithstuff/                   # Reference Pi setup with stuff
 │   ├── agent/sessions/            # Agent session configs
-│   ├── bin/                       # Shell scripts (openai-filter-toggle, etc.)
+│   │   ├── .md
+│   │   └── rules/README.md
+│   ├── bin/                       # Shell scripts
+│   │   ├── openai-filter-toggle.sh
+│   │   └── toggle-filter.py
+│   ├── .context/                  # Context state
+│   │   └── session-state.json
+│   ├── .env.sample
+│   ├── .gitignore
 │   ├── extensions/                # Extension implementations
+│   │   ├── agent-chain.ts
+│   │   ├── agent-team.ts
+│   │   ├── cross-agent.ts
+│   │   ├── damage-control.ts
+│   │   ├── minimal.ts
+│   │   ├── pi-pi.ts
+│   │   ├── pure-focus.ts
+│   │   ├── purpose-gate.ts
+│   │   ├── session-replay.ts
+│   │   ├── subagent-widget.ts
+│   │   ├── system-select.ts
+│   │   ├── theme-cycler.ts
+│   │   ├── themeMap.ts
+│   │   ├── tilldone.ts
+│   │   ├── tool-counter.ts
+│   │   └── tool-counter-widget.ts
 │   ├── images/                    # Pi logos
+│   │   ├── pi-logo.png
+│   │   └── pi-logo.svg
 │   ├── .pi/                       # Pi config (agents, docs, teams, etc.)
-│   ├── specs/                     # Spec files (agent-forge, etc.)
-│   ├── state/                     # State files (filter status)
-│   ├── utils/                     # Python utilities (filter_models.py)
+│   │   ├── agents/               # Agent definitions (yaml, md)
+│   │   ├── agent-team.ts
+│   │   ├── damage-control-rules.yaml
+│   │   ├── docs/                 # Documentation
+│   │   ├── .github/              # GitHub workflows
+│   │   ├── planning/             # Planning docs
+│   │   ├── README.md
+│   │   ├── security-audit.log
+│   │   ├── settings.json
+│   │   ├── teams.yaml
+│   │   └── themes/              # Theme files
+│   ├── __pycache__/              # Python cache
+│   ├── specs/                     # Spec files
+│   │   ├── agent-forge.md
+│   │   ├── agent-workflow.md
+│   │   ├── damage-control.md
+│   │   └── pi-pi.md
+│   ├── state/                     # State files
+│   │   ├── filter-instructions.txt
+│   │   └── filter-status.json
+│   ├── utils/                     # Python utilities
+│   │   └── filter_models.py
 │   ├── models.py, model_resolver.py, model_selector.py
 │   ├── prompt_templates.py
 │   ├── test_openai_model_filtering.py
-│   ├── package.json, bun.lock
-│   ├── justfile
+│   ├── package.json, bun.lock, justfile
 │   ├── readme.md, RESERVED_KEYS.md, THEME.md, TOOLS.md
 │   └── pi-session-*.html          # Session replay HTML
-├── sub-agents/                    # Sub-agent definitions
-│   └── planner.md
+├── session-memory.ts              # Session memory reference implementation
+├── session-replay.ts              # Session replay reference
+└── sub-agents/                    # Sub-agent definitions
+    └── planner.md
 ```
 
 ---
@@ -397,10 +536,13 @@ scripts/
 ├── enable-playground-in-project            # Enable playground in project
 ├── ghm-install.js                          # GitHub management install
 ├── github-management-cli.js                # GitHub management CLI
+├── host-for-demo.sh                       # Host Way of Pi for demo
 ├── import-domain-specialists.cjs           # Import domain specialists
 ├── init-project-local-pi-env.sh           # Init local Pi environment
 ├── install-ngrok-optional.sh               # Install ngrok (optional)
+├── install.ps1                             # PowerShell install script
 ├── install-ppi-global.sh                   # Install ppi globally
+├── install.sh                              # Install script
 ├── link-playground-agent-trees.sh          # Link playground agent trees
 ├── normalize-pi-config-model-order.py      # Normalize model order
 ├── pi-e                                    # Pi extensions CLI
@@ -429,44 +571,9 @@ scripts/
 
 ---
 
-## Way of Pi Docs (`docs/wayofpi/`)
+## Way of Pi Docs (Archived)
 
-```
-docs/wayofpi/
-├── CABA.md                              # CABA documentation
-├── WAY_OF_PI_INTRODUCTION.md            # Introduction to Way of Pi
-├── WOP_BUILD_PLAN_MODE.md               # Build vs Plan mode
-├── WOP_CLAW_MODE_PLAN.md                # Claw mode plan
-├── WOP_CLAW_UI_PLAN.md                  # Claw UI plan
-├── WOP_CODE_EDITOR_LINE_NUMBERS.md      # Code editor line numbers
-├── WOP_COMBINED_BUILD_TODO.md           # Combined build TODO
-├── WOP_EXTENSION_APPEARANCES_VIEWS_PLAN.md
-├── WOP_GENERATED_FILES_AND_LINE_PARITY.md
-├── WOP_MENU_BAR_BACKLOG.md              # Menu bar backlog
-├── WOP_MOBILE_UI_PLAN.md                # Mobile UI plan
-├── WOP_MODULAR_DOCKS_PLAN.md            # Modular docks plan
-├── WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md
-├── WOP_MULTI_AGENT_WEBSOCKET.md         # Multi-agent WebSocket
-├── WOP_NAMESPACE.md                     # Namespace documentation
-├── WOP_NGROK.md                         # ngrok documentation
-├── WOP_OPEN_TODOS.md                     # Open TODOs
-├── WOP_ORCHESTRATION_EXTENSIONS_PANEL.md
-├── WOP_ORCHESTRATOR_VS_PI_DISPATCHER.md
-├── WOP_PI_BACKEND_WIRING_PLAN.md        # Pi backend wiring
-├── WOP_PI_TOKEN_CONTEXT_DISCIPLINE.md   # Token discipline
-├── WOP_PI_TOOLS_AND_ORCHESTRATOR_PARITY.md
-├── WOP_PLANNING.md                      # Planning hub
-├── WOP_PRODUCT_CAPABILITIES.md           # Product capabilities
-├── WOP_PRODUCT_OVERVIEW.md               # Product overview
-├── WOP_SAFE_CUSTOMIZATION.md            # Safe customization
-├── WOP_SIMPLE_UI_VIEWS.md               # Simple UI views
-├── WOP_STANDALONE_SYSTEM_PLAN.md        # Standalone system plan
-├── WOP_TECHNICAL_UI.md                  # Technical UI shell
-├── WOP_TELEGRAM_PLAN.md                 # Telegram integration
-├── WOP_UI_MANIFEST.md                   # UI manifest strategy
-├── WOP_UPSTREAM_SYNC.md                 # Upstream sync
-└── WOP_WORKSPACE_AGENTS_UI_PLAN.md      # Workspace agents UI
-```
+The `docs/wayofpi/` content has been moved to `docs/old/wayofpi/` for archival. See the `docs/` section above for current location.
 
 ---
 
@@ -518,4 +625,4 @@ docs/wayofpi/
 
 ---
 
-*Generated: 2026-05-04 - Way of Pi Project Structure (3-level deep)*
+*Generated: 2026-05-05 - Way of Pi Project Structure (updated to match current file system)*

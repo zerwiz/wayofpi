@@ -39,6 +39,7 @@ import { ClawApp } from "./components/claw/ClawApp";
 import { DocsApp } from "./components/docs/DocsApp";
 import { WorkApp } from "./components/work";
 import { WorkerPortal, ClientDashboard, SuperAdminDashboard, UserProfile } from "./pages";
+import { Navigation } from "./components/Navigation";
 import { ClawHelpModal, type ClawHelpSectionId } from "./components/claw/ClawHelpModal";
 import type { ClawTabId } from "./components/claw/ClawNavRail";
 import "./claw/clawUserUiModules";

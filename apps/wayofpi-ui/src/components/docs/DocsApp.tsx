@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { FolderOpen, MessageSquare, Eye, FileText } from "lucide-react";
+import { useCallback, useMemo, useState, useEffect } from "react";
+import { FolderOpen, MessageSquare, Eye, FileText, FileCheck, FileWarning, FileClock, CheckCircle, AlertCircle, Clock, Send } from "lucide-react";
 import type { TreeNode } from "../../types/tree";
 import type { ChatRow, LogRow } from "../../hooks/useWayOfPiSession";
 import type { UiMode } from "../../hooks/useUiMode";
@@ -7,6 +7,7 @@ import { FileExplorer } from "../documenthandler/FileExplorer";
 import { ChatPanel } from "../documenthandler/ChatPanel";
 import { PreviewModal } from "../documenthandler/PreviewModal";
 import { UiModeToggle } from "../UiModeToggle";
+import { apiGet } from "../../api/client";
 
 interface DocsAppProps {
 	uiMode: UiMode;
@@ -42,6 +43,24 @@ export function DocsApp({
 	const [previewOpen, setPreviewOpen] = useState(false);
 	const [leftOpen, setLeftOpen] = useState(true);
 	const [rightOpen, setRightOpen] = useState(true);
+	const [docStatus, setDocStatus] = useState<"draft" | "review" | "approved" | null>(null);
+
+	/** Filter tree to only show document files (.md, .txt, .doc, .docx) */
+	const docsNodes = useMemo(() => {
+		const docExts = new Set([".md", ".txt", ".doc", ".docx", ".pdf"]);
+		function filterNode(node: TreeNode): TreeNode | null {
+			if (node.type === "dir") {
+				const children = (node.children || [])
+					.map(filterNode)
+					.filter((n): n is TreeNode => n !== null);
+				if (children.length === 0) return null;
+				return { ...node, children };
+			}
+			const ext = "." + node.name.split(".").pop()?.toLowerCase();
+			return docExts.has(ext) ? node : null;
+		}
+		return nodes.map(filterNode).filter((n): n is TreeNode => n !== null);
+	}, [nodes]);
 
 	const handleSelectFile = useCallback(
 		(path: string) => {
@@ -50,6 +69,47 @@ export function DocsApp({
 		},
 		[setSelectedPath],
 	);
+
+	// Detect document status from content
+	useEffect(() => {
+		if (!selectedPath) {
+			setDocStatus(null);
+			return;
+		}
+		async function detectStatus() {
+			try {
+				const content = await apiGet<string>(`/api/file?path=${encodeURIComponent(selectedPath)}`);
+				const lower = content.toLowerCase();
+				if (lower.includes("status: approved") || lower.includes("# approved")) {
+					setDocStatus("approved");
+				} else if (lower.includes("status: review") || lower.includes("# review")) {
+					setDocStatus("review");
+				} else if (lower.includes("status: draft") || lower.includes("# draft")) {
+					setDocStatus("draft");
+				} else {
+					setDocStatus(selectedPath.includes("/plans/") ? "draft" : "review");
+				}
+			} catch {
+				setDocStatus(null);
+			}
+		}
+		detectStatus();
+	}, [selectedPath]);
+
+	const statusBadge = (status: string | null) => {
+		const badges = {
+			draft: { color: "bg-amber-900/30 text-amber-400", icon: <FileClock size={12} />, label: "Draft" },
+			review: { color: "bg-blue-900/30 text-blue-400", icon: <AlertCircle size={12} />, label: "Review" },
+			approved: { color: "bg-green-900/30 text-green-400", icon: <CheckCircle size={12} />, label: "Approved" },
+		};
+		const b = status ? badges[status as keyof typeof badges] : null;
+		return b ? (
+			<span className={`ml-2 flex items-center gap-1 rounded px-2 py-0.5 text-xs ${b.color}`}>
+				{b.icon}
+				{b.label}
+			</span>
+		) : null;
+	};
 
 	const appearanceDark = true;
 	const bg = "bg-[#1e1e1e]";
@@ -74,11 +134,12 @@ export function DocsApp({
 					<div className="flex items-center gap-2">
 						<FileText size={18} className="text-[#fb923c]" />
 						<span className={`text-sm font-semibold ${titleC}`}>DOCS</span>
+						{statusBadge(docStatus)}
 					</div>
 				</div>
 
 				<div className="flex items-center gap-3">
-					<span className={`text-xs ${subC}`}>{selectedPath ? "File selected" : "No file selected"}</span>
+					<span className={`text-xs ${subC}`}>{selectedPath ? selectedPath.split("/").pop() : "No file selected"}</span>
 					<button
 						type="button"
 						onClick={() => setRightOpen((v) => !v)}
@@ -100,7 +161,7 @@ export function DocsApp({
 						style={{ minWidth: "200px", maxWidth: "400px" }}
 					>
 						<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
-							<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Files</span>
+							<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Documents</span>
 							<button
 								type="button"
 								onClick={refreshTree}
@@ -112,7 +173,7 @@ export function DocsApp({
 						</div>
 						<div className="min-h-0 flex-1 overflow-y-auto p-1">
 							<FileExplorer
-								nodes={nodes}
+								nodes={docsNodes}
 								loading={treeLoading}
 								error={treeError}
 								onSelectFile={handleSelectFile}
@@ -123,7 +184,48 @@ export function DocsApp({
 				)}
 
 				{/* Middle: Chat Panel */}
-				<div className={`docs-chat flex min-w-0 flex-1 flex-col overflow-hidden border-r ${border}`}>
+				<div className={`docs-chat flex min-w-0 flex-col overflow-hidden border-r ${border}`}>
+					{/* Quick action buttons for document Q&A */}
+					{selectedPath && (
+						<div className={`flex shrink-0 gap-2 border-b px-3 py-2 ${border}`}>
+							<button
+								type="button"
+								onClick={() => sendChat(`Summarize this document: ${selectedPath}`)}
+								disabled={streaming}
+								className={`rounded px-3 py-1 text-xs transition-colors ${
+									streaming
+										? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
+										: "bg-[#ea580c] text-white hover:bg-[#c2410c]"
+								}`}
+							>
+								📝 Summarize
+							</button>
+							<button
+								type="button"
+								onClick={() => sendChat(`Extract action items from: ${selectedPath}`)}
+								disabled={streaming}
+								className={`rounded px-3 py-1 text-xs transition-colors ${
+									streaming
+										? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
+										: "bg-[#3b82f6] text-white hover:bg-[#2563eb]"
+								}`}
+							>
+								✅ Action Items
+							</button>
+							<button
+								type="button"
+								onClick={() => sendChat(`Review this document for completeness: ${selectedPath}`)}
+								disabled={streaming}
+								className={`rounded px-3 py-1 text-xs transition-colors ${
+									streaming
+										? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
+										: "bg-[#8b5cf6] text-white hover:bg-[#7c3aed]"
+								}`}
+							>
+								🔍 Review
+							</button>
+						</div>
+					)}
 					<ChatPanel
 						rows={rows}
 						streaming={streaming}

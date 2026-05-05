@@ -14,8 +14,8 @@ export interface TreeNode {
 	children?: TreeNode[];
 }
 
-const MAX_DEPTH = 14;
-const MAX_NODES = 4000;
+const MAX_DEPTH = 20;
+const MAX_NODES = 150000;
 
 async function readTreeRecursive(
 	absDir: string,

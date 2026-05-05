@@ -47,6 +47,10 @@ import {
   FolderKanban,
   GitBranch,
 } from 'lucide-react';
+import
+{
+  WorkBoardSelector,
+} from './WorkBoardSelector';
 import type { BoardViewType } from '../../../types/kanban';
 
 export function WorkBoard() {
@@ -1341,7 +1345,8 @@ export function WorkBoard() {
         </div>
 
         {/* Board Selector Modal */}
-        <BoardSelector
+
+        <WorkBoardSelector
           isOpen={showBoardSelector}
           onClose={() => setShowBoardSelector(false)}
           onSelectBoard={(boardId) => {
@@ -3233,7 +3238,8 @@ export function WorkBoard() {
       )}
 
       {/* Board Selector Modal */}
-      <BoardSelector
+
+        <WorkBoardSelector
         isOpen={showBoardSelector}
         onClose={() => setShowBoardSelector(false)}
         onSelectBoard={(boardId) => {
