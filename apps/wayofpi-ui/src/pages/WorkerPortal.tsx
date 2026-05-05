@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+const useNavigate = () => (path: string) => { window.location.pathname = path; };
+import { UiModeToggle } from "../components/UiModeToggle";
+import type { UiMode } from "../hooks/useUiMode";
 
 interface WorkerCredentials {
   workerId: string;
@@ -22,7 +25,7 @@ interface WorkerTask {
   progressPct?: number;
 }
 
-export function WorkerPortal() {
+export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [workerId, setWorkerId] = useState("");
   const [pin, setPin] = useState("");
@@ -44,11 +47,7 @@ export function WorkerPortal() {
     try {
       setLoading(true);
       // TODO: Fetch from /api/portal/me, /api/portal/tasks, /api/portal/files
-      // const [meRes, tasksRes, filesRes] = await Promise.all([...]);
-      // if (meRes.ok) { const data = await meRes.json(); setWorkerName(data.name); }
-      // if (tasksRes.ok) setTasks(await tasksRes.json());
-      // if (filesRes.ok) setFiles(await filesRes.json());
-      setLoadError("API endpoints not yet implemented");
+      setLoadError("API endpoints not yet fully connected to UI states");
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : "Failed to load data");
     } finally {
@@ -83,7 +82,6 @@ export function WorkerPortal() {
   };
 
   const handleDownload = (fileId: string) => {
-    // TODO: Replace with actual download: GET /api/portal/download/:fileId
     window.open(`/api/portal/download/${fileId}`, "_blank");
   };
 
@@ -95,7 +93,10 @@ export function WorkerPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1e1e1e]">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e]">
+        <div className="mb-8">
+           <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
+        </div>
         <div className="w-full max-w-sm rounded-lg border border-[#3c3c3c] bg-[#252526] p-8">
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold text-[#cccccc]">WAY OF PI</h1>
@@ -150,9 +151,12 @@ export function WorkerPortal() {
     <div className="min-h-screen bg-[#1e1e1e]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#3c3c3c] bg-[#252526] px-4 py-3">
-        <div>
-          <h1 className="text-sm font-bold text-[#cccccc]">WAY OF PI - WORKER PORTAL</h1>
-          <p className="text-xs text-[#858585]">Welcome, {workerName}</p>
+        <div className="flex items-center gap-6">
+          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
+          <div>
+            <h1 className="text-sm font-bold text-[#cccccc]">WAY OF PI - WORKER PORTAL</h1>
+            <p className="text-xs text-[#858585]">Welcome, {workerName}</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}

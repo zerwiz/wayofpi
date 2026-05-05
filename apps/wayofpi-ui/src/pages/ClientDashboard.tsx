@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+const useNavigate = () => (path: string) => { window.location.pathname = path; };
+import { UiModeToggle } from "../components/UiModeToggle";
+import type { UiMode } from "../hooks/useUiMode";
 
 interface Project {
   id: string;
@@ -37,7 +40,7 @@ interface Drawing {
   created_at: string;
 }
 
-export default function ClientDashboard() {
+export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -142,9 +145,12 @@ export default function ClientDashboard() {
       {/* Header */}
       <div className="bg-[#252526] border-b border-[#3c3c3c] px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Client Dashboard</h1>
-            <p className="text-sm text-[#999] mt-1">Project progress, drawings, and feedback</p>
+          <div className="flex items-center gap-6">
+            <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
+            <div>
+              <h1 className="text-2xl font-bold text-white">Client Dashboard</h1>
+              <p className="text-sm text-[#999] mt-1">Project progress, drawings, and feedback</p>
+            </div>
           </div>
           <button
             onClick={() => navigate("/")}

@@ -102,6 +102,9 @@ else
 	bun install --frozen-lockfile 2>/dev/null || bun install
 fi
 
+# Set workspace root for the server
+export WOP_WORKSPACE="$ROOT"
+
 # Start servers
 if [[ "$1" == "--web" ]] || [[ "$WOP_USE_ELECTRON" == "0" ]]; then
 	echo "Starting servers at: http://localhost:5173/"

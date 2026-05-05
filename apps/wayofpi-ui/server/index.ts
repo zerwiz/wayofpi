@@ -95,6 +95,7 @@ import {
 import {
 	patchPiJsonChatRuntimeOverride,
 	piAgentRuntimeBlockedReason,
+	getPiStackForSurface,
 	resolvePiBinaryPath,
 	runPiChatTurn,
 	shouldUsePiJsonChat,
@@ -651,9 +652,12 @@ async function runChatTurn(
 		try {
 			let result: StreamChatResult;
 			if (usePiChat) {
+				const surface = data.wopSessionKey?.split(".")[0] || null;
+				const piStack = getPiStackForSurface(surface);
 				const o = await runPiChatTurn({
 					cwd: getPrimaryWorkspacePath(data.tenantId),
 					messages: data.messages,
+					piStack,
 					onDelta: (delta) => {
 						full += delta;
 						ws.send(JSON.stringify({ type: "assistant_delta", content: delta }));

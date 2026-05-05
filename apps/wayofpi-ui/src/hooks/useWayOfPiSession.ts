@@ -312,6 +312,7 @@ export function useWayOfPiSession(
 		technical: createInitialSurface("technical", "t"),
 		claw: createInitialSurface("claw", "c"),
 		docs: createInitialSurface("docs", "d"),
+		work: createInitialSurface("work", "w"),
 	}));
 	const surfacesRef = useRef(surfaces);
 	surfacesRef.current = surfaces;
@@ -370,8 +371,9 @@ export function useWayOfPiSession(
 		setSurfaces((prev) => {
 			let any = false;
 			const next: Record<ChatSessionSurfaceId, SurfaceSlice> = { ...prev };
-			for (const sid of ["simple", "technical", "claw"] as const) {
+			for (const sid of ["simple", "technical", "claw", "docs", "work"] as const) {
 				const s = next[sid];
+				if (!s) continue;
 				const mapped = s.chatTabs.map((t) => {
 					const r = s.rowsByTab[t.id] ?? [];
 					const hasUser = r.some((row) => row.role === "user");
@@ -975,6 +977,8 @@ export function useWayOfPiSession(
 
 		const sid = surfaceId;
 		const s = surfacesRef.current[sid];
+		if (!s) return;
+
 		const tabId = s.activeChatTabId;
 		const tabRows = s.rowsByTab[tabId] ?? [];
 		activeChatTabIdRef.current = tabId;

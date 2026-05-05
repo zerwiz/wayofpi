@@ -12,8 +12,13 @@ agent/sessions/wayofpi-chat-claw.t-1777919781002-c-xejltzn.jsonl
 agent/sessions/wayofpi-chat-claw.t-1777919781103-c-6mvft3p.jsonl
 agent/sessions/wayofpi-chat-claw.t-1777920497542-c-ehmlnif.jsonl
 agent/sessions/wayofpi-chat-claw.t-1777920497685-c-3cnqv2k.jsonl
+agent/sessions/wayofpi-chat-claw.t-1777920522005-c-kv8htm9.jsonl
+agent/sessions/wayofpi-chat-claw.t-1777920522053-c-xucervo.jsonl
+agent/sessions/wayofpi-chat-claw.t-1777922827418-c-gp0ukwk.jsonl
+agent/sessions/wayofpi-chat-claw.t-1777923495517-c-1xglh12.jsonl
 agent/sessions/wayofpi-chat-docs.t-1777919599141-d-9pnv8l2.jsonl
 agent/sessions/wayofpi-chat-docs.t-1777919781103-d-zylpxnd.jsonl
 agent/sessions/wayofpi-chat-simple.t-1777919599141-s-znv92np.jsonl
 agent/sessions/wayofpi-chat-simple.t-1777919781103-s-g64i37d.jsonl
 agent/sessions/wayofpi-chat-technical.t-1777919599141-t-cl9weh1.jsonl
+agent/sessions/wayofpi-chat-technical.t-1777922827418-t-odimwky.jsonl

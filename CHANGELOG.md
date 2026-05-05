@@ -9,6 +9,46 @@ Earlier work is not backfilled; entries start from when this file was added.
 ## [Unreleased]
 
 ### Added
+- **PIP Integration & Tiered Loader Strategy:**
+  - **Submodule Versioning:** Updated the `pip` submodule to track the `17` branch for stable, version-controlled infrastructure.
+  - **Read-Only PIP Mandate:** Explicitly documented that the `pip/` directory is an upstream read-only source; all customizations must happen in `.pi/` or the core repository.
+  - **Tiered Dynamic Loader:** Refined `.pi/extensions/util/pi-loader.ts` to implement a prioritized search order:
+    1. `.pi/extensions/protected/` (Way of Pi Stable)
+    2. `pip/extensions/` (Upstream Fluent)
+    3. `pip/.pi/extensions/` (Upstream Internal)
+    4. `.pi/extensions/local/` (Project Custom)
+    5. `.pi/extensions/fluent/` (Project Fluent)
+    6. `extensions/` (Legacy Root)
+  - **Context-Aware Extension Stacking:** Updated the Way of Pi server to dynamically set `PI_STACK` based on the active UI surface (Claw, Technical, Simple, etc.), ensuring the correct mix of UI cores and widgets for each view.
+  - **Headless Pi Integration:** Configured `pi --mode json` spawns to automatically utilize the unified loader, solving stacking instabilities in Pi 0.70.5+.
+  - **Strategy Alignment:** Updated `plans/PI_EXTENSION_STRATEGY_NEW.md` and `plans/pip/TODO.md` to reflect the new tiered architecture and read-only submodule mandate.
+
+- **Production Readiness & Tiered Architecture:**
+  - **Tiered Extension Hierarchy:** Organized `.pi/extensions/` into `protected/` (UI-critical), `fluent/` (agile upstream), `local/` (project-specific), and `util/` (helpers).
+  - **Tiered Agent Hierarchy:** Mirrored the tiered structure in `.pi/agents/` to separate stable UI agents from agile TUI specialists.
+  - **Unified Smart Loader:** Implemented `.pi/extensions/util/pi-loader.ts` as the single orchestrator for all Pi sessions. It programmatically initializes extensions from the `PI_STACK` environment variable, solving Pi 0.70.5+ stacking instabilities.
+  - **PIP (Pi Infrastructure Package) Integration:** Established PIP (`/home/zerwiz/pip`) as a core infrastructure dependency to provide a massive library of agile tools and agents.
+  - **Root Symlink Compatibility:** Added `extensions/ -> .pi/extensions/` symlink to ensure legacy script and documentation compatibility.
+
+### Changed
+- **Justfile Extension Suite Rewrite:**
+    - Centralized execution through a new `run-pi` helper recipe.
+    - Fully rewritten `pi-e` interactive menu to support dynamic stacking and simplified extension names.
+    - Added `pip-sync` target to maintain agility with upstream PIP reference files.
+    - Cleaned up and modernized all `ext-*` targets to leverage the dynamic loader.
+- **Pi Configuration:** Simplified `.pi/settings.json` to a single-entry loader pattern, shifting stack management to runtime environment variables.
+
+### Fixed
+- **Tool Registration Conflicts:** Resolved the `web_search` naming collision between npm packages and local extensions via loader-level check logic.
+- **ESM Race Conditions:** Fixed async initialization issues in modern Pi versions by using absolute `file://` URI resolution for all extensions.
+
+### Added
+- **Unified UI Navigation & Dashboard Integration:**
+  - **Global Mode Toggle**: Overhauled `UiModeToggle` with icons and expanded access to all major app sections (Simple, Technical, Claw, Docs, Work, Client, Portal, Admin, Profile).
+  - **Dashboard Integration**: Wired `ClientDashboard`, `SuperAdminDashboard`, and `UserProfile` into the main `App.tsx` routing and state management.
+  - **Consistent Navigation Header**: Integrated the unified mode toggle into the headers of Docs mode, Work mode, and all specialized dashboards for seamless switching.
+  - **Routing Support**: Added path-based routing for `/client`, `/admin`, `/portal`, and `/profile` in the core application shell.
+  - **Mock Navigation**: Implemented a `useNavigate` shim across dashboard pages to support internal routing without a `react-router-dom` dependency.
 
 - **Phase 3 Wiring (Work Leader System):**
   - **Real Services Integration:** Updated `WorkBoard.tsx`, `WorkTaskCard.tsx`, `WorkDocsView.tsx`, `WorkTeamView.tsx` to use real API services (replacing mocks):

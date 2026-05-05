@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { UiMode } from "../hooks/useUiMode";
+import { UiModeToggle } from "../components/UiModeToggle";
 
 interface UserProfile {
   id: string;
@@ -32,7 +33,15 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
       const res = await fetch("/api/portal/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to load profile");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 503) {
+          setError(errorData.error || "Not authenticated. Please log in to view your profile.");
+        } else {
+          throw new Error(errorData.error || "Failed to load profile");
+        }
+        return;
+      }
       const data = await res.json();
       setProfile(data);
       setFormData(data);
@@ -46,6 +55,10 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
   async function saveProfile() {
     try {
       const token = localStorage.getItem("wop_token");
+      if (!token) {
+        setError("Not authenticated. Please log in to update your profile.");
+        return;
+      }
       // TODO: Implement PUT /api/portal/me
       console.log("Save profile:", formData);
       setProfile({ ...profile, ...formData } as UserProfile);
@@ -66,6 +79,11 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
     }
     try {
       const token = localStorage.getItem("wop_token");
+      if (!token) {
+        setError("Not authenticated. Please log in to change your PIN.");
+        setShowPinChange(false);
+        return;
+      }
       // TODO: Implement POST /api/portal/change-pin
       console.log("Change PIN");
       setShowPinChange(false);
@@ -75,23 +93,21 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
     }
   }
 
-  if (loading) return <div className="p-4 text-[#858585]">Loading...</div>;
-  if (error) return <div className="p-4 text-red-400">{error}</div>;
-  if (!profile) return <div className="p-4 text-[#858585]">No profile found</div>;
 
-  return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[#cccccc]">User Profile</h1>
+      <div className="flex items-center justify-between mb-8 border-b border-[#3c3c3c] pb-4">
+        <div className="flex items-center gap-6">
+          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
+          <h1 className="text-2xl font-bold text-[#cccccc]">User Profile</h1>
+        </div>
         <button
-          onClick={() => setUiMode("simple")}
+          onClick={() => { window.location.pathname = "/"; }}
           className="rounded px-3 py-1.5 text-xs text-[#858585] hover:bg-[#3c3c3c]"
         >
-          ← Back
+          ← Back to App
         </button>
       </div>
 
-      <div className="rounded-lg border border-[#3c3c3c] bg-[#252526] p-6">
+      <div className="max-w-2xl mx-auto rounded-lg border border-[#3c3c3c] bg-[#252526] p-6">
         {!isEditing ? (
           <>
             <div className="grid grid-cols-2 gap-4 mb-6">

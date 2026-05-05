@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join, normalize, relative } from "node:path";
 import { parseTeamsYaml } from "../src/utils/teamsYaml";
 import { shouldSkipDir } from "./paths";
 import { listWorkspaceFolders } from "./workspace-state";
+import { getClawHostRepoRoot } from "./claw-workspace-root";
 
 export interface AgentMeta {
 	name: string;
@@ -91,12 +92,20 @@ async function collectAgentMarkdownFiles(absDir: string): Promise<string[]> {
  * `name`); `.cursor/agents` is appended for Cursor-native layouts.
  */
 function agentScanRoots(workspaceRoot: string): string[] {
-	return [
+	const roots = [
 		join(workspaceRoot, "agents"),
 		join(workspaceRoot, ".claude", "agents"),
 		join(workspaceRoot, ".pi", "agents"),
 		join(workspaceRoot, ".cursor", "agents"),
 	];
+
+	// Also include Way of Pi host repo root agents if it's different from the workspace
+	const hostRoot = getClawHostRepoRoot();
+	if (hostRoot && normalize(hostRoot) !== normalize(workspaceRoot)) {
+		roots.push(join(hostRoot, ".pi", "agents"));
+	}
+
+	return roots;
 }
 
 /**

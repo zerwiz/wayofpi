@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { UiMode } from "../../hooks/useUiMode";
 import { WorkBoard } from "./kanban/WorkBoard";
+import { UiModeToggle } from "../UiModeToggle";
 
 interface TimeEntry {
   id: string;
@@ -102,14 +103,7 @@ export function WorkApp({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: 
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-[#3c3c3c] bg-[#252526] px-4 py-3">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setUiMode("simple")}
-            className="rounded p-1.5 text-[#858585] hover:bg-[#3c3c3c]"
-            title="Back to Simple"
-          >
-            ←
-          </button>
+          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-[#cccccc]">⏰ WORK MODE</span>
             {isLeader && (

@@ -38,7 +38,7 @@ import type { SimpleTabId } from "./components/simple/SimpleNavRail";
 import { ClawApp } from "./components/claw/ClawApp";
 import { DocsApp } from "./components/docs/DocsApp";
 import { WorkApp } from "./components/work";
-import { WorkerPortal } from "./pages/WorkerPortal";
+import { WorkerPortal, ClientDashboard, SuperAdminDashboard, UserProfile } from "./pages";
 import { ClawHelpModal, type ClawHelpSectionId } from "./components/claw/ClawHelpModal";
 import type { ClawTabId } from "./components/claw/ClawNavRail";
 import "./claw/clawUserUiModules";
@@ -262,12 +262,11 @@ function languageFromPath(path: string | null): string {
 }
 
 const isPortal = window.location.pathname === "/portal" || window.location.pathname.startsWith("/portal/");
+const isClient = window.location.pathname === "/client" || window.location.pathname.startsWith("/client/");
+const isAdmin = window.location.pathname === "/admin" || window.location.pathname.startsWith("/admin/");
+const isProfile = window.location.pathname === "/profile" || window.location.pathname.startsWith("/profile/");
 
 export default function App() {
-	if (isPortal) {
-		return <WorkerPortal />;
-	}
-
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
 	/** IDE-style shell (Technical or Claw); Simple uses `SimpleApp`. */
 	const technical = uiMode !== "simple";
@@ -329,6 +328,20 @@ export default function App() {
 	const llmFixModalAppearanceDark = technical || simpleIsDark;
 	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
 	const prevChatErrorRef = useRef<string | null>(null);
+
+	if (isPortal) {
+		return <WorkerPortal uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isClient) {
+		return <ClientDashboard uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isAdmin) {
+		return <SuperAdminDashboard uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isProfile) {
+		return <UserProfile uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+
 	useEffect(() => {
 		const e = session.error;
 		if (!e) {

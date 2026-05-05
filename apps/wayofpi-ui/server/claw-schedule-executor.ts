@@ -11,7 +11,7 @@ import { join } from "node:path";
 import type { ChatMessage } from "./chat";
 import { getAgentBodyByName } from "./agents";
 import { getClawWorkspaceBundleDirAbs } from "./claw-workspace-root";
-import { runPiChatTurn, shouldUsePiJsonChat } from "./pi-agent-runtime";
+import { getPiStackForSurface, runPiChatTurn, shouldUsePiJsonChat } from "./pi-agent-runtime";
 import { appendClawMissionEvent } from "./claw-mission-events";
 import { getPrimaryWorkspacePath } from "./workspace-state";
 
@@ -88,6 +88,7 @@ export async function executeClawAutomation(
 	const r = await runPiChatTurn({
 		cwd,
 		messages,
+		piStack: getPiStackForSurface("claw"),
 		onDelta: (s) => {
 			full += s;
 		},

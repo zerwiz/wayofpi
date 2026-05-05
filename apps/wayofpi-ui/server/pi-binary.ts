@@ -94,3 +94,11 @@ export function resolvePiBinaryPath(): string | null {
 	}
 	return null;
 }
+
+/** Resolve the unified dynamic loader path (must be absolute for headless Pi `-e`). */
+export function resolvePiLoaderPath(): string | null {
+	const root = getClawHostRepoRoot();
+	if (!root) return null;
+	const p = join(root, ".pi", "extensions", "util", "pi-loader.ts");
+	return existsSync(p) ? p : null;
+}

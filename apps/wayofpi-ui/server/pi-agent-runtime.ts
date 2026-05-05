@@ -7,10 +7,10 @@
 
 import type { ChatMessage, StreamChatResult } from "./chat";
 import type { StreamTokenUsage } from "./chat-usage";
-import { resolvePiBinaryPath } from "./pi-binary";
+import { resolvePiBinaryPath, resolvePiLoaderPath } from "./pi-binary";
 import { streamPiJsonChatTurn } from "./pi-json-mode-chat";
 
-export { resolvePiBinaryPath } from "./pi-binary";
+export { resolvePiBinaryPath, resolvePiLoaderPath } from "./pi-binary";
 
 /**
  * Normalized `WOP_CHAT_ENGINE`:
@@ -84,6 +84,7 @@ export type PiChatTurnContext = {
 export type RunPiChatTurnOpts = {
 	cwd: string;
 	messages: ChatMessage[];
+	piStack?: string;
 	onDelta: (s: string) => void;
 	/** Forward Pi `thinking_delta` to the client as `assistant_reasoning_delta`. */
 	onReasoningDelta?: (s: string) => void;
@@ -129,6 +130,7 @@ export async function runPiChatTurn(
 		piBinary,
 		cwd: opts.cwd,
 		prompt,
+		piStack: opts.piStack,
 		signal: opts.signal,
 		onDelta: opts.onDelta,
 		onReasoningDelta: opts.onReasoningDelta,
@@ -142,4 +144,33 @@ export async function runPiChatTurn(
 		return { result: { ok: false, aborted: true }, lastStreamUsage: null };
 	}
 	return { result: { ok: false, error: r.error }, lastStreamUsage: null };
+}
+
+/** Determine the comma-separated PI_STACK for a given UI surface (simple, technical, claw, etc.). */
+export function getPiStackForSurface(surface: string | null): string {
+	// Standard background logic
+	const base = "damage-control,memory";
+
+	if (surface === "claw") {
+		// Claw: Mission control with team grid and metrics
+		return `${base},agent-team,tool-counter-widget`;
+	}
+	if (surface === "technical") {
+		// Technical: Full IDE-style with agent team
+		return `${base},agent-team`;
+	}
+	if (surface === "simple") {
+		// Simple: Clean chat with minimal footer
+		return `${base},minimal`;
+	}
+	if (surface === "docs") {
+		// Docs: Document-focused, minimal chrome
+		return `${base},minimal`;
+	}
+	if (surface === "work") {
+		// Work: Task-focused
+		return `${base},tilldone,minimal`;
+	}
+
+	return base;
 }

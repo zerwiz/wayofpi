@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { broadcastToolLog } from "./tool-log-broadcast";
 import { parseStreamUsage, type StreamTokenUsage } from "./chat-usage";
+import { resolvePiLoaderPath } from "./pi-binary";
 
 export type PiJsonChatResult =
 	| { ok: true; fullText: string; lastStreamUsage: StreamTokenUsage | null }
@@ -79,6 +80,7 @@ export async function streamPiJsonChatTurn(opts: {
 	piBinary: string;
 	cwd: string;
 	prompt: string;
+	piStack?: string;
 	signal?: AbortSignal;
 	onDelta: (s: string) => void;
 	/** Model thinking / reasoning chunks (Pi `thinking_delta` in JSON mode). */
@@ -102,12 +104,22 @@ export async function streamPiJsonChatTurn(opts: {
 		opts.onLog("INFO", "pi", `Long prompt (${opts.prompt.length} chars) passed as ${promptArg}`);
 	}
 
-	const proc = Bun.spawn([opts.piBinary, "--mode", "json", promptArg], {
+	const args = [opts.piBinary];
+	const loader = resolvePiLoaderPath();
+	if (loader) {
+		args.push("-e", loader);
+	}
+	args.push("--mode", "json", promptArg);
+
+	const proc = Bun.spawn(args, {
 		cwd: opts.cwd,
 		stdin: "ignore",
 		stdout: "pipe",
 		stderr: "pipe",
-		env: { ...process.env },
+		env: {
+			...process.env,
+			...(opts.piStack ? { PI_STACK: opts.piStack } : {}),
+		},
 	});
 
 	let lastUsage: StreamTokenUsage | null = null;
