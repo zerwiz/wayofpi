@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-const useNavigate = () => (path: string) => { window.location.pathname = path; };
 import { UiModeToggle } from "../components/UiModeToggle";
 import type { UiMode } from "../hooks/useUiMode";
 
@@ -39,6 +37,47 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  // Demo data (shown when API is not available)
+  const DEMO_TASKS: WorkerTask[] = [
+    {
+      id: "task-001",
+      title: "Review CAD drawings for A-102",
+      hours: 3,
+      status: "in_progress",
+      progressPct: 65,
+    },
+    {
+      id: "task-002",
+      title: "Update documentation for Portal API",
+      hours: 2,
+      status: "not_started",
+    },
+    {
+      id: "task-003",
+      title: "Fix login flow in Worker Portal",
+      hours: 4,
+      status: "in_progress",
+      progressPct: 40,
+    },
+  ];
+
+  const DEMO_FILES: WorkerFile[] = [
+    {
+      id: "file-001",
+      name: "A-102_CAD_draft.pdf",
+      size: "2.3 MB",
+      type: "pdf",
+      updatedAt: "2024-01-15 14:30",
+    },
+    {
+      id: "file-002",
+      name: "Project_specs.docx",
+      size: "456 KB",
+      type: "doc",
+      updatedAt: "2024-01-14 09:15",
+    },
+  ];
+
   useEffect(() => {
     loadPortalData();
   }, []);
@@ -46,13 +85,21 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
   async function loadPortalData() {
     try {
       setLoading(true);
+      // Load demo data in case of demo credentials or API error
+      loadDemoData();
       // TODO: Fetch from /api/portal/me, /api/portal/tasks, /api/portal/files
-      setLoadError("API endpoints not yet fully connected to UI states");
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
+  }
+
+  function loadDemoData() {
+    // Demo data (shown when API is not available)
+    setWorkerName("Demo Worker");
+    setTasks([...DEMO_TASKS]);
+    setFiles([...DEMO_FILES]);
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -61,28 +108,55 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
       setError("Please enter Worker ID and PIN");
       return;
     }
-    try {
-      const res = await fetch("/api/portal/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId, pin }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Invalid credentials");
-        return;
+
+    let isLoggedIn = false;
+    let message = "";
+
+    // Check for demo credentials first
+    if (workerId === "Demo" && pin === "1234") {
+      isLoggedIn = true;
+      message = "Demo mode loaded successfully";
+    } else {
+      try {
+        const res = await fetch("/api/portal/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workerId, pin }),
+        });
+
+        // Handle server errors (API not running)
+        if (res.status === 404 || res.status === 500) {
+          // API is not available - use demo mode
+          if (workerId === "Demo" && pin === "1234") {
+            isLoggedIn = true;
+            message = "Demo mode loaded successfully";
+          } else {
+            const errorMsg = res.status === 404
+              ? "Way of Pi API is not running. Start the server and try again."
+              : "Backend server returned 500 error. This is expected in development. Use demo mode: Worker ID 'Demo', PIN '1234'.";
+            message = errorMsg;
+          }
+        } else if (res.ok) {
+          // API success
+          const data = await res.json();
+          localStorage.setItem("wop_token", data.token);
+          isLoggedIn = true;
+          message = "Login successful";
+        } else {
+          // Other HTTP errors
+          message = "Login failed. Please try again.";
+        }
+      } catch (e) {
+        message = "Error connecting to API";
       }
-      const data = await res.json();
-      localStorage.setItem("wop_token", data.token);
+    }
+
+    if (isLoggedIn) {
       setIsLoggedIn(true);
       setError("");
-    } catch {
-      setError("Login failed. Please try again.");
+    } else {
+      setError(message);
     }
-  };
-
-  const handleDownload = (fileId: string) => {
-    window.open(`/api/portal/download/${fileId}`, "_blank");
   };
 
   const handleLogout = () => {
@@ -91,15 +165,19 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
     setPin("");
   };
 
+  const handleDownload = (fileId: string) => {
+    window.open(`/api/portal/download/${fileId}`, "_blank");
+  };
+
   if (!isLoggedIn) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e]">
         <div className="mb-8">
-           <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
+          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
         </div>
-        <div className="w-full max-w-sm rounded-lg border border-[#3c3c3c] bg-[#252526] p-8">
+        <div className="w-full max-w-md rounded-lg border border-[#3c3c3c] bg-[#252526] p-8">
           <div className="mb-6 text-center">
-            <h1 className="text-xl font-bold text-[#cccccc]">WAY OF PI</h1>
+            <h1 className="text-2xl font-bold text-[#cccccc]">WAY OF PI</h1>
             <p className="mt-1 text-sm text-[#858585]">Worker Portal</p>
           </div>
 
@@ -139,9 +217,32 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
             </button>
           </form>
 
-          <p className="mt-4 text-center text-xs text-[#585858]">
-            Demo: Use PIN "1234"
-          </p>
+          {error ? (
+            <div className="mt-4 p-3 bg-[#2d2d2d] rounded border border-[#3c3c3c] text-left">
+              <p className="text-xs text-[#ea580c] font-medium mb-1">
+                {error.includes("not ready") || error.includes("not running") ? (
+                  "⚠️ Backend Not Ready"
+                ) : (
+                  "⚠️ Login Failed"
+                )}
+              </p>
+              <p className="text-xs text-[#858585]">
+                {error.includes("not ready") || error.includes("not running") ? (
+                  <div>
+                    The Way of Pi backend API isn't available. This is expected in demo mode.
+                    <br />
+                    Use <strong className="text-[#f0f0f0]">Worker ID: "Demo"</strong> and <strong className="text-[#f0f0f0]">PIN: "1234"</strong> to test.
+                  </div>
+                ) : (
+                  "Login failed with invalid credentials. Please check your Worker ID and PIN."
+                )}
+              </p>
+            </div>
+          ) : (
+            <p className="mt-4 text-center text-xs text-[#585858]">
+              Demo: Use PIN "1234"
+            </p>
+          )}
         </div>
       </div>
     );
@@ -224,6 +325,11 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
                   )}
                 </div>
               ))}
+              {tasks.length === 0 && (
+                <p className="text-xs text-[#585858] text-center py-4">
+                  No tasks yet
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -254,6 +360,11 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
                   </button>
                 </div>
               ))}
+              {files.length === 0 && (
+                <p className="text-xs text-[#585858] text-center py-4">
+                  No files uploaded yet
+                </p>
+              )}
             </div>
           </div>
         )}

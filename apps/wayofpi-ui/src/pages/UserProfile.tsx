@@ -50,6 +50,9 @@ export function UserProfilePage({
             errorData.error ||
               "Not authenticated. Please log in to view your profile.",
           );
+        } else if (res.status === 404) {
+          // In dev environment, API may not be ready
+          setError("API not ready. Please check Way of Pi server is running.");
         } else {
           throw new Error(errorData.error || "Failed to load profile");
         }
@@ -151,6 +154,29 @@ export function UserProfilePage({
                 <p className="text-xs text-[#585858] mt-4">
                   Demo mode: Use PIN "1234"
                 </p>
+              </div>
+            ) : error.includes("API not ready") ? (
+              <div>
+                <h2 className="text-2xl font-bold mb-3 text-[#f0f0f0]">
+                  Way of Pi Server Not Running
+                </h2>
+                <p className="text-[#858585] mb-6">
+                  The API server isn't ready yet. Please start the Way of Pi
+                  backend or check that your terminal is running.
+                </p>
+                <div className="bg-[#2d2d2d] rounded-lg p-4 mb-6 text-left">
+                  <p className="text-sm text-[#858585]">
+                    If you're in demo mode, use the{" "}
+                    <strong className="text-[#f0f0f0]">Worker Portal</strong> to
+                    log in with PIN "1234".
+                  </p>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="rounded bg-[#ea580c] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#c2410c] transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
             ) : (
               <div>
