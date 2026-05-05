@@ -2,6 +2,13 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.20.00] - 2026-05-05
+
+### Critical
+- **[DEPLOY] Hosting Required**: Application must be hosted on developer's computer ASAP for client demos and user testing
+- **[DEPLOY] Demo Access**: Clients need to log in and try out the app for stakeholder reviews
+- **[DEPLOY] Production Plans**: See `plans/productionready` for Docker/VMS hosting options
+
 ## [0.19.99] - 2026-05-05
 
 ### Fixed

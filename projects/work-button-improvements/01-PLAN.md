@@ -1,4 +1,4 @@
-# Work Button Improvement Plan
+# Work Button Improvement Plan and ui fixes
 
 ## Overview
 This document outlines the plan to transform the **Work** button from a disconnected, confusing UI element into a meaningful, functional workspace that provides actual value to users of the Way of Pi application.
