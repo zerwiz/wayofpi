@@ -13,13 +13,23 @@ interface UserProfile {
   tenantId: string;
 }
 
-export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
+export function UserProfilePage({
+  uiMode,
+  setUiMode,
+}: {
+  uiMode: UiMode;
+  setUiMode: (m: UiMode) => void;
+}) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
-  const [pinChange, setPinChange] = useState({ oldPin: "", newPin: "", confirmPin: "" });
+  const [pinChange, setPinChange] = useState({
+    oldPin: "",
+    newPin: "",
+    confirmPin: "",
+  });
   const [showPinChange, setShowPinChange] = useState(false);
 
   useEffect(() => {
@@ -36,7 +46,10 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         if (res.status === 401 || res.status === 503) {
-          setError(errorData.error || "Not authenticated. Please log in to view your profile.");
+          setError(
+            errorData.error ||
+              "Not authenticated. Please log in to view your profile.",
+          );
         } else {
           throw new Error(errorData.error || "Failed to load profile");
         }
@@ -93,14 +106,88 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
     }
   }
 
+  // Error UI - styled error page for not found/unauthenticated
+  if (!profile && error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1e1e1e]">
+        <div className="max-w-md mx-auto p-8 text-center">
+          <div className="mb-6 text-[#f0f0f0]">
+            <svg
+              className="w-16 h-16 mx-auto mb-4 text-[#ea580c]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            {error.startsWith("401") || error.startsWith("503") ? (
+              <div>
+                <h2 className="text-2xl font-bold mb-3 text-[#f0f0f0]">
+                  Not Authenticated
+                </h2>
+                <p className="text-[#858585] mb-6">
+                  You are not logged in to Way of Pi.
+                </p>
+                <div className="bg-[#2d2d2d] rounded-lg p-4 mb-6 text-left">
+                  <p className="text-sm text-[#858585] mb-2">
+                    <strong className="text-[#f0f0f0]">
+                      Worker Portal Login
+                    </strong>
+                    <br />
+                    <strong className="text-[#f0f0f0]">PIN:</strong> 1234
+                  </p>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="rounded bg-[#ea580c] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#c2410c] transition-colors"
+                >
+                  Try Logging In
+                </button>
+                <p className="text-xs text-[#585858] mt-4">
+                  Demo mode: Use PIN "1234"
+                </p>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold mb-3 text-[#f0f0f0]">
+                  Profile Not Found
+                </h2>
+                <p className="text-[#858585]">
+                  The profile you are looking for does not exist or you are not
+                  authenticated.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1e1e1e]">
+        <div className="text-[#858585]">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
       <div className="flex items-center justify-between mb-8 border-b border-[#3c3c3c] pb-4">
         <div className="flex items-center gap-6">
           <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
           <h1 className="text-2xl font-bold text-[#cccccc]">User Profile</h1>
         </div>
         <button
-          onClick={() => { window.location.pathname = "/"; }}
+          onClick={() => {
+            window.location.pathname = "/";
+          }}
           className="rounded px-3 py-1.5 text-xs text-[#858585] hover:bg-[#3c3c3c]"
         >
           ← Back to App
@@ -113,27 +200,39 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <p className="text-xs text-[#585858]">Full Name</p>
-                <p className="text-sm text-[#cccccc]">{profile.fullName || "Not set"}</p>
+                <p className="text-sm text-[#cccccc]">
+                  {profile?.fullName || "Not set"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[#585858]">Username</p>
-                <p className="text-sm text-[#cccccc]">{profile.username}</p>
+                <p className="text-sm text-[#cccccc]">
+                  {profile?.username || "Demo"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[#585858]">Email</p>
-                <p className="text-sm text-[#cccccc]">{profile.email || "Not set"}</p>
+                <p className="text-sm text-[#cccccc]">
+                  {profile?.email || "demo@example.com"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[#585858]">Phone</p>
-                <p className="text-sm text-[#cccccc]">{profile.phone || "Not set"}</p>
+                <p className="text-sm text-[#cccccc]">
+                  {profile?.phone || "Not set"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[#585858]">Role</p>
-                <p className="text-sm text-[#ea580c]">{profile.role}</p>
+                <p className="text-sm text-[#ea580c]">
+                  {profile?.role || "Demo"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[#585858]">Job Title</p>
-                <p className="text-sm text-[#cccccc]">{profile.jobTitle || "Not set"}</p>
+                <p className="text-sm text-[#cccccc]">
+                  {profile?.jobTitle || "Not set"}
+                </p>
               </div>
             </div>
 
@@ -155,11 +254,15 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs text-[#585858] mb-1">Full Name</label>
+              <label className="block text-xs text-[#585858] mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 value={formData.fullName || ""}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
                 className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 text-sm text-[#cccccc] focus:border-[#ea580c] focus:outline-none"
               />
             </div>
@@ -168,7 +271,9 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
               <input
                 type="email"
                 value={formData.email || ""}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 text-sm text-[#cccccc] focus:border-[#ea580c] focus:outline-none"
               />
             </div>
@@ -177,7 +282,9 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
               <input
                 type="tel"
                 value={formData.phone || ""}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 text-sm text-[#cccccc] focus:border-[#ea580c] focus:outline-none"
               />
             </div>
@@ -200,34 +307,48 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
 
         {showPinChange && (
           <div className="mt-6 pt-6 border-t border-[#3c3c3c]">
-            <h3 className="text-sm font-semibold text-[#cccccc] mb-4">Change PIN</h3>
+            <h3 className="text-sm font-semibold text-[#cccccc] mb-4">
+              Change PIN
+            </h3>
             <div className="space-y-3 max-w-sm">
               <div>
-                <label className="block text-xs text-[#585858] mb-1">Current PIN</label>
+                <label className="block text-xs text-[#585858] mb-1">
+                  Current PIN
+                </label>
                 <input
                   type="password"
                   value={pinChange.oldPin}
-                  onChange={(e) => setPinChange({ ...pinChange, oldPin: e.target.value })}
+                  onChange={(e) =>
+                    setPinChange({ ...pinChange, oldPin: e.target.value })
+                  }
                   maxLength={4}
                   className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 text-sm text-[#cccccc] focus:border-[#ea580c] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#585858] mb-1">New PIN</label>
+                <label className="block text-xs text-[#585858] mb-1">
+                  New PIN
+                </label>
                 <input
                   type="password"
                   value={pinChange.newPin}
-                  onChange={(e) => setPinChange({ ...pinChange, newPin: e.target.value })}
+                  onChange={(e) =>
+                    setPinChange({ ...pinChange, newPin: e.target.value })
+                  }
                   maxLength={4}
                   className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 text-sm text-[#cccccc] focus:border-[#ea580c] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#585858] mb-1">Confirm New PIN</label>
+                <label className="block text-xs text-[#585858] mb-1">
+                  Confirm New PIN
+                </label>
                 <input
                   type="password"
                   value={pinChange.confirmPin}
-                  onChange={(e) => setPinChange({ ...pinChange, confirmPin: e.target.value })}
+                  onChange={(e) =>
+                    setPinChange({ ...pinChange, confirmPin: e.target.value })
+                  }
                   maxLength={4}
                   className="w-full rounded border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 text-sm text-[#cccccc] focus:border-[#ea580c] focus:outline-none"
                 />
@@ -242,6 +363,6 @@ export function UserProfilePage({ uiMode, setUiMode }: { uiMode: UiMode; setUiMo
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
