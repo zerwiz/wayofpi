@@ -1,7 +1,20 @@
 # TODO: WORK BUTTON / LOCAL HOSTING IMPLEMENTATION
 **CRITICAL:** Host application on developer's computer ASAP for client demos and user testing!
 
-## 🎯 Overview
+## 🔴 CRITICAL: Hermes Page Visibility Issue
+**[ ] URGENT:** Fix Hermes page routing
+- Export HermesPage from `apps/wayofpi-ui/src/pages/index.ts`
+- Add routing condition in `apps/wayofpi-ui/src/App.tsx`
+- Test `/hermes` route works correctly
+- See `plans/productionready/investigation/HERMES_PAGE_NOT_VISIBLE.md`
+**CRITICAL:** Host application on developer's computer ASAP for client demos and user testing!
+
+## 🔴 CRITICAL: Hermes Page Visibility Issue
+**[ ] URGENT:** Fix Hermes page routing
+- Export HermesPage from `apps/wayofpi-ui/src/pages/index.ts`
+- Add routing condition in `apps/wayofpi-ui/src/App.tsx`
+- Test `/hermes` route works correctly
+- See `plans/productionready/investigation/HERMES_PAGE_NOT_VISIBLE.md`
 
 This document tracks implementation for **LOCAL HOSTING** capability. Each instance (home, on-site, office) runs **INDEPENDENTLY**.
 
@@ -78,6 +91,12 @@ These capabilities are **CURRENTLY AVAILABLE**:
 - [ ] Test client login flow
 - [ ] Prepare demo presentation
 - [ ] Share access with client team
+
+### 🔧 Hermes Page Routing Fix
+- [ ] Export HermesPage from `apps/wayofpi-ui/src/pages/index.ts`
+- [ ] Add routing condition in `apps/wayofpi-ui/src/App.tsx`
+- [ ] Test `/hermes` route visibility
+- [ ] See `plans/productionready/investigation/HERMES_PAGE_NOT_VISIBLE.md`
 
 ### Local Deployment Steps (if needed)
 

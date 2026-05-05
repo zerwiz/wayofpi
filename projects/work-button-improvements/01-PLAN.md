@@ -201,6 +201,33 @@ When Work button is clicked, show unified dashboard with:
 - Integrate WorkerPortal with navigation
 - Fix App.tsx routing for portal/client/admin/profile
 
+#### Hermes Page Integration (CRITICAL)
+**Priority: CRITICAL - Needed for client demos**
+
+**Issue:** HermesPage exists but is not visible in the UI
+
+**Root Cause:**
+1. Not exported from `apps/wayofpi-ui/src/pages/index.ts`
+2. No routing condition in `apps/wayofpi-ui/src/App.tsx`
+
+**Required Fixes:**
+1. **Export HermesPage** in `pages/index.ts`:
+   ```typescript
+   export { HermesTerminalPage as HermesPage } from "./hermes/HermesPage";
+   ```
+
+2. **Add routing condition** in `App.tsx` (after `isProfile` at line 341):
+   ```typescript
+   const isHermes = window.location.pathname === "/hermes" || window.location.pathname.startsWith("/hermes/");
+   
+   if (isHermes) {
+       return <HermesPage hermesPath={hermesPath || DEFAULT_HERMES_PATH} />;
+   }
+   ```
+
+**Documentation:** See `plans/productionready/investigation/HERMES_PAGE_NOT_VISIBLE.md`
+
+
 
 ### Phase 2: Task Detection from Code (V2)
 **Priority: HIGH | Timeline: 2-3 weeks**

@@ -118,6 +118,42 @@ Based on the WORKBOARD_REUSE_PLAN.md, the interface includes:
 
 ---
 
+## 7) Missing Pages Investigation
+
+### Hermes Page Issue (CRITICAL)
+
+**Status:** 🔴 **Not Visible** - Needs Immediate Fix
+
+**Problem:** The Hermes page at `apps/wayofpi-ui/src/pages/hermes/HermesPage.tsx` exists but is not accessible in the UI.
+
+**Root Cause:**
+1. ❌ Not exported from `apps/wayofpi-ui/src/pages/index.ts`
+2. ❌ No routing condition in `apps/wayofpi-ui/src/App.tsx`
+
+**Required Fixes:**
+1. **Export HermesPage** in `apps/wayofpi-ui/src/pages/index.ts`:
+   ```typescript
+   export { HermesTerminalPage as HermesPage } from "./hermes/HermesPage";
+   ```
+
+2. **Add routing condition** in `apps/wayofpi-ui/src/App.tsx` (after `isProfile`):
+   ```typescript
+   const isHermes = window.location.pathname === "/hermes" || window.location.pathname.startsWith("/hermes/");
+   
+   if (isHermes) {
+       return <HermesPage hermesPath={hermesPath || DEFAULT_HERMES_PATH} />;
+   }
+   ```
+
+**Documentation:** See `plans/productionready/investigation/HERMES_PAGE_NOT_VISIBLE.md`
+
+**Impact:**
+- Hermes feature is unusable without these fixes
+- Clients cannot access Hermes for demos
+- Feature is effectively hidden despite being built
+
+---
+
 ## 6) Technical Implementation Guidelines
 
 ### RBAC & Visibility Logic
@@ -144,6 +180,29 @@ const navItems = [
 **Query logic:** `(user_id OR group_id) + workspace_id + file_path = access_granted`
 
 **Super Admin Enforcement:** All Super Admin actions must be logged and subject to audit review. Super Admin access is treated as a last-resort maintenance capability, not a production user role.
+
+---
+
+## 8) Action Items
+
+### Immediate Actions Required
+
+1. **Fix Hermes Page Visibility**
+   - Export HermesPage from `apps/wayofpi-ui/src/pages/index.ts`
+   - Add routing condition in `apps/wayofpi-ui/src/App.tsx`
+   - Test `/hermes` route works correctly
+   - See `plans/productionready/investigation/HERMES_PAGE_NOT_VISIBLE.md`
+
+2. **Deploy for Client Demos**
+   - Host application on developer's computer ASAP
+   - Configure demo credentials
+   - Set up ngrok tunnel for external access
+   - See `plans/productionready/hosting/URGENT_DEPLOY_CLIENT_DEMO.md`
+
+3. **Review Production Hosting Plans**
+   - Evaluate Docker deployment options
+   - Review VMS deployment (DigitalOcean, etc.)
+   - See `plans/productionready/` directory
 
 ---
 
