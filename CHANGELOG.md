@@ -2,6 +2,30 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.20.02] - 2026-05-05
+
+### Fixed
+- **[UI] useWayOfPiSession**: Fixed runtime crash when switching to "work" mode by initializing the 'work' surface state and adding safety checks to prevent accessing undefined session data.
+- **[UI] App.tsx**: Fixed `ReferenceError: Cannot access 'uiMode' before initialization` by moving all hook declarations to the top of the `App` component, ensuring hooks are called before any conditional returns and adhering to React's Rules of Hooks.
+
+## [0.20.01] - 2026-05-05
+
+### Added
+- **[MOBILE] Documentation**: Created comprehensive mobile documentation in `/home/zerwiz/CodeP/Way of pi/projects/work-button-improvements/mobile/`
+- **[MOBILE] Mobile Components**: Documented all mobile-specific components: `MobileChrome`, `ClawMobileTabBar`, `SimpleMobileTabBar`, `MobileTechnicalShell`
+- **[MOBILE] Mobile Views**: Documented mobile entry points (`?shell=mobile`, `/m` path) and localStorage toggle (`wayofpi.shell.mobile`)
+- **[MOBILE] Mobile UX**: Documented mobile-first design patterns, breakpoints (≤768px mobile, 769-1024px tablet, ≥1025px desktop), and touch-optimized controls
+- **[MOBILE] Claw Navigation**: Documented 8-tab claw bottom nav (Mission, Chat, Team, Schedule, Channels, Files, Modules, Settings)
+- **[MOBILE] Simple Navigation**: Documented 6-tab simple bottom nav (Chat, Team, Models, Projects, Help, Settings)
+- **[MOBILE] Mobile Shell**: Documented `useShellMobile` hook implementation with URL sync and path detection
+- **[MOBILE] Mobile Chrome**: Documented shared top bar with title display, workspace hint, and desktop escape button
+- **[MOBILE] Safe-Area Support**: Documented iOS notch, Android status bar, and browser UI handling
+
+### Changed
+- **[MOBILE] Component Structure**: Created new dedicated mobile documentation folder at `/home/zerwiz/CodeP/Way of pi/projects/work-button-improvements/mobile/`
+- **[MOBILE] File Organization**: Organized mobile docs matching actual component structure in `/apps/wayofpi-ui/src/components/mobile/`
+- **[MOBILE] Documentation Style**: Standardized mobile documentation format with headers, tables, and code examples
+
 ## [0.20.00] - 2026-05-05
 
 ### Critical
@@ -318,6 +342,9 @@ All notable changes to the **Way of Pi** project.
 ### Fixed
 - **[UI] WorkersPage**: Fixed display when users exist
 
+### Changed
+- **[API] WorkersPage**: Changed from `getWorkers` to `getUsers`
+
 ## [0.19.44] - 2026-05-05
 
 ### Fixed
@@ -583,3 +610,33 @@ Recent Changes Summary:
 - **[UI] WorkerPortal**: Modified `handleLogin()` to check for demo credentials first before calling API
 - **[UI] WorkerPortal**: Simplified error handling to reduce complexity
 
+## MOBILE CHANGES - [0.20.01] - 2026-05-05
+
+**Location**: `/home/zerwiz/CodeP/Way of pi/projects/work-button-improvements/mobile/`
+
+### Files Created (9):
+1. **README.md** - Entry point with quick links
+2. **MOBILE-VIEWS-INDEX.md** - Overview of mobile views
+3. **MOBILE-MODULES.md** - Component structure & files
+4. **MOBILE-UX.md** - UX patterns & breakpoints
+5. **MOBILE-CHROME.md** - Top bar implementation
+6. **CLAW-MOBILE-TAB-BAR.md** - Claw navigation tabs
+7. **SIMPLE-MOBILE-TAB-BAR.md** - Simple navigation tabs
+8. **MOBILE-SHELL.md** - Shell hook `?shell=mobile`
+9. **MOBILE-TECHNICAL-SHELL.md** - Track 3 stub
+
+### Components Documented:
+- `MobileChrome` - Shared top bar
+- `ClawMobileTabBar` - 8-tab bottom nav
+- `SimpleMobileTabBar` - 6-tab bottom nav
+- `MobileTechnicalShell` - Track 3 stub
+- `useShellMobile` - Mobile shell hook
+
+### Features Covered:
+- Mobile-first design patterns
+- Touch-friendly controls (min 44x44px)
+- Responsive breakpoints (≤768px, 769-1024px, ≥1025px)
+- Safe-area support (iOS notch, Android status bar)
+- Entry points: `?shell=mobile`, `/m`, localStorage
+
+---

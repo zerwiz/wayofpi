@@ -79,37 +79,45 @@ These capabilities are **CURRENTLY AVAILABLE**:
 - [ ] Prepare demo presentation
 - [ ] Share access with client team
 
-### Local Deployment Steps (if needed)
+### 🛠 Local Deployment Checklist
+- [x] Install Bun + tsx
+- [x] Clone repository
+- [x] Configure `.env` (instance ID, PIN)
+- [x] Initialize SQLite database
+- [ ] Start with `bun run dev`
+- [ ] Test with mock data
+- [ ] Verify WebSocket connections
 
-- [ ] **Step 1**: Install Bun + tsx
-- [ ] **Step 2**: Clone repository
-- [ ] **Step 3**: Configure `.env` (instance ID, PIN)
-- [ ] **Step 4**: Initialize SQLite
-- [ ] **Step 5**: Start with `bun run dev`
-- [ ] **Step 6**: Optional: ngrok tunnel for external access
-- [ ] **Step 7**: Optional: VPS deployment (DigitalOcean)
+### 🔧 Instance Configuration Steps
+- [ ] Create `.env.example` template
+- [ ] Generate unique `.env` per instance
+- [ ] Set `INSTANCE_ID` per location (home-001, office-001)
+- [ ] Set `PIN` for demo/testing
+- [ ] Configure `DB_FILE=.instance.db`
+- [ ] Set `PORT=3333` or higher
 
-### Instance Configuration
-
-- [ ] Create `.env` per instance:
-  ```env
-  INSTANCE_ID=home-001
-  PIN=112233
-  DB_FILE=.instance.db
-  PORT=3333
-  NGROK_AUTH=<your-token> (optional)
-  ```
-
-- [ ] Each instance has independent `.instance.db`
-- [ ] No cross-instance data sharing
-- [ ] Each location manages its own data
-
-### ngrok Setup (Optional)
-
-- [ ] Get free ngrok token
+### 🔌 ngrok Setup Steps
+- [ ] Get free ngrok token from https://ngrok.com
+- [ ] Install ngrok CLI
 - [ ] Run: `ngrok http 3333 --authtoken <your-token>`
-- [ ] Tunnel URL: `https://random-id.ngrok-free.app`
-- [ ] Share URL with remote users (session-based access)
+- [ ] Copy tunnel URL
+- [ ] Share URL with remote users
+- [ ] Test external access from different networks
+
+### 💾 Database Initialization
+- [ ] Create server-side init script
+- [ ] Ensure SQLite creates on first run
+- [ ] Add schema: time_entries, tasks, workers tables
+- [ ] Seed initial data if needed
+
+### 🔐 Security Setup
+- [ ] If VPS: Configure firewall (ufw/firewalld)
+- [ ] If VPS: Set up rate limiting
+- [ ] If VPS: Install Fail2ban
+- [ ] Configure Let's Encrypt for HTTPS
+- [ ] Set up automatic SSL rotation
+- [ ] Test PIN auth locally
+- [ ] Test ngrok auth (if using tunnel)
 
 ---
 
@@ -210,9 +218,127 @@ Each location's instance should meet these criteria:
 
 ## 📚 Related Documentation
 
+### Infrastructure & Deployment
 - [Local Deployment](./DEPLOYMENT.md) (new)
 - [VPS Setup Guide](./VPS-SETUP.md) (new)
 - [NGROK Guide](./NGROK-SETUP.md) (new)
+
+### UI Mode Improvement Capabilities (Aligned)
+
+#### Docs → Plans Redesign
+**Aligned With:** [WOP_DOCS_MODE_IMPROVEMENTS.md](./ref/WOP_DOCS_MODE_IMPROVEMENTS.md)
+
+**Current Capability:** Basic document file listing with code icons
+
+**Target Capability:** 
+- Document-only file tree filter (.md, .txt, .doc)
+- Folder grouping (Plans, Docs, Specs, Projects)
+- Document status badges
+- Markdown rendered viewer with TOC
+- Simplified PM chat with document-specific prompts
+
+**Implementation Task:** [ ] Implement Phase 1 changes (rename, filter, simplify chat)
+**Depends On:** Work button navigation integration completing
+
+#### Work Mode - Time & Task Management
+**Aligned With:** [WOP_TIME_MANAGEMENT_PLAN.md](./ref/WOP_TIME_MANAGEMENT_PLAN.md)
+
+**Current Capability:** Basic time tracking form (pending)
+
+**Target Capability:**
+- 3-panel layout: Team Browser | Time/Tasks View | Leader Actions
+- Worker and Leader role toggle
+- Time entry submission and approval workflow
+- Task creation, assignment, status tracking
+- Weekly/monthly report generation
+- CSV export
+
+**Implementation Task:** [ ] Implement Phase 1 (basic time tracking in Work mode)
+**Depends On:** Navigation integration, local hosting stable
+
+### Feature Dependencies Graph
+
+```
+Local Hosting Ready (TODO.md) ──┐
+                                 ├──→ Work Button Navigation (01-PLAN.md) 
+WorkMode UI Design (WOP_TIME_) │             
+                                ├────→ Task Detection from Code
+DocsMode UI Design (WOP_DOCS_)╰────→ UI Mode Redesign Phase 3-4
+```
+
+### Implementation Queue (Aligned with Both Docs)
+
+1. **🔴 CRITICAL:** Complete 01-PLAN.md Phase 1 (navigation integration)
+2. **🟠 HIGH:** Complete TODO.md local hosting deployment
+3. **🟡 MEDIUM:** Complete DOC IMPROVEMENTS Phase 1 below
+4. **🟢 LOW:** Complete WORK MODE Phase 1 below
+
+### 📋 DOC IMPROVEMENTS TASKS (from WOP_DOCS_MODE_IMPROVEMENTS.md)
+
+#### Phase 1: Minimal Changes (Rename + Filter)
+- [ ] Rename "Plans" to "Docs" in `useUiMode.ts`
+- [ ] Filter file tree: only `.md`, `.txt`, `.docs` files
+- [x] Remove code-specific chat features (agent picker, thinking toggle)
+- [ ] Add quick prompt buttons: "Summarize", "Extract action items", "Review"
+- [ ] Add document status badges (Draft, Review, Approved)
+- [ ] Hide line numbers in document viewer
+
+#### Phase 2: Layout Redesign
+- [ ] Create `components/plans/DocumentBrowser.tsx` (grouped by folder)
+- [ ] Create `components/plans/DocumentViewer.tsx` (markdown renderer)
+- [ ] Create `components/plans/PMChatPanel.tsx` (simplified chat)
+- [ ] Replace code icons with document icons
+- [ ] Add TOC sidebar to markdown viewer
+- [ ] Add document metadata (author, last modified)
+
+#### Phase 3: Full PM Workflow
+- [ ] Create document templates (PRD, Spec, Meeting Notes, Planning)
+- [ ] Implement status workflow: Draft → Review → Approved
+- [ ] Add AI-powered document analysis features
+- [ ] Implement document comparison view
+- [ ] Add "My Documents", "Needs Review", "All Documents" views
+- [ ] Full-text search across documents
+
+### 📋 WORK MODE TASKS (from WOP_TIME_MANAGEMENT_PLAN.md)
+
+#### Phase 1: Basic Time Tracking (Workers and admin  Only)
+- [ ] Add `"work"` to `useUiMode.ts` type
+- [ ] Create `apps/wayofpi-ui/src/components/work/WorkApp.tsx`
+- [ ] Create `TimeEntryForm.tsx` component
+- [ ] Implement basic 3-panel layout (Team Browser | Entries | Leader Actions)
+- [ ] Create data storage: `workspace/.wayofpi/time-entries.json`
+- [ ] Build "My Submissions" list for workers
+- [ ] Create `apps/wayofpi-ui/src/components/work/TeamBrowser.tsx`
+- [ ] Create `apps/wayofpi-ui/src/components/work/LeaderActions.tsx`
+
+#### Phase 2: Leader Review
+- [ ] Add leader toggle to Settings
+- [ ] Store leader role in `workspace/.wayofpi/work-config.json`
+- [ ] Create approve/reject endpoints: `/api/time-entries/:id/approve`
+- [ ] Create `/api/time-entries/:id/reject` endpoint
+- [ ] Show ALL entries to leader (not just their own)
+- [ ] Add leader notes field to time entries
+- [ ] Create `apps/wayofpi-ui/src/components/work/LeaderReviewPanel.tsx`
+
+#### Phase 3: Task Management
+- [ ] Create `apps/wayofpi-ui/src/components/work/TaskForm.tsx`
+- [ ] Implement task assignment workflow
+- [ ] Link time entries to tasks
+- [ ] Create task status workflow: Draft → In Progress → Complete
+- [ ] Add deadline tracking
+- [ ] Create `apps/wayofpi-ui/src/components/work/TaskList.tsx`
+
+#### Phase 4: Reports & Export
+- [ ] Create `/api/time-reports` endpoint
+- [ ] Implement weekly/monthly report generation
+- [ ] Add CSV export functionality
+- [ ] Create `apps/wayofpi-ui/src/components/work/TimeReport.tsx`
+- [ ] Create `apps/wayofpi-ui/src/components/work/TeamDashboard.tsx`
+
+#### Visual Design
+- [ ] Use CheckCircle (`#22c55e`), XCircle (`#ef4444`), Clock icons
+- [ ] Create `TeamBrowser` component with worker list
+- [ ] Create `TimeTaskView` component with tabs
 
 ---
 

@@ -330,12 +330,26 @@ DELETE /api/work/tasks/:id      # Complete task
 
 ## Related Documents
 
+### Core Infrastructure
 - [WorkspacePane Component](../../apps/wayofpi-ui/src/components/WorkspacePane.tsx)
 - [WorkApp Component](../../apps/wayofpi-ui/src/components/work/WorkApp.tsx)
 - [WorkerPortal Component](../../apps/wayofpi-ui/src/pages/WorkerPortal.tsx)
 - [Navigation Component](../../apps/wayofpi-ui/src/components/Navigation.tsx) (create)
 - [UseUiMode Hook](../../apps/wayofpi-ui/src/hooks/useUiMode.ts)
 - [App.tsx Routing](../../apps/wayofpi-ui/src/App.tsx)
+
+### UI Mode Improvements (Aligned Capabilities)
+- [WOP_DOCS_MODE_IMPROVEMENTS.md](../ref/WOP_DOCS_MODE_IMPROVEMENTS.md) - **Docs → Plans**: Document-centric UI redesign (filter code files, markdown rendering, project manager chat)
+- [WOP_TIME_MANAGEMENT_PLAN.md](../ref/WOP_TIME_MANAGEMENT_PLAN.md) - **Work Mode**: Time tracking, task management, leader/worker approval workflow
+
+### Implementation Priority Matrix
+| Feature | Source Doc | Priority | Phase |
+|---------|----------------|----------|-----------|
+| Work Button Navigation | 01-PLAN.md | CRITICAL | Phase 1 |
+| Task Detection from Code | 01-PLAN.md | HIGH | Phase 2 |
+| UI Mode Redesign - Docs | WOP_DOCS_MODE_IMPROVEMENTS.md | MEDIUM | Phase 3 |
+| UI Mode Redesign - Work | WOP_TIME_MANAGEMENT_PLAN.md | LOW | Phase 4 |
+| Infrastructure - ngrok | TODO.md | CRITICAL | Phase 0
 - [TechnicalWorkspaceGrid](../../apps/wayofpi-ui/src/components/TechnicalWorkspaceGrid.tsx)
 
 ---
