@@ -20,6 +20,13 @@ interface SystemStats {
   projects: number;
   tasks: number;
   time_entries: number;
+  system?: {
+    memoryUsage: { rss: number, heapTotal: number, heapUsed: number, external: number, arrayBuffers: number };
+    uptime: number;
+    platform: string;
+    nodeVersion: string;
+    bunVersion: string;
+  };
 }
 
 interface User {
@@ -107,10 +114,23 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
     }
   };
 
+  const formatBytes = (bytes?: number) => {
+    if (!bytes) return "0 MB";
+    return (bytes / 1024 / 1024).toFixed(2) + " MB";
+  };
+
+  const formatUptime = (seconds?: number) => {
+    if (!seconds) return "0s";
+    const d = Math.floor(seconds / (3600*24));
+    const h = Math.floor(seconds % (3600*24) / 3600);
+    const m = Math.floor(seconds % 3600 / 60);
+    return `${d}d ${h}h ${m}m`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#1e1e1e] text-white">
-        <div className="text-lg">Loading Super Admin Dashboard...</div>
+        <div className="text-lg">Loading Developer View...</div>
       </div>
     );
   }
@@ -123,7 +143,7 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
           <div className="flex items-center gap-6">
             <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
             <div>
-              <h1 className="text-2xl font-bold text-white">Super Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold text-white">Developer View</h1>
               <p className="text-sm text-[#999] mt-1">System-wide management console</p>
             </div>
           </div>
@@ -137,10 +157,11 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-5 gap-4 p-6">
+      <div className="grid grid-cols-6 gap-4 p-6">
         {[
           { label: "Tenants", value: stats.tenants, color: "border-[#ea580c]" },
           { label: "Users", value: stats.users, color: "border-blue-500" },
+          { label: "Clients", value: (stats as any).clients || 0, color: "border-[#ea580c]" },
           { label: "Projects", value: stats.projects, color: "border-green-500" },
           { label: "Tasks", value: stats.tasks, color: "border-yellow-500" },
           { label: "Time Entries", value: stats.time_entries, color: "border-purple-500" },
@@ -313,23 +334,85 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
         )}
 
         {activeTab === "stats" && (
-          <div>
-            <h2 className="text-xl font-semibold text-white mb-4">System Statistics</h2>
-            <div className="grid grid-cols-2 gap-6 max-w-4xl">
-              {[
-                { label: "Total Tenants", value: stats.tenants, icon: "🏢" },
-                { label: "Total Users", value: stats.users, icon: "👥" },
-                { label: "Total Projects", value: stats.projects, icon: "📁" },
-                { label: "Total Tasks", value: stats.tasks, icon: "✅" },
-                { label: "Time Entries", value: stats.time_entries, icon: "⏱️" },
-              ].map((item) => (
-                <div key={item.label} className="bg-[#252526] p-6 rounded border border-[#3c3c3c]">
-                  <div className="text-4xl mb-2">{item.icon}</div>
-                  <div className="text-3xl font-bold text-white">{item.value}</div>
-                  <div className="text-[#999] mt-1">{item.label}</div>
-                </div>
-              ))}
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold text-white mb-4">Business Metrics</h2>
+              <div className="grid grid-cols-3 gap-6 max-w-5xl">
+                {[
+                  { label: "Total Tenants", value: stats.tenants, icon: "🏢" },
+                  { label: "Total Users", value: stats.users, icon: "👥" },
+                  { label: "Total Clients", value: (stats as any).clients || 0, icon: "🤝" },
+                  { label: "Total Projects", value: stats.projects, icon: "📁" },
+                  { label: "Total Tasks", value: stats.tasks, icon: "✅" },
+                  { label: "Time Entries", value: stats.time_entries, icon: "⏱️" },
+                ].map((item) => (
+                  <div key={item.label} className="bg-[#252526] p-6 rounded border border-[#3c3c3c]">
+                    <div className="text-4xl mb-2">{item.icon}</div>
+                    <div className="text-3xl font-bold text-white">{item.value}</div>
+                    <div className="text-[#999] mt-1">{item.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {stats.system && (
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-4">Server Health & Environment</h2>
+                <div className="grid grid-cols-2 gap-6 max-w-5xl">
+                  {/* System Info */}
+                  <div className="bg-[#252526] p-6 rounded border border-[#3c3c3c]">
+                    <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                      <span>🖥️</span> Host Information
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]">Platform</span>
+                        <span className="text-white capitalize">{stats.system.platform}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]">Uptime</span>
+                        <span className="text-white">{formatUptime(stats.system.uptime)}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]">Node.js Version</span>
+                        <span className="text-white">{stats.system.nodeVersion}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]">Bun Version</span>
+                        <span className="text-white">{stats.system.bunVersion || "N/A"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Memory Usage */}
+                  <div className="bg-[#252526] p-6 rounded border border-[#3c3c3c]">
+                    <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                      <span>🧠</span> Memory Usage
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]" title="Resident Set Size (Total Memory)">RSS</span>
+                        <span className="text-white font-medium">{formatBytes(stats.system.memoryUsage?.rss)}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]" title="V8 Heap Total">Heap Total</span>
+                        <span className="text-white">{formatBytes(stats.system.memoryUsage?.heapTotal)}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]" title="V8 Heap Used">Heap Used</span>
+                        <span className="text-white">{formatBytes(stats.system.memoryUsage?.heapUsed)}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-[#3c3c3c] pb-2">
+                        <span className="text-[#999]">External & Buffers</span>
+                        <span className="text-white">
+                          {formatBytes((stats.system.memoryUsage?.external || 0) + (stats.system.memoryUsage?.arrayBuffers || 0))}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

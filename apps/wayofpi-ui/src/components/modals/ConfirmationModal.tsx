@@ -1,53 +1,42 @@
-import React from "react";
-import Modal from "./Modal";
+import React from 'react';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
   title: string;
   message: string;
-  confirmText?: string;
-  cancelText?: string;
-  isDanger?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
-export default function ConfirmationModal({
+export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isOpen,
-  onClose,
-  onConfirm,
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-  isDanger = false,
-}: ConfirmationModalProps) {
+  onConfirm,
+  onCancel,
+}) => {
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <p className="text-sm text-[#cccccc] mb-6">{message}</p>
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 text-sm text-[#858585] hover:text-[#cccccc] transition-colors"
-        >
-          {cancelText}
-        </button>
-        <button
-          onClick={() => {
-            onConfirm();
-            onClose();
-          }}
-          className={`px-4 py-2 text-sm rounded ${
-            isDanger
-              ? "bg-red-600 hover:bg-red-700 text-white"
-              : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
-          } transition-colors`}
-        >
-          {confirmText}
-        </button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+      <div className="bg-[#252526] p-6 rounded-lg max-w-md w-full">
+        <h2 className="text-xl font-bold text-[#cccccc] mb-4">{title}</h2>
+        <p className="text-[#858585] mb-6">{message}</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-[#858585] hover:bg-[#3c3c3c] rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-[#ea580c] text-white rounded hover:bg-[#c2410c]"
+          >
+            Confirm
+          </button>
+        </div>
       </div>
-    </Modal>
+    </div>
   );
-}
+};

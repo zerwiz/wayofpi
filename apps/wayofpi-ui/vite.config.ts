@@ -19,16 +19,15 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://127.0.0.1:3333',
         ws: true,
         changeOrigin: true,
       },
     },
     hmr: {
-      port: 5173,
-      protocol: 'ws',
-      enabled: true,
-    },
+        port: 5173,
+        protocol: 'ws',
+        host: 'localhost',
+      },
     cors: true,
   },
   define: {

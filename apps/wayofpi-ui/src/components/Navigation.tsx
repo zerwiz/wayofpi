@@ -7,7 +7,7 @@ interface NavItem {
   icon: React.ReactNode;
   title: string;
   path?: string;
-  showCondition?: () => boolean;
+  showCondition?: (role?: string) => boolean;
 }
 
 interface NavigationProps {
@@ -23,21 +23,27 @@ interface NavigationProps {
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { id: "simple", label: "Simple", icon: <Code2 size={14} />, title: "Calmer layout and friendly labels" },
-  { id: "technical", label: "Technical", icon: <Code2 size={14} />, title: "IDE-style chrome and technical labels" },
-  { id: "claw", label: "Claw", icon: <Bot size={14} />, title: "Claw roadmap: autonomous-agent shell" },
-  { id: "docs", label: "Docs", icon: <FileText size={14} />, title: "Docs mode: Document-centric layout" },
-  { id: "work", label: "Work", icon: <Briefcase size={14} />, title: "Work mode: Time and tasks" },
+  { id: "simple", label: "Simple", icon: <Code2 size={14} />, title: "Calmer layout and friendly labels", showCondition: (role?: string) => !!role },
+  { id: "technical", label: "Technical", icon: <Code2 size={14} />, title: "IDE-style chrome and technical labels", showCondition: (role?: string) => role === "worker" || role === "leader" || role === "admin" || role === "super_admin" },
+  { id: "claw", label: "Claw", icon: <Bot size={14} />, title: "Claw roadmap: autonomous-agent shell", showCondition: (role?: string) => role === "leader" || role === "admin" || role === "super_admin" },
+  { id: "docs", label: "Docs", icon: <FileText size={14} />, title: "Docs mode: Document-centric layout", showCondition: (role?: string) => !!role },
+  { id: "work", label: "Work", icon: <Briefcase size={14} />, title: "Work mode: Time and tasks", showCondition: (role?: string) => role === "worker" || role === "leader" || role === "admin" || role === "super_admin" },
 ];
 
 const CONTEXT_NAV: NavItem[] = [
-  { id: "client", label: "Client", icon: <User size={14} />, title: "Client Dashboard", path: "/client", showCondition: () => true },
-  { id: "portal", label: "Portal", icon: <LayoutDashboard size={14} />, title: "Worker Portal", path: "/portal", showCondition: (role?: string) => role === "worker" || !role },
-  { id: "admin", label: "Admin", icon: <Shield size={14} />, title: "Super Admin Dashboard", path: "/admin", showCondition: (role?: string) => role === "admin" || !role },
-  { id: "profile", label: "Profile", icon: <User size={14} />, title: "User Profile", path: "/profile", showCondition: () => true },
+  { id: "portal", label: "Portal", icon: <LayoutDashboard size={14} />, title: "Worker/Admin Portal", path: "/portal", showCondition: (role?: string) => role === "worker" || role === "leader" || role === "admin" },
+  { id: "admin", label: "Admin", icon: <Shield size={14} />, title: "Admin Console", path: "/admin", showCondition: (role?: string) => role === "admin" },
+  { id: "super_admin", label: "DevView", icon: <Shield size={14} />, title: "Developer View", path: "/super-admin", showCondition: (role?: string) => role === "super_admin" },
+  { id: "profile", label: "Profile", icon: <User size={14} />, title: "User Profile", path: "/profile", showCondition: (role?: string) => !!role },
 ];
 
+// Client entry - only for clients (separate orange button)
+const CLIENT_ENTRY = { id: "client", label: "Client", icon: <User size={14} />, title: "Client Dashboard (View-Only)", path: "/client", showCondition: (role?: string) => role === "client" };
+
 export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin, isProfile, userRole = null }: NavigationProps) {
+  // Universal Authorization Gate: Only show navigation AFTER user is logged in
+  if (!userRole) return null;
+
   const isContextActive = isPortal || isClient || isAdmin || isProfile;
 
   const handlePrimaryClick = (mode: UiMode) => {
@@ -63,23 +69,27 @@ export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin
 
   return (
     <nav className="flex shrink-0 items-center gap-1" aria-label="Main navigation">
-      {/* Primary Navigation */}
+      {/* Primary Navigation - Role-based visibility */}
       <div className="flex shrink-0 items-center gap-0.5 rounded border border-[#454545] bg-[#2d2d2d] p-0.5">
-        {PRIMARY_NAV.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => handlePrimaryClick(item.id as UiMode)}
-            className={navBtnClass(isActive(item))}
-            title={item.title}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
+        {PRIMARY_NAV.map((item) => {
+          const shouldShow = item.showCondition ? item.showCondition(userRole) : true;
+          if (!shouldShow) return null;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handlePrimaryClick(item.id as UiMode)}
+              className={navBtnClass(isActive(item))}
+              title={item.title}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Context-Aware Navigation (shown when Work mode active or based on role) */}
+      {/* Context-Aware Navigation - Role-based */}
       <div className="flex shrink-0 items-center gap-0.5 rounded border border-[#454545] bg-[#2d2d2d] p-0.5">
         {CONTEXT_NAV.map((item) => {
           const shouldShow = item.showCondition ? item.showCondition(userRole) : true;
@@ -98,6 +108,21 @@ export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin
           );
         })}
       </div>
+
+      {/* Client Entry - Only for clients */}
+      {CLIENT_ENTRY.showCondition(userRole) && (
+        <div className="flex shrink-0 items-center gap-0.5 rounded border border-[#ea580c] bg-[#2d2d2d] p-0.5">
+          <button
+            type="button"
+            onClick={() => handleContextClick(CLIENT_ENTRY)}
+            className={navBtnClass(isActive(CLIENT_ENTRY))}
+            title={CLIENT_ENTRY.title}
+          >
+            {CLIENT_ENTRY.icon}
+            <span className="text-[#ea580c]">{CLIENT_ENTRY.label}</span>
+          </button>
+        </div>
+      )}
     </nav>
   );
 }

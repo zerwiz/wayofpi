@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 // import { useNavigate, useSearchParams } from 'react-router-dom';
 const useNavigate = () => (path: string) => console.log('Navigate to:', path);
 const useSearchParams = () => [new URLSearchParams(), (params: any) => {}] as const;
-import { kanbanService } from '../../../services/kanbanService';
+import { kanbanService } from '../../../services/mockKanbanService';
 import { notesService } from '../../../services/notesService';
 import { tasksService } from '../../../services/tasksService';
 import { driveService } from '../../../services/driveService';
@@ -47,10 +47,7 @@ import {
   FolderKanban,
   GitBranch,
 } from 'lucide-react';
-import
-{
-  WorkBoardSelector,
-} from './WorkBoardSelector';
+import WorkBoardSelector from './WorkBoardSelector';
 import type { BoardViewType } from '../../../types/kanban';
 
 export function WorkBoard() {
@@ -3232,8 +3229,8 @@ export function WorkBoard() {
         />
       )}
 
-      {/* WorkTaskCard Component */}
-      <WorkTaskCard
+      {/* WorkTaskCard Component - Temporarily disabled */}
+      {/* <WorkTaskCard
         boardId={currentBoardId}
         cardId={cardViewCardId}
         columnId={cardViewColumnId || undefined}
@@ -3247,7 +3244,7 @@ export function WorkBoard() {
         onSave={handleCreateCardFromEditor}
         onUpdated={loadBoard}
         isCreateMode={cardViewCreateMode}
-      />
+      /> */}
 
       {/* Board Settings Modal */}
       {board && (

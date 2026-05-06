@@ -38,13 +38,14 @@ import type { SimpleTabId } from "./components/simple/SimpleNavRail";
 import { ClawApp } from "./components/claw/ClawApp";
 import { DocsApp } from "./components/docs/DocsApp";
 import { WorkApp } from "./components/work";
-import { WorkerPortal, ClientDashboard, SuperAdminDashboard, UserProfile } from "./pages";
+import { WorkerPortal, ClientDashboard, AdminDashboard, SuperAdminDashboard, UserProfile } from "./pages";
 import { Navigation } from "./components/Navigation";
 import { ClawHelpModal, type ClawHelpSectionId } from "./components/claw/ClawHelpModal";
 import type { ClawTabId } from "./components/claw/ClawNavRail";
 import "./claw/clawUserUiModules";
 import { StatusBar } from "./components/StatusBar";
 import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalysisContext";
+import { DocumentHandlerProvider } from "./components/documenthandler/context/DocumentHandlerContext";
 import { TechnicalWorkspaceGrid, type TechnicalWorkspaceCellSnapshot } from "./components/TechnicalWorkspaceGrid";
 import { WorkspaceCellDropSurface } from "./components/WorkspaceCellDropSurface";
 import type { WorkspaceGridPickerConfig } from "./components/WorkspaceGridLayoutPicker";
@@ -265,6 +266,7 @@ function languageFromPath(path: string | null): string {
 const isPortal = window.location.pathname === "/portal" || window.location.pathname.startsWith("/portal/");
 const isClient = window.location.pathname === "/client" || window.location.pathname.startsWith("/client/");
 const isAdmin = window.location.pathname === "/admin" || window.location.pathname.startsWith("/admin/");
+const isSuperAdmin = window.location.pathname === "/super-admin" || window.location.pathname.startsWith("/super-admin/");
 const isProfile = window.location.pathname === "/profile" || window.location.pathname.startsWith("/profile/");
 
 export default function App() {
@@ -329,19 +331,6 @@ export default function App() {
 	const llmFixModalAppearanceDark = technical || simpleIsDark;
 	const [llmFixModalDismissed, setLlmFixModalDismissed] = useState(false);
 	const prevChatErrorRef = useRef<string | null>(null);
-
-	if (isPortal) {
-		return <WorkerPortal uiMode={uiMode} setUiMode={setUiMode} />;
-	}
-	if (isClient) {
-		return <ClientDashboard uiMode={uiMode} setUiMode={setUiMode} />;
-	}
-	if (isAdmin) {
-		return <SuperAdminDashboard uiMode={uiMode} setUiMode={setUiMode} />;
-	}
-	if (isProfile) {
-		return <UserProfile uiMode={uiMode} setUiMode={setUiMode} />;
-	}
 
 	useEffect(() => {
 		const e = session.error;
@@ -2697,17 +2686,16 @@ description:
 		(workspaceRelativePath: string) => {
 			const p = workspaceRelativePath.replace(/^[/\\]+/, "");
 			if (!p) return;
+			
+			// Plan files should only be visible in the main workspace, not duplicated in multi-cell preview panes.
+			// Always use single-panel docking (like Simple mode) to avoid showing in all cells' previews.
 			setExplorerContextDir(posixDirname(p));
-			if (uiMode === "technical" && (workspaceGrid.cols > 1 || workspaceGrid.rows > 1)) {
-				setWorkspaceOpenSignal((s) => ({ path: p, rev: (s?.rev ?? 0) + 1 }));
-			} else {
-				setSelectedPath(p);
-				if (uiMode === "technical") {
-					setPanelDock((prev) => applyAddFileTab(prev, p));
-				}
+			setSelectedPath(p);
+			if (uiMode === "technical") {
+				setPanelDock((prev) => applyAddFileTab(prev, p));
 			}
 		},
-		[uiMode, workspaceGrid.cols, workspaceGrid.rows, setPanelDock],
+		[uiMode, setPanelDock],
 	);
 
 	const workspaceEmbeddedChat = useCallback(
@@ -3849,6 +3837,23 @@ description:
 			/>
 		);
 
+	const anyPageActive = isPortal || isClient || isAdmin || isProfile || isSuperAdmin;
+	if (isPortal) {
+		return <WorkerPortal uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isClient) {
+		return <ClientDashboard uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isAdmin) {
+		return <AdminDashboard uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isSuperAdmin) {
+		return <SuperAdminDashboard uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+	if (isProfile) {
+		return <UserProfile uiMode={uiMode} setUiMode={setUiMode} />;
+	}
+
 	// ── Claw shell ───────────────────────────────────────────────
 	if (uiMode === "claw") {
 		return (
@@ -4061,6 +4066,39 @@ description:
 		</>
 	);
 }
+
+	// ── Docs shell ────────────────────────────────────────────────
+	if (uiMode === "docs") {
+		return (
+			<DocumentHandlerProvider>
+				<DocsApp
+					uiMode={uiMode}
+					setUiMode={setUiMode}
+					nodes={nodes}
+					treeLoading={treeLoading}
+					treeError={treeError}
+					refreshTree={refresh}
+					selectedPath={selectedPath}
+					setSelectedPath={setSelectedPath}
+					rows={session.rows}
+					streaming={session.streaming}
+					connected={session.connected}
+					sendChat={session.sendChat}
+					stop={session.stop}
+				/>
+			</DocumentHandlerProvider>
+		);
+	}
+
+	// ── Work shell ────────────────────────────────────────────────
+	if (uiMode === "work") {
+		return (
+			<WorkApp
+				uiMode={uiMode}
+				setUiMode={setUiMode}
+			/>
+		);
+	}
 
 	// ── Simple shell ───────────────────────────────────────────────
 	if (uiMode === "simple") {
@@ -4449,27 +4487,6 @@ description:
 					onNewPlanFile={() => void handleNewPlanFile()}
 					newPlanFileDisabled={!workspaceOperational}
 					viewTechnical={viewTechnicalOptions}
-				/>
-			) : uiMode === "docs" ? (
-				<DocsApp
-					uiMode={uiMode}
-					setUiMode={setUiMode}
-					nodes={nodes}
-					treeLoading={treeLoading}
-					treeError={treeError}
-					refreshTree={refresh}
-					selectedPath={selectedPath}
-					setSelectedPath={setSelectedPath}
-					rows={session.rows}
-					streaming={session.streaming}
-					connected={session.connected}
-					sendChat={session.sendChat}
-					stop={session.stop}
-				/>
-			) : uiMode === "work" ? (
-				<WorkApp
-					uiMode={uiMode}
-					setUiMode={setUiMode}
 				/>
 			) : (
 				<div className="flex h-8 shrink-0 items-center gap-2 border-b border-[#252526] bg-[#2d2d2d] px-2">

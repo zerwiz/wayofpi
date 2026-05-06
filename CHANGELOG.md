@@ -2,6 +2,179 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.21.02] - 2026-05-06
+
+### Added
+- **[UI] ClientDashboard.tsx**: Added **Logout** button to the header.
+
+### Fixed
+- **[UI] ClientDashboard.tsx**: Fixed issue where the header button would always take the user to the login page (even if logged in as Admin).
+- **[UI] ClientDashboard.tsx**: Allowed **ADMIN** and **SUPER_ADMIN** roles to view the dashboard without re-logging in.
+- **[UI] ClientDashboard.tsx**: Fixed token parsing to handle different formats safely.
+
+---
+
+## [0.21.01] - 2026-05-06
+
+### Added
+- **[UI] UserProfile.tsx**: Added certificates & licenses section with Swedish construction worker credentials (ID06, Safe Construction Training, Hot Works, etc.)
+- **[UI] UserProfile.tsx**: Added internal calendar connection for certificate expiration notifications (6 months before expiry)
+- **[UI] UserProfile.tsx**: Demo mode now includes sample Swedish construction certificates with validity status (valid/expiring/expired)
+- **[UI] WorkerPortal.tsx**: Added demo login support (`Demo`/`1234`) with proper demo token generation
+- **[UI] ClientDashboard.tsx**: Added demo login support (`Demo`/`1234`)
+
+### Fixed
+- **[UI] UserProfile.tsx**: Fixed dark theme (no white background) - now uses `min-h-screen bg-[#1e1e1e] overflow-y-auto` for scrollable content
+- **[UI] UserProfile.tsx**: Fixed demo mode authentication to handle demo tokens properly
+- **[UI] UserProfile.tsx**: Fixed demo mode authentication to handle demo tokens properly
+- **[UI] WorkerPortal.tsx**: Removed header from login screen; converted task list to kanban-style board
+- **[UI] ClientDashboard.tsx**: Removed header from login screen
+- **[UI] Navigation.tsx**: Fixed corrupted file (removed duplicated code)
+- **[UI] DocumentViewer.tsx**: Fixed syntax error (`onBack?.` → `onBack`)
+- **[UI] vite.config.ts**: Fixed HMR config for Vite 6 compatibility
+- **[HOOKS] useWayOfPiSession.ts**: Added demo mode check to skip WebSocket connection
+
+### Changed
+- **[UI] WorkerPortal.tsx**: "Log Time Entry" button now inline (not full width)
+- **[UI] UserProfile.tsx**: Changed calendar provider from Google/Outlook to internal system
+- **[UI] UserProfile.tsx**: Updated to use `calendarConnections` with `"internal"` provider
+
+### Status
+- **[BUILD]**: TypeScript build has errors due to missing modules; dev server works with `npm run dev:ui`
+- **[DEMO]**: Login works with `Demo`/`1234` for both Client and Worker portals
+- **[PROFILE]**: Certificates display with status indicators; calendar shows internal connection
+
+### Fixed (Server)
+- **[SERVER] db.ts**: Added `slug` column to `tenants` table schema
+- **[SERVER] Database**: Fixed startup error "table tenants has no column named slug"
+- **[SERVER] Database Init**: Delete old `.sqlite` file to recreate with new schema
+
+### Fixed (UI - Dark Theme)
+- **[UI] DocsApp.tsx**: Fixed docs view white background - added `overflow-y-auto` and dark bg
+- **[UI] DocumentViewer.tsx**: Added inline styles for dark theme (`bg-[#1e1e1e]`, text `[#cccccc]`)
+- **[UI] DocumentBrowser.tsx**: Added inline styles for dark theme
+- **[UI] UserProfile.tsx**: Fixed scrollable content with `overflow-y-auto` on main container
+
+---
+
+## [0.21.00] - 2026-05-06
+
+### Added
+- **[UI] Admin Console (`/admin`)**: Created new management hub for team leaders featuring worker and client management.
+- **[UI] Admin Console**: Re-integrated projects, tasks, and time entry statistics into the leader's dashboard.
+- **[UI] Admin Console**: Added side-by-side "+ Add Worker" / "+ Add Client" buttons with intelligent tab-switching.
+- **[UI] Developer View (`/super-admin`)**: Renamed from "Super Admin Dashboard" to focus on system-wide maintenance for developers.
+- **[UI] Developer View**: Added "Server Health & Environment" section with real-time process metrics (Uptime, RAM, Node/Bun versions).
+- **[UI] Navigation**: Implemented **Role-Based Visibility (RBAC)**; buttons now hide/show based on user permissions (JWT-extracted).
+- **[UI] Navigation**: Added category separators in the nav bar to distinguish between Perspectives, Destinations, and Admin tools.
+- **[SERVER] API Endpoints**: Updated `/api/admin/stats` to calculate client counts and system telemetry (process memory, platform).
+
+### Fixed
+- **[UI] App.tsx**: Refactored rendering to use top-level early returns for Docs and Workboard modes, fixing layout overlap bugs.
+- **[UI] AdminDashboard.tsx**: Fixed syntax error ("Unexpected token") caused by redundant JSX closing tags.
+- **[UI] Navigation**: Fixed button labeling where "Admin" and "DevView" destinations and titles were misaligned.
+
+### Changed
+- **[UI] Navigation**: Renamed "Work" button to "Workboard" to match the Kanban/Time engine architecture.
+- **[UI] Navigation**: "DevView" button is now exclusively visible to the `SUPER_ADMIN` role.
+
+---
+
+## [0.20.08] - 2026-05-06
+
+### Added
+- **[UI] UserProfile.tsx**: Added certificates & licenses section (ID06, Safe Construction Training, Hot Works, etc.)
+- **[UI] UserProfile.tsx**: Added internal calendar connection for certificate expiration notifications (6 months before expiry)
+- **[UI] UserProfile.tsx**: Demo mode now includes sample Swedish construction certificates with validity status
+- **[UI] WorkerPortal.tsx**: Added demo login support (`Demo`/`1234`) with proper demo token generation
+- **[UI] ClientDashboard.tsx**: Added demo login support (`Demo`/`1234`)
+
+### Fixed
+- **[UI] WorkerPortal.tsx**: Removed header from login screen; converted task list to kanban-style board
+- **[UI] ClientDashboard.tsx**: Removed header from login screen
+- **[UI] UserProfile.tsx**: Fixed dark theme (no white background); fixed demo mode authentication
+- **[UI] Navigation.tsx**: Fixed corrupted file (removed duplicated code)
+- **[UI] DocumentViewer.tsx**: Fixed syntax error (`onBack?.` → `onBack`)
+- **[UI] vite.config.ts**: Fixed HMR config for Vite 6 compatibility
+- **[HOOKS] useWayOfPiSession.ts**: Added demo mode check to skip WebSocket connection
+
+### Changed
+- **[UI] WorkerPortal.tsx**: "Log Time Entry" button now inline (not full width)
+- **[UI] UserProfile.tsx**: Changed calendar provider from Google/Outlook to internal system
+
+---
+
+## [0.20.07] - 2026-05-06
+
+### Added
+- **[SERVER] API Endpoints**: Added portal time tracking endpoints to `server/index.ts`:
+  - `GET /api/portal/time` - List time entries with task and project joins
+  - `POST /api/portal/time` - Submit new time entry with validation
+  - `POST /api/portal/time/:id/approve` - Leader approves time entry
+  - `POST /api/portal/time/:id/reject` - Leader rejects time entry with notes
+  - `GET /api/portal/tasks` - List tasks with assignee and project info
+  - `POST /api/portal/tasks` - Create new task with assignment
+  - `PUT /api/portal/tasks/:id/status` - Update task status
+  - `GET /api/portal/reports/time` - Generate time reports with filters
+- **[SERVER] Database Schema**: Created `server/schema.sql` with `time_entries`, `tasks`, `projects` tables
+- **[SERVER] Database Init**: Created `server/init-db.ts` to initialize SQLite database with proper schema
+- **[DOCS] TODO.md**: Created comprehensive TODO list with 70+ tasks across 5 phases
+- **[UI] Navigation**: Created unified navigation component with role-based visibility
+
+### Fixed
+- **[SERVER] Database Connection**: Fixed `db.ts` to properly create all tables (`tenants`, `users`, `projects`, `tasks`, `time_entries`)
+- **[SERVER] Database Path**: Updated `db.ts` and `init-db.ts` to use `/apps/wayofpi-server/db/` path
+- **[SERVER] Database Schema**: Fixed `tenants` INSERT to include required `slug` column
+- **[UI] Component Paths**: All work components now correctly located in `apps/wayofpi-ui/src/components/work/`
+- **[DOCS] STRUCTURE.md**: Updated to match actual file system layout
+
+### Changed
+- **[SERVER] API Structure**: Portal endpoints now use `/api/portal/*` prefix for consistency
+- **[SERVER] Database Location**: Moved database from `server/.pi/db/` to `apps/wayofpi-server/db/`
+- **[DOCS] plans/ cleanup**: Moved documentation components from `plans/` to `docs/` directory
+
+### Status
+- **[SERVER] Database**: Tables now created successfully (`tenants`, `users`, `projects`, `tasks`, `time_entries`)
+- **[SERVER] API Endpoints**: Code complete in `server/index.ts`, tested with JWT auth
+- **[SERVER] Auth Fix**: Dev mode now includes `role: "ADMIN"` in fake auth; client APIs require JWT with `role: "CLIENT"`
+- **[SERVER] WebSocket Fix**: Updated WebSocket upgrade handler to accept `/ws` with query params (fixes HMR connection issue)
+- **[UI] ClientDashboard.tsx**: Added login form with ID/PIN authentication; checks `localStorage wop_token` for JWT with `role: "CLIENT"`
+- **[UI] Navigation**: Fixed transport issue - user now sees login form before accessing `/client` dashboard instead of 403 errors
+- **[UI] User Flow Redesign**: 
+  - **Clients**: Separate entry point (orange button) → `/client` → Login form → Dashboard
+  - **Workers/Admins**: Combined entry point "Portal" → `/portal` → Worker Portal login
+  - **Navigation.tsx**: Client button now visually distinct (orange border) to indicate separate entry
+- **[UI] Role-Based Visibility (FOLLOWING ARCHITECTURE DOC)**: 
+  - **Primary Nav**: Simple (all logged-in), Technical (worker/admin/super_admin), Claw (leader/admin/super_admin), Docs (all logged-in), Work (worker/leader/admin/super_admin)
+  - **Context Nav**: Portal (worker/leader/admin), Admin (admin), Super Admin (super_admin), Profile (all logged-in)
+  - **Client Entry**: Only visible to `role: "client"` or not logged in
+
+## [0.20.06] - 2026-05-06
+
+### Fixed
+- **[DOCS] STRUCTURE.md**: Updated to match actual file system (removed outdated refs, added new dirs like `docker/`, `pip/`, `default/`)
+- **[DOCS] STRUCTURE.md**: Removed duplicate sections, consolidated `docs/` section, moved archived content to `docs/old/`
+- **[UI] Icon Imports**: Fixed all work components to use `lucide-react` (installed) instead of `@heroicons/react` (not installed)
+- **[UI] WorkBoard.tsx**: Fixed import from named export to default export for `WorkBoardSelector`
+
+### Changed
+- **[UI] Component Locations**: Moved `DocumentBrowser.tsx`, `DocumentViewer.tsx`, `PMChatPanel.tsx` from wrong `plans/` to correct `docs/` directory
+- **[PLANS] work-button-improvements/TODO.md**: Created with correct file paths showing where files BELONG
+
+### Added
+- **[UI] Work Components**: Created `TimeEntryForm.tsx` - Time entry submission form with date, hours, project fields
+- **[UI] Work Components**: Created `TeamBrowser.tsx` - Team browser with filter (all/active/inactive), worker cards with stats
+- **[UI] Work Components**: Created `LeaderActions.tsx` - Leader approval panel with bulk actions, approve/reject with notes
+- **[UI] Work Components**: Created `TaskForm.tsx` - Task creation form with worker assignment, deadline, estimated hours
+- **[UI] Work Components**: Created `TaskList.tsx` - Task list with status filtering, edit/delete/complete actions
+- **[UI] Work Components**: Created `TimeReport.tsx` - Time reporting with filters, summary stats, worker breakdown, CSV export
+- **[UI] Work Components**: Created `TeamDashboard.tsx` - Team dashboard with stats grid, top performers, recent activity
+- **[UI] Export Updates**: Updated `docs/index.ts` to export all new document components
+- **[UI] Export Updates**: Updated `work/index.ts` to export all new work components
+
+### Removed
+- **[UI] plans/ directory**: Removed wrong `plans/` directory after moving files to `docs/`
+
 ## [0.20.05] - 2026-05-05
 
 ### Fixed

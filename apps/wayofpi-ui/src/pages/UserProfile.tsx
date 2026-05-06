@@ -2,6 +2,22 @@ import { useState, useEffect } from "react";
 import type { UiMode } from "../hooks/useUiMode";
 import { UiModeToggle } from "../components/UiModeToggle";
 
+interface Certificate {
+  id: string;
+  name: string;
+  issuer: string;
+  validUntil: string;
+  category: "site" | "safety" | "trade" | "machine";
+  status: "valid" | "expiring" | "expired";
+}
+
+interface CalendarConnection {
+  id: string;
+  provider: "internal";
+  connected: boolean;
+  email: string;
+}
+
 interface UserProfile {
   id: string;
   username: string;
@@ -11,6 +27,8 @@ interface UserProfile {
   role: string;
   jobTitle: string;
   tenantId: string;
+  certificates?: Certificate[];
+  calendarConnections?: CalendarConnection[];
 }
 
 export function UserProfilePage({
@@ -40,6 +58,45 @@ export function UserProfilePage({
     try {
       setLoading(true);
       const token = localStorage.getItem("wop_token");
+      
+      // Demo mode - return demo profile
+      if (token) {
+        try {
+          const tokenStr = token.includes('.') ? atob(token.split('.')[1]) : atob(token);
+          const payload = JSON.parse(tokenStr);
+          if (payload.id === "demo-client" || payload.id === "demo-worker") {
+            const isWorker = payload.id === "demo-worker";
+            const demoProfile: UserProfile = {
+              id: payload.id,
+              username: payload.id,
+              fullName: payload.id === "demo-client" ? "Demo Client" : "Demo Worker",
+              email: "demo@wayofpi.dev",
+              phone: "+46-555-0123",
+              role: payload.role,
+              jobTitle: payload.role === "CLIENT" ? "Client" : "Worker",
+              tenantId: "demo-tenant",
+              certificates: isWorker ? [
+                { id: "cert-1", name: "ID06 Identification Card", issuer: "ID06 AB", validUntil: "2026-12-31", category: "site" as const, status: "valid" as const },
+                { id: "cert-2", name: "Safe Construction Training", issuer: "Byggföretagen", validUntil: "2025-08-15", category: "safety" as const, status: "expiring" as const },
+                { id: "cert-3", name: "Heta Arbeten (Hot Works)", issuer: "Brandförsvaret", validUntil: "2027-03-20", category: "safety" as const, status: "valid" as const },
+                { id: "cert-4", name: "Fallskydd (Fall Protection)", issuer: "Arbetsmiljöverket", validUntil: "2024-11-30", category: "safety" as const, status: "expired" as const },
+                { id: "cert-5", name: "Träarbetare (Carpenter)", issuer: "BYN", validUntil: "2026-06-30", category: "trade" as const, status: "expiring" as const },
+                { id: "cert-6", name: "Truckkort (Forklift A/B)", issuer: "TYA", validUntil: "2028-01-15", category: "machine" as const, status: "valid" as const },
+              ] : [],
+              calendarConnections: [
+                { id: "cal-1", provider: "internal" as const, connected: true, email: "demo@wayofpi.dev" },
+              ],
+            };
+            setProfile(demoProfile);
+            setFormData(demoProfile);
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // Not a demo token, continue to API
+        }
+      }
+      
       const res = await fetch("/api/portal/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -204,8 +261,9 @@ export function UserProfilePage({
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-8 border-b border-[#3c3c3c] pb-4">
+    <div className="min-h-screen bg-[#1e1e1e] overflow-y-auto">
+      <div className="mx-auto max-w-4xl p-6 pb-20">
+        <div className="flex items-center justify-between mb-8 border-b border-[#3c3c3c] pb-4">
         <div className="flex items-center gap-6">
           <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
           <h1 className="text-2xl font-bold text-[#cccccc]">User Profile</h1>
@@ -262,7 +320,7 @@ export function UserProfilePage({
               </div>
             </div>
 
-            <div className="flex gap-3">
+             <div className="flex gap-3">
               <button
                 onClick={() => setIsEditing(true)}
                 className="rounded bg-[#ea580c] px-4 py-2 text-sm font-medium text-white hover:bg-[#c2410c]"
@@ -276,6 +334,65 @@ export function UserProfilePage({
                 Change PIN
               </button>
             </div>
+
+            {/* Certificates Section */}
+            {profile?.certificates && profile.certificates.length > 0 && (
+              <div className="mt-8">
+                <h2 className="mb-4 text-sm font-semibold text-[#cccccc]">Certificates & Licenses</h2>
+                <div className="space-y-2">
+                  {profile.certificates.map((cert) => (
+                    <div key={cert.id} className="flex items-center justify-between rounded border border-[#3c3c3c] bg-[#1e1e1e] p-3">
+                      <div>
+                        <p className="text-sm font-medium text-[#cccccc]">{cert.name}</p>
+                        <p className="text-xs text-[#858585]">Issuer: {cert.issuer}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-[#858585]">Valid until: {cert.validUntil}</p>
+                        <span className={`rounded px-2 py-1 text-xs ${
+                          cert.status === "valid" ? "bg-green-900/30 text-green-400" :
+                          cert.status === "expiring" ? "bg-yellow-900/30 text-yellow-400" :
+                          "bg-red-900/30 text-red-400"
+                        }`}>
+                          {cert.status === "valid" && "✓ Valid"}
+                          {cert.status === "expiring" && "⚠ Expiring Soon"}
+                          {cert.status === "expired" && "✗ Expired"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Calendar Connections Section */}
+            {profile?.calendarConnections && profile.calendarConnections.length > 0 && (
+              <div className="mt-8">
+                <h2 className="mb-4 text-sm font-semibold text-[#cccccc]">Calendar Connections</h2>
+                <div className="space-y-2">
+                  {profile.calendarConnections.map((cal) => (
+                    <div key={cal.id} className="flex items-center justify-between rounded border border-[#3c3c3c] bg-[#1e1e1e] p-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">
+                          {cal.provider === "internal" && "📅"}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-[#cccccc]">{cal.provider.charAt(0).toUpperCase() + cal.provider.slice(1)}</p>
+                          <p className="text-xs text-[#858585]">{cal.email}</p>
+                        </div>
+                      </div>
+                      <span className={`rounded px-2 py-1 text-xs ${
+                        cal.connected ? "bg-green-900/30 text-green-400" : "bg-red-900/30 text-red-400"
+                      }`}>
+                        {cal.connected ? "✓ Connected" : "✗ Disconnected"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-[#585858]">
+                  System will notify 6 months before certificate expiration via connected calendar.
+                </p>
+              </div>
+            )}
           </>
         ) : (
           <div className="space-y-4">
@@ -389,6 +506,8 @@ export function UserProfilePage({
           </div>
         )}
       </div>
-    </>
-  );
+    </div>
+  </div>
+);
+
 }

@@ -1,14 +1,9 @@
-export interface BoardTemplate {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-}
+import type { KanbanBoard } from './mockKanbanService';
 
-export const BOARD_TEMPLATES: BoardTemplate[] = [
-  { id: 'kanban', name: 'Kanban Board', category: 'Software Development', description: 'Classic kanban board' },
-];
+export interface BoardTemplate { id: string; name: string; category: string; columns: string[] }
 
-export const getTemplatesByCategory = (category: string) => {
+export const BOARD_TEMPLATES: BoardTemplate[] = [];
+
+export const getTemplatesByCategory = (category: string): BoardTemplate[] => {
   return BOARD_TEMPLATES.filter(t => t.category === category);
 };

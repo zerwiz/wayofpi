@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+const useNavigate = () => (path: string) => { window.location.pathname = path; };
 import { UiModeToggle } from "../components/UiModeToggle";
 import type { UiMode } from "../hooks/useUiMode";
 
@@ -24,10 +26,22 @@ interface WorkerTask {
 }
 
 export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const token = localStorage.getItem("wop_token");
+    if (!token) return false;
+    try {
+      // Handle demo token (no dots) vs JWT (has dots)
+      const tokenStr = token.includes('.') ? atob(token.split('.')[1]) : atob(token);
+      const payload = JSON.parse(tokenStr);
+      return payload.role === "WORKER" || payload.role === "LEADER" || payload.role === "ADMIN";
+    } catch {
+      return false;
+    }
+  });
   const [workerId, setWorkerId] = useState("");
   const [pin, setPin] = useState("");
-  const [error, setError] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [activeTab, setActiveTab] = useState<"tasks" | "files" | "time">("tasks");
 
   // Real data from APIs
@@ -37,6 +51,7 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  
   // Demo data (shown when API is not available)
   const DEMO_TASKS: WorkerTask[] = [
     {
@@ -102,60 +117,54 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
     setFiles([...DEMO_FILES]);
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     if (!workerId || !pin) {
-      setError("Please enter Worker ID and PIN");
+      setLoginError("Worker ID and PIN required");
       return;
     }
-
-    let isLoggedIn = false;
-    let message = "";
-
-    // Check for demo credentials first
+    // Demo mode
     if (workerId === "Demo" && pin === "1234") {
-      isLoggedIn = true;
-      message = "Demo mode loaded successfully";
-    } else {
-      try {
-        const res = await fetch("/api/portal/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ workerId, pin }),
-        });
-
-        // Handle server errors (API not running)
-        if (res.status === 404 || res.status === 500) {
-          // API is not available - use demo mode
-          if (workerId === "Demo" && pin === "1234") {
-            isLoggedIn = true;
-            message = "Demo mode loaded successfully";
-          } else {
-            const errorMsg = res.status === 404
-              ? "Way of Pi API is not running. Start the server and try again."
-              : "Backend server returned 500 error. This is expected in development. Use demo mode: Worker ID 'Demo', PIN '1234'.";
-            message = errorMsg;
-          }
-        } else if (res.ok) {
-          // API success
-          const data = await res.json();
-          localStorage.setItem("wop_token", data.token);
-          isLoggedIn = true;
-          message = "Login successful";
-        } else {
-          // Other HTTP errors
-          message = "Login failed. Please try again.";
-        }
-      } catch (e) {
-        message = "Error connecting to API";
-      }
-    }
-
-    if (isLoggedIn) {
+      const demoToken = btoa(JSON.stringify({ role: "WORKER", id: "demo-worker" }));
+      localStorage.setItem("wop_token", demoToken);
       setIsLoggedIn(true);
-      setError("");
-    } else {
-      setError(message);
+      setLoginError("");
+      loadPortalData();
+      return;
+    }
+    if (workerId === "Admin" && pin === "1234") {
+      const demoToken = btoa(JSON.stringify({ role: "ADMIN", id: "demo-admin" }));
+      localStorage.setItem("wop_token", demoToken);
+      setIsLoggedIn(true);
+      setLoginError("");
+      loadPortalData();
+      return;
+    }
+    if (workerId === "Super" && pin === "1234") {
+      const demoToken = btoa(JSON.stringify({ role: "SUPER_ADMIN", id: "demo-super" }));
+      localStorage.setItem("wop_token", demoToken);
+      setIsLoggedIn(true);
+      setLoginError("");
+      loadPortalData();
+      return;
+    }
+    try {
+      const res = await fetch("/api/portal/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerId, pin }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setLoginError(data.error || "Login failed");
+        return;
+      }
+      const data = await res.json();
+      localStorage.setItem("wop_token", data.token);
+      setIsLoggedIn(true);
+      setLoginError("");
+      loadPortalData();
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : "Login failed");
     }
   };
 
@@ -172,16 +181,13 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
   if (!isLoggedIn) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e]">
-        <div className="mb-8">
-          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
-        </div>
         <div className="w-full max-w-md rounded-lg border border-[#3c3c3c] bg-[#252526] p-8">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-[#cccccc]">WAY OF PI</h1>
             <p className="mt-1 text-sm text-[#858585]">Worker Portal</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-4">
             <div>
               <label className="block text-xs text-[#858585] mb-1">Worker ID</label>
               <input
@@ -205,8 +211,8 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-400">{error}</p>
+            {loginError && (
+              <p className="text-sm text-red-400">{loginError}</p>
             )}
 
             <button
@@ -217,17 +223,17 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
             </button>
           </form>
 
-          {error ? (
+          {loginError ? (
             <div className="mt-4 p-3 bg-[#2d2d2d] rounded border border-[#3c3c3c] text-left">
               <p className="text-xs text-[#ea580c] font-medium mb-1">
-                {error.includes("not ready") || error.includes("not running") ? (
+                {loginError.includes("not ready") || loginError.includes("not running") ? (
                   "⚠️ Backend Not Ready"
                 ) : (
                   "⚠️ Login Failed"
                 )}
               </p>
               <p className="text-xs text-[#858585]">
-                {error.includes("not ready") || error.includes("not running") ? (
+                {loginError.includes("not ready") || loginError.includes("not running") ? (
                   <div>
                     The Way of Pi backend API isn't available. This is expected in demo mode.
                     <br />
@@ -290,46 +296,46 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
       <div className="p-4">
         {activeTab === "tasks" && (
           <div>
-            <h2 className="mb-4 text-sm font-semibold text-[#cccccc]">My Tasks</h2>
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div key={task.id} className="rounded border border-[#3c3c3c] bg-[#252526] p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-[#cccccc]">{task.title}</h3>
-                      <p className="text-xs text-[#858585]">Estimated: {task.hours}h</p>
-                    </div>
-                    <span className={`rounded px-2 py-1 text-xs ${
-                      task.status === "complete" ? "bg-green-900/30 text-green-400" :
-                      task.status === "in_progress" ? "bg-blue-900/30 text-blue-400" :
-                      "bg-[#3c3c3c] text-[#858585]"
-                    }`}>
-                      {task.status === "complete" && "✅ Complete"}
-                      {task.status === "in_progress" && "🚀 In Progress"}
-                      {task.status === "not_started" && "⏳ Not Started"}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-[#cccccc]">My Tasks</h2>
+              <span className="text-xs text-[#858585]">{tasks.length} tasks</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {(["not_started", "in_progress", "complete"] as const).map((status) => (
+                <div key={status} className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 px-2 py-1">
+                    <span className="text-xs font-medium text-[#858585] uppercase">
+                      {status === "not_started" && "⏳ Not Started"}
+                      {status === "in_progress" && "🚀 In Progress"}
+                      {status === "complete" && "✅ Complete"}
+                    </span>
+                    <span className="rounded-full bg-[#3c3c3c] px-2 py-0.5 text-xs text-[#858585]">
+                      {tasks.filter(t => t.status === status).length}
                     </span>
                   </div>
-                  {task.progressPct !== undefined && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-[#858585] mb-1">
-                        <span>Progress</span>
-                        <span>{task.progressPct}%</span>
+                  <div className="flex flex-col gap-2 min-h-[200px]">
+                    {tasks.filter(t => t.status === status).map((task) => (
+                      <div key={task.id} className="rounded border border-[#3c3c3c] bg-[#252526] p-3">
+                        <h3 className="text-xs font-medium text-[#cccccc]">{task.title}</h3>
+                        <p className="mt-1 text-xs text-[#858585]">Est: {task.hours}h</p>
+                        {task.progressPct !== undefined && (
+                          <div className="mt-2">
+                            <div className="h-1 rounded-full bg-[#3c3c3c]">
+                              <div
+                                className="h-full rounded-full bg-[#ea580c]"
+                                style={{ width: `${task.progressPct}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="h-1.5 rounded-full bg-[#3c3c3c]">
-                        <div
-                          className="h-full rounded-full bg-[#ea580c]"
-                          style={{ width: `${task.progressPct}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                    ))}
+                    {tasks.filter(t => t.status === status).length === 0 && (
+                      <p className="text-xs text-[#585858] text-center py-4">No tasks</p>
+                    )}
+                  </div>
                 </div>
               ))}
-              {tasks.length === 0 && (
-                <p className="text-xs text-[#585858] text-center py-4">
-                  No tasks yet
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -388,14 +394,16 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
                 </div>
               </div>
             </div>
-
-            <button className="w-full rounded border border-[#ea580c] px-4 py-2 text-sm text-[#ea580c] hover:bg-[#ea580c] hover:text-white transition-colors">
-              + Log Time Entry
-            </button>
-
-            <p className="mt-4 text-center text-xs text-[#585858]">
-              Or use WhatsApp: "log 4.5h on A-101" to @WorkTimeBot
-            </p>
+            
+            <div className="flex items-center gap-4">
+              <button className="rounded border border-[#ea580c] px-4 py-2 text-sm text-[#ea580c] hover:bg-[#ea580c] hover:text-white transition-colors">
+                + Log Time Entry
+              </button>
+              
+              <p className="text-xs text-[#585858]">
+                Or use WhatsApp: "log 4.5h on A-101" to @WorkTimeBot
+              </p>
+            </div>
           </div>
         )}
       </div>

@@ -459,6 +459,20 @@ export function useWayOfPiSession(
 
 		function openSocket() {
 			if (disposed) return;
+			// Skip WebSocket in demo mode
+			const token = typeof window !== "undefined" ? localStorage.getItem("wop_token") : null;
+			if (token) {
+				try {
+					const tokenStr = token.includes('.') ? atob(token.split('.')[1]) : atob(token);
+					const payload = JSON.parse(tokenStr);
+					if (payload.id === "demo-client" || payload.id === "demo-worker") {
+						console.log("Demo mode: skipping WebSocket connection");
+						return;
+					}
+				} catch {
+					// Not a demo token, continue
+				}
+			}
 			scrubLegacyStoredOllamaModel();
 			clearReconnect();
 			const ws = new WebSocket(wsUrl());

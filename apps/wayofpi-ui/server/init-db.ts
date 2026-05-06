@@ -2,13 +2,13 @@ import { Database } from "bun:sqlite";
 import { existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 
-const DB_PATH = join(import.meta.dir, ".pi/db/wayofpi.sqlite");
+const DB_DIR = join(import.meta.dir, "..", "..", "wayofpi-server", "db");
+const DB_PATH = join(DB_DIR, "wayofpi.sqlite");
 const SCHEMA_PATH = join(import.meta.dir, "schema.sql");
 
 // Ensure directory exists
-const dbDir = join(import.meta.dir, ".pi/db");
-if (!existsSync(dbDir)) {
-  await Bun.write(join(dbDir, ".keep"), "");
+if (!existsSync(DB_DIR)) {
+  await Bun.write(join(DB_DIR, ".keep"), "");
 }
 
 // Open or create DB

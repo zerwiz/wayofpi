@@ -42,6 +42,20 @@ interface Drawing {
 
 export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const token = localStorage.getItem("wop_token");
+    if (!token) return false;
+    try {
+      const tokenStr = token.includes('.') ? atob(token.split('.')[1]) : atob(token);
+      const payload = JSON.parse(tokenStr);
+      return payload.role === "CLIENT" || payload.role === "ADMIN" || payload.role === "SUPER_ADMIN";
+    } catch {
+      return false;
+    }
+  });
+  const [clientId, setClientId] = useState("");
+  const [pin, setPin] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [progress, setProgress] = useState<ProjectProgress | null>(null);
@@ -50,9 +64,54 @@ export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode;
   const [activeTab, setActiveTab] = useState<"projects" | "drawings" | "feedback">("projects");
   const [feedback, setFeedback] = useState({ rating: 5, comment: "", category: "general" });
 
+  const handleLogin = async () => {
+    if (!clientId || !pin) {
+      setLoginError("Client ID and PIN required");
+      return;
+    }
+    // Demo mode
+    if (clientId === "Demo" && pin === "1234") {
+      const demoToken = btoa(JSON.stringify({ role: "CLIENT", id: "demo-client" }));
+      localStorage.setItem("wop_token", demoToken);
+      setIsLoggedIn(true);
+      setLoginError("");
+      fetchData();
+      return;
+    }
+    try {
+      const res = await fetch("/api/portal/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerId: clientId, pin }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setLoginError(data.error || "Login failed");
+        return;
+      }
+      const data = await res.json();
+      localStorage.setItem("wop_token", data.token);
+      setIsLoggedIn(true);
+      fetchData();
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : "Login failed");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("wop_token");
+    setIsLoggedIn(false);
+    setClientId("");
+    setPin("");
+  };
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isLoggedIn) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [isLoggedIn]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -140,6 +199,55 @@ export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode;
     );
   }
 
+  // Show login form if not logged in
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#1e1e1e] text-[#cccccc] flex items-center justify-center">
+        <div className="bg-[#252526] border border-[#3c3c3c] rounded p-8 w-full max-w-md">
+          <h1 className="text-2xl font-bold text-white mb-2">Client Login</h1>
+          <p className="text-sm text-[#999] mb-6">Enter your Client ID and PIN</p>
+          {loginError && (
+            <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-2 rounded mb-4 text-sm">
+              {loginError}
+            </div>
+          )}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-[#999] mb-1">Client ID</label>
+              <input
+                type="text"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className="w-full bg-[#1e1e1e] border border-[#3c3c3c] rounded px-3 py-2 text-white"
+                placeholder="Enter your Client ID"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-[#999] mb-1">PIN</label>
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                className="w-full bg-[#1e1e1e] border border-[#3c3c3c] rounded px-3 py-2 text-white"
+                placeholder="Enter your PIN"
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              />
+            </div>
+            <button
+              onClick={handleLogin}
+              className="w-full bg-[#ea580c] hover:bg-[#d45307] text-white py-2 rounded font-medium"
+            >
+              Login
+            </button>
+          </div>
+          <p className="mt-4 text-center text-xs text-[#585858]">
+            Demo: Client ID "Demo", PIN "1234"
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#1e1e1e] text-[#cccccc]">
       {/* Header */}
@@ -152,12 +260,20 @@ export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode;
               <p className="text-sm text-[#999] mt-1">Project progress, drawings, and feedback</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate("/")}
-            className="px-4 py-2 bg-[#3c3c3c] hover:bg-[#4a4a4a] rounded text-sm"
-          >
-            Back to App
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-[#3c3c3c] hover:bg-[#4a4a4a] text-red-400 border border-red-900/30 rounded text-sm transition-colors"
+            >
+              Logout
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="px-4 py-2 bg-[#3c3c3c] hover:bg-[#4a4a4a] rounded text-sm transition-colors"
+            >
+              Back to App
+            </button>
+          </div>
         </div>
       </div>
 

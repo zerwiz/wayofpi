@@ -956,7 +956,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	}
 	// In dev mode, create a fake auth for compatibility
 	if (!auth && isDevMode) {
-		auth = { userId: "dev-user", tenantId: "dev-tenant" };
+		auth = { userId: "dev-user", tenantId: "dev-tenant", role: "ADMIN" };
 	}
 
 	if (p === "/api/health") {
@@ -1127,6 +1127,137 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		}
 	}
 
+	// Time Entry Approve
+	if (p.match(/^\/api\/portal\/time\/[^/]+\/approve$/) && req.method === "POST") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		try {
+			const timeId = p.split("/")[4];
+			const result = db.query("UPDATE time_entries SET status = 'approved', reviewed_at = datetime('now') WHERE id = ? AND tenant_id = ?")
+				.run(timeId, auth.tenantId);
+			if (result.changes === 0) return json({ error: "Time entry not found" }, 404);
+			return json({ ok: true, status: "approved" });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to approve time entry", details: message }, 500);
+		}
+	}
+
+	// Time Entry Reject
+	if (p.match(/^\/api\/portal\/time\/[^/]+\/reject$/) && req.method === "POST") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		let body: { notes?: string };
+		try {
+			body = (await req.json()) as { notes?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		try {
+			const timeId = p.split("/")[4];
+			const result = db.query("UPDATE time_entries SET status = 'rejected', leader_notes = ?, reviewed_at = datetime('now') WHERE id = ? AND tenant_id = ?")
+				.run(body.notes || null, timeId, auth.tenantId);
+			if (result.changes === 0) return json({ error: "Time entry not found" }, 404);
+			return json({ ok: true, status: "rejected" });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to reject time entry", details: message }, 500);
+		}
+	}
+
+	// Task Management - List tasks
+	if (p === "/api/portal/tasks" && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		try {
+			const tasks = db.query(`
+				SELECT t.*, u.username as assigned_name
+				FROM tasks t
+				LEFT JOIN users u ON t.assigned_to = u.id
+				WHERE t.tenant_id = ?
+				ORDER BY t.created_at DESC
+			`).all(auth.tenantId) as any[];
+			return json(tasks || []);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to fetch tasks", details: message }, 500);
+		}
+	}
+
+	// Task Management - Create task
+	if (p === "/api/portal/tasks" && req.method === "POST") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		let body: { title?: string; assignedTo?: string; projectId?: string; estimatedHours?: number; deadline?: string };
+		try {
+			body = (await req.json()) as { title?: string; assignedTo?: string; projectId?: string; estimatedHours?: number; deadline?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		if (!body.title || !body.assignedTo) {
+			return json({ error: "Title and assignedTo required" }, 400);
+		}
+		try {
+			const id = `task_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+			db.query(`
+				INSERT INTO tasks (id, tenant_id, title, assigned_to, project_id, estimated_hours, deadline, status, created_by)
+				VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?)
+			`).run(id, auth.tenantId, body.title, body.assignedTo, body.projectId || null, body.estimatedHours || null, body.deadline || null, auth.userId);
+			return json({ ok: true, id });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to create task", details: message }, 500);
+		}
+	}
+
+	// Task Management - Update task status
+	if (p.match(/^\/api\/portal\/tasks\/[^/]+\/status$/) && req.method === "PUT") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		let body: { status?: string };
+		try {
+			body = (await req.json()) as { status?: string };
+		} catch {
+			return json({ error: "Invalid JSON" }, 400);
+		}
+		try {
+			const taskId = p.split("/")[4];
+			const result = db.query("UPDATE tasks SET status = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?")
+				.run(body.status, taskId, auth.tenantId);
+			if (result.changes === 0) return json({ error: "Task not found" }, 404);
+			return json({ ok: true, status: body.status });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to update task", details: message }, 500);
+		}
+	}
+
+	// Time Reports
+	if (p === "/api/portal/reports/time" && req.method === "GET") {
+		if (!auth) return json({ error: "Unauthorized" }, 401);
+		const startDate = url.searchParams.get("start") || "";
+		const endDate = url.searchParams.get("end") || "";
+		try {
+			let query = `
+				SELECT te.*, t.title as task_title, p.name as project_name
+				FROM time_entries te
+				LEFT JOIN tasks t ON te.task_id = t.id
+				LEFT JOIN projects p ON te.project_id = p.id
+				WHERE te.tenant_id = ?
+			`;
+			const params: any[] = [auth.tenantId];
+			if (startDate) {
+				query += " AND te.date >= ?";
+				params.push(startDate);
+			}
+			if (endDate) {
+				query += " AND te.date <= ?";
+				params.push(endDate);
+			}
+			query += " ORDER BY te.date DESC";
+			const entries = db.query(query).all(...params) as any[];
+			return json({ entries: entries || [], startDate, endDate });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			return json({ error: "Failed to generate report", details: message }, 500);
+		}
+	}
+
 	if (p.startsWith("/api/portal/download/") && req.method === "GET") {
 		if (!auth) return json({ error: "Unauthorized" }, 401);
 
@@ -1229,9 +1360,17 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			const stats = {
 				tenants: (db.query("SELECT COUNT(*) as count FROM tenants").get() as any).count,
 				users: (db.query("SELECT COUNT(*) as count FROM users").get() as any).count,
+				clients: (db.query("SELECT COUNT(*) as count FROM users WHERE role = 'CLIENT'").get() as any).count,
 				projects: (db.query("SELECT COUNT(*) as count FROM projects").get() as any).count,
 				tasks: (db.query("SELECT COUNT(*) as count FROM tasks").get() as any).count,
 				timeEntries: (db.query("SELECT COUNT(*) as count FROM time_entries").get() as any).count,
+				system: {
+					memoryUsage: process.memoryUsage(),
+					uptime: process.uptime(),
+					platform: process.platform,
+					nodeVersion: process.version,
+					bunVersion: process.versions?.bun,
+				}
 			};
 			return json(stats);
 		} catch (e) {
@@ -2413,7 +2552,7 @@ const server = Bun.serve<ServerWsData>({
 		}
 
                  if (
-                        url.pathname === "/ws" &&
+                        url.pathname.startsWith("/ws") &&
                         req.headers.get("upgrade")?.toLowerCase() === "websocket"
                 ) {
                         // In dev mode, allow WebSocket upgrades without auth
