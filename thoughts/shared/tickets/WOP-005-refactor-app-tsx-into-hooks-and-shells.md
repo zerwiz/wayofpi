@@ -1,5 +1,7 @@
 # [WOP-005] Refactor App.tsx Into Custom Hooks and Mode Shells
 
+> 📋 **Task checkboxes migrated to `WOP-ALL-TODO.md`: Phase 3 (App.tsx Refactor).** Update checkboxes there, not here.
+
 ## Problem
 
 `src/App.tsx` is **4826 lines** with **78 imports** — a monolithic component that handles all UI modes (Simple, Technical, Claw, Docs, Work) in a single file. This causes:

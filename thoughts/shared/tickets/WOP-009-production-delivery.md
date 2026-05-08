@@ -1,5 +1,7 @@
 # [WOP-009] Production Delivery — Desktop, Cloud & Self-Hosted Deployment
 
+> 📋 **Task checkboxes migrated to `WOP-ALL-TODO.md`: Phase 8 (Production Delivery — Desktop, Cloud, Self-Host, Domain).** Update checkboxes there, not here.
+
 ## Executive Summary
 
 Deliver Way of Pi to clients through 3 channels: signed desktop installers (Windows/macOS/Linux), multi-tenant cloud SaaS (Docker/PostgreSQL), and self-hosted via tunnel (ngrok/Cloudflare). Currently electron-builder config exists but is unsigned, Dockerfile exists but is not production-hardened, and self-hosting works ad-hoc via ngrok with no automation.

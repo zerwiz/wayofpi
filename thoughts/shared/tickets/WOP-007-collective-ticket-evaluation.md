@@ -1,5 +1,7 @@
 # [WOP-007] Collective Ticket Evaluation — Root Causes & Unified Path Forward
 
+> 📋 **This ticket defines the phased roadmap. All task checkboxes are consolidated in `WOP-ALL-TODO.md`.** Update checkboxes there, not here.
+
 ## Executive Summary
 
 We have **6 active tickets** tracking distinct problems. Despite their separate labels, they share **a single root cause**: code was imported from multiple external projects (server, kanban, modals, pi extensions) without systematic import path audit, and build was never enforced clean.

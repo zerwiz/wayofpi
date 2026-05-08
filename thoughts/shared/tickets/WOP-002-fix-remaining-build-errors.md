@@ -1,5 +1,7 @@
 # [WOP-002] Implement Unified Routing/Header Architecture & Fix Build Errors
 
+> 📋 **Task checkboxes migrated to `WOP-ALL-TODO.md`: Phase 0 (Clean Build) + Phase 2 (Auth & Routing) + Phase 5 (Kanban).** Update checkboxes there, not here.
+
 ## Problem Statement
 
 Two major work items:

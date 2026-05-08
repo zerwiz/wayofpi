@@ -1,5 +1,7 @@
 # [WOP-003] Fix Electron White Screen, WebSocket ECONNRESET & ENOENT Runtime Errors
 
+> 📋 **Task checkboxes migrated to `WOP-ALL-TODO.md`: Phase 1 (Runtime Stability).** Update checkboxes there, not here.
+
 ## Problem
 
 Two runtime errors prevent the app from working in dev mode, plus a persistent white screen in Electron:

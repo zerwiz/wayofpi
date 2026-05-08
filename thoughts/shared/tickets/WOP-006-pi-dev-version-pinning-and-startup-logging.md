@@ -1,5 +1,7 @@
 # [WOP-006] Pi.dev Version Pinning & Startup Logging
 
+> 📋 **Task checkboxes migrated to `WOP-ALL-TODO.md`: Phase 4 (Pi.dev Version Pinning).** Update checkboxes there, not here.
+
 ## Problem
 
 `pi.dev` (www.pi.dev) ships frequent updates that introduce breaking changes. Way of Pi integrates with pi.dev at **14+ points** (npm package, JSON mode event stream, binary discovery, tool delegation, extension API, agent format, session format, PI_STACK, surface mapping, etc.). Each upstream update risks breaking one or more of these without warning.

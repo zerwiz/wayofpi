@@ -1,5 +1,7 @@
 # [WOP-004] Server Functionality Evaluation: Architecture Change Assessment
 
+> 📋 **Task checkboxes migrated to `WOP-ALL-TODO.md`: Phase 0 (Clean Build) + Phase 1 (Runtime Stability) + Phase 6 (SDK Migration).** Update checkboxes there, not here.
+
 ## 📋 Executive Summary
 
 **Date**: 2026-05-06  

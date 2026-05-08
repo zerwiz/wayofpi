@@ -1,5 +1,7 @@
 # [WOP-001] Fix Docs Mode Routing and Component Issues
 
+> ✅ **COMPLETED** — All task checkboxes migrated to `WOP-ALL-TODO.md` (Completed section).
+
 ## Problem Statement
 
 Investigation of Docs mode UI (docs/DOCS-MODE-ROUTING-INVESTIGATION.md) identified 3 major issues and 10 suggested fixes: FileExplorer not displaying file tree, ChatPanel not showing AI chat history, DocumentBrowser component orphaned with broken functionality (empty loadFiles, missing CSS, unused states).
