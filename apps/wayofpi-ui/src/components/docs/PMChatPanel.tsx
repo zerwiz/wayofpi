@@ -5,7 +5,7 @@ import './PMChatPanel.css';
 interface PMChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  messages: Array<{ id: string; content: string; author: string; timestamp: string; type: 'message' | 'system' }>;
+  messages: Array<{ id: string; content: string; author: string; timestamp: string; type: 'message' | 'system' | 'user' }>;
   onSendMessage: (content: string) => void;
   projectName?: string;
 }

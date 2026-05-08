@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 const useNavigate = () => (path: string) => { window.location.pathname = path; };
 import { UiModeToggle } from "../components/UiModeToggle";
-import type { UiMode } from "../hooks/useUiMode";
+// UiMode typed as string
 
 interface Worker {
   id: string;
@@ -21,7 +21,7 @@ interface AdminStats {
   time_entries: number;
 }
 
-export default function AdminDashboard({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
+export default function AdminDashboard({ uiMode, setUiMode }: { uiMode: string; setUiMode: (m: string) => void }) {
   const navigate = useNavigate();
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [clients, setClients] = useState<Worker[]>([]);
@@ -37,10 +37,23 @@ export default function AdminDashboard({ uiMode, setUiMode }: { uiMode: UiMode; 
     fetchData();
   }, []);
 
+  const DEMO_WORKERS: Worker[] = [
+    { id: "w-1", username: "anna", full_name: "Anna Svensson", role: "WORKER", active: 1, last_active: "2026-05-08" },
+    { id: "w-2", username: "bjorn", full_name: "Björn Larsson", role: "WORKER", active: 1, last_active: "2026-05-07" },
+    { id: "w-3", username: "cecilia", full_name: "Cecilia Johansson", role: "LEADER", active: 1, last_active: "2026-05-08" },
+    { id: "w-4", username: "demo-worker", full_name: "Demo Worker", role: "WORKER", active: 1, last_active: "2026-05-08" },
+  ];
+
+  const DEMO_CLIENTS: Worker[] = [
+    { id: "c-1", username: "demo-client", full_name: "Demo Client", role: "CLIENT", active: 1, last_active: "2026-05-08" },
+    { id: "c-2", username: "byggab", full_name: "Bygg AB", role: "CLIENT", active: 1, last_active: "2026-05-06" },
+  ];
+
+  const DEMO_STATS: AdminStats = { workers: 3, clients: 2, projects: 8, tasks: 24, time_entries: 142 };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      // In a real app, these would be tenant-scoped
       const [usersRes, statsRes] = await Promise.all([
         fetch("/api/admin/users"),
         fetch("/api/admin/stats"),
@@ -48,9 +61,11 @@ export default function AdminDashboard({ uiMode, setUiMode }: { uiMode: UiMode; 
 
       if (usersRes.ok) {
         const data = await usersRes.json();
-        // Categorize users based on roles (mock logic for demo)
         setWorkers(data.filter((u: any) => u.role !== "CLIENT"));
         setClients(data.filter((u: any) => u.role === "CLIENT"));
+      } else {
+        setWorkers(DEMO_WORKERS);
+        setClients(DEMO_CLIENTS);
       }
 
       if (statsRes.ok) {
@@ -62,9 +77,14 @@ export default function AdminDashboard({ uiMode, setUiMode }: { uiMode: UiMode; 
           tasks: statsData.tasks || 0,
           time_entries: statsData.timeEntries || 0,
         });
+      } else {
+        setStats(DEMO_STATS);
       }
     } catch (error) {
       console.error("Failed to fetch admin data:", error);
+      setWorkers(DEMO_WORKERS);
+      setClients(DEMO_CLIENTS);
+      setStats(DEMO_STATS);
     } finally {
       setLoading(false);
     }

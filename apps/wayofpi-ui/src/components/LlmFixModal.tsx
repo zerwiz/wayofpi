@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { createPortal } from "react-dom";
-import type { UiMode } from "../hooks/useUiMode";
+// uiMode typed as string
 
 /** Shown when chat fails for model/provider reasons so users can jump to the right UI. */
 export function LlmFixModal({
@@ -17,7 +17,7 @@ export function LlmFixModal({
 	onClose: () => void;
 	errorMessage: string;
 	appearanceDark: boolean;
-	uiMode: UiMode;
+	uiMode: string;
 	onOpenSimpleAiBrains: () => void;
 	onOpenProviderCatalog: () => void;
 	onClearError: () => void;

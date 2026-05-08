@@ -76,13 +76,13 @@ function ToolLogScrollBody({ logs, variant = "tool_log" }: { logs: LogRow[]; var
 								<span className="w-24 shrink-0 text-[#858585]">[{log.time}]</span>
 								<span
 									className={`w-16 shrink-0 font-bold ${
-										log.level === "INFO"
-											? "text-[#ea580c]"
-											: log.level === "WARN"
-												? "text-[#ce9178]"
-												: log.level === "SUCCESS"
-													? "text-[#89d185]"
-													: "text-[#f14c4c]"
+									log.level?.toUpperCase() === "INFO"
+										? "text-[#ea580c]"
+										: log.level?.toUpperCase() === "WARN"
+											? "text-[#ce9178]"
+											: log.level?.toUpperCase() === "SUCCESS"
+												? "text-[#89d185]"
+												: "text-[#f14c4c]"
 									}`}
 								>
 									{log.level}

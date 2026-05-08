@@ -139,7 +139,7 @@ export function ModelSelectorModal({
               <Button
                 onClick={close}
                 size="sm"
-                variant="primary"
+                variant="outline"
                 disabled={loading}
               >
                 {loading ? "…" : "Done"}

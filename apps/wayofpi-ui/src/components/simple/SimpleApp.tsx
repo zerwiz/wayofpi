@@ -10,7 +10,6 @@ import { useSimplePreferences } from "../../hooks/useSimplePreferences";
 import type { PiModelConfigPath } from "../../constants/piModelConfigPaths";
 import type { ChatRow, ChatSessionMode, LogRow } from "../../hooks/useWayOfPiSession";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
-import type { UiMode } from "../../hooks/useUiMode";
 import type { TreeNode } from "../../types/tree";
 import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import { SimpleChatView } from "./SimpleChatView";
@@ -130,8 +129,8 @@ export function SimpleApp({
 	layoutVariant = "desktop",
 	simpleMobileMenuFileFocusRev,
 }: {
-	uiMode: UiMode;
-	setUiMode: (m: UiMode) => void;
+	uiMode: string;
+	setUiMode: (m: string) => void;
 	root: string | null;
 	rootLabel: string;
 	nodes: TreeNode[];
@@ -669,7 +668,20 @@ export function SimpleApp({
 								</div>
 							) : activeTab === "documenthandler" ? (
 								<div className="min-h-0 flex-1 overflow-hidden">
-									<ChatExplorer appearanceDark={appearanceDark} />
+									<ChatExplorer
+									appearanceDark={appearanceDark}
+									nodes={nodes}
+									selectedPath={selectedPath}
+									onSelectFile={(p) => setSelectedPath(p)}
+									loading={treeLoading}
+									error={treeError}
+									logs={logs}
+									streaming={streaming}
+									connected={connected}
+									rows={rows}
+									onSend={sendChat}
+									onStop={stop}
+								/>
 								</div>
 							) : activeTab === "settings" ? (
 								<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2">

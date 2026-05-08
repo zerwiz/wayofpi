@@ -48,7 +48,7 @@ export function TerminalSettingsSection({
 	const shellExe = config?.shellExecutable ?? "—";
 	const shellArgs = config?.shellArgs?.length ? config.shellArgs.join(" ") : "";
 	const enabled = config?.terminalEnabled === true;
-	const custom = config?.customShell === true;
+	const custom = Boolean(config?.customShell);
 
 	return (
 		<>

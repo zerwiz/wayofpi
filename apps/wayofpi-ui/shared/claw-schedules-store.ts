@@ -17,7 +17,7 @@ import type {
 } from "../shared/claw-schedules-types.ts";
 import { CLAW_SCHEDULES_FILE_VERSION } from "../shared/claw-schedules-types.ts";
 import { getClawDotDirAbs } from "./claw-workspace-root";
-import { getPrimaryWorkspacePath } from "./workspace-state";
+import { getPrimaryWorkspacePath } from "../server/workspace-state";
 
 function scheduleDir(): string {
 	return join(getClawDotDirAbs(), "schedule");

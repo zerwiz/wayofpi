@@ -95,7 +95,7 @@ export function StatusBar({
 	chatMode,
 	chatAgentName,
 }: {
-	uiMode: UiMode;
+	uiMode: string;
 	workspaceRoot: string;
 	connected: boolean;
 	line: number;

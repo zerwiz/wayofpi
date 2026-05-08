@@ -18,7 +18,7 @@ interface ViewMenuHandlers {
   onApplyLayoutPreset: (preset: string) => void;
 }
 
-const ViewMenu: React.FC<Readonly<Record<keyof ViewMenuHandlers, boolean | (() => void)>>> = (
+const ViewMenu: React.FC<ViewMenuHandlers> = (
   {
     onToggleStatusBar,
     onToggleMenuBar,
@@ -34,7 +34,7 @@ const ViewMenu: React.FC<Readonly<Record<keyof ViewMenuHandlers, boolean | (() =
     onZoomReset,
     onFlipLayout,
     onApplyLayoutPreset,
-  }: ViewMenuHandlers
+  }
 ) => {
   const handleZoomIn = () => onZoomIn?.();
   const handleZoomOut = () => onZoomOut?.();

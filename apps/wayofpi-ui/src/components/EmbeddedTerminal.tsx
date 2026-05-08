@@ -1,25 +1,12 @@
-import { FitAddon } from "@xterm/addon-fit";
-import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef } from "react";
 import { useServerConfig } from "../hooks/useServerConfig";
 import { useTerminalUiPreferences } from "../hooks/useTerminalUiPreferences";
 import { TERMINAL_UI_DEFAULT_FONT } from "../utils/terminalUiPreferences";
-import { registerTerminalInputSender } from "../utils/terminalInputBridge";
+import { attachTerminal, detachTerminal, ensureConnection } from "../utils/terminalConnectionManager";
 import "@xterm/xterm/css/xterm.css";
-
-/** Ubuntu brand orange — block cursor fill in the integrated terminal. */
-const WOP_TERMINAL_CURSOR = "#E95420";
-/** Glyph color on top of the block cursor (contrast on Ubuntu orange). */
-const WOP_TERMINAL_CURSOR_ACCENT = "#ffffff";
-
-function terminalWsUrl(): string {
-	const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-	return `${proto}//${window.location.host}/ws/terminal`;
-}
 
 export function EmbeddedTerminal() {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const termRef = useRef<Terminal | null>(null);
 	const { config } = useServerConfig();
 	const enabled = config?.terminalEnabled === true;
 	const { prefs } = useTerminalUiPreferences();
@@ -30,125 +17,11 @@ export function EmbeddedTerminal() {
 		const el = containerRef.current;
 		if (!el) return;
 
-		const term = new Terminal({
-			cursorBlink: true,
-			cursorStyle: "block",
-			fontSize: prefs.fontSize,
-			fontFamily,
-			theme: {
-				background: "#1e1e1e",
-				foreground: "#d4d4d4",
-				cursor: WOP_TERMINAL_CURSOR,
-				cursorAccent: WOP_TERMINAL_CURSOR_ACCENT,
-				black: "#1e1e1e",
-				red: "#f14c4c",
-				green: "#89d185",
-				yellow: "#dcdcaa",
-				blue: "#569cd6",
-				cyan: "#4ec9b0",
-				white: "#d4d4d4",
-				brightBlack: "#858585",
-			},
-		});
-		termRef.current = term;
-		const fit = new FitAddon();
-		term.loadAddon(fit);
-		term.open(el);
-		fit.fit();
-
-		const ws = new WebSocket(terminalWsUrl());
-		let open = false;
-
-		ws.onopen = () => {
-			open = true;
-			term.focus();
-			registerTerminalInputSender((data) => {
-				if (ws.readyState === WebSocket.OPEN) {
-					ws.send(JSON.stringify({ type: "term_in", data }));
-				}
-			});
-		};
-
-		ws.onmessage = (ev) => {
-			try {
-				const msg = JSON.parse(String(ev.data)) as {
-					type?: string;
-					data?: string;
-					stream?: string;
-					message?: string;
-					cwd?: string;
-					code?: number;
-				};
-				if (msg.type === "term_ready" && msg.cwd) {
-					term.writeln(`\x1b[90m# cwd: ${msg.cwd}\x1b[0m`);
-					term.focus();
-					return;
-				}
-				if (msg.type === "term_out" && typeof msg.data === "string") {
-					term.write(msg.data);
-					return;
-				}
-				if (msg.type === "term_error" && msg.message) {
-					term.writeln(`\r\n\x1b[31m${msg.message}\x1b[0m\r\n`);
-					return;
-				}
-				if (msg.type === "term_exit") {
-					term.writeln(`\r\n\x1b[90m[Process exited${msg.code != null ? ` (${msg.code})` : ""}]\x1b[0m\r\n`);
-				}
-			} catch {
-				/* ignore */
-			}
-		};
-
-		ws.onerror = () => {
-			if (open) return;
-			term.writeln("\r\n\x1b[31mTerminal WebSocket error (is the server running with WOP_ALLOW_TERMINAL=1?)\x1b[0m\r\n");
-		};
-
-		ws.onclose = () => {
-			open = false;
-		};
-
-		const sub = term.onData((data) => {
-			if (ws.readyState === WebSocket.OPEN) {
-				ws.send(JSON.stringify({ type: "term_in", data }));
-			}
-		});
-
-		const ro = new ResizeObserver(() => {
-			try {
-				fit.fit();
-				const dims = fit.proposeDimensions();
-				if (dims && ws.readyState === WebSocket.OPEN) {
-					ws.send(JSON.stringify({ type: "term_resize", cols: dims.cols, rows: dims.rows }));
-				}
-			} catch {
-				/* ignore */
-			}
-		});
-		ro.observe(el);
-
-		const onWinResize = () => {
-			try {
-				fit.fit();
-			} catch {
-				/* ignore */
-			}
-		};
-		window.addEventListener("resize", onWinResize);
+		ensureConnection(prefs.fontSize, fontFamily);
+		attachTerminal(el);
 
 		return () => {
-			termRef.current = null;
-			registerTerminalInputSender(null);
-			window.removeEventListener("resize", onWinResize);
-			ro.disconnect();
-			sub.dispose();
-			try {
-				ws.close();
-			} catch {
-				/* ignore */
-			}
-			term.dispose();
+			detachTerminal();
 		};
 	}, [enabled, prefs.fontSize, fontFamily]);
 
@@ -177,7 +50,6 @@ export function EmbeddedTerminal() {
 		<div
 			ref={containerRef}
 			className="h-full min-h-[160px] w-full flex-1 overflow-hidden p-1"
-			onMouseDown={() => termRef.current?.focus()}
 		/>
 	);
 }

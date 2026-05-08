@@ -23,7 +23,7 @@ export interface GoMenuHandlers {
   onGoToFile: () => void;
   onGoToSymbolInWorkspace: () => void;
   canGoToLine: boolean;
-  onGoToLineColumn: (line: number, column: number) => void;
+  onGoToLineColumn: () => void;
   canGoToBracket: boolean;
   onGoToBracket: () => void;
   canLanguageFeatures: boolean;
@@ -118,7 +118,7 @@ const GoMenu: React.FC<{ handlers: GoMenuHandlers }> = ({ handlers }) => {
           {section.actions.map((action) => (
             <button
               key={action.id}
-              onClick={action.handler}
+              onClick={() => { if (typeof action.handler === 'function') action.handler(); }}
               disabled={!action.enabled}
               className={`go-menu-item ${action.enabled ? "" : "disabled"}`}
             >

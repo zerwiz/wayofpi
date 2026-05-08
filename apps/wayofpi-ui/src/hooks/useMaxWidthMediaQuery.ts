@@ -1,20 +1,70 @@
-import { useEffect, useState } from "react";
+/**
+ * useMaxWidthMediaQuery Hook
+ *
+ * @description Manages responsive breakpoint state based on CSS media queries
+ * @param maxPixels - Maximum width in pixels for the breakpoint
+ *
+ * @returns Object containing current breakpoint state and optional resize handlers
+ *
+ * @example
+ * ```tsx
+ * const { isAtMaxWidth, onWidth } = useMaxWidthMediaQuery(576);
+ * if (isAtMaxWidth) {
+ *   // render mobile UI
+ * }
+ * onWidth(false);
+ * ```
+ */
 
-/** `true` when `window.innerWidth <= maxWidthPx` (inclusive). SSR-safe initial `false`. */
-export function useMaxWidthMediaQuery(maxWidthPx: number): boolean {
-	const [matches, setMatches] = useState(() =>
-		typeof window !== "undefined"
-			? window.matchMedia(`(max-width: ${maxWidthPx}px)`).matches
-			: false,
-	);
+import { useState, useEffect } from "react";
+
+export interface UseMaxWidthMediaQueryReturn {
+	isAtMaxWidth: boolean;
+}
+
+export function useMaxWidthMediaQuery(
+	maxPixels: number,
+): UseMaxWidthMediaQueryReturn {
+	const [isAtMaxWidth, setIsAtMaxWidth] = useState(() => {
+		try {
+			return window.matchMedia(`(max-width: ${maxPixels}px)`).matches;
+		} catch {
+			return false;
+		}
+	});
 
 	useEffect(() => {
-		const mq = window.matchMedia(`(max-width: ${maxWidthPx}px)`);
-		const onChange = () => setMatches(mq.matches);
-		onChange();
-		mq.addEventListener("change", onChange);
-		return () => mq.removeEventListener("change", onChange);
-	}, [maxWidthPx]);
+		const handleResize = () => {
+			try {
+				setIsAtMaxWidth(
+					window.matchMedia(`(max-width: ${maxPixels}px)`).matches,
+				);
+			} catch {
+				// Ignore matchMedia errors
+			}
+		};
 
-	return matches;
+		// Handle initial setup
+		handleResize();
+
+		// Listen for window resize events
+		try {
+			window.addEventListener("resize", handleResize);
+		} catch {
+			// Ignore addEventListener errors
+		}
+
+		// Cleanup on unmount
+		return () => {
+			try {
+				window.removeEventListener("resize", handleResize);
+			} catch {
+				// Ignore removeEventListener errors
+			}
+		};
+	}, [maxPixels]);
+
+	return {
+		isAtMaxWidth,
+	};
 }

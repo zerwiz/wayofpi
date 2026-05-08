@@ -38,7 +38,7 @@ Role-based access control (RBAC) ensures everyone sees what they need:
 - **Frontend**: [React](https://reactjs.org) + [Vite](https://vitejs.dev) + [Tailwind CSS](https://tailwindcss.com)
 - **Desktop Shell**: [Electron](https://www.electronjs.org)
 - **Database**: [SQLite](https://www.sqlite.org)
-- **AI Framework**: [Pi Framework](https://www.pi.dev)
+- **AI Framework**: [Pi Framework](https://www.pi.dev) (Project-local v0.74.0 via `@earendil-works/pi-coding-agent`)
 - **Utilities**: `just` (command runner), `ngrok` (secure tunneling)
 
 ---
@@ -48,6 +48,7 @@ Role-based access control (RBAC) ensures everyone sees what they need:
 ### Prerequisites
 - [Bun](https://bun.sh) installed.
 - [Node.js](https://nodejs.org) (for Electron).
+- `just` (highly recommended for running project-local Pi).
 
 ### Installation
 1. Clone the repository:
@@ -63,6 +64,12 @@ Role-based access control (RBAC) ensures everyone sees what they need:
    ```bash
    bun run apps/wayofpi-ui/server/init-db.ts
    ```
+
+### Running Pi
+Way of Pi uses a **project-local** Pi installation to ensure stability.
+- **Run Pi**: `just pi` (or `./node_modules/.bin/pi`)
+- **Verify Version**: `just pi-verify`
+- **Fix/Reinstall Local Pi**: `just pi-fix-version`
 
 ### Running the App
 - **Desktop (Electron)**:

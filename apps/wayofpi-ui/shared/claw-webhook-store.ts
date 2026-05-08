@@ -7,7 +7,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import { getPrimaryWorkspacePath } from "./workspace-state";
+import { getPrimaryWorkspacePath } from "../server/workspace-state";
 
 const FILE = "claw-webhook.v1.json";
 

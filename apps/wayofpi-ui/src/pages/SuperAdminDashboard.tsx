@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 const useNavigate = () => (path: string) => { window.location.pathname = path; };
 import { UiModeToggle } from "../components/UiModeToggle";
-import type { UiMode } from "../hooks/useUiMode";
+// UiMode typed as string
 
 interface Tenant {
   id: string;
@@ -40,7 +40,7 @@ interface User {
   tenant_name: string;
 }
 
-export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
+export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: string; setUiMode: (m: string) => void }) {
   const navigate = useNavigate();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [users, setUsers] = useState<User[]>([]);

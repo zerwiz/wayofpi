@@ -71,7 +71,7 @@ export function Chat({
 								{row.fromUser ? "You" : row.agentName ?? "Assistant"}
 							</div>
 							<div className={`prose prose-sm max-w-none ${titleC}`}>
-								{row.segments.map((seg, i) => {
+								{(row.segments ?? []).map((seg: any, i: number) => {
 									if (seg.kind === "text") {
 										return (
 											<span key={i} className="whitespace-pre-wrap">

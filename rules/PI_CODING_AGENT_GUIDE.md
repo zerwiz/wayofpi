@@ -31,8 +31,17 @@
 
 ## Quick Start
 
+Way of Pi uses a **project-local** Pi installation decoupled from your global `pi` command.
+
 ```bash
-npm install -g @mariozechner/pi-coding-agent
+# Install (done automatically by bun install)
+bun add @earendil-works/pi-coding-agent@0.74.0
+
+# Run via just (recommended)
+just pi
+
+# Run via local binary
+./node_modules/.bin/pi
 ```
 
 ### Authentication

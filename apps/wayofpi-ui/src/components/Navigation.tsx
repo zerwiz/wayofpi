@@ -1,8 +1,7 @@
-import type { UiMode } from "../hooks/useUiMode";
 import { FileText, Briefcase, Shield, User, LayoutDashboard, Code2, Bot, FileCode } from "lucide-react";
 
 interface NavItem {
-  id: UiMode | "portal" | "client" | "admin" | "profile";
+  id: string;
   label: string;
   icon: React.ReactNode;
   title: string;
@@ -11,8 +10,8 @@ interface NavItem {
 }
 
 interface NavigationProps {
-  uiMode: UiMode;
-  onUiModeChange: (mode: UiMode) => void;
+  uiMode: string;
+  onUiModeChange: (mode: string) => void;
   /** Current pathname-based context (portal, client, admin, profile) */
   isPortal: boolean;
   isClient: boolean;
@@ -46,7 +45,7 @@ export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin
 
   const isContextActive = isPortal || isClient || isAdmin || isProfile;
 
-  const handlePrimaryClick = (mode: UiMode) => {
+  const handlePrimaryClick = (mode: string) => {
     if (window.location.pathname !== "/") window.location.pathname = "/";
     onUiModeChange(mode);
   };
@@ -78,7 +77,7 @@ export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin
             <button
               key={item.id}
               type="button"
-              onClick={() => handlePrimaryClick(item.id as UiMode)}
+              onClick={() => handlePrimaryClick(item.id)}
               className={navBtnClass(isActive(item))}
               title={item.title}
             >

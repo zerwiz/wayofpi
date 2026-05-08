@@ -55,7 +55,7 @@ const HowToUseModal: React.FC<HowToUseModalProps & HowToUseSectionHandlersWithRe
 }) => {
   const [currentSection, setCurrentSection] = useState<HowToUseSectionId>(initialSection);
 
-  const sections: { id: HowToUseSectionId; title: string; render: () => JSX.Element }[] = useMemo(
+  const sections: { id: HowToUseSectionId; title: string; render: () => React.JSX.Element }[] = useMemo(
     () => [
       {
         id: "welcome",

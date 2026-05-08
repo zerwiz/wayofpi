@@ -463,7 +463,7 @@ export function SimpleTeamView({
 													key={m}
 													type="button"
 													onClick={() => {
-														if (meta) onOpenAgentFile(meta.relativePath);
+														if (meta && meta.relativePath) onOpenAgentFile(meta.relativePath);
 													}}
 													className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
 														meta
@@ -523,8 +523,8 @@ export function SimpleTeamView({
 									</span>
 								</div>
 								{agent.tools ? (
-									<p className={`mb-2 truncate font-mono text-[11px] ${sub}`} title={agent.tools}>
-										tools: {agent.tools}
+									<p className={`mb-2 truncate font-mono text-[11px] ${sub}`} title={agent.tools?.join(", ")}>
+										tools: {agent.tools?.join(", ")}
 									</p>
 								) : null}
 								<p className={`mb-3 text-xs ${sub}`}>
@@ -537,7 +537,7 @@ export function SimpleTeamView({
 									</span>
 									<button
 										type="button"
-										onClick={() => onOpenAgentFile(agent.relativePath)}
+										onClick={() => agent.relativePath && onOpenAgentFile(agent.relativePath)}
 										className="shrink-0 text-xs font-bold uppercase tracking-wide text-[#fb923c] hover:text-[#fed7aa]"
 									>
 										Edit prompt

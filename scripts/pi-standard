@@ -20,6 +20,7 @@ done
 SCRIPT_DIR="$(cd -P "$(dirname "$_script")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 export PI_PLAYGROUND="$ROOT"
+export PI_CODING_AGENT_DIR="$ROOT/.pi/agent"
 
 if [[ -f "$ROOT/.env" ]]; then
 	set -a
@@ -32,4 +33,4 @@ if [[ "${1:-}" == "." ]]; then
 	shift
 fi
 
-exec pi --no-extensions --no-skills --no-themes --no-prompt-templates "$@"
+exec "$ROOT/node_modules/.bin/pi" --no-extensions --no-skills --no-themes --no-prompt-templates "$@"

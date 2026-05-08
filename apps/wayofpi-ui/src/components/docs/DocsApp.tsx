@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import { FolderOpen, MessageSquare, Eye, FileText, FileCheck, FileWarning, FileClock, CheckCircle, AlertCircle, Clock, Send } from "lucide-react";
 import type { TreeNode } from "../../types/tree";
 import type { ChatRow, LogRow } from "../../hooks/useWayOfPiSession";
-import type { UiMode } from "../../hooks/useUiMode";
+// UiMode imported as string type
 import { FileExplorer } from "../documenthandler/FileExplorer";
 import { ChatPanel } from "../documenthandler/ChatPanel";
 import { PreviewModal } from "../documenthandler/PreviewModal";
@@ -13,8 +13,8 @@ import { useDocumentHandler } from "../documenthandler/context/DocumentHandlerCo
 import type { FileEntry } from "../documenthandler/types/documenthandler.types";
 
 interface DocsAppProps {
-	uiMode: UiMode;
-	setUiMode: (m: UiMode) => void;
+	uiMode: string;
+	setUiMode: (m: string) => void;
 	nodes: TreeNode[];
 	treeLoading: boolean;
 	treeError: string | null;

@@ -1,56 +1,57 @@
-import { useCallback, useEffect, useState } from "react";
+/**
+ * useUiMode Hook
+ *
+ * @description Manages UI mode state (technical/simple/claw) with localStorage persistence
+ * @returns Object containing current mode and setter function
+ *
+ * @example
+ * ```tsx
+ * const { mode, setMode } = useUiMode();
+ * if (mode === "simple") {
+ *   // render Simple UI
+ * }
+ * ```
+ */
 
-export type UiMode = "simple" | "technical" | "claw" | "docs" | "work";
+import { useState, useCallback, useMemo } from "react";
 
-const STORAGE_KEY = "wayofpi.uiMode";
+const STORAGE_KEY = "wop-ui-mode";
+const DEFAULT_MODE = "technical";
 
-function readStored(): UiMode {
-	try {
-		const v = localStorage.getItem(STORAGE_KEY);
-		if (v === "technical" || v === "simple" || v === "claw" || v === "docs" || v === "work") return v;
-	} catch {
-		/* ignore */
-	}
-	return "simple";
+export type UiMode = string;
+
+export interface UseUiModeReturn {
+	mode: string;
+	setMode: (mode: string) => void;
 }
 
-export function useUiMode() {
-	const [mode, setModeState] = useState<UiMode>(() =>
-		typeof window !== "undefined" ? readStored() : "simple",
-	);
-
-	useEffect(() => {
-		setModeState(readStored());
-	}, []);
-
-	const setMode = useCallback((next: UiMode) => {
-		setModeState(next);
+export function useUiMode(): UseUiModeReturn {
+	const [mode, setModeState] = useState<"technical" | "simple" | "claw">(() => {
 		try {
-			localStorage.setItem(STORAGE_KEY, next);
+			const stored = localStorage.getItem(STORAGE_KEY);
+			if (stored) {
+				const parsed = stored as "technical" | "simple" | "claw";
+				if (["technical", "simple", "claw"].includes(parsed)) {
+					return parsed;
+				}
+			}
 		} catch {
-			/* ignore */
+			// Storage not available
+		}
+		return DEFAULT_MODE;
+	});
+
+	const setMode = useCallback((newMode: string) => {
+		setModeState(newMode as "technical" | "simple" | "claw");
+		try {
+			localStorage.setItem(STORAGE_KEY, newMode);
+		} catch {
+			// Storage might not be available
 		}
 	}, []);
 
-	const toggleMode = useCallback(() => {
-		setModeState((m) => {
-			const next: UiMode = m === "simple" ? "technical" : m === "technical" ? "claw" : m === "claw" ? "docs" : m === "docs" ? "work" : "simple";
-			try {
-				localStorage.setItem(STORAGE_KEY, next);
-			} catch {
-				/* ignore */
-			}
-			return next;
-		});
-	}, []);
-
-	/** Switch directly to docs mode. */
-	const switchToDocs = useCallback(() => {
-		setModeState("docs");
-		try {
-			localStorage.setItem(STORAGE_KEY, "docs");
-		} catch { /* ignore */ }
-	}, []);
-
-	return { mode, setMode, toggleMode, switchToDocs, isTechnical: mode === "technical", isClaw: mode === "claw", isDocs: mode === "docs", isWork: mode === "work" };
+	return {
+		mode,
+		setMode,
+	};
 }

@@ -1,9 +1,13 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+interface ScrollAreaProps extends React.HTMLAttributes<HTMLDivElement> {
+  orientation?: "vertical" | "horizontal";
+}
+
 const ScrollArea = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  ScrollAreaProps
 >(({ className, children, orientation = "vertical", ...props }, ref) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
 

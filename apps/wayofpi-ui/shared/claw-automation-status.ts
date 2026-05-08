@@ -9,7 +9,7 @@ import {
 	clawSchedulesDefinitionsPathForDiagnostics,
 } from "./claw-schedules-store";
 import { clawWebhookConfigured, clawWebhookInboundEnabled } from "./claw-webhook-store";
-import { shouldUsePiJsonChat } from "./pi-agent-runtime";
+import { shouldUsePiJsonChat } from "../server/pi-agent-runtime";
 
 export type ClawAutomationStatusV1 = {
 	version: 1;

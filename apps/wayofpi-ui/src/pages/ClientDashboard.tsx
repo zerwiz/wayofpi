@@ -236,6 +236,12 @@ export default function ClientDashboard({ uiMode, setUiMode, appHeader }: { uiMo
           <p className="mt-4 text-center text-xs text-[#585858]">
             Demo: Client ID "Demo", PIN "1234"
           </p>
+          <button
+            onClick={() => window.location.pathname = "/"}
+            className="mt-4 w-full text-center text-xs text-[#585858] hover:text-[#858585] transition-colors"
+          >
+            &larr; Back to Welcome
+          </button>
         </div>
       </div>
     );

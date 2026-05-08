@@ -10,9 +10,10 @@ import { Card } from './Card';
 // Define component types
 export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultValue?: string;
+  onValueChange?: (value: string) => void;
 }
 
-function Tabs({ className, defaultValue = 'overview', ...props }: TabsProps & React.HTMLAttributes<HTMLDivElement>) {
+function Tabs({ className, defaultValue = 'overview', onValueChange, ...props }: TabsProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn('w-full', className)} {...props} />
   );
@@ -49,11 +50,13 @@ function TabsTrigger({ className, value, ...props }: TabsTriggerProps & React.Bu
   );
 }
 
-export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  value?: string;
+}
 
-function TabsContent({ className, ...props }: TabsContentProps & React.HTMLAttributes<HTMLDivElement>) {
+function TabsContent({ className, value, ...props }: TabsContentProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2', className)} {...props} />
+    <div data-tab-value={value} className={cn('ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2', className)} {...props} />
   );
 }
 
@@ -214,7 +217,7 @@ export function PlanReview() {
         <p className="text-muted-foreground mt-1">Review and manage your project plan</p>
       </div>
 
-      <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="p-6">
+      <Tabs defaultValue={selectedTab} onValueChange={(v) => setSelectedTab(v as "overview" | "tasks" | "participants")} className="p-6">
         <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>

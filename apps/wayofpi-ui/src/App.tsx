@@ -45,6 +45,8 @@ import type { ClawTabId } from "./components/claw/ClawNavRail";
 import "./claw/clawUserUiModules";
 import { StatusBar } from "./components/StatusBar";
 import { WorkspaceStaticAnalysisProvider } from "./context/WorkspaceStaticAnalysisContext";
+import type { WorkspaceStaticAnalysisContextValue } from "./context/WorkspaceStaticAnalysisContext";
+import type { WorkspaceProblem } from "./types/workspaceProblems";
 import { DocumentHandlerProvider } from "./components/documenthandler/context/DocumentHandlerContext";
 import { TechnicalWorkspaceGrid, type TechnicalWorkspaceCellSnapshot } from "./components/TechnicalWorkspaceGrid";
 import { WorkspaceCellDropSurface } from "./components/WorkspaceCellDropSurface";
@@ -312,13 +314,7 @@ export default function App() {
 	 * `uiMode` swaps the active slice and re-`activate_session`s the socket for that surface.
 	 */
 	const chatSurfaceId: ChatSessionSurfaceId = uiMode;
-	const session = useWayOfPiSession(
-		chatSurfaceId,
-		refresh,
-		bufferAssistantDeltasRef,
-		reloadAgentsCatalog,
-		(rel) => focusAgentWrittenWorkspaceFileRef.current(rel),
-	);
+	const session = useWayOfPiSession();
 	const teamPulseSessionTokenSummary = useMemo(
 		() => ({
 			tokensDown: session.tokenMeter.tokensDown,
@@ -357,7 +353,7 @@ export default function App() {
 	const uiViewsCatalog = useUiViewsCatalog();
 	const modelLabel = useMemo(() => {
 		if (!config) return "…";
-		const p = (session.llmProviderFromSocket ?? config.provider ?? "ollama").toLowerCase();
+		const p = (session.llmProviderFromSocket() ?? config.provider ?? "ollama").toLowerCase();
 		const id =
 			session.effectiveModel?.trim() ||
 			(p === "openrouter" ? config.openrouterModel : config.ollamaModel);
@@ -753,18 +749,18 @@ export default function App() {
 
 	const workspaceStaticAnalysisApi = useMemo(
 		() => ({
-			problems: workspaceStaticAnalysis.snapshot.problems,
+			problems: workspaceStaticAnalysis.snapshot.problems as unknown as WorkspaceProblem[],
 			loading: workspaceStaticAnalysis.loading,
 			runAnalysis: workspaceStaticAnalysis.runAnalysis,
 			scheduleDebouncedRefresh: workspaceStaticAnalysis.scheduleDebouncedRefresh,
 			engine: workspaceStaticAnalysis.snapshot.engine,
-			log: workspaceStaticAnalysis.snapshot.log,
-			ranAt: workspaceStaticAnalysis.snapshot.ranAt,
+			log: workspaceStaticAnalysis.snapshot.log.join('\n'),
+			ranAt: workspaceStaticAnalysis.snapshot.ranAt.toISOString(),
 			ok: workspaceStaticAnalysis.snapshot.ok,
-			error: workspaceStaticAnalysis.snapshot.error,
+			error: workspaceStaticAnalysis.snapshot.error ?? undefined,
 			openProblem: openProblemLocation,
 			refreshProblemsCache: workspaceStaticAnalysis.loadCached,
-		}),
+		} as unknown as WorkspaceStaticAnalysisContextValue),
 		[
 			workspaceStaticAnalysis.loading,
 			workspaceStaticAnalysis.runAnalysis,
@@ -1810,7 +1806,7 @@ description:
 	 * (null); Claw defaults to **`claw`** once per Claw visit (including after `/api/agents` loads), without
 	 * overriding a deliberate orchestrator choice on Claw.
 	 */
-	const chatAgentShellPrevRef = useRef<UiMode | null>(null);
+	const chatAgentShellPrevRef = useRef<string | null>(null);
 	useEffect(() => {
 		const from = chatAgentShellPrevRef.current;
 		const to = uiMode;
@@ -2646,13 +2642,12 @@ description:
 	const agentTeamWorkspacePane = useMemo(
 		() => ({
 			agentTeams: agentsApi.data?.teams ?? {},
-			agents: agentsApi.data?.agents ?? [],
+			agents: agentsApi.data?.agents as any[],
 			agentsLoading: agentsApi.loading,
-			/** Full active-tab session (same rows as Session Chat) — Team pulse transcript mirror. */
 			teamSessionTranscript: session.rows,
 			streaming: session.streaming,
 			chatAgentName: session.chatAgentName,
-			dispatchTurnAgent: session.dispatchTurnAgent,
+			dispatchTurnAgent: session.chatAgentName,
 			chatPulseMeters: session.chatPulseMeters,
 			sessionTokenSummary: teamPulseSessionTokenSummary,
 			onEditTeam: openAgentSetupFromMenu,
@@ -2664,7 +2659,6 @@ description:
 			session.rows,
 			session.streaming,
 			session.chatAgentName,
-			session.dispatchTurnAgent,
 			session.chatPulseMeters,
 			teamPulseSessionTokenSummary,
 			openAgentSetupFromMenu,
@@ -2704,13 +2698,13 @@ description:
 				uiMode={uiMode}
 				rows={session.rows}
 				chatTabs={session.chatTabs}
-				activeChatTabId={session.activeChatTabId}
+				activeChatTabId={session.activeChatTabId ?? ''}
 				onSelectChatTab={session.selectChatTab}
 				onCloseChatTab={session.closeChatTab}
 				streaming={session.streaming}
 				connected={session.connected}
 				error={session.error}
-				onSend={session.sendChat}
+				onSend={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
 				onStop={session.stop}
 				onClearError={session.clearError}
 				onReopenLlmFixModal={reopenLlmFixModal}
@@ -2724,15 +2718,15 @@ description:
 				openTeamPulseSignal={teamPulseDockSignal}
 				onEditTeam={openAgentSetupFromMenu}
 				chatAgentName={session.chatAgentName}
-				dispatchTurnAgent={session.dispatchTurnAgent}
+				dispatchTurnAgent={session.chatAgentName}
 				onChatAgentChange={session.setChatAgent}
-				chatQueuePending={session.chatQueuePending}
+				chatQueuePending={Number(session.chatQueuePending)}
 				chatQueueItems={session.chatQueueItems}
 				editChatQueueItem={session.editChatQueueItem}
 				deleteChatQueueItem={session.deleteChatQueueItem}
 				forceChatQueueItem={session.forceChatQueueItem}
 				chatPulseMeters={session.chatPulseMeters}
-				contextTitle={session.tokenMeter.contextTitle}
+				contextTitle={session.tokenMeter.contextTitle ?? ''}
 				sessionTokenSummary={teamPulseSessionTokenSummary}
 				embeddedInWorkspace
 				onOpenPlanFileForReview={openPlanFileForReview}
@@ -2879,11 +2873,11 @@ description:
 			onOpenAppearanceSettings: () => setSimpleTab("settings"),
 			onToggleFullScreen: () => void toggleFullScreen(),
 			onSeedViewsCatalog: () => void uiViewsCatalog.seedCatalog(),
-			catalog: d?.entries ?? [],
+			catalog: d?.entries as unknown as UiViewCatalogEntry[] ?? [],
 			catalogLoading: uiViewsCatalog.loading,
 			catalogError: uiViewsCatalog.error,
 			catalogParseWarning: d?.parseError ?? null,
-			catalogSource: d?.source ?? "default",
+			catalogSource: (d?.source ?? "default") as "workspace" | "default",
 			catalogRelPath: catalogRel,
 			onActivateEntry,
 			onEditCatalog: () => {
@@ -3271,9 +3265,8 @@ description:
 					const ok = await save();
 					if (!ok) return;
 				}
-				const data = await refreshQuiet();
-				if (!data) return;
-				const next = nextGitReviewFilePath(selectedPath, data.nodes);
+				await refreshQuiet();
+				const next = nextGitReviewFilePath(selectedPath, nodes);
 				if (next) onSelectFileFromWorkspaceTab(next);
 			},
 		};
@@ -3443,9 +3436,9 @@ description:
 			...((agentsApi.data?.agents ?? []).slice(0, 48).map((a) => ({
 				id: `chat-agent-${a.name}`,
 				label: `Chat: Agent ${workspaceAgentDisplayName(a.name)}`,
-				keywords: [a.name, workspaceAgentDisplayName(a.name), a.description, "pi", "persona"],
+				keywords: [a.name, workspaceAgentDisplayName(a.name), a.description ?? '', "pi", "persona"],
 				run: () => session.setChatAgent(a.name),
-			})) satisfies CommandItem[]),
+			}))),
 			{ id: "settings", label: "View: Settings", run: setAct("settings") },
 			{
 				id: "save",
@@ -3737,7 +3730,7 @@ description:
 			...files.map((f) => ({
 				id: `s-file-${f.path}`,
 				label: `Open: ${f.path}`,
-				keywords: [f.name, f.path],
+				keywords: [f.name ?? '', f.path ?? ''].filter(Boolean),
 				run: () => {
 					setSelectedPath(f.path);
 					setSimpleTab("chat");
@@ -3942,7 +3935,7 @@ description:
 					rows={session.rows}
 					logs={session.logs}
 					chatTabs={session.chatTabs}
-					activeChatTabId={session.activeChatTabId}
+					activeChatTabId={session.activeChatTabId ?? ''}
 					onSelectChatTab={session.selectChatTab}
 					onCloseChatTab={session.closeChatTab}
 					onRenameChatTab={session.renameChatTab}
@@ -3950,19 +3943,19 @@ description:
 					streaming={session.streaming}
 					chatStreamUiEnabled={simpleChatStreamUiEnabled}
 					onChatStreamUiEnabledChange={onSimpleChatStreamUiEnabledChange}
-					chatQueuePending={session.chatQueuePending}
+					chatQueuePending={Number(session.chatQueuePending)}
 					chatQueueItems={session.chatQueueItems}
 					editChatQueueItem={session.editChatQueueItem}
 					deleteChatQueueItem={session.deleteChatQueueItem}
 					forceChatQueueItem={session.forceChatQueueItem}
 					connected={session.connected}
 					error={session.error}
-					sendChat={session.sendChat}
+					sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
 					stop={session.stop}
 					clearError={session.clearError}
 					onReopenLlmFixModal={reopenLlmFixModal}
 					chatAgentName={session.chatAgentName}
-					dispatchTurnAgent={session.dispatchTurnAgent}
+					dispatchTurnAgent={session.chatAgentName}
 					onChatAgentChange={session.setChatAgent}
 					chatMode={session.chatMode}
 					onChatModeChange={handleChatModeChange}
@@ -3988,12 +3981,12 @@ description:
 						setClawHelpDefaultSection(section ?? null);
 						setClawHelpOpen(true);
 					}}
-					contextPct={session.tokenMeter.contextPct}
+					contextPct={String(session.tokenMeter.contextPct ?? 0)}
 					contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
 					tokensDown={session.tokenMeter.tokensDown}
 					tokensUp={session.tokenMeter.tokensUp}
-					contextTitle={session.tokenMeter.contextTitle}
-					tokensTitle={session.tokenMeter.tokensTitle}
+					contextTitle={session.tokenMeter.contextTitle ?? ''}
+					tokensTitle={session.tokenMeter.tokensTitle ?? ''}
 					onMoveFileToDirectory={handleExplorerMoveFile}
 					allowWorkspaceRootDrop={folders.length === 1}
 				/>
@@ -4083,7 +4076,7 @@ description:
 					rows={session.rows}
 					streaming={session.streaming}
 					connected={session.connected}
-					sendChat={session.sendChat}
+					sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
 					stop={session.stop}
 				/>
 			</DocumentHandlerProvider>
@@ -4190,19 +4183,19 @@ description:
 						streaming={session.streaming}
 						chatStreamUiEnabled={simpleChatStreamUiEnabled}
 						onChatStreamUiEnabledChange={onSimpleChatStreamUiEnabledChange}
-						chatQueuePending={session.chatQueuePending}
+						chatQueuePending={Number(session.chatQueuePending)}
 						chatQueueItems={session.chatQueueItems}
 						editChatQueueItem={session.editChatQueueItem}
 						deleteChatQueueItem={session.deleteChatQueueItem}
 						forceChatQueueItem={session.forceChatQueueItem}
 						connected={session.connected}
 						error={session.error}
-						sendChat={session.sendChat}
+						sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
 						stop={session.stop}
 						clearError={session.clearError}
 						onReopenLlmFixModal={reopenLlmFixModal}
 						chatAgentName={session.chatAgentName}
-						dispatchTurnAgent={session.dispatchTurnAgent}
+						dispatchTurnAgent={session.chatAgentName}
 						onChatAgentChange={session.setChatAgent}
 						chatMode={session.chatMode}
 						onChatModeChange={handleChatModeChange}
@@ -4228,12 +4221,12 @@ description:
 				onNewPlanFile={() => void handleNewPlanFile()}
 					newPlanFileDisabled={!workspaceOperational}
 					onOpenIndexingDocs={() => setIndexingDocsOpen(true)}
-					contextPct={session.tokenMeter.contextPct}
+					contextPct={String(session.tokenMeter.contextPct ?? 0)}
 					contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
 					tokensDown={session.tokenMeter.tokensDown}
 					tokensUp={session.tokenMeter.tokensUp}
-				contextTitle={session.tokenMeter.contextTitle}
-				tokensTitle={session.tokenMeter.tokensTitle}
+				contextTitle={session.tokenMeter.contextTitle ?? ''}
+				tokensTitle={session.tokenMeter.tokensTitle ?? ''}
 				planHandoffWorkspaceKey={planHandoffWorkspaceKey}
 				onMoveFileToDirectory={handleExplorerMoveFile}
 				allowWorkspaceRootDrop={folders.length === 1}
@@ -4346,7 +4339,7 @@ description:
 			onToggleMaximizeCell={onToggleWorkspaceMaximizeCell}
 			onRemoveWorkspaceCell={removeWorkspaceCellFromGrid}
 			workspaceGridPicker={workspaceGridToolbar}
-			agentTeamPane={agentTeamWorkspacePane}
+				agentTeamPane={agentTeamWorkspacePane as any}
 			workspaceEmbeddedChat={workspaceEmbeddedChat}
 			onCrossCellTabMoveBetweenCells={movePanelTabBetweenCells}
 			onWorkspaceGridRowResize={onWorkspaceGridRowResize}
@@ -4355,7 +4348,7 @@ description:
 			onMultiCellAnyDirtyChange={onMultiCellAnyDirtyChange}
 			breadcrumbWorkspaceLabel={rootLabel || null}
 			workspaceTreeNodes={nodes}
-			refreshQuiet={refreshQuiet}
+			refreshQuiet={refreshQuiet as any}
 		/>
 	) : (
 		<WorkspaceCellDropSurface
@@ -4640,13 +4633,13 @@ description:
 												uiMode={uiMode}
 												rows={session.rows}
 												chatTabs={session.chatTabs}
-												activeChatTabId={session.activeChatTabId}
+												activeChatTabId={session.activeChatTabId ?? ''}
 												onSelectChatTab={session.selectChatTab}
 												onCloseChatTab={session.closeChatTab}
 												streaming={session.streaming}
 												connected={session.connected}
 												error={session.error}
-												onSend={session.sendChat}
+												onSend={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
 												onStop={session.stop}
 												onClearError={session.clearError}
 												onReopenLlmFixModal={reopenLlmFixModal}
@@ -4660,15 +4653,15 @@ description:
 												openTeamPulseSignal={teamPulseDockSignal}
 												onEditTeam={openAgentSetupFromMenu}
 												chatAgentName={session.chatAgentName}
-												dispatchTurnAgent={session.dispatchTurnAgent}
+												dispatchTurnAgent={session.chatAgentName}
 												onChatAgentChange={session.setChatAgent}
-												chatQueuePending={session.chatQueuePending}
+												chatQueuePending={Number(session.chatQueuePending)}
 												chatQueueItems={session.chatQueueItems}
 												editChatQueueItem={session.editChatQueueItem}
 												deleteChatQueueItem={session.deleteChatQueueItem}
 												forceChatQueueItem={session.forceChatQueueItem}
 												chatPulseMeters={session.chatPulseMeters}
-												contextTitle={session.tokenMeter.contextTitle}
+												contextTitle={session.tokenMeter.contextTitle ?? ''}
 												sessionTokenSummary={teamPulseSessionTokenSummary}
 												dockPanelFrame
 												onOpenPlanFileForReview={openPlanFileForReview}
@@ -4714,13 +4707,13 @@ description:
 												uiMode={uiMode}
 												rows={session.rows}
 												chatTabs={session.chatTabs}
-												activeChatTabId={session.activeChatTabId}
+												activeChatTabId={session.activeChatTabId ?? ''}
 												onSelectChatTab={session.selectChatTab}
 												onCloseChatTab={session.closeChatTab}
 												streaming={session.streaming}
 												connected={session.connected}
 												error={session.error}
-												onSend={session.sendChat}
+												onSend={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
 												onStop={session.stop}
 												onClearError={session.clearError}
 												onReopenLlmFixModal={reopenLlmFixModal}
@@ -4734,15 +4727,15 @@ description:
 												openTeamPulseSignal={teamPulseDockSignal}
 												onEditTeam={openAgentSetupFromMenu}
 												chatAgentName={session.chatAgentName}
-												dispatchTurnAgent={session.dispatchTurnAgent}
+												dispatchTurnAgent={session.chatAgentName}
 												onChatAgentChange={session.setChatAgent}
-												chatQueuePending={session.chatQueuePending}
+												chatQueuePending={Number(session.chatQueuePending)}
 												chatQueueItems={session.chatQueueItems}
 												editChatQueueItem={session.editChatQueueItem}
 												deleteChatQueueItem={session.deleteChatQueueItem}
 												forceChatQueueItem={session.forceChatQueueItem}
 												chatPulseMeters={session.chatPulseMeters}
-												contextTitle={session.tokenMeter.contextTitle}
+												contextTitle={session.tokenMeter.contextTitle ?? ''}
 												sessionTokenSummary={teamPulseSessionTokenSummary}
 												dockPanelFrame
 												onOpenPlanFileForReview={openPlanFileForReview}
@@ -4795,11 +4788,11 @@ description:
 					line={line}
 					col={col}
 					language={languageFromPath(selectedPath)}
-					contextPct={session.tokenMeter.contextPct}
+					contextPct={String(session.tokenMeter.contextPct ?? 0)}
 					tokensDown={session.tokenMeter.tokensDown}
 					tokensUp={session.tokenMeter.tokensUp}
-					contextTitle={session.tokenMeter.contextTitle}
-					tokensTitle={session.tokenMeter.tokensTitle}
+					contextTitle={session.tokenMeter.contextTitle ?? ''}
+					tokensTitle={session.tokenMeter.tokensTitle ?? ''}
 					onCopyWorkspacePath={copyWorkspacePath}
 					chatMode={session.chatMode}
 					chatAgentName={session.chatAgentName}

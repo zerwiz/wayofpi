@@ -8,12 +8,12 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { ChatMessage } from "./chat";
-import { getAgentBodyByName } from "./agents";
+import type { ChatMessage } from "../server/chat";
+import { getAgentBodyByName } from "../server/agents";
 import { getClawWorkspaceBundleDirAbs } from "./claw-workspace-root";
-import { runPiChatTurn, shouldUsePiJsonChat } from "./pi-agent-runtime";
+import { runPiChatTurn, shouldUsePiJsonChat } from "../server/pi-agent-runtime";
 import { appendClawMissionEvent } from "./claw-mission-events";
-import { getPrimaryWorkspacePath } from "./workspace-state";
+import { getPrimaryWorkspacePath } from "../server/workspace-state";
 
 export type ClawAutomationSource = "schedule" | "webhook";
 
@@ -88,7 +88,7 @@ export async function executeClawAutomation(
 	const r = await runPiChatTurn({
 		cwd,
 		messages,
-		onDelta: (s) => {
+		onDelta: (s: string) => {
 			full += s;
 		},
 		onLog: () => {},

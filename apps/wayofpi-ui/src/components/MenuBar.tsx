@@ -12,7 +12,7 @@ import type { PiModelConfigPath } from "../constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
 import type { ServerConfig } from "../hooks/useServerConfig";
 import type { ChatSessionMode } from "../hooks/useWayOfPiSession";
-import type { UiMode } from "../hooks/useUiMode";
+// UiMode typed as string
 import type {
 	BottomPanelTab,
 	TechnicalActivity,
@@ -99,8 +99,8 @@ export function MenuBar({
 	viewSimple,
 }: {
 	modelLabel: string;
-	uiMode: UiMode;
-	onUiModeChange: (mode: UiMode) => void;
+	uiMode: string;
+	onUiModeChange: (mode: string) => void;
 	config: ServerConfig | null;
 	onOpenCommandPalette: () => void;
 	onSave: () => void | Promise<void>;
@@ -231,7 +231,7 @@ export function MenuBar({
 	const closeMenus = () => setOpenMenu(null);
 
 	return (
-		<header className="relative z-[60] flex h-8 shrink-0 select-none items-center justify-between border-b border-[#252526] bg-[#323233] px-3">
+		<header className="relative z-[60] flex h-8 shrink-0 select-none items-center justify-between overflow-hidden border-b border-[#252526] bg-[#323233] px-3">
 			<div className="flex min-w-0 items-center gap-4">
 				<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
 					<TerminalSquare size={14} className="text-[#007acc]" />
@@ -3394,8 +3394,8 @@ export function MenuBar({
 					title="Command palette (Ctrl+K)"
 				>
 					<Search size={12} className="text-[#cccccc]" />
-					<span className="text-[12px] text-[#cccccc]">Search or command…</span>
-					<span className="ml-1 font-mono text-[10px] font-bold text-[#969696]">⌘K</span>
+					<span className="hidden text-[12px] text-[#cccccc] lg:inline">Search or command…</span>
+					<span className="ml-1 hidden font-mono text-[10px] font-bold text-[#969696] lg:inline">⌘K</span>
 				</button>
 
 				<div className="relative" ref={modelRef}>

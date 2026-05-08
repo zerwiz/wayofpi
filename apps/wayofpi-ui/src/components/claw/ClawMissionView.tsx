@@ -325,7 +325,7 @@ export function ClawMissionView({
 
 	const schedulesChannelsLine = useMemo(() => {
 		const embedded =
-			config?.clawAutomation?.version === 1 ? config.clawAutomation : null;
+			(config?.clawAutomation as any)?.version === 1 ? config?.clawAutomation as any : null;
 		const auto = embedded ?? clawAuto;
 		const automationDataLoaded = clawAutoLoaded || embedded != null;
 		/** Same gate as Chat + Claw executor: trust Engine (`piDrivesChat`) so Mission rows cannot disagree. */
@@ -794,12 +794,13 @@ function StatusRow({
 }
 
 function ActivityRow({ log, dark }: { log: LogRow; dark: boolean }) {
+	const msg = log.msg ?? "";
 	const isTool =
 		log.source === "tool" ||
-		log.msg.startsWith("▶") ||
-		log.msg.startsWith("✓") ||
-		log.msg.startsWith("✗") ||
-		log.msg.toLowerCase().includes("tool");
+		msg.startsWith("▶") ||
+		msg.startsWith("✓") ||
+		msg.startsWith("✗") ||
+		msg.toLowerCase().includes("tool");
 	const isSystem = log.level === "info" && !isTool;
 
 	const Icon = isTool ? Cpu : isSystem ? Play : MessageCircle;

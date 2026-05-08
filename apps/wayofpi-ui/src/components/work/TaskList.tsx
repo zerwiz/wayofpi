@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Clock, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle, Clock, Pencil, Trash2, type LucideIcon } from "lucide-react";
 
 interface Task {
   id: string;
@@ -57,7 +57,7 @@ export function TaskList({ tasks, onUpdateStatus, onEdit, onDelete, isLeader }: 
               <span className="task-assignee">Assigned to: {task.assignedTo}</span>
               {task.deadline && (
                 <span className="task-deadline">
-                  <ClockIcon width={14} /> {new Date(task.deadline).toLocaleDateString()}
+                  <Clock width={14} /> {new Date(task.deadline).toLocaleDateString()}
                 </span>
               )}
               {task.estimatedHours && (

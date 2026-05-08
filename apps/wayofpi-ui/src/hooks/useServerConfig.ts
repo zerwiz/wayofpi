@@ -1,133 +1,224 @@
-import { useCallback, useEffect, useState } from "react";
-import { parseClawTelegramStatusV1, type ClawTelegramStatusV1 } from "../../shared/claw-telegram-status";
-import { apiGet } from "../api/client";
-import type { ClawAutomationStatus } from "./useClawAutomationStatus";
+/**
+ * useServerConfig Hook
+ *
+ * @description Manages server configuration state including connection status,
+ *              API endpoints, and refresh mechanisms for Way of Pi backend communication
+ * @returns Object containing config object, refresh function, and related state
+ *
+ * @example
+ * ```tsx
+ * const { config, refresh: refreshServerConfig } = useServerConfig();
+ * if (config) displayConfig(config);
+ * refreshServerConfig();
+ * ```
+ */
 
-export type WayofpiApiCapabilities = {
-	workspaceProblems?: boolean;
-	/** This Bun build supports **`POST /api/config`** session toggles (Extensions → Orchestration). */
-	configRuntimePost?: boolean;
-	/** This Bun build exposes **`GET /api/claw/tree`** (Claw host `.claw/` explorer). */
-	clawHostTreeGet?: boolean;
-	/** Telegram snapshot on **`GET /api/config`** and **`GET /api/claw/telegram/status`**. */
-	clawTelegramStatusGet?: boolean;
-};
+import { useState, useCallback, useEffect } from "react";
+
+const STORAGE_KEY = "wop-server-config";
 
 export interface ServerConfig {
-	provider: string;
-	/** Echo of **`GET /api/health`** `capabilities` when present — detect stale Bun vs this UI. */
-	capabilities?: WayofpiApiCapabilities;
-	/** Effective chat backend label: **`pi`**, **`auto`**, or provider id when bundled. */
-	chatEngine: string;
-	/** True when **`pi`** resolves and headless Pi JSON is active — all personas use `pi --mode json` (full Pi tools). */
-	piDrivesChat: boolean;
-	/** True when engine mode is **`pi`** or **`auto`** (includes **unset**, which defaults to **`auto`**). */
-	piChatEngineRequested?: boolean;
-	/** Same as **`piDrivesChat`** today: Pi binary found for JSON-mode turns. */
-	piChatEngineWired?: boolean;
-	/** **`pi`** executable resolved on the server (PATH or **`WOP_PI_BINARY`**). */
-	piBinaryResolved?: boolean;
-	/** Open workspace folder contains **`.pi/`** (settings tree — not the Pi CLI). */
-	workspaceDotPiPresent?: boolean;
-	/** Pi-shaped workspace tools on orchestrator turns (read/grep/…); not full Pi extensions. */
-	orchestratorTools?: boolean;
-	orchestratorBash?: boolean;
-	/** Static manifest path (filesystem scan; not runtime Pi introspection). */
-	manifestUrl?: string;
-	ollamaHost: string;
-	ollamaModel: string;
-	openrouterModel: string;
-	/** True when `WOP_ALLOW_TERMINAL` is enabled (`1`, `true`, `yes`, `on`) — WebSocket `/ws/terminal` is allowed. */
-	terminalEnabled?: boolean;
-	/** Shell binary the server spawns for the embedded terminal (from `WOP_SHELL` or default). */
+	baseUrl: string;
+	enabled: boolean;
+	version: string;
+	apiVersion?: string;
+	timeoutMs?: number;
+	authEnabled?: boolean;
+	authBearerToken?: string;
+	debugMode?: boolean;
+	lastConnected?: Date;
+	connectionStatus?: "connected" | "disconnected" | "error";
 	shellExecutable?: string;
 	shellArgs?: string[];
-	/** True when `WOP_SHELL` is set on the server. */
-	customShell?: boolean;
-	/** Node `process.platform` from the Bun server. */
+	shellEnabled?: boolean;
+	shellCustom?: boolean;
 	platform?: string;
-	/** Node `process.arch` from the Bun server (`arm64` on Apple Silicon, `x64` on Intel/Rosetta). */
 	arch?: string;
-	/** Way of Pi checkout root where host-scoped **`.claw/`** lives (not the opened project workspace). */
-	clawHostRepoRoot?: string;
-	/** Absolute host **`.claw/`** (optional `telegram.json`, etc.). */
-	clawDotDirAbs?: string;
-	/** Absolute **`.claw/workspace/`** (seven scaffold files + `memory/`). */
+	features?: Record<string, boolean>;
+	clawTelegramStatus?: boolean;
+	clawTelegramEnabled?: boolean;
+	clawTelegramChannels?: string[];
+	capabilities?: Record<string, boolean>;
+	cliVersion?: string;
+	terminalEnabled?: boolean;
+	customShell?: string;
+	piDrivesChat?: boolean;
+	piBinaryResolved?: boolean;
+	chatEngine?: string;
+	provider?: string;
 	clawWorkspaceDirAbs?: string;
-	/** Same shape as **`GET /api/claw/automation`** — echoed on **`GET /api/config`** for Claw Mission. */
-	clawAutomation?: ClawAutomationStatus;
-	/** Same shape as **`GET /api/claw/telegram/status`** — echoed on **`GET /api/config`** for Claw Channels. */
-	clawTelegramStatus?: ClawTelegramStatusV1;
+	clawDotDirAbs?: string;
+	piChatEngineRequested?: boolean;
+	orchestratorTools?: boolean;
+	orchestratorBash?: boolean;
+	clawAutomation?: boolean;
+	ollamaHost?: string;
+	ollamaModel?: string;
+	openrouterModel?: string;
+	configRuntimePost?: boolean;
+	clawTelegramStatusGet?: boolean;
 }
 
-/**
- * Older APIs omitted **`piChatEngineRequested`** (undefined → was wrongly read as false).
- * Legacy servers also sent **`piChatEngineRequested: false`** with **`chatEngine: ollama`** when **`WOP_CHAT_ENGINE=ollama`**
- * was misinterpreted as Bun-only — treat that as Pi/auto intent for Mission / diagnostics copy.
- */
-function normalizePiChatEngineRequested(raw: ServerConfig): boolean {
-	const explicit = raw.piChatEngineRequested;
-	const ce = String(raw.chatEngine ?? "").trim().toLowerCase();
-	if (explicit === true) return true;
-	if (explicit === false) {
-		if (ce === "bundled" || ce === "bun") return false;
-		if (ce === "ollama" || ce === "openrouter") return true;
-		return false;
-	}
-	if (ce === "bundled" || ce === "bun") return false;
-	return true;
+export interface UseServerConfigReturn {
+	config: ServerConfig | null;
+	refresh: () => Promise<void>;
+	refreshQuiet: () => Promise<void>;
+	setConfig: (config: Partial<ServerConfig>) => void;
 }
 
-function normalizeServerConfig(raw: ServerConfig): ServerConfig {
-	const cap = raw.capabilities;
-	return {
-		...raw,
-		capabilities: cap
-			? {
-					workspaceProblems: cap.workspaceProblems === true,
-					configRuntimePost: cap.configRuntimePost === true,
-					clawHostTreeGet: cap.clawHostTreeGet === true,
-					clawTelegramStatusGet: cap.clawTelegramStatusGet === true,
+const DEFAULT_CONFIG: ServerConfig = {
+	baseUrl: "",
+	enabled: true,
+	version: "1.0.0",
+	apiVersion: "v1",
+	timeoutMs: 30000,
+	authEnabled: false,
+	debugMode: false,
+	connectionStatus: "disconnected",
+	features: {
+		fileOperations: true,
+		agentCommunication: true,
+		planExecution: true,
+		workspaceSync: true,
+	},
+};
+
+export function useServerConfig(): UseServerConfigReturn {
+	const [config, setConfigState] = useState<ServerConfig>(() => {
+		try {
+			const stored = localStorage.getItem(STORAGE_KEY);
+			if (stored) {
+				const parsed = JSON.parse(stored) as ServerConfig;
+				// Migrate old hardcoded port to relative URL (Vite proxy)
+				if (parsed.baseUrl === "http://localhost:3000") {
+					parsed.baseUrl = "";
 				}
-			: undefined,
-		chatEngine: raw.chatEngine ?? raw.provider ?? "ollama",
-		piDrivesChat: raw.piDrivesChat ?? false,
-		piChatEngineRequested: normalizePiChatEngineRequested(raw),
-		piChatEngineWired: raw.piChatEngineWired ?? false,
-		piBinaryResolved: raw.piBinaryResolved ?? false,
-		workspaceDotPiPresent: raw.workspaceDotPiPresent === true,
-		orchestratorTools: raw.orchestratorTools ?? false,
-		orchestratorBash: raw.orchestratorBash ?? false,
-		clawHostRepoRoot: typeof raw.clawHostRepoRoot === "string" ? raw.clawHostRepoRoot : undefined,
-		clawDotDirAbs: typeof raw.clawDotDirAbs === "string" ? raw.clawDotDirAbs : undefined,
-		clawWorkspaceDirAbs: typeof raw.clawWorkspaceDirAbs === "string" ? raw.clawWorkspaceDirAbs : undefined,
-		clawAutomation: (() => {
-			const a = raw.clawAutomation;
-			if (!a || typeof a !== "object") return undefined;
-			if ((a as ClawAutomationStatus).version !== 1) return undefined;
-			return a as ClawAutomationStatus;
-		})(),
-		clawTelegramStatus: parseClawTelegramStatusV1(raw.clawTelegramStatus) ?? undefined,
-	};
-}
-
-export function useServerConfig() {
-	const [config, setConfig] = useState<ServerConfig | null>(null);
-	const [error, setError] = useState<string | null>(null);
+				// Merge with defaults to ensure all fields exist
+				return {
+					...DEFAULT_CONFIG,
+					...parsed,
+					features: {
+						...DEFAULT_CONFIG.features,
+						...parsed.features,
+					},
+				};
+			}
+		} catch {
+			// Storage not available or parse error
+		}
+		return DEFAULT_CONFIG;
+	});
 
 	const refresh = useCallback(async () => {
-		setError(null);
 		try {
-			const raw = await apiGet<ServerConfig>("/api/config");
-			setConfig(normalizeServerConfig(raw));
-		} catch (e) {
-			setError(e instanceof Error ? e.message : String(e));
+			// Try to fetch current server config
+			const response = await fetch(`${config.baseUrl}/api/config`, {
+				headers: config.authEnabled
+					? { Authorization: `Bearer ${config.authBearerToken}` }
+					: {},
+			});
+
+			if (response.ok) {
+				const newConfig = await response.json();
+				setConfigState((prev) => ({
+					...prev,
+					...newConfig,
+					connectionStatus: "connected",
+					lastConnected: new Date(),
+				}));
+
+				// Persist updated config
+				localStorage.setItem(
+					STORAGE_KEY,
+					JSON.stringify({
+						baseUrl: config.baseUrl,
+						enabled: config.enabled,
+						version: config.version,
+						authEnabled: config.authEnabled,
+						authBearerToken: config.authBearerToken,
+						debugMode: config.debugMode,
+						connectionStatus: "connected",
+						lastConnected: config.lastConnected,
+					}),
+				);
+			}
+		} catch (error) {
+			console.warn("Server config refresh failed:", error);
+			setConfigState((prev) => ({
+				...prev,
+				connectionStatus: "error",
+			}));
+		}
+	}, [config.baseUrl, config.authEnabled, config.authBearerToken]);
+
+	const refreshQuiet = useCallback(async () => {
+		// Same as refresh but doesn't update connection status
+		try {
+			const response = await fetch(`${config.baseUrl}/api/config`, {
+				headers: config.authEnabled
+					? { Authorization: `Bearer ${config.authBearerToken}` }
+					: {},
+			});
+
+			if (response.ok) {
+				const newConfig = await response.json();
+				setConfigState((prev) => ({
+					...prev,
+					...newConfig,
+				}));
+			}
+		} catch (error) {
+			// Silently handle errors for quiet refresh
+			console.warn("Server config quiet refresh failed:", error);
+		}
+	}, [config.baseUrl, config.authEnabled, config.authBearerToken]);
+
+	const setConfig = useCallback(
+		(newConfig: Partial<ServerConfig>) => {
+			setConfigState((prev) => ({
+				...prev,
+				...newConfig,
+			}));
+
+			// Persist updated config
+			localStorage.setItem(
+				STORAGE_KEY,
+				JSON.stringify({
+					baseUrl: config.baseUrl,
+					enabled: config.enabled,
+					version: config.version,
+					authEnabled: config.authEnabled,
+					authBearerToken: config.authBearerToken,
+					debugMode: config.debugMode,
+					...newConfig,
+				}),
+			);
+		},
+		[
+			config.baseUrl,
+			config.enabled,
+			config.version,
+			config.authEnabled,
+			config.authBearerToken,
+			config.debugMode,
+		],
+	);
+
+	useEffect(() => {
+		// Refresh config on mount
+		refresh();
+
+		// Set up periodic refresh if enabled
+		if (config.enabled) {
+			const interval = setInterval(refreshQuiet, 60000); // Refresh every minute
+			return () => clearInterval(interval);
 		}
 	}, []);
 
-	useEffect(() => {
-		void refresh();
-	}, [refresh]);
-
-	return { config, error, refresh };
+	return {
+		config,
+		refresh,
+		refreshQuiet,
+		setConfig,
+	};
 }

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "files": {
+    "apps/wayofpi-ui/src/hooks/useUiViewsCatalog.ts": {
+      "latest": {
+        "commit": "5ec3c9e",
+        "timestamp": "2026-05-08T17:34:38.498Z",
+        "mi": 33.9,
+        "cognitive": 75,
+        "nesting": 7,
+        "lines": 169,
+        "maxCyclomatic": 27,
+        "entropy": 5.94
+      },
+      "history": [
+        {
+          "commit": "5ec3c9e",
+          "timestamp": "2026-05-08T17:34:38.498Z",
+          "mi": 33.9,
+          "cognitive": 75,
+          "nesting": 7,
+          "lines": 169,
+          "maxCyclomatic": 27,
+          "entropy": 5.94
+        }
+      ],
+      "trend": "stable"
+    }
+  },
+  "capturedAt": "2026-05-08T17:34:43.499Z"
+}

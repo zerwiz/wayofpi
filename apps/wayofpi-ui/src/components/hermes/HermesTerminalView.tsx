@@ -5,7 +5,11 @@ import React, {
   useRef,
   useEffect,
 } from "react";
-import type { TerminalCommand } from "../../pages/hermes/types/hermes";
+interface TerminalCommand {
+  command: string;
+  name: string;
+  description?: string;
+}
 
 interface HermesTerminalViewProps {
   commands: Array<{ cmd: string; output: string; timestamp: Date }>;
@@ -48,7 +52,7 @@ export const HermesTerminalView = forwardRef<
     focus: () => inputRef.current?.focus(),
     clear: () => {
       setInput("");
-      setCommands([]);
+      setCommandHistory([]);
     },
     scrollToBottom: () =>
       scrollRef.current?.scrollTo({ top: Infinity, behavior: "smooth" }),
@@ -112,7 +116,7 @@ export const HermesTerminalView = forwardRef<
   const handleQuickCommand = async (command: TerminalCommand) => {
     await handleSubmit({
       preventDefault: () => {},
-      target: { value: command.command } as HTMLFormElement,
+      target: { value: command.command } as unknown as HTMLFormElement,
     } as unknown as React.FormEvent);
   };
 

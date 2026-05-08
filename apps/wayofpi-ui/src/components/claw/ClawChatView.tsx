@@ -649,7 +649,7 @@ function ClawFilePanel({
 						onReplaceInFiles={onReplaceInFiles}
 						columnLayout="besideChat"
 						markdownPaneMode={markdownMode}
-						onMarkdownPaneModeChange={setMarkdownMode}
+						onMarkdownPaneModeChange={setMarkdownMode as (m: any) => void}
 					/>
 				) : (
 					<div className={`flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center ${emptyHint}`}>

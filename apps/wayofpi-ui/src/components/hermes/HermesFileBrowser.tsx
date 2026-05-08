@@ -71,7 +71,7 @@ export const HermesFileBrowser: React.FC<HermesFileBrowserProps> = ({
 
   // Get files for current directory
   const getFilesForDirectory = useCallback(
-    (directory: string) => fileStructure[directory] || [],
+    (directory: string) => (fileStructure as any)[directory] || [],
     [fileStructure],
   );
 
@@ -167,8 +167,8 @@ export const HermesFileBrowser: React.FC<HermesFileBrowserProps> = ({
   const countItemsInDirectory = useCallback(
     (directory: string) => {
       const files = getFilesForDirectory(directory);
-      const folders = files.filter((f) => f.type === "folder").length;
-      const filesTotal = files.filter((f) => f.type !== "folder").length;
+      const folders = files.filter((f: {type: string}) => f.type === "folder").length;
+      const filesTotal = files.filter((f: {type: string}) => f.type !== "folder").length;
       return { folders, files: filesTotal };
     },
     [getFilesForDirectory],

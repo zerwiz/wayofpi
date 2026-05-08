@@ -143,7 +143,7 @@ export async function runPiChatTurn(
 	if ("aborted" in r && r.aborted) {
 		return { result: { ok: false, aborted: true }, lastStreamUsage: null };
 	}
-	return { result: { ok: false, error: r.error }, lastStreamUsage: null };
+	return { result: { ok: false, error: (r as { ok: false; error: string }).error }, lastStreamUsage: null };
 }
 
 /** Determine the comma-separated PI_STACK for a given UI surface (simple, technical, claw, etc.). */

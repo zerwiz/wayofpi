@@ -18,7 +18,7 @@ Currently:
 
 | Point | File | Risk |
 |-------|------|------|
-| npm pkg | `@mariozechner/pi-coding-agent@0.72.1` | CLI interface changes |
+| npm pkg | `@earendil-works/pi-coding-agent@0.74.0` | CLI interface changes |
 | JSON mode | `pi-json-mode-chat.ts` parses `pi --mode json` stream | Event format breaks streaming |
 | Binary discovery | `pi-binary.ts` resolves `pi` executable | Path changes |
 | Tool delegation | `orchestrator-tools-exec.ts:49` | Tool interface changes |
@@ -47,7 +47,7 @@ justfile targets:
 └── pi-fix-version               # Re-pins pi to the pinned version
 
 .env:
-├── PI_PINNED_VERSION=0.72.1     # The exact version we test against
+├── PI_PINNED_VERSION=0.74.0     # The exact version we test against
 
 Startup log output (JSONL or human-readable):
 ├── timestamp, pi version, pinned version, match?
@@ -60,13 +60,14 @@ Startup log output (JSONL or human-readable):
 
 ## Success Criteria
 
-### Phase 1: Version Pin + Justfile Target
-- [ ] `.env` gains `PI_PINNED_VERSION` (set to current `0.72.1`)
-- [ ] `scripts/pi-version-check.sh` — validates `pi --version` matches `PI_PINNED_VERSION` at startup
-- [ ] `just pi-verify` — runs the check
-- [ ] `just pi-fix-version` — runs `npm install -g @mariozechner/pi-coding-agent@${PI_PINNED_VERSION}`
-- [ ] `run-pi` target (or a variant) runs version check before loading extensions
-- [ ] `package.json` pins `@mariozechner/pi-coding-agent` to exact version (no `^` or `~`)
+### Phase 1: Version Pin + Justfile Target (Completed)
+- [x] `.env` gains `PI_PINNED_VERSION` (set to current `0.74.0`)
+- [x] `scripts/pi-version-check.sh` — validates `pi --version` matches `PI_PINNED_VERSION` at startup
+- [x] `just pi-verify` — runs the check
+- [x] `just pi-fix-version` — runs `bun install` to restore project-local Pi
+- [x] `run-pi` target runs version check before loading extensions
+- [x] `package.json` pins `@earendil-works/pi-coding-agent` to exact version `0.74.0`
+- [x] **Decoupling**: All WOP `pi` commands now use `node_modules/.bin/pi` and isolated `PI_CODING_AGENT_DIR=".pi/agent"`.
 
 ### Phase 2: Startup Logging
 - [ ] `scripts/pi-startup-log.sh` — logs all 14+ integration point statuses

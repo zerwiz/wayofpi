@@ -25,7 +25,7 @@ import type { ChatPulseMeters } from "../hooks/useWayOfPiSession";
 import type { ChatQueueItem } from "../utils/chatQueueTranscript";
 import { ChatQueueModal } from "./ChatQueueModal";
 import type { ChatRow, ChatSessionMode, ChatSessionTab } from "../hooks/useWayOfPiSession";
-import type { UiMode } from "../hooks/useUiMode";
+// UiMode typed as string
 import { chatErrorSuggestsModelFix } from "../utils/chatErrorModelHint";
 import {
 	applySlashCompletion,
@@ -101,7 +101,7 @@ export function ChatPanel({
 	/** Primary workspace folder path (or `""`) — scopes saved **Plan document** choice in localStorage. */
 	planHandoffWorkspaceKey = "",
 }: {
-	uiMode: UiMode;
+	uiMode: string;
 	rows: ChatRow[];
 	chatTabs: ChatSessionTab[];
 	activeChatTabId: string;

@@ -35,9 +35,7 @@ export function AiModelDropdown({
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen} // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    >
+    <DropdownMenu {...({ open, onOpenChange: setOpen } as any)}>
       <DropdownMenuTrigger asChild // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       >
@@ -73,7 +71,7 @@ export function AiModelDropdown({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onBack}>
-              {onBack ? "Back" : undefined}
+              Back
             </DropdownMenuItem>
           </>
         )}

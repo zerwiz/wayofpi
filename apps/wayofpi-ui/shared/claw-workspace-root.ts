@@ -10,7 +10,7 @@
 import { dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { isInsideRoot, safeResolveUnderWorkspace } from "./paths";
+import { isInsideRoot, safeResolveUnderWorkspace } from "../server/paths";
 
 function thisModuleDir(): string {
 	if (typeof import.meta.dirname === "string") return import.meta.dirname;

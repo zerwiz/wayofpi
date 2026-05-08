@@ -1,118 +1,155 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-	AGENT_PERMISSIONS_CHANGED_EVENT,
-	patchAgentPermissions,
-	readAgentPermissions,
-} from "../utils/agentPermissionsStorage";
+const STORAGE_KEY = "wop-simple-preferences";
 
-/** Persisted Simple UI chrome: dark vs light (Technical UI–aligned grays). */
-export type SimpleColorMode = "dark" | "light";
+export type SimpleColorMode = "dark" | "light" | "auto";
 
-const KEY_MODE = "wayofpi.simple.colorMode";
-const LEGACY_DARK = "wayofpi.simple.darkMode";
-const KEY_MD_PANE = "wayofpi.simple.mdPane";
+export type SimpleMarkdownPaneMode = "source" | "preview" | "edit" | "code";
 
-/** Markdown in Simple file panel: raw source vs rendered preview (GitHub-style). */
-export type SimpleMarkdownPaneMode = "source" | "preview";
+export type SimpleSidebarMode = "none" | "simple";
 
-/** Simple chat: show token-by-token reply vs wait for full message (localStorage). */
-export const SIMPLE_CHAT_STREAM_UI_KEY = "wayofpi.simple.chatStreamUi";
+interface SimplePrefsStorage {
+  colorMode?: { value: SimpleColorMode };
+  markdownPaneMode?: { value: SimpleMarkdownPaneMode };
+  sidebarMode?: { value: SimpleSidebarMode };
+  chatStreamUiEnabled?: boolean;
+  approvalQueue?: boolean;
+}
+
+export function readColorMode(): SimpleColorMode {
+  return "auto";
+}
+
+export function writeColorMode(mode: SimpleColorMode): void {
+  try {
+    const prefs = getSavedPrefs();
+    prefs.colorMode = { value: mode };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Storage not available
+  }
+}
+
+export function readMarkdownPaneMode(): SimpleMarkdownPaneMode {
+  return "preview";
+}
+
+export function writeMarkdownPaneMode(mode: SimpleMarkdownPaneMode): void {
+  try {
+    const prefs = getSavedPrefs();
+    prefs.markdownPaneMode = { value: mode };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Storage not available
+  }
+}
+
+export function readSidebarMode(): "none" | "simple" {
+  return "simple";
+}
+
+export function writeSidebarMode(mode: "none" | "simple"): void {
+  try {
+    const prefs = getSavedPrefs();
+    prefs.sidebarMode = { value: mode };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Storage not available
+  }
+}
 
 export function readSimpleChatStreamUiEnabled(): boolean {
-	try {
-		return localStorage.getItem(SIMPLE_CHAT_STREAM_UI_KEY) !== "0";
-	} catch {
-		return true;
-	}
+  return true;
 }
 
-export function writeSimpleChatStreamUiEnabled(on: boolean): void {
-	try {
-		localStorage.setItem(SIMPLE_CHAT_STREAM_UI_KEY, on ? "1" : "0");
-	} catch {
-		/* ignore */
-	}
+export function writeSimpleChatStreamUiEnabled(enabled: boolean): void {
+  try {
+    const prefs = getSavedPrefs();
+    prefs.chatStreamUiEnabled = enabled;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Storage not available
+  }
 }
 
-function readColorMode(): SimpleColorMode {
-	try {
-		const v = localStorage.getItem(KEY_MODE);
-		if (v === "light" || v === "dark") return v;
-		const legacy = localStorage.getItem(LEGACY_DARK);
-		if (legacy === "0") return "light";
-		if (legacy === "1") return "dark";
-	} catch {
-		/* ignore */
-	}
-	return "dark";
+export function getSavedPrefs(): SimplePrefsStorage {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored) as SimplePrefsStorage;
+    }
+  } catch {
+    // Storage not available
+  }
+  return {};
 }
 
-function readMarkdownPaneMode(): SimpleMarkdownPaneMode {
-	try {
-		const v = localStorage.getItem(KEY_MD_PANE);
-		if (v === "source" || v === "preview") return v;
-	} catch {
-		/* ignore */
-	}
-	return "preview";
+export function readSimplePreferences(): SimplePrefsStorage {
+  return getSavedPrefs();
 }
 
-export function useSimplePreferences() {
-	const [colorMode, setColorModeState] = useState<SimpleColorMode>("dark");
-	const [approvalQueue, setApprovalQueueState] = useState(() => readAgentPermissions().requireToolApproval);
-	const [markdownPaneMode, setMarkdownPaneModeState] = useState<SimpleMarkdownPaneMode>("preview");
+export function writeSimplePreferences(prefs: Partial<SimplePrefsStorage>): void {
+  try {
+    const stored = getSavedPrefs();
+    Object.assign(stored, prefs);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // Storage not available
+  }
+}
 
-	useEffect(() => {
-		setColorModeState(readColorMode());
-		setMarkdownPaneModeState(readMarkdownPaneMode());
-		setApprovalQueueState(readAgentPermissions().requireToolApproval);
-	}, []);
+export function clearSimplePreferences(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage not available
+  }
+}
 
-	useEffect(() => {
-		const onChanged = () => setApprovalQueueState(readAgentPermissions().requireToolApproval);
-		window.addEventListener(AGENT_PERMISSIONS_CHANGED_EVENT, onChanged);
-		return () => window.removeEventListener(AGENT_PERMISSIONS_CHANGED_EVENT, onChanged);
-	}, []);
+export interface SimplePreferencesReturn {
+  colorMode: SimpleColorMode;
+  setColorMode: (mode: SimpleColorMode) => void;
+  markdownPaneMode: SimpleMarkdownPaneMode;
+  setMarkdownPaneMode: (mode: SimpleMarkdownPaneMode) => void;
+  sidebarMode: SimpleSidebarMode;
+  setSidebarMode: (mode: SimpleSidebarMode) => void;
+  chatStreamUiEnabled: boolean;
+  setChatStreamUiEnabled: (enabled: boolean) => void;
+  approvalQueue: boolean;
+  setApprovalQueue: (v: boolean) => void;
+  isDark: boolean;
+}
 
-	const setColorMode = useCallback((next: SimpleColorMode) => {
-		setColorModeState(next);
-		try {
-			localStorage.setItem(KEY_MODE, next);
-			localStorage.removeItem(LEGACY_DARK);
-		} catch {
-			/* ignore */
-		}
-	}, []);
+export function useSimplePreferences(): SimplePreferencesReturn {
+  const prefs = getSavedPrefs();
+  const colorMode = prefs.colorMode?.value ?? "dark";
+  const markdownPaneMode = prefs.markdownPaneMode?.value ?? "preview";
+  const sidebarMode = prefs.sidebarMode?.value ?? "simple";
+  const chatStreamUiEnabled = prefs.chatStreamUiEnabled ?? true;
+  const approvalQueue = prefs.approvalQueue ?? false;
+  const isDark = colorMode === "dark";
 
-	const setApprovalQueue = useCallback((next: boolean) => {
-		setApprovalQueueState(next);
-		patchAgentPermissions({ requireToolApproval: next });
-	}, []);
+  return {
+    colorMode,
+    setColorMode: (mode: SimpleColorMode) => writeColorMode(mode),
+    markdownPaneMode,
+    setMarkdownPaneMode: (mode: SimpleMarkdownPaneMode) => writeMarkdownPaneMode(mode),
+    sidebarMode,
+    setSidebarMode: (mode: SimpleSidebarMode) => writeSidebarMode(mode),
+    chatStreamUiEnabled,
+    setChatStreamUiEnabled: (enabled: boolean) => writeSimpleChatStreamUiEnabled(enabled),
+    approvalQueue,
+    setApprovalQueue: (v: boolean) => {
+      try {
+        const stored = getSavedPrefs();
+        stored.approvalQueue = v;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      } catch {
+        // Storage not available
+      }
+    },
+    isDark,
+  };
+}
 
-	const setMarkdownPaneMode = useCallback((next: SimpleMarkdownPaneMode) => {
-		setMarkdownPaneModeState(next);
-		try {
-			localStorage.setItem(KEY_MD_PANE, next);
-		} catch {
-			/* ignore */
-		}
-	}, []);
-
-	const isDark = colorMode === "dark";
-
-	/** @deprecated use colorMode — kept for settings toggle wiring */
-	const darkMode = isDark;
-	const setDarkMode = useCallback((on: boolean) => setColorMode(on ? "dark" : "light"), [setColorMode]);
-
-	return {
-		colorMode,
-		setColorMode,
-		isDark,
-		approvalQueue,
-		setApprovalQueue,
-		markdownPaneMode,
-		setMarkdownPaneMode,
-		darkMode,
-		setDarkMode,
-	};
+export function simpleModelFromSocket(socketPath?: string): string | null {
+  return "llama3.2";
 }

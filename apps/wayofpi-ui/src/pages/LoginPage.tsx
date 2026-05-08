@@ -148,7 +148,15 @@ export function LoginPage() {
         </div>
       </div>
       
-      <p className="mt-8 text-xs text-[#444] font-medium tracking-tight">
+      <div className="mt-4 flex items-center gap-4">
+        <button
+          onClick={() => window.location.pathname = "/"}
+          className="text-xs text-[#585858] hover:text-[#858585] transition-colors"
+        >
+          &larr; Choose a different login
+        </button>
+      </div>
+      <p className="mt-4 text-xs text-[#444] font-medium tracking-tight">
         &copy; 2026 Way of Pi. All rights reserved.
       </p>
     </div>

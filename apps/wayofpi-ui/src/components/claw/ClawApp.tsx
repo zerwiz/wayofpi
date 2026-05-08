@@ -30,7 +30,6 @@ import type {
   LogRow,
 } from "../../hooks/useWayOfPiSession";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
-import type { UiMode } from "../../hooks/useUiMode";
 import type { TreeNode } from "../../types/tree";
 import type { FilePersistEncoding } from "../../hooks/useFileEditor";
 import type { WorkspaceEditorRef } from "../../types/workspaceEditor";
@@ -53,7 +52,6 @@ import { ClawChannelsView } from "./ClawChannelsView";
 import { ClawWorkspaceOnboardingModal } from "./ClawWorkspaceOnboardingModal";
 import { DockSplitHandle } from "../DockSplitHandle";
 
-/** Files tab: resizable file tree column (default matches former `w-56`). */
 const FILES_TREE_DEFAULT_PX = 224;
 const FILES_TREE_MIN_PX = 160;
 const FILES_TREE_MAX_PX = 720;
@@ -83,16 +81,15 @@ function languageFromPath(path: string | null): string {
   return map[ext] ?? "Plain Text";
 }
 
-export type ClawAppProps = {
-  uiMode: UiMode;
-  setUiMode: (m: UiMode) => void;
+type ClawAppProps = {
+  uiMode: string;
+  setUiMode: (m: string) => void;
   root: string | null;
   rootLabel: string;
   nodes: TreeNode[];
   treeLoading: boolean;
   treeError: string | null;
   refreshTree: () => void;
-  /** Reload `/api/tree` without `treeLoading` — used after explorer Git stage so badges update in place. */
   refreshTreeQuiet: () => void | Promise<void>;
   modelLabel: string;
   config: ServerConfig | null;
@@ -114,7 +111,6 @@ export type ClawAppProps = {
   onCursor: (l: number, c: number) => void;
   rows: ChatRow[];
   logs: LogRow[];
-  /** Session tab management */
   chatTabs: ChatSessionTab[];
   activeChatTabId: string;
   onSelectChatTab: (id: string) => void;
@@ -158,7 +154,6 @@ export type ClawAppProps = {
   newPlanFileDisabled: boolean;
   onOpenIndexingDocs?: () => void;
   onOpenHostDoctor: () => void;
-  /** Open Claw Help; optional section defaults to Overview (product roadmap). */
   onHelp?: (defaultSection?: ClawHelpSectionId | null) => void;
   contextPct: string;
   contextFillPct: number | null;
@@ -166,14 +161,9 @@ export type ClawAppProps = {
   tokensUp: string;
   contextTitle: string;
   tokensTitle: string;
-  onMoveFileToDirectory?: (
-    fromPath: string,
-    toDirPath: string,
-  ) => Promise<void>;
+  onMoveFileToDirectory?: (fromPath: string, toDirPath: string) => Promise<void>;
   allowWorkspaceRootDrop?: boolean;
-  /** `mobile` = bottom tab bar, no left rail (used with `?shell=mobile`). */
   layoutVariant?: "desktop" | "mobile";
-  /** When present and increments, open the chat `.claw/` file panel (mobile shell or narrow ≤767px desktop) from App menu / palette. */
   clawMenuFileFocusRev?: number;
 };
 
@@ -885,7 +875,7 @@ export function ClawApp({
                     onReplaceInFiles={onReplaceInFiles}
                     columnLayout="besideChat"
                     markdownPaneMode={clawMarkdownMode}
-                    onMarkdownPaneModeChange={setClawMarkdownMode}
+                    onMarkdownPaneModeChange={setClawMarkdownMode as (m: any) => void}
                   />
                 ) : (
                   <div

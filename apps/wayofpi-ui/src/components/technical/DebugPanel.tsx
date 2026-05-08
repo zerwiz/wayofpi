@@ -12,7 +12,7 @@ export function DebugPanel({ mode }: { mode: ChatSessionMode }) {
       )}
       <button
         className="mt-2 rounded border border-[#007acc] bg-[#007acc] text-white px-2 py-1 hover:bg-[#007acc]/30"
-        onClick={beginDebugSession}
+        onClick={() => beginDebugSession(false)}
       >
         Begin Debug
       </button>

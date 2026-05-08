@@ -10,7 +10,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import { getClawDotDirAbs } from "./claw-workspace-root";
-import { getPrimaryWorkspacePath } from "./workspace-state";
+import { getPrimaryWorkspacePath } from "../server/workspace-state";
 
 const MAX_EVENTS = 80;
 

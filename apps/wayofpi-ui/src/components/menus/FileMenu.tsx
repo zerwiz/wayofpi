@@ -1,18 +1,18 @@
 import { useCallback, useMemo, useState } from "react";
 import { Menu } from "@mariozechner/pi-tui/menu";
-import { useUiMode } from "../../../hooks/useUiMode";
-import { useSimplePreferences } from "../../../hooks/useSimplePreferences";
-import { useWorkspaceTree } from "../../../hooks/useWorkspaceTree";
-import { useAgents } from "../../../hooks/useAgents";
-import { useUiViewsCatalog } from "../../../hooks/useUiViewsCatalog";
-import { useRunMenuDebugState } from "../../../hooks/useRunMenuDebugState";
-import { useWayOfPiSession } from "../../../hooks/useWayOfPiSession";
-import { useServerConfig } from "../../../hooks/useServerConfig";
-import { useShellMobile } from "../../../hooks/useShellMobile";
-import { useMaxWidthMediaQuery } from "../../../hooks/useMaxWidthMediaQuery";
-import { WOP_PUBLIC_REPO_URL, WOP_FEEDBACK_CONTACT_URL, WOP_SUPPORT_HOME_URL, TASKS_JSON_REL, LAUNCH_JSON_REL } from "../../../constants";
-import type { SettingsMenuHandlers, FileMenuHandlers } from "../../../types/commands";
-import { readAutoSaveInitial, readRecentWorkspaceFolders } from "../../../utils/workspace";
+import { useUiMode } from "../../hooks/useUiMode";
+import { useSimplePreferences } from "../../hooks/useSimplePreferences";
+import { useWorkspaceTree } from "../../hooks/useWorkspaceTree";
+import { useAgents } from "../../hooks/useAgents";
+import { useUiViewsCatalog } from "../../hooks/useUiViewsCatalog";
+import { useRunMenuDebugState } from "../../hooks/useRunMenuDebugState";
+import { useWayOfPiSession } from "../../hooks/useWayOfPiSession";
+import { useServerConfig } from "../../hooks/useServerConfig";
+import { useShellMobile } from "../../hooks/useShellMobile";
+import { useMaxWidthMediaQuery } from "../../hooks/useMaxWidthMediaQuery";
+import { WOP_PUBLIC_REPO_URL, WOP_FEEDBACK_CONTACT_URL, WOP_SUPPORT_HOME_URL, TASKS_JSON_REL, LAUNCH_JSON_REL } from "../../constants";
+import type { SettingsMenuHandlers, FileMenuHandlers } from "../../types/commands";
+import { readAutoSaveInitial, readRecentWorkspaceFolders } from "../../utils/workspace";
 
 export function FileMenu() {
   const { mode: uiMode, setMode: setUiMode } = useUiMode();

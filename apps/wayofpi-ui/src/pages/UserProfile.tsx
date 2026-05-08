@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { UiMode } from "../hooks/useUiMode";
+// UiMode typed as string
 import { UiModeToggle } from "../components/UiModeToggle";
 
 interface Certificate {
@@ -35,8 +35,8 @@ export function UserProfilePage({
   uiMode,
   setUiMode,
 }: {
-  uiMode: UiMode;
-  setUiMode: (m: UiMode) => void;
+  uiMode: string;
+  setUiMode: (m: string) => void;
 }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,16 +113,28 @@ export function UserProfilePage({
         try {
           const tokenStr = token.includes('.') ? atob(token.split('.')[1]) : atob(token);
           const payload = JSON.parse(tokenStr);
-          if (payload.id === "demo-client" || payload.id === "demo-worker") {
+          if (payload.id === "demo-client" || payload.id === "demo-worker" || payload.id === "demo-admin" || payload.id === "demo-super") {
             const isWorker = payload.id === "demo-worker";
+            const nameMap: Record<string, string> = {
+              "demo-client": "Demo Client",
+              "demo-worker": "Demo Worker",
+              "demo-admin": "Demo Admin",
+              "demo-super": "Demo Super Admin",
+            };
+            const jobMap: Record<string, string> = {
+              "demo-client": "Client",
+              "demo-worker": "Worker",
+              "demo-admin": "Administrator",
+              "demo-super": "Super Administrator",
+            };
             const demoProfile: UserProfile = {
               id: payload.id,
               username: payload.id,
-              fullName: payload.id === "demo-client" ? "Demo Client" : "Demo Worker",
+              fullName: nameMap[payload.id] || payload.id,
               email: "demo@wayofpi.dev",
               phone: "+46-555-0123",
               role: payload.role,
-              jobTitle: payload.role === "CLIENT" ? "Client" : "Worker",
+              jobTitle: jobMap[payload.id] || payload.role,
               tenantId: "demo-tenant",
               certificates: isWorker ? [
                 { id: "cert-1", name: "ID06 Identification Card", issuer: "ID06 AB", validUntil: "2026-12-31", category: "site" as const, status: "valid" as const },

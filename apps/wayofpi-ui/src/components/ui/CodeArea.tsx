@@ -83,11 +83,12 @@ export function CodeArea({
     (e: React.KeyboardEvent) => {
       if (e.key === 'Tab') {
         e.preventDefault();
-        const start = e.currentTarget.selectionStart;
-        const end = e.currentTarget.selectionEnd;
-        const value = e.currentTarget.value;
+        const target = e.currentTarget as HTMLTextAreaElement;
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+        const value = target.value;
         const newValue = value.substring(0, start) + '  ' + value.substring(end);
-        e.currentTarget.value = newValue;
+        target.value = newValue;
       }
     },
     []

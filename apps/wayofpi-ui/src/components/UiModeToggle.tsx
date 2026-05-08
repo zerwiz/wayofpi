@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import type { UiMode } from "../hooks/useUiMode";
 import { FileText, Briefcase, Shield, User, LayoutDashboard } from "lucide-react";
 
 /** Same control as in the technical `MenuBar` (IDE chrome). */
@@ -7,8 +6,8 @@ export function UiModeToggle({
 	uiMode,
 	onUiModeChange,
 }: {
-	uiMode: UiMode;
-	onUiModeChange: (mode: UiMode) => void;
+	uiMode: string;
+	onUiModeChange: (mode: string) => void;
 }) {
 	const [role, setRole] = useState<string>("");
 

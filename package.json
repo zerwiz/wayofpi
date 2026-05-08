@@ -1,0 +1,7 @@
+{
+  "name": "way-of-pi-root",
+  "private": true,
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.74.0"
+  }
+}

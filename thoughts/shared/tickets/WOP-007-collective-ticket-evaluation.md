@@ -220,7 +220,7 @@ Shared "root" dependency:
 apps/
 ├── wayofpi-ui/         → imports @earendil-works/pi-coding-agent
 ├── another-ui/         → imports @earendil-works/pi-coding-agent (same version, same root)
-└── package.json        → "@earendil-works/pi-coding-agent": "0.72.1" (single source of truth)
+└── package.json        → "@earendil-works/pi-coding-agent": "0.74.0" (single source of truth)
 ```
 
 **Benefits**:

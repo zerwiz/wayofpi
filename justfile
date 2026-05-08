@@ -25,32 +25,48 @@ wayofpi-electron:
 
 # Internal helper to run pi with the dynamic loader
 # This ensures we only use ONE -e flag, which is more stable in 0.70.5
-run-pi stack *args:
+run-pi stack *args: pi-verify
     #!/usr/bin/env bash
     set -euo pipefail
-    export PI_STACK="{{ stack }}"
-    # Always load playground .env
     ROOT="{{justfile_directory()}}"
+    export PI_STACK="{{ stack }}"
+    export PI_CODING_AGENT_DIR="$ROOT/.pi/agent"
+    # Always load playground .env
     if [[ -f "$ROOT/.env" ]]; then
         set -a
         source "$ROOT/.env"
         set +a
     fi
-    exec pi -e .pi/extensions/util/pi-loader.ts "$@"
+    exec "$ROOT/node_modules/.bin/pi" -e .pi/extensions/util/pi-loader.ts "$@"
 
 # g1
 
 # 1. default pi (always load playground .env so OPENROUTER_API_KEY is set)
-pi:
+pi *args:
     #!/usr/bin/env bash
     set -euo pipefail
     ROOT="{{justfile_directory()}}"
+    export PI_CODING_AGENT_DIR="$ROOT/.pi/agent"
     if [[ -f "$ROOT/.env" ]]; then
         set -a
         source "$ROOT/.env"
         set +a
     fi
-    exec pi "$@"
+    exec "$ROOT/node_modules/.bin/pi" "$@"
+
+# Verify pi version matches PI_PINNED_VERSION
+pi-verify:
+    @./scripts/pi-version-check.sh
+
+# Reinstall pinned pi version to resolve conflicts/broken updates
+pi-fix-version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    echo "Reinstalling project-local pi..."
+    bun install
+    echo "✅ Done. Local pi version:"
+    "$ROOT/node_modules/.bin/pi" --version
 
 # 1a. Standard Pi (upstream minimal harness): no project extension/skill/theme/prompt discovery — `scripts/pi-standard` (optional leading `.`)
 pi-standard *args:

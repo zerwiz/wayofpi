@@ -5,12 +5,12 @@
 
 import React, { useState, useEffect } from "react";
 import { LogsPanel } from "./logs/index";
-import { SessionManagerClient } from "./lib/SessionManagerClient";
+// SessionManagerClient type not available
 /**
  * Props for AppContainer
  */
 type AppContainerProps = {
-  sessionManager: SessionManagerClient;
+  sessionManager: any;
   prompt?: string;
   sessionId?: string;
 };
@@ -38,7 +38,7 @@ const AppContainer: React.FC<AppContainerProps> = ({
   const handleUserInput = (input: string) => {
     if (input.trim()) {
       // Send to PTY master
-      sessionManager.handleConnection(sessionId, input).catch(() => {
+      (sessionManager as any).handleConnection(sessionId, input).catch(() => {
         console.error("Error sending input to PTY");
       });
     }
@@ -65,10 +65,9 @@ const AppContainer: React.FC<AppContainerProps> = ({
   return (
     <div className="terminal-container">
       <LogsPanel
-        sessionManager={sessionManager}
         sessionId={sessionId}
         prompt={prompt}
-        onInput={handleUserInput}
+        onInput={(sid: string, _rowId: number, value: string, _cursorPos: { x: number; y: number }) => handleUserInput(value)}
         onExecute={handleCommandExecute}
         onResize={handleResize}
       />

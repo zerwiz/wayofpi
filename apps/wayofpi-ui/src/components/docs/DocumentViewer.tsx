@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FileIcon, ArrowLeftIcon, ArrowRightIcon, PrinterIcon, DownloadIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, ArrowLeftIcon, ArrowRightIcon, PrinterIcon, ArrowDownTrayIcon, ShareIcon } from '@heroicons/react/24/outline';
 import './DocumentViewer.css';
 
 interface DocumentViewerProps {
@@ -35,7 +35,7 @@ export function DocumentViewer({ content, title = 'Document', onBack }: Document
             <PrinterIcon className="w-4 h-4" />
           </button>
           <button className="toolbar-btn" style={{ color: '#cccccc' }}>
-            <DownloadIcon className="w-4 h-4" />
+            <ArrowDownTrayIcon className="w-4 h-4" />
           </button>
           <button className="toolbar-btn" style={{ color: '#cccccc' }}>
             <ShareIcon className="w-4 h-4" />

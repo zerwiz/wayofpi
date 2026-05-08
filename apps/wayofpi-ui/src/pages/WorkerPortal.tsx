@@ -42,7 +42,7 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
   const [workerId, setWorkerId] = useState("");
   const [pin, setPin] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [activeTab, setActiveTab] = useState<"tasks" | "files" | "time">("tasks");
+  const [activeTab, setActiveTab] = useState<"tasks" | "files" | "time" | "profile">("tasks");
 
   // Real data from APIs
   const [workerName, setWorkerName] = useState("Worker");
@@ -52,6 +52,13 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
   const [loadError, setLoadError] = useState("");
 
   
+  // Profile data
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileRole, setProfileRole] = useState("");
+  const [profileJobTitle, setProfileJobTitle] = useState("");
+  const [profileId, setProfileId] = useState("");
+
   // Demo data (shown when API is not available)
   const DEMO_TASKS: WorkerTask[] = [
     {
@@ -115,6 +122,11 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
     setWorkerName("Demo Worker");
     setTasks([...DEMO_TASKS]);
     setFiles([...DEMO_FILES]);
+    setProfileId("demo-worker");
+    setProfileEmail("demo@wayofpi.dev");
+    setProfilePhone("+46-555-0123");
+    setProfileRole("WORKER");
+    setProfileJobTitle("Worker");
   }
 
   const handleLogin = async () => {
@@ -169,9 +181,11 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("wop_token");
     setIsLoggedIn(false);
     setWorkerId("");
     setPin("");
+    window.location.pathname = "/";
   };
 
   const handleDownload = (fileId: string) => {
@@ -249,6 +263,12 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
               Demo: Use PIN "1234"
             </p>
           )}
+          <button
+            onClick={() => window.location.pathname = "/"}
+            className="mt-4 w-full text-center text-xs text-[#585858] hover:text-[#858585] transition-colors"
+          >
+            &larr; Back to Welcome
+          </button>
         </div>
       </div>
     );
@@ -264,17 +284,25 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
           <h1 className="text-xs font-bold text-[#cccccc] uppercase tracking-wider">Worker Portal</h1>
           <p className="text-[10px] text-[#858585]">Signed in as {workerName}</p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="rounded px-2 py-1 text-[10px] text-[#858585] hover:bg-[#3c3c3c] hover:text-red-400 transition-colors border border-[#3c3c3c]"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.location.pathname = "/profile"}
+            className="rounded px-2 py-1 text-[10px] text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc] transition-colors border border-[#3c3c3c]"
+          >
+            Profile
+          </button>
+          <button
+            onClick={handleLogout}
+            className="rounded px-2 py-1 text-[10px] text-[#858585] hover:bg-[#3c3c3c] hover:text-red-400 transition-colors border border-[#3c3c3c]"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[#3c3c3c] bg-[#252526] px-4">
-        {(["tasks", "files", "time"] as const).map((tab) => (
+        {(["tasks", "files", "time", "profile"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -287,6 +315,7 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
             {tab === "tasks" && "📋 My Tasks"}
             {tab === "files" && "📐 My Files"}
             {tab === "time" && "⏰ Time Entries"}
+            {tab === "profile" && "👤 Profile"}
           </button>
         ))}
       </div>
@@ -402,6 +431,48 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
               <p className="text-xs text-[#585858]">
                 Or use WhatsApp: "log 4.5h on A-101" to @WorkTimeBot
               </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "profile" && (
+          <div className="max-w-2xl">
+            <h2 className="mb-4 text-sm font-semibold text-[#cccccc]">My Profile</h2>
+            <div className="rounded-lg border border-[#3c3c3c] bg-[#252526] p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-[#585858]">Full Name</p>
+                  <p className="text-sm text-[#cccccc]">{workerName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#585858]">User ID</p>
+                  <p className="text-sm text-[#cccccc]">{profileId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#585858]">Email</p>
+                  <p className="text-sm text-[#cccccc]">{profileEmail}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#585858]">Phone</p>
+                  <p className="text-sm text-[#cccccc]">{profilePhone}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#585858]">Role</p>
+                  <p className="text-sm text-[#ea580c]">{profileRole}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#585858]">Job Title</p>
+                  <p className="text-sm text-[#cccccc]">{profileJobTitle}</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-[#3c3c3c]">
+                <button
+                  onClick={() => window.location.pathname = "/profile"}
+                  className="rounded bg-[#ea580c] px-4 py-2 text-sm font-medium text-white hover:bg-[#c2410c]"
+                >
+                  Full Profile & Settings →
+                </button>
+              </div>
             </div>
           </div>
         )}

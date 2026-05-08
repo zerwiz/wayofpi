@@ -1,12 +1,12 @@
 import type { ChatSessionMode } from "../../hooks/useWayOfPiSession";
 import type { AgentMeta, AgentTeamMap } from "../../hooks/useAgents";
 import type { ChatPulseMeters, ChatRow, ChatTab } from "../../hooks/useWayOfPiSession";
-import type { UiMode } from "../../hooks/useUiMode";
+// UiMode typed as string
 import type { ChatDockRegion } from "../../utils/technicalLayoutStorage";
 import { ChatPanel } from "../ChatPanel";
 
 interface TechnicalChatPanelProps {
-  uiMode: UiMode;
+  uiMode: string;
   rows: ChatRow[];
   chatTabs: ChatTab[];
   activeChatTabId: string;
@@ -19,32 +19,32 @@ interface TechnicalChatPanelProps {
   onStop: () => void;
   onClearError: () => void;
   reopenLlmFixModal: () => void;
-  onNewSession: () => void;
-  chatMode: ChatSessionMode;
-  onChatModeChange: (mode: ChatSessionMode) => void;
-  agents: AgentMeta[];
-  agentsLoading: boolean;
-  agentTeams: AgentTeamMap;
-  onOpenAgentTeamInPane: () => void;
-  openTeamPulseSignal: number;
-  onEditTeam: () => void;
-  chatAgentName: string | null;
-  dispatchTurnAgent: (agent: string | null) => void;
-  onChatAgentChange: (agent: string | null) => void;
-  chatQueuePending: boolean;
-  chatQueueItems: ChatRow[];
-  editChatQueueItem: (index: number, content: string) => void;
-  deleteChatQueueItem: (index: number) => void;
-  forceChatQueueItem: () => void;
-  chatPulseMeters: ChatPulseMeters | null;
-  contextTitle: string | null;
-  sessionTokenSummary: {
-    tokensDown: number;
-    tokensUp: number;
-    tokensTitle: string;
+  onNewSession?: () => void;
+  chatMode?: ChatSessionMode;
+  onChatModeChange?: (mode: ChatSessionMode) => void;
+  agents?: AgentMeta[];
+  agentsLoading?: boolean;
+  agentTeams?: AgentTeamMap;
+  onOpenAgentTeamInPane?: () => void;
+  openTeamPulseSignal?: number;
+  onEditTeam?: () => void;
+  chatAgentName?: string | null;
+  dispatchTurnAgent?: string | null;
+  onChatAgentChange?: (name: string | null) => void;
+  chatQueuePending?: number;
+  chatQueueItems?: any[];
+  editChatQueueItem?: (id: string, text: string) => void;
+  deleteChatQueueItem?: (id: string) => void;
+  forceChatQueueItem?: (id: string) => void;
+  chatPulseMeters?: ChatPulseMeters | null;
+  contextTitle?: string;
+  sessionTokenSummary?: {
+    tokensDown: string;
+    tokensUp: string;
+    tokensTitle?: string;
   };
-  onOpenPlanFileForReview: (path: string) => void;
-  planHandoffWorkspaceKey: string;
+  onOpenPlanFileForReview?: (path: string) => void;
+  planHandoffWorkspaceKey?: string;
   technicalDock?: {
     region: ChatDockRegion;
     sizePx: number;
