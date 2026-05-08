@@ -8,6 +8,7 @@ All notable changes to the **Way of Pi** project.
 - **[PLAN] Production delivery plan**: Wrote `docs/PRODUCTION_DELIVERY_PLAN.md` — covers 4 delivery channels: Desktop installers (Windows .exe, macOS .dmg, Linux .AppImage/.deb), Cloud SaaS hosting (Docker multi-tenant on Railway/Fly/Hetzner), Local self-hosting (ngrok/Cloudflare Tunnel from your machine), and CI/CD pipeline (GitHub Actions matrix build, code signing, auto-update). Includes cost estimation ($300-500/yr signing, $12-60/mo per cloud client, $11-32/mo self-host), domain/SSL strategy, backup/recovery plan, monitoring, and a 4-phase implementation roadmap.
 - **[TICKET] WOP-009 production delivery**: Created `thoughts/shared/tickets/WOP-009-production-delivery.md` (4 sections: desktop, cloud, self-host, domain). Updated WOP-007 collective ticket table to include WOP-009.
 - **[TICKET] Master combined TODO**: Created `thoughts/shared/tickets/WOP-ALL-TODO.md` aggregating all tasks from WOP-001 through WOP-009 into one organized checklist by WOP-007 phase. Covers all 8 phases + completed items. Removed superseded `WOP-009-TODO.md`.
+- **[TICKETS] Aligned all tickets with master TODO**: Added cross-reference banners to WOP-001 through WOP-009 pointing to `WOP-ALL-TODO.md` as the single source of truth for checkboxes. Each ticket now says "Update checkboxes there, not here."
 
 ## [0.21.09] - 2026-05-08
 
