@@ -182,28 +182,71 @@ Restart=on-failure
 
 ---
 
-## Plan G: Self-Hosted (On-Premise)
+## Plan G: Cloudflare Tunnel (Production Self-Hosted)
 
-**What it is:** Client runs Way of Pi on their own machine, exposed via Cloudflare Tunnel.
+**What it is:** Expose a self-hosted instance via Cloudflare's `cloudflared` tunnel — faster, custom domain, built-in Zero Trust auth, no bandwidth limits.
+
+**Why Cloudflare over ngrok:**
+| Feature | ngrok (free) | Cloudflare Tunnel |
+|---------|-------------|-------------------|
+| Bandwidth | Throttled (~1-2 Mbps) | Unlimited |
+| Connections | ~40/min | Unlimited |
+| Custom domain | No (free tier) | Yes |
+| Auth | Basic Auth | Zero Trust / Access policies |
+| Speed | Moderate (via ngrok relay) | Fast (direct Cloudflare edge) |
+
+**Setup:**
+```bash
+# Install cloudflared
+sudo apt install cloudflared   # Linux
+brew install cloudflared        # macOS
+
+# Authenticate with Cloudflare
+cloudflared tunnel login
+
+# Create a named tunnel
+cloudflared tunnel create wayofpi
+
+# Route your domain to the tunnel
+cloudflared tunnel route dns wayofpi clientx.yourdomain.com
+
+# Run tunnel pointing at local Way of Pi
+cloudflared tunnel run wayofpi --url http://localhost:3333
+```
+
+**Planned automation** (`scripts/tunnel-cloudflare.sh`):
+- [ ] Check/install `cloudflared`
+- [ ] `cloudflared tunnel login`
+- [ ] Create named tunnel if missing
+- [ ] Route DNS to tunnel
+- [ ] Start tunnel with `--url http://localhost:3333`
+- [ ] Register as systemd service for auto-start on boot
+
+**Domain strategy:**
+```
+wayofpi.com              → Marketing / landing page (Cloudflare DNS)
+app.wayofpi.com          → Our hosted SaaS (Cloudflare proxy)
+clientx.wayofpi.com      → Self-hosted client instance (Cloudflare Tunnel)
+```
 
 **Prerequisites:**
+- Cloudflare account (free tier for DNS + tunnel)
+- Domain registered via Cloudflare (~$10/yr) or any registrar with NS pointing to Cloudflare
 - Ubuntu 22.04+/Debian 12+, 4 CPU, 8GB RAM, 50GB SSD
-- Bun, Git, cloudflared (or ngrok)
+- Bun, Git, cloudflared
 - 50+ Mbps upload
+
+## Plan H: Self-Hosted (On-Premise, General)
+
+**What it is:** Client runs Way of Pi on their own machine, exposed via any tunnel method.
 
 **Steps:**
 1. Clone repo + `bun install`
 2. Set up `.env`
 3. Start service (`just self-host`)
-4. Expose via tunnel (`just tunnel`)
+4. Expose via tunnel (Cloudflare, ngrok, or bore)
 
-**Tunnel options:**
-| Service | Free Tier | Speed | Custom Domain | Auth |
-|---------|-----------|-------|---------------|------|
-| ngrok   | 1 tunnel, 40 conn/min | Moderate | No (free) | Basic Auth |
-| Cloudflare Tunnel | Unlimited | Fast | Yes | Zero Trust |
-
-**Files:** `scripts/tunnel-cloudflare.sh` (planned), `scripts/install-ngrok-optional.sh`
+**Files:** `docs/PRODUCTION_DELIVERY_PLAN.md`, `scripts/install-ngrok-optional.sh`
 
 ---
 
@@ -217,7 +260,8 @@ Restart=on-failure
 | **D. Docker** | 15 min | LAN/Port-mapped | Container isolation | Free | Multi-instance, CI |
 | **E. Cloud SaaS** | 30 min | Public URL (custom domain) | TLS, VPN | $9-60/mo/per client | Production multi-tenant |
 | **F. VM** | 60 min | LAN/Reverse proxy | OS-level isolation | Hosting cost | High-security clients |
-| **G. Self-Hosted** | 30 min | Public URL (tunnel) | Tunnel auth | $11-32/mo | Client-managed infra |
+| **G. Cloudflare Tunnel** | 20 min | Public URL (custom domain) | Zero Trust, TLS | Free tier | Production self-hosted |
+| **H. Self-Hosted** | 30 min | Public URL (tunnel) | Tunnel auth | $11-32/mo | Client-managed infra |
 
 ---
 

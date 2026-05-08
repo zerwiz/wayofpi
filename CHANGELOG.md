@@ -5,6 +5,9 @@ All notable changes to the **Way of Pi** project.
 ## [0.21.15] - 2026-05-08
 
 ### Added
+- **`docs/MULTI_TENANCY.md`**: Comprehensive document covering the multi-tenancy architecture — existing implementation (schema, JWT scoping, tenant-scoped API endpoints, workspace path isolation, admin UI, RBAC roles) and planned features (RBAC middleware, PostgreSQL migration, cloud deployment, onboarding automation, white-label domains, billing metering).
+
+### Added
 - **`docs/HOSTING_PLANS.md`**: Consolidated document covering all 7 hosting options — Desktop (Electron), Local Dev Server, ngrok Tunnel, Docker, Cloud SaaS, VM/Hypervisor, and Self-Hosted (On-Premise). Includes comparison matrix and related file index.
 
 ### Fixed
