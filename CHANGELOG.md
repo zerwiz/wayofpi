@@ -2,6 +2,18 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.21.15] - 2026-05-08
+
+### Added
+- **`docs/HOSTING_PLANS.md`**: Consolidated document covering all 7 hosting options — Desktop (Electron), Local Dev Server, ngrok Tunnel, Docker, Cloud SaaS, VM/Hypervisor, and Self-Hosted (On-Premise). Includes comparison matrix and related file index.
+
+### Fixed
+- **`SimpleApp.tsx`**: Left/right sidebars on narrow viewports (≤767px) now push the chat inline instead of rendering as fixed overlays. Removed drawer overlay pattern for both panels.
+- **`server/index.ts`**: Dev mode auth role changed from `"ADMIN"` to `"SUPER_ADMIN"` so `/api/admin/users` and `/api/admin/stats` return real data (not 403) during development.
+
+### Changed
+- **`vite.config.ts`**: Added `allowedHosts` to include ngrok tunnel domain for dev server access via public URL.
+
 ## [0.21.14] - 2026-05-08
 
 ### Fixed
