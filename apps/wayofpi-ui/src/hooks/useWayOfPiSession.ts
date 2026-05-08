@@ -973,11 +973,11 @@ export function useWayOfPiSession(
 			clearReconnect();
 			const cur = wsRef.current;
 			wsRef.current = null;
-			try {
-				cur?.close();
-			} catch {
-				/* ignore */
+			if (cur && cur.readyState === WebSocket.OPEN) {
+				try { cur.close(); } catch { /* ignore */ }
 			}
+			// CONNECTING: abandon — don't close, or React Strict Mode double-invoke
+			// will fire "closed before connection established" on the first instance.
 		};
 		// bufferAssistantDeltasRef is read via .current inside handlers; omit from deps to avoid reconnecting the socket.
 	}, [onTreeRefresh, setRowsByTab]);

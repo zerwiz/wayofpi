@@ -1,10 +1,10 @@
 import { randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { broadcastToolLog } from "./tool-log-broadcast";
 import { parseStreamUsage, type StreamTokenUsage } from "./chat-usage";
-import { resolvePiLoaderPath } from "./pi-binary";
 
 export type PiJsonChatResult =
 	| { ok: true; fullText: string; lastStreamUsage: StreamTokenUsage | null }
@@ -104,23 +104,31 @@ export async function streamPiJsonChatTurn(opts: {
 		opts.onLog("INFO", "pi", `Long prompt (${opts.prompt.length} chars) passed as ${promptArg}`);
 	}
 
-	const args = [opts.piBinary];
-	const loader = resolvePiLoaderPath();
-	if (loader) {
-		args.push("-e", loader);
-	}
-	args.push("--mode", "json", promptArg);
+	// Spawn piBinary directly — Bun.spawn respects the shebang. No -e flag needed:
+	// Pi 0.70.5+ made multiple -e flags unstable, and the loader (pi-loader.ts) only
+	// loads UI extensions which are unused in headless JSON mode.
+	const args = [opts.piBinary, "--mode", "json", promptArg];
+	
+	opts.onLog("INFO", "pi-json", `Spawning: ${args.join(" ")}`);
 
-	const proc = Bun.spawn(args, {
-		cwd: opts.cwd,
-		stdin: "ignore",
-		stdout: "pipe",
-		stderr: "pipe",
-		env: {
-			...process.env,
-			...(opts.piStack ? { PI_STACK: opts.piStack } : {}),
-		},
-	});
+	let proc: import("bun").Subprocess;
+	try {
+		proc = Bun.spawn(args, {
+			cwd: opts.cwd,
+			stdin: "ignore",
+			stdout: "pipe",
+			stderr: "pipe",
+			env: {
+				...process.env,
+				...(opts.piStack ? { PI_STACK: opts.piStack } : {}),
+			},
+		});
+	} catch (spawnErr) {
+		const spawnMsg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
+		opts.onLog("ERROR", "pi-json", `spawn failed: ${spawnMsg} (args: ${args.join(" ")})`);
+		if (tmpFile) await unlink(tmpFile).catch(() => {});
+		return { ok: false, error: `Failed to spawn Pi process: ${spawnMsg}` };
+	}
 
 	let lastUsage: StreamTokenUsage | null = null;
 	let fullText = "";

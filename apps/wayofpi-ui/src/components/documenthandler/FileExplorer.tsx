@@ -212,11 +212,28 @@ export function FileExplorer({
 
       <div className="file-explorer-content min-h-0 flex-1 overflow-y-auto">
         {loading ? (
-          <div className={`p-4 text-center text-sm ${subC}`}>Loading...</div>
+          <div className={`p-4 text-center text-sm ${subC}`}>
+            <div className="animate-pulse">Loading file tree...</div>
+          </div>
         ) : error ? (
-          <div className={`p-4 text-center text-sm text-red-500`}>{error}</div>
+          <div className={`p-4 text-center text-sm text-red-500`}>
+            <div>Error: {error}</div>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-2 text-xs underline hover:no-underline"
+            >
+              Retry
+            </button>
+          </div>
         ) : flatNodes.length === 0 ? (
-          <div className={`p-4 text-center text-sm ${subC}`}>No files</div>
+          <div className={`p-4 text-center text-sm ${subC}`}>
+            <div className="mb-2">📂</div>
+            <div>No documents found</div>
+            <div className="mt-1 text-xs opacity-60">
+              {nodes.length === 0 ? "The workspace is empty" : "Try adjusting the file filter"}
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col gap-0.5 p-2">
             {flatNodes.map(({ node, depth }) => {

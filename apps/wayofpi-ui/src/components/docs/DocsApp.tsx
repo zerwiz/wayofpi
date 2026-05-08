@@ -6,8 +6,11 @@ import type { UiMode } from "../../hooks/useUiMode";
 import { FileExplorer } from "../documenthandler/FileExplorer";
 import { ChatPanel } from "../documenthandler/ChatPanel";
 import { PreviewModal } from "../documenthandler/PreviewModal";
+import { DocumentBrowser } from "./DocumentBrowser";
 import { UiModeToggle } from "../UiModeToggle";
 import { apiGet } from "../../api/client";
+import { useDocumentHandler } from "../documenthandler/context/DocumentHandlerContext";
+import type { FileEntry } from "../documenthandler/types/documenthandler.types";
 
 interface DocsAppProps {
 	uiMode: UiMode;
@@ -44,6 +47,7 @@ export function DocsApp({
 	const [leftOpen, setLeftOpen] = useState(true);
 	const [rightOpen, setRightOpen] = useState(true);
 	const [docStatus, setDocStatus] = useState<"draft" | "review" | "approved" | null>(null);
+	const [showDocBrowser, setShowDocBrowser] = useState(false);
 
 	/** Filter tree to only show document files (.md, .txt, .doc, .docx) */
 	const docsNodes = useMemo(() => {
@@ -62,12 +66,24 @@ export function DocsApp({
 		return nodes.map(filterNode).filter((n): n is TreeNode => n !== null);
 	}, [nodes]);
 
+	// Try to get DocumentHandlerContext - may not be available
+	const docHandlerContext = useDocumentHandler();
+
 	const handleSelectFile = useCallback(
 		(path: string) => {
 			setSelectedPath(path);
 			setPreviewOpen(true);
+			// Also update the DocumentHandlerContext if available
+			try {
+				docHandlerContext?.onSelectFile?.({ 
+					name: path.split('/').pop() || path, 
+					path 
+				} as FileEntry);
+			} catch {
+				// Context not available - that's ok
+			}
 		},
-		[setSelectedPath],
+		[setSelectedPath, docHandlerContext],
 	);
 
 	// Detect document status from content
@@ -78,7 +94,7 @@ export function DocsApp({
 		}
 		async function detectStatus() {
 			try {
-				const content = await apiGet<string>(`/api/file?path=${encodeURIComponent(selectedPath)}`);
+				const content = await apiGet<string>(`/api/file?path=${encodeURIComponent(selectedPath ?? '')}`);
 				const lower = content.toLowerCase();
 				if (lower.includes("status: approved") || lower.includes("# approved")) {
 					setDocStatus("approved");
@@ -87,7 +103,7 @@ export function DocsApp({
 				} else if (lower.includes("status: draft") || lower.includes("# draft")) {
 					setDocStatus("draft");
 				} else {
-					setDocStatus(selectedPath.includes("/plans/") ? "draft" : "review");
+					setDocStatus(selectedPath?.includes("/plans/") ? "draft" : "review");
 				}
 			} catch {
 				setDocStatus(null);
@@ -160,8 +176,17 @@ export function DocsApp({
 						className={`docs-file-tree flex w-[280px] shrink-0 flex-col overflow-hidden border-r ${border} ${panelBg}`}
 						style={{ minWidth: "200px", maxWidth: "400px" }}
 					>
-						<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
-							<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Documents</span>
+					<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
+						<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Documents</span>
+						<div className="flex items-center gap-1">
+							<button
+								type="button"
+								onClick={() => setShowDocBrowser(!showDocBrowser)}
+								className={`rounded p-1 text-xs ${showDocBrowser ? 'bg-[#ea580c] text-white' : `${subC} hover:bg-[#3c3c3c]`}`}
+								title={showDocBrowser ? "Switch to File Tree" : "Switch to Document Browser"}
+							>
+								{showDocBrowser ? '📄 Tree' : '📂 Docs'}
+							</button>
 							<button
 								type="button"
 								onClick={refreshTree}
@@ -171,15 +196,29 @@ export function DocsApp({
 								↻
 							</button>
 						</div>
-						<div className="min-h-0 flex-1 overflow-y-auto p-1">
+					</div>
+					<div className="min-h-0 flex-1 overflow-y-auto p-1">
+						{showDocBrowser ? (
+							<DocumentBrowser
+								nodes={docsNodes}
+								loading={treeLoading}
+								error={treeError}
+								selectedPath={selectedPath}
+								onSelectFile={handleSelectFile}
+							/>
+						) : (
 							<FileExplorer
 								nodes={docsNodes}
 								loading={treeLoading}
 								error={treeError}
 								onSelectFile={handleSelectFile}
 								selectedPath={selectedPath}
+								visible={leftOpen}
+								onToggle={() => setLeftOpen(v => !v)}
+								appearanceDark={appearanceDark}
 							/>
-						</div>
+						)}
+					</div>
 					</div>
 				)}
 
@@ -233,6 +272,8 @@ export function DocsApp({
 						onSend={sendChat}
 						onStop={stop}
 						appearanceDark={appearanceDark}
+						visible={true}
+						onToggle={() => {}}
 					/>
 				</div>
 
@@ -247,15 +288,14 @@ export function DocsApp({
 								<span className={`text-xs ${subC}`}>{selectedPath.split("/").pop()}</span>
 							)}
 						</div>
-						<div className="min-h-0 flex-1 overflow-y-auto">
-							<PreviewModal
-								isOpen={previewOpen}
-								onClose={() => setPreviewOpen(false)}
-								filePath={selectedPath}
-								appearanceDark={appearanceDark}
-								embedded
-							/>
-						</div>
+					<div className="min-h-0 flex-1 overflow-y-auto">
+						<PreviewModal
+							visible={previewOpen && !!selectedPath}
+							onClose={() => setPreviewOpen(false)}
+							path={selectedPath || ''}
+							appearanceDark={appearanceDark}
+						/>
+					</div>
 					</div>
 				)}
 			</div>

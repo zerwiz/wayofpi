@@ -28,7 +28,7 @@ interface Contact {
 }
 
 export function WorkApp({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
-  const [activeTab, setActiveTab] = useState<"time" | "tasks" | "contacts">("time");
+  const [activeTab, setActiveTab] = useState<"time" | "tasks" | "contacts">("tasks");
   const [isLeader, setIsLeader] = useState(false); // TODO: Get from user role via /api/me
 
   // Real data from APIs

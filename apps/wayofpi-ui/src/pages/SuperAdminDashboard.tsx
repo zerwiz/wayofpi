@@ -50,6 +50,12 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
   const [showCreateTenant, setShowCreateTenant] = useState(false);
   const [newTenant, setNewTenant] = useState({ name: "", slug: "", subscription_tier: "free" });
 
+  // Helper to get auth headers
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem("wop_token");
+    return token ? { "Authorization": `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -57,10 +63,11 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
   const fetchData = async () => {
     setLoading(true);
     try {
+      const headers = getAuthHeaders();
       const [tenantsRes, usersRes, statsRes] = await Promise.all([
-        fetch("/api/admin/tenants"),
-        fetch("/api/admin/users"),
-        fetch("/api/admin/stats"),
+        fetch("/api/admin/tenants", { headers }),
+        fetch("/api/admin/users", { headers }),
+        fetch("/api/admin/stats", { headers }),
       ]);
 
       if (tenantsRes.ok) {
@@ -90,7 +97,10 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: UiM
     try {
       const res = await fetch("/api/admin/tenants", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(newTenant),
       });
 

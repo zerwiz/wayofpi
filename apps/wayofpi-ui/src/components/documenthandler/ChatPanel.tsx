@@ -78,13 +78,21 @@ export function ChatPanel({
 				</button>
 
 				<span className={`text-sm ${titleC}`}>
-					{connected ? "Connected" : "Disconnected"}
+					{connected ? "Connected" : "Disconnected - Start the server"}
 				</span>
 			</div>
 
 			<div className={`min-h-0 flex-1 overflow-y-auto ${transcriptPad}`}>
 				<div className={`flex flex-col ${transcriptGap} ${transcriptMax} mx-auto`}>
-					{rows.length === 0 ? (
+					{!connected ? (
+						<div className={`p-4 text-center text-sm ${subC}`}>
+							<div className="mb-2">⚠️</div>
+							<div>Chat requires the server to be running.</div>
+							<div className="mt-1 text-xs">
+								Start the server with: <code className="px-1 py-0.5 rounded bg-[#3c3c3c]">bun run dev</code>
+							</div>
+						</div>
+					) : rows.length === 0 ? (
 						<div className={`p-4 text-center text-sm ${subC}`}>
 							Start a conversation...
 						</div>
@@ -93,7 +101,7 @@ export function ChatPanel({
 							<div
 								key={row.id}
 								className={`flex flex-col gap-2 rounded-lg p-4 ${
-									row.fromUser
+									row.role === "user"
 										? appearanceDark
 											? "bg-[#2d4c2d]"
 											: "bg-[#e8f5e8]"
@@ -102,32 +110,14 @@ export function ChatPanel({
 											: "bg-[#f5f5f5]"
 								}`}
 							>
-								<div className={`text-xs font-semibold ${subC}`}>
-									{row.fromUser ? "You" : row.agentName ?? "Assistant"}
-								</div>
-								<div className={`prose prose-sm max-w-none ${titleC}`}>
-									{row.segments.map((seg, i) => {
-										if (seg.kind === "text") {
-											return (
-												<span key={i} className="whitespace-pre-wrap">
-													{seg.text}
-												</span>
-											);
-										}
-										if (seg.kind === "tool_use") {
-											return (
-												<code
-													key={i}
-													className={`block rounded p-2 font-mono text-xs ${
-														appearanceDark ? "bg-[#1e1e1e]" : "bg-[#eeeeee]"
-													}`}
-												>
-													{seg.text}
-												</code>
-											);
-										}
-										return null;
-									})}
+							<div className={`text-xs font-semibold ${subC}`}>
+								{row.role === "user" ? "You" : row.assistantPersona ?? "Assistant"}
+							</div>
+								<div className={`prose prose-sm max-w-none whitespace-pre-wrap ${
+									row.role === "user" ? "text-[#e5e5e5]" : titleC
+								}`}
+								>
+									{row.content}
 								</div>
 							</div>
 						))
@@ -152,7 +142,7 @@ export function ChatPanel({
 						placeholder="Type a message..."
 						rows={3}
 						className={`w-full resize-none rounded-lg border px-4 py-3 ${inputBg}`}
-						disabled={streaming}
+						disabled={streaming || !connected}
 					/>
 
 					<div className="flex items-center justify-between">

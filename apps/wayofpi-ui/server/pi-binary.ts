@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -36,6 +36,7 @@ function commonPiExecutableCandidates(): string[] {
 	if (home) {
 		out.push(
 			join(home, ".local", "bin", "pi"),
+			join(home, ".pi", "agent", "packages", "npm", "lib", "bin", "pi"),
 			join(home, ".cargo", "bin", "pi"),
 			join(home, ".nix-profile", "bin", "pi"),
 			join(home, ".asdf", "shims", "pi"),
@@ -62,6 +63,7 @@ function prependPathHintsForPiLookup(): void {
 		parts.push(
 			join(home, ".bun", "bin"),
 			join(home, ".local", "bin"),
+			join(home, ".pi", "agent", "packages", "npm", "lib", "bin"),
 			join(home, ".cargo", "bin"),
 			join(home, ".asdf", "shims"),
 			join(home, ".local", "share", "mise", "shims"),
@@ -77,7 +79,9 @@ function prependPathHintsForPiLookup(): void {
 	process.env.PATH = `${head}${sep}${tail}`;
 }
 
-/** Resolve Pi CLI for headless `--mode json` / RPC (see `docs/WOP_NAMESPACE.md`). */
+/** Resolve Pi CLI for headless `--mode json` / RPC (see `docs/WOP_NAMESPACE.md`).
+ * Returns the path as-is (symlinks preserved) so Bun.spawn respects the file's shebang.
+ */
 export function resolvePiBinaryPath(): string | null {
 	prependPathHintsForPiLookup();
 	const expanded = expandedWopPiBinaryFromEnv();

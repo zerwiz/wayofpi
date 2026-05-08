@@ -42,6 +42,8 @@ export function UserProfilePage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [startBusy, setStartBusy] = useState(false);
+  const [startHint, setStartHint] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
   const [pinChange, setPinChange] = useState({
     oldPin: "",
@@ -49,6 +51,53 @@ export function UserProfilePage({
     confirmPin: "",
   });
   const [showPinChange, setShowPinChange] = useState(false);
+
+  const handleStartServer = async () => {
+    setStartBusy(true);
+    setStartHint(null);
+    try {
+      const shell = typeof window !== "undefined" ? window.wopShell : undefined;
+      if (shell?.startWayOfPiBunServer) {
+        const r = await shell.startWayOfPiBunServer();
+        setStartHint(
+          r.message || (r.ok ? "Server started." : "Failed to start server."),
+        );
+        if (r.ok) window.location.reload();
+        return;
+      }
+
+      if (import.meta.env.DEV) {
+        try {
+          const resp = await fetch("/__wop_dev/start-wayofpi-api", {
+            method: "POST",
+          });
+          if (resp.status !== 404) {
+            const data = await resp.json().catch(() => ({}));
+            setStartHint(
+              data.message ||
+                (data.ok ? "Server started." : "Failed to start server."),
+            );
+            if (data.ok) window.location.reload();
+            return;
+          }
+        } catch {
+          // Fallback
+        }
+      }
+
+      const cmd = "./start-wayofpi.sh --web";
+      try {
+        await navigator.clipboard.writeText(cmd);
+        setStartHint("Command copied to clipboard: ./start-wayofpi.sh --web");
+      } catch {
+        setStartHint("Run this in your terminal: ./start-wayofpi.sh --web");
+      }
+    } catch (e) {
+      setStartHint(e instanceof Error ? e.message : String(e));
+    } finally {
+      setStartBusy(false);
+    }
+  };
 
   useEffect(() => {
     loadProfile();
@@ -202,13 +251,20 @@ export function UserProfilePage({
                     <strong className="text-[#f0f0f0]">PIN:</strong> 1234
                   </p>
                 </div>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="rounded bg-[#ea580c] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#c2410c] transition-colors"
-                >
-                  Try Logging In
-                </button>
-                <p className="text-xs text-[#585858] mt-4">
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => window.history.back()}
+                    className="rounded bg-[#3c3c3c] px-6 py-2.5 text-sm font-medium text-[#cccccc] hover:bg-[#4c4c4c] transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="rounded bg-[#ea580c] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#c2410c] transition-colors"
+                  >
+                    Try Logging In
+                  </button>
+                </div>                <p className="text-xs text-[#585858] mt-4">
                   Demo mode: Use PIN "1234"
                 </p>
               </div>
@@ -228,13 +284,34 @@ export function UserProfilePage({
                     log in with PIN "1234".
                   </p>
                 </div>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="rounded bg-[#ea580c] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#c2410c] transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => window.history.back()}
+                      className="rounded bg-[#3c3c3c] px-6 py-2.5 text-sm font-medium text-[#cccccc] hover:bg-[#4c4c4c] transition-colors"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleStartServer}
+                      disabled={startBusy}
+                      className="rounded bg-[#007acc] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#006bb3] transition-colors disabled:opacity-50"
+                    >
+                      {startBusy ? "Starting..." : "Start Way of Pi"}
+                    </button>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="rounded bg-[#ea580c] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#c2410c] transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                  {startHint && (
+                    <p className="text-xs text-[#858585] bg-[#2d2d2d] p-2 rounded">
+                      {startHint}
+                    </p>
+                  )}
+                </div>              </div>
             ) : (
               <div>
                 <h2 className="text-2xl font-bold mb-3 text-[#f0f0f0]">

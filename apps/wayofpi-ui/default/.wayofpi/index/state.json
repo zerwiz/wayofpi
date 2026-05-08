@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "syncedAt": "2026-05-05T22:52:10.067Z",
-  "fileCount": 115,
+  "syncedAt": "2026-05-07T12:26:13.658Z",
+  "fileCount": 117,
   "truncated": false,
-  "merkleRoot": "8f190aafb04b72b4",
+  "merkleRoot": "6b67921741ec599b",
   "samplePaths": [
     "agent/sessions/wayofpi-chat-claw.t-1777919040410-c-r6ep0rt.jsonl",
     "agent/sessions/wayofpi-chat-claw.t-1777919087912-c-6bc79et.jsonl",
@@ -95,6 +95,8 @@
     "agent/sessions/wayofpi-chat-simple.t-1777984346774-s-o9z9d9m.jsonl",
     "agent/sessions/wayofpi-chat-simple.t-1777984679935-s-yw83qmq.jsonl",
     "agent/sessions/wayofpi-chat-simple.t-1778019558951-s-1kdgu2x.jsonl",
+    "agent/sessions/wayofpi-chat-simple.t-1778155755206-s-azb5tx5.jsonl",
+    "agent/sessions/wayofpi-chat-simple.t-1778156170136-s-vy3gavl.jsonl",
     "agent/sessions/wayofpi-chat-technical.t-1777919599141-t-cl9weh1.jsonl",
     "agent/sessions/wayofpi-chat-technical.t-1777922827418-t-odimwky.jsonl",
     "agent/sessions/wayofpi-chat-technical.t-1777926595899-t-mafhhwd.jsonl",

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 const useNavigate = () => (path: string) => { window.location.pathname = path; };
 import { UiModeToggle } from "../components/UiModeToggle";
 import type { UiMode } from "../hooks/useUiMode";
+import { apiGet } from "../api/client";
 
 interface Project {
   id: string;
@@ -40,7 +41,7 @@ interface Drawing {
   created_at: string;
 }
 
-export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
+export default function ClientDashboard({ uiMode, setUiMode, appHeader }: { uiMode: UiMode; setUiMode: (m: UiMode) => void; appHeader?: React.ReactNode }) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const token = localStorage.getItem("wop_token");
@@ -116,23 +117,15 @@ export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode;
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [projectsRes, drawingsRes] = await Promise.all([
-        fetch("/api/client/projects"),
-        fetch("/api/client/drawings"),
+      const [projectsData, drawingsData] = await Promise.all([
+        apiGet<Project[]>("/api/client/projects").catch(() => [] as Project[]),
+        apiGet<Drawing[]>("/api/client/drawings").catch(() => [] as Drawing[]),
       ]);
-
-      if (projectsRes.ok) {
-        const projectsData = await projectsRes.json();
-        setProjects(projectsData);
-        if (projectsData.length > 0 && !selectedProject) {
-          setSelectedProject(projectsData[0].id);
-        }
+      setProjects(projectsData);
+      if (projectsData.length > 0 && !selectedProject) {
+        setSelectedProject(projectsData[0].id);
       }
-
-      if (drawingsRes.ok) {
-        const drawingsData = await drawingsRes.json();
-        setDrawings(drawingsData);
-      }
+      setDrawings(drawingsData);
     } catch (error) {
       console.error("Failed to fetch client data:", error);
     } finally {
@@ -249,32 +242,21 @@ export default function ClientDashboard({ uiMode, setUiMode }: { uiMode: UiMode;
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] text-[#cccccc]">
-      {/* Header */}
-      <div className="bg-[#252526] border-b border-[#3c3c3c] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
-            <div>
-              <h1 className="text-2xl font-bold text-white">Client Dashboard</h1>
-              <p className="text-sm text-[#999] mt-1">Project progress, drawings, and feedback</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-[#3c3c3c] hover:bg-[#4a4a4a] text-red-400 border border-red-900/30 rounded text-sm transition-colors"
-            >
-              Logout
-            </button>
-            <button
-              onClick={() => navigate("/")}
-              className="px-4 py-2 bg-[#3c3c3c] hover:bg-[#4a4a4a] rounded text-sm transition-colors"
-            >
-              Back to App
-            </button>
-          </div>
+    <div className="min-h-screen bg-[#1e1e1e] text-[#cccccc] flex flex-col">
+      {appHeader}
+
+      {/* Info Bar */}
+      <div className="bg-[#252526] border-b border-[#3c3c3c] px-6 py-2 flex items-center justify-between">
+        <div>
+          <h1 className="text-xs font-bold text-white uppercase tracking-wider">Client Dashboard</h1>
+          <p className="text-[10px] text-[#999]">Project progress and feedback</p>
         </div>
+        <button
+          onClick={handleLogout}
+          className="px-3 py-1 bg-[#3c3c3c] hover:bg-[#4a4a4a] text-red-400 border border-[#3c3c3c] rounded text-[10px] transition-colors"
+        >
+          Logout
+        </button>
       </div>
 
       {/* Project Selector */}

@@ -2551,18 +2551,28 @@ const server = Bun.serve<ServerWsData>({
 			return new Response("WebSocket upgrade failed", { status: 500 });
 		}
 
-                 if (
+                if (
                         url.pathname.startsWith("/ws") &&
                         req.headers.get("upgrade")?.toLowerCase() === "websocket"
                 ) {
+                        let auth: any = null;
+                        
                         // In dev mode, allow WebSocket upgrades without auth
                         if (!devMode) {
                         	const authHeader = req.headers.get("Authorization");
-                        	const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
-                        	const auth = token ? await verifyToken(token) : null;
+                        	let token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+                                
+                                // Support token in query param (common for WebSockets)
+                                if (!token) {
+                                        token = url.searchParams.get("token");
+                                }
+                                
+                        	auth = token ? await verifyToken(token) : null;
                         	if (!auth) {
                         		return new Response("Unauthorized", { status: 401 });
                         	}
+                        } else {
+                                auth = { userId: "dev-user", tenantId: "dev-tenant", role: "ADMIN" };
                         }
                         
                         const upgraded = srv.upgrade(req, {
@@ -2580,8 +2590,8 @@ const server = Bun.serve<ServerWsData>({
                                         cumPromptTokens: 0,
                                         cumCompletionTokens: 0,
                                         wopSessionKey: null,
-					tenantId: devMode ? "dev-tenant" : auth?.tenantId || "unknown",
-					userId: devMode ? "dev-user" : auth?.userId || "unknown",
+					tenantId: auth?.tenantId || "dev-tenant",
+					userId: auth?.userId || "dev-user",
                                 } satisfies ChatWsData,
                         });
                         if (upgraded) return undefined as unknown as Response;
@@ -2598,31 +2608,37 @@ const server = Bun.serve<ServerWsData>({
 	},
 	websocket: {
 		open(ws) {
-			if (ws.data.kind === "terminal") {
-				attachTerminalSession(ws);
-				return;
+			try {
+				if (ws.data.kind === "terminal") {
+					attachTerminalSession(ws);
+					return;
+				}
+				applyLeadFromCache(ws.data);
+				const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+				const envOllama = resolveOllamaModelDefault();
+				const envOr = process.env.OPENROUTER_MODEL || "openrouter/auto";
+				const effectiveModel =
+					provider === "openrouter"
+						? ws.data.openrouterModel || envOr
+						: ws.data.ollamaModel || envOllama;
+				ws.send(
+					JSON.stringify({
+						type: "ready",
+						workspace: getWorkspaceRoot(),
+						provider,
+						effectiveModel,
+						ollamaModel: ws.data.ollamaModel ?? null,
+						openrouterModel: ws.data.openrouterModel ?? null,
+						chatMode: ws.data.chatMode,
+						agentName: ws.data.agentName,
+					}),
+				);
+				registerChatSocketForToolLogs(ws);
+			} catch (e) {
+				const m = e instanceof Error ? e.message : String(e);
+				console.error("[ws open handler error]", m);
+				try { ws.close(1011, `Server error: ${m}`); } catch { /* ignore */ }
 			}
-			applyLeadFromCache(ws.data);
-			const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
-			const envOllama = resolveOllamaModelDefault();
-			const envOr = process.env.OPENROUTER_MODEL || "openrouter/auto";
-			const effectiveModel =
-				provider === "openrouter"
-					? ws.data.openrouterModel || envOr
-					: ws.data.ollamaModel || envOllama;
-			ws.send(
-				JSON.stringify({
-					type: "ready",
-					workspace: getWorkspaceRoot(),
-					provider,
-					effectiveModel,
-					ollamaModel: ws.data.ollamaModel ?? null,
-					openrouterModel: ws.data.openrouterModel ?? null,
-					chatMode: ws.data.chatMode,
-					agentName: ws.data.agentName,
-				}),
-			);
-			registerChatSocketForToolLogs(ws);
 		},
 		close(ws) {
 			if (ws.data.kind === "terminal") {
@@ -2632,18 +2648,19 @@ const server = Bun.serve<ServerWsData>({
 			}
 		},
 		async message(ws, raw) {
-			if (ws.data.kind === "terminal") {
-				handleTerminalMessage(ws, raw);
-				return;
-			}
-			let msg: { type?: string; content?: string; model?: string; mode?: string; agent?: string | null };
 			try {
-				msg = JSON.parse(String(raw));
-			} catch {
-				ws.send(JSON.stringify({ type: "error", message: "Invalid JSON" }));
-				return;
-			}
-			if (msg.type === "ping") {
+				if (ws.data.kind === "terminal") {
+					handleTerminalMessage(ws, raw);
+					return;
+				}
+				let msg: { type?: string; content?: string; model?: string; mode?: string; agent?: string | null };
+				try {
+					msg = JSON.parse(String(raw));
+				} catch {
+					ws.send(JSON.stringify({ type: "error", message: "Invalid JSON" }));
+					return;
+				}
+				if (msg.type === "ping") {
 				ws.send(JSON.stringify({ type: "pong" }));
 				return;
 			}
@@ -2877,6 +2894,11 @@ const server = Bun.serve<ServerWsData>({
 			void runChatTurn(ws, text, true).catch(() => {
 				/* runChatTurn already reports errors to the client */
 			});
+			} catch (e) {
+				const m = e instanceof Error ? e.message : String(e);
+				console.error("[ws message handler error]", m);
+				try { ws.send(JSON.stringify({ type: "error", message: `Server error: ${m}` })); } catch { /* ignore */ }
+			}
 		},
 	},
 });

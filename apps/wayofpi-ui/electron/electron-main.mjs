@@ -13,7 +13,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const preloadPath = path.join(__dirname, "preload.mjs");
+const preloadPath = path.join(__dirname, "preload.cjs");
 
 /** Match **`start-wayofpi-ui.sh`** so spawned Bun can **`which pi`** like a login-ish shell. */
 function wayofpiEnrichedPath(base) {

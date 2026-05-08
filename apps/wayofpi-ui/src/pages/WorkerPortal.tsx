@@ -25,7 +25,7 @@ interface WorkerTask {
   progressPct?: number;
 }
 
-export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode: (m: UiMode) => void }) {
+export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode; setUiMode: (m: UiMode) => void; appHeader?: React.ReactNode }) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const token = localStorage.getItem("wop_token");
@@ -255,19 +255,18 @@ export function WorkerPortal({ uiMode, setUiMode }: { uiMode: UiMode; setUiMode:
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#3c3c3c] bg-[#252526] px-4 py-3">
-        <div className="flex items-center gap-6">
-          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
-          <div>
-            <h1 className="text-sm font-bold text-[#cccccc]">WAY OF PI - WORKER PORTAL</h1>
-            <p className="text-xs text-[#858585]">Welcome, {workerName}</p>
-          </div>
+    <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
+      {appHeader}
+      
+      {/* Info Bar */}
+      <div className="flex items-center justify-between border-b border-[#3c3c3c] bg-[#252526] px-4 py-2">
+        <div>
+          <h1 className="text-xs font-bold text-[#cccccc] uppercase tracking-wider">Worker Portal</h1>
+          <p className="text-[10px] text-[#858585]">Signed in as {workerName}</p>
         </div>
         <button
           onClick={handleLogout}
-          className="rounded px-3 py-1.5 text-xs text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc] transition-colors"
+          className="rounded px-2 py-1 text-[10px] text-[#858585] hover:bg-[#3c3c3c] hover:text-red-400 transition-colors border border-[#3c3c3c]"
         >
           Logout
         </button>

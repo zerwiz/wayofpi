@@ -7,13 +7,17 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 // import { useNavigate, useSearchParams } from 'react-router-dom';
 const useNavigate = () => (path: string) => console.log('Navigate to:', path);
-const useSearchParams = () => [new URLSearchParams(), (params: any) => {}] as const;
+const stableSearchParams = new URLSearchParams();
+const stableSetSearchParams = (params: any) => {};
+const useSearchParams = () => [stableSearchParams, stableSetSearchParams] as const;
 import { kanbanService } from '../../../services/mockKanbanService';
 import { notesService } from '../../../services/notesService';
 import { tasksService } from '../../../services/tasksService';
 import { driveService } from '../../../services/driveService';
 import { calendarService } from '../../../services/calendarService';
+import { useToast } from '../../../context/ToastContext';
 import { developmentWorkflowService } from '../../../services/developmentWorkflowService';
+import { workflowsService } from '../../../services/workflowsService';
 import { boardMembersService } from '../../../services/boardMembersService';
 import type { Board, BoardCard } from '../../../types/kanban';
 import type { DriveFile } from '../../../types/drive';
@@ -147,9 +151,9 @@ export function WorkBoard() {
     }
   }, [viewType, currentBoardId, driveCurrentFolder]);
 
-  const loadAllBoards = () => {
+  const loadAllBoards = async () => {
     try {
-      const boards = kanbanService.getAllBoards();
+      const boards = await kanbanService.getAllBoards();
       setAllBoards(boards);
     } catch (error) {
       console.error('Failed to load boards:', error);
@@ -187,16 +191,15 @@ export function WorkBoard() {
   }, [columnMenuOpen, cardMenuOpen, boardListMenuOpen]);
 
   useEffect(() => {
-    // Load available development workflows
-    const workflows = developmentWorkflowService.getAllWorkflows();
-    setAvailableWorkflows(workflows);
-    
-    // Load available workflow tracks (Quick Flow, Project Management, Enterprise Method)
-    const workflowTracks = workflowsService.getAllWorkflows();
-    setAvailableWorkflowTracks(workflowTracks);
+    (async () => {
+      const workflows = await developmentWorkflowService.getAllWorkflows();
+      setAvailableWorkflows(workflows);
+      const workflowTracks = await workflowsService.getAllWorkflows();
+      setAvailableWorkflowTracks(workflowTracks);
+    })();
   }, []);
 
-  const loadBoard = () => {
+  const loadBoard = async () => {
     if (!currentBoardId) {
       setBoard(null);
       setCards(new Map());
@@ -204,10 +207,10 @@ export function WorkBoard() {
     }
 
     try {
-      const loadedBoard = kanbanService.getBoard(currentBoardId);
+      const loadedBoard = await kanbanService.getBoard(currentBoardId);
       if (loadedBoard) {
         setBoard(loadedBoard);
-        const allCards = kanbanService.getAllCardsForBoard(currentBoardId);
+        const allCards = await kanbanService.getAllCardsForBoard(currentBoardId);
         const cardMap = new Map<string, BoardCard>();
         allCards.forEach((card) => {
           cardMap.set(card.id, card);
@@ -1155,7 +1158,7 @@ export function WorkBoard() {
                             try {
                               await kanbanService.updateBoard(b.id, { starred: !b.starred });
                               // Reload boards list
-                              const updatedBoards = kanbanService.getAllBoards();
+                              const updatedBoards = await kanbanService.getAllBoards();
                               setAllBoards(updatedBoards);
                               showToast({
                                 type: 'success',

@@ -19,6 +19,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/ws': {
+        target: 'http://127.0.0.1:3333',
         ws: true,
         changeOrigin: true,
       },

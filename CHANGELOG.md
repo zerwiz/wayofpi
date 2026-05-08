@@ -2,6 +2,109 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.21.08] - 2026-05-08
+
+### Fixed
+- **[UI] ClientDashboard.tsx**: Fixed 403 on `/api/client/projects` and `/api/client/drawings` — raw `fetch()` calls didn't include `Authorization: Bearer` header. Server's dev mode falls back to `role: ADMIN`, which the client routes reject. Switched to `apiGet()` from `api/client.ts` which attaches the stored JWT token.
+
+### Note
+- **[UI] WorkBoard.tsx**: This is the simplified worker-facing kanban view. The full kanban system lives at `src/pages/Kanban.tsx` + `src/components/kanban/` and needs separate integration (color theming, routing, import paths).
+
+## [0.21.07] - 2026-05-07
+
+### Fixed
+- **[ELECTRON] preload.cjs**: Fixed Electron white screen — renamed `preload.mjs` → `preload.cjs` and replaced `import` with `require()`. Electron sandboxed preload scripts do not support ESM syntax. The `SyntaxError: Cannot use import statement outside a module` in the preload caused the renderer to fail silently, resulting in a blank white window.
+- **[SERVER] pi-binary.ts**: Removed `realpathSync` on `resolvePiBinaryPath()` return — now returns symlink path as-is so `Bun.spawn` uses the shebang directly instead of resolving to `.js` target and failing with ENOENT.
+- **[SERVER] workspace-state.ts**: Fixed `getPrimaryWorkspacePath` appending `/default` to the already-default workspace path, causing `Bun.spawn` to fail with ENOENT (non-existent cwd). Default tenant now returns `baseWorkspace` directly.
+- **[UI] WorkBoard.tsx**: Added missing `useToast` import, `workflowsService` import, and `await` on async service calls (`kanbanService.getAllBoards`, `getBoard`, `getAllCardsForBoard`, `developmentWorkflowService.getAllWorkflows`, `workflowsService.getAllWorkflows`). All three calls were returning Promises instead of resolved values.
+- **[UI] mockKanbanService.ts**: Added all missing stub methods (`getAllBoards`, `getAllCardsForBoard`, `createBoardFromTemplate`, `updateBoard`, `deleteBoard`, `createColumn`, `deleteColumn`, `createCard`, `updateCard`, `deleteCard`, `moveCard`) to match WorkBoard usage.
+- **[UI] developmentWorkflowService.ts**: Added missing stub methods (`getAllWorkflows`, `getWorkflow`, `syncStepFromItemUpdate`, `updateStep`).
+- **[UI] workflowsService.ts**: Created new service with `getAllWorkflows` stub for WorkBoard workflow tracks.
+- **[UI] WorkBoard.tsx**: Fixed infinite re-render loop — `useSearchParams` mock created a new `URLSearchParams()` on every render, causing `searchParams` dependency reference to change each render, re-triggering the `useEffect` → `setAllBoards([])` → re-render loop endlessly. Extracted stable module-level refs.
+- **[UI] ClientDashboard.tsx**: Fixed 403 on `/api/client/projects` and `/api/client/drawings` — raw `fetch()` calls didn't include `Authorization: Bearer` header. Server's dev mode falls back to `role: ADMIN`, which the client routes reject. Switched to `apiGet()` from `api/client.ts` which attaches the stored JWT token.
+
+### Changed
+- **[DOCS] WOP-003**: Updated ticket with white screen root cause (preload ESM error), Electron debug findings, and verification steps.
+
+## [0.21.06] - 2026-05-07
+
+### Fixed
+- **[SERVER] WebSocket open handler**: Wrapped in try/catch to prevent unhandled errors from closing the WebSocket connection immediately (was causing ECONNRESET from Vite proxy).
+- **[SERVER] WebSocket message handler**: Wrapped in try/catch for same protection.
+- **[SERVER] pi-json-mode-chat.ts**: Fixed node binary resolution — now uses `realpathSync` on `Bun.which("node")`, checks common locations (`/usr/bin/node`, `/usr/local/bin/node`), and falls back to shebang-based spawn if node is unavailable. Added detailed spawn error logging.
+- **[UI] useWayOfPiSession.ts**: Fixed React Strict Mode double-invocation error — cleanup no longer calls `.close()` on WebSocket in CONNECTING state, preventing "WebSocket is closed before the connection is established" console error on initial mount.
+
+### Changed
+- **[UI] useWayOfPiSession.ts**: Cleanup only closes WebSocket if it's in OPEN state; CONNECTING sockets are abandoned gracefully.
+
+## [0.21.05] - 2026-05-06
+
+### Fixed
+- **[UI] ChatPanel.tsx**: Fixed to use correct `ChatRow` properties (`role`, `assistantPersona`, `content`) instead of deprecated `fromUser`, `agentName`, `segments`
+- **[UI] ChatPanel.tsx**: Shows "Disconnected - Start the server to enable chat" message when server is offline
+- **[UI] ChatPanel.tsx**: Disables input and send button when disconnected
+- **[UI] DocsApp.tsx**: Fixed hooks violation (moved `useDocumentHandler()` to component level instead of try/catch block)
+- **[UI] DocsApp.tsx**: Fixed `docsNodes` reference error (added back the `useMemo` definition)
+
+### Changed
+- **[UI] ChatPanel.tsx**: Updated empty state message to indicate server connection requirement
+- **[UI] ChatPanel.tsx**: Input field now disabled when streaming or disconnected
+
+### Status
+- **[BUILD]**: ✅ Build passes (`bun run build`) - All our files now error-free
+- **[CHAT]**: Requires server running (`bun run dev` or `./start-wayofpi.sh`) for WebSocket connection
+
+---
+
+## [0.21.04] - 2026-05-06
+
+### Added
+- **[DOCS] thoughts/shared/tickets/WOP-001-fix-docs-mode-routing-issues.md**: Created comprehensive ticket for Docs mode routing fixes
+- **[DOCS] thoughts/shared/plans/WOP-001-fix-docs-mode-routing.md**: Created implementation plan for Docs mode fixes
+- **[UI] DocumentBrowser.css**: Created proper dark theme styling for DocumentBrowser component
+
+### Fixed
+- **[UI] DocsApp.tsx**: Fixed FileExplorer to display file tree (added missing props: `visible`, `onToggle`, `appearanceDark`)
+- **[UI] DocsApp.tsx**: Fixed ChatPanel initialization (added missing props: `visible`, `onToggle`)
+- **[UI] DocsApp.tsx**: Fixed PreviewModal props (`visible`/`path` instead of `isOpen`/`filePath`)
+- **[UI] DocsApp.tsx**: Integrated DocumentBrowser component with toggle button (Tree ↔ Docs view)
+- **[UI] DocsApp.tsx**: Consolidated file selection logic (Path A/B) - now updates both `selectedPath` and `DocumentHandlerContext`
+- **[UI] DocumentBrowser.tsx**: Replaced empty `loadFiles()` with proper `TreeNode` filtering
+- **[UI] DocumentBrowser.tsx**: Added filter by type (All/Markdown/Text/Code) with real-time filtering
+- **[UI] DocumentBrowser.tsx**: Added search functionality with real-time results
+- **[UI] DocumentBrowser.tsx**: Implemented expand/collapse for folders
+- **[UI] DocumentBrowser.tsx**: Removed unused imports and states
+- **[UI] FileExplorer.tsx**: Improved empty states (loading spinner, error with retry button, helpful empty state message)
+- **[UI] DocumentBrowser.tsx**: Fixed JSX namespace issue (`JSX.Element` → implicit return type)
+
+### Changed
+- **[UI] DocsApp.tsx**: Added `docsNodes` filter definition back (was missing after edits)
+- **[UI] DocsApp.tsx**: Fixed `selectedPath` null handling in `apiGet` call
+- **[UI] DocumentBrowser.tsx**: Changed from orphaned component to fully integrated Docs mode browser
+
+### Status
+- **[BUILD]**: ✅ Build passes (`bun run build`) - DocsApp.tsx and DocumentBrowser.tsx errors fixed
+- **[TICKET]**: WOP-001 now 10/10 items complete
+- **[DOCS]**: Investigation document `DOCS-MODE-ROUTING-INVESTIGATION.md` issues resolved
+
+---
+
+## [0.21.03] - 2026-05-06
+
+### Added
+- **[UI] UserProfile.tsx**: Added **"Back"** and **"Start Way of Pi"** buttons to error screens (API not ready, Not Authenticated).
+- **[UI] UserProfile.tsx**: Added "Start Way of Pi" logic to attempt server startup via Electron IPC or dev-mode endpoint, with clipboard fallback.
+- **[DOCS] LOCAL_HOSTING.md**: Created comprehensive guide for local hosting via Docker, ngrok, and VMs.
+
+### Fixed
+- **[UI] WorkApp.tsx**: Changed default active tab to **"Tasks"** so the Kanban board is visible by default when opening Workboard.
+- **[UI] vite.config.ts**: Fixed "Must provide a proper URL as target" error by adding missing target to `/ws` proxy.
+- **[SERVER] pi-binary.ts**: Fixed `ENOENT` error when spawning Pi by resolving symlinks and improving path detection (including global `.pi` agent path).
+- **[SERVER] pi-json-mode-chat.ts**: Fixed `ENOENT: node` error by resolving the absolute path of the `node` executable and added spawn logging for better diagnostics.
+- **[SERVER] index.ts**: Fixed WebSocket connection failure by supporting authentication via `token` query parameters and ensuring proper tenant/user ID defaults in dev mode.
+
+---
+
 ## [0.21.02] - 2026-05-06
 
 ### Added

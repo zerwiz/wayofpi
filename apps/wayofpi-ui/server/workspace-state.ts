@@ -76,7 +76,12 @@ export function getPrimaryWorkspacePath(tenantId: string = "default"): string {
 		|| frozenInitialPath 
 		|| "/home/zerwiz/CodeP/Way of pi/workspace";
 	
-	// Tenant isolation: each tenant gets subdirectory
+	// Default tenant IS the base workspace — no subdirectory appended
+	if (tenantId === "default") {
+		return baseWorkspace;
+	}
+	
+	// Tenant isolation: each non-default tenant gets a subdirectory
 	const tenantWorkspace = resolve(baseWorkspace, tenantId);
 	
 	// Ensure path stays within base (trailing sep is critical!)
