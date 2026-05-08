@@ -14,6 +14,7 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     host: '0.0.0.0',
+    allowedHosts: ['unvocable-oligopoly-lorraine.ngrok-free.dev'],
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3333',

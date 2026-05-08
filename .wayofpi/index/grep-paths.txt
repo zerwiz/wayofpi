@@ -27754,6 +27754,8 @@
 .kilo/tsconfig.json
 .pi-lens/cache/knip.json
 .pi-lens/cache/knip.meta.json
+.pi-lens/cache/session-start-guidance.json
+.pi-lens/cache/session-start-guidance.meta.json
 .pi-lens/cache/turn-end-findings-last.json
 .pi-lens/cache/turn-end-findings-last.meta.json
 .pi-lens/cache/turn-end-findings.json
@@ -29507,6 +29509,7 @@ apps/wayofpi-ui/src/pages/Kanban.tsx
 apps/wayofpi-ui/src/pages/LoginPage.tsx
 apps/wayofpi-ui/src/pages/SuperAdminDashboard.tsx
 apps/wayofpi-ui/src/pages/UserProfile.tsx
+apps/wayofpi-ui/src/pages/WelcomePage.tsx
 apps/wayofpi-ui/src/pages/WorkerPortal.tsx
 apps/wayofpi-ui/src/ReferenceApp.tsx
 apps/wayofpi-ui/src/services/boardMembersService.ts
@@ -29580,6 +29583,7 @@ apps/wayofpi-ui/src/utils/simpleWorkspaceLayoutStorage.ts
 apps/wayofpi-ui/src/utils/sortTreeNodes.ts
 apps/wayofpi-ui/src/utils/teamsYaml.ts
 apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts
+apps/wayofpi-ui/src/utils/terminalConnectionManager.ts
 apps/wayofpi-ui/src/utils/terminalInputBridge.ts
 apps/wayofpi-ui/src/utils/terminalRunCommands.ts
 apps/wayofpi-ui/src/utils/terminalUiPreferences.ts
@@ -31616,6 +31620,7 @@ thoughts/shared/tickets/WOP-006-pi-dev-version-pinning-and-startup-logging.md
 thoughts/shared/tickets/WOP-007-collective-ticket-evaluation.md
 thoughts/shared/tickets/WOP-009-production-delivery.md
 thoughts/shared/tickets/WOP-010-kanban-full-integration.md
+thoughts/shared/tickets/WOP-011-terminal-persistence-across-views.md
 thoughts/shared/tickets/WOP-ALL-TODO.md
 tilldone-checklist.md
 Way of pi.code-workspace

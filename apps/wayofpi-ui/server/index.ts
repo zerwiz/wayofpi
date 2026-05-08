@@ -956,7 +956,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	}
 	// In dev mode, create a fake auth for compatibility
 	if (!auth && isDevMode) {
-		auth = { userId: "dev-user", tenantId: "dev-tenant", role: "ADMIN" };
+		auth = { userId: "dev-user", tenantId: "dev-tenant", role: "SUPER_ADMIN" };
 	}
 
 	if (p === "/api/health") {

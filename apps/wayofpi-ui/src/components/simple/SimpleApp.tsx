@@ -709,7 +709,7 @@ export function SimpleApp({
 			) : (
 				<>
 			<div className="flex min-h-0 flex-1 overflow-hidden">
-				{leftOpen && !narrowDesktop ? navRailEl : null}
+				{leftOpen ? navRailEl : null}
 
 				<div className={`flex min-w-0 flex-1 flex-col ${mainCol}`}>
 					<SimpleSecondaryToolbar
@@ -975,12 +975,12 @@ export function SimpleApp({
 							) : null}
 						</div>
 
-						{rightOpen && !narrowDesktop ? (
-							<div className="hidden h-full shrink-0 md:flex">
+						{rightOpen ? (
+							<div className="h-full shrink-0">
 								<SimpleRightPanel
 									nodes={nodes}
 									selectedPath={selectedPath}
-									onSelectFile={setSelectedPath}
+									onSelectFile={narrowDesktop ? handleNarrowTreeSelect : setSelectedPath}
 									loading={treeLoading}
 									error={treeError}
 									logs={logs}
@@ -1000,89 +1000,12 @@ export function SimpleApp({
 				</div>
 			</div>
 
-			{narrowDesktop && rightOpen ? (
-				<div
-					className="fixed inset-0 z-[58] flex flex-row"
-					role="dialog"
-					aria-modal="true"
-					aria-label="Project files"
-				>
-					<button
-						type="button"
-						className="min-h-0 min-w-0 flex-1 bg-black/45"
-						aria-label="Dismiss file list"
-						onClick={() => setRightOpen(false)}
-					/>
-					<div
-						className={`flex h-[100dvh] max-h-screen w-[min(100vw,400px)] max-w-[94vw] shrink-0 flex-col overflow-hidden border-l shadow-2xl ${mobileSheetShell}`}
-						style={{
-							paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
-							paddingTop: "max(0px, env(safe-area-inset-top))",
-						}}
-					>
-						<div
-							className={`flex min-h-10 shrink-0 items-center justify-between border-b px-2 py-1.5 ${appearanceDark ? "border-[#3c3c3c]" : "border-[#e5e5e5]"}`}
-						>
-							<span className="text-[12px] font-semibold">Project files</span>
-							<button
-								type="button"
-								onClick={() => setRightOpen(false)}
-								className={`min-h-9 min-w-9 rounded-lg text-[11px] font-semibold ${appearanceDark ? "text-[#858585] hover:bg-[#1e1e1e]" : "text-[#666666] hover:bg-[#eeeeee]"}`}
-							>
-								Done
-							</button>
-						</div>
-						<div className="min-h-0 flex-1 overflow-hidden">
-							<SimpleRightPanel
-								presentation="sheet"
-								nodes={nodes}
-								selectedPath={selectedPath}
-								onSelectFile={handleNarrowTreeSelect}
-								loading={treeLoading}
-								error={treeError}
-								logs={logs}
-								streaming={streaming}
-								appearanceDark={appearanceDark}
-								onExplorerGitMutated={() => void refreshTreeQuiet()}
-								onMoveFileToDirectory={onMoveFileToDirectory}
-								allowWorkspaceRootDrop={allowWorkspaceRootDrop}
-							/>
-						</div>
-					</div>
-				</div>
-			) : null}
 
-			{narrowDesktop && leftOpen ? (
-				<div
-					className="fixed inset-0 z-[55] flex"
-					role="dialog"
-					aria-modal="true"
-					aria-label="Way of Pi navigation"
-				>
-					<div
-						className={`flex h-[100dvh] max-h-screen shrink-0 flex-col shadow-2xl ${
-							appearanceDark ? "bg-[#333333]" : "bg-white"
-						}`}
-						style={{
-							paddingTop: "max(0px, env(safe-area-inset-top))",
-							paddingBottom: "max(0px, env(safe-area-inset-bottom))",
-						}}
-					>
-						{navRailEl}
-					</div>
-					<button
-						type="button"
-						className="min-h-0 min-w-0 flex-1 cursor-default border-0 bg-black/50 p-0"
-						aria-label="Close navigation"
-						onClick={() => setLeftOpen(false)}
-					/>
-				</div>
-			) : null}
 				</>
 			)}
 
 			{!isMobile ? (
-				<div className={narrowDesktop ? "hidden md:block" : undefined}>
+				<div>
 					<StatusBar
 						uiMode={uiMode}
 						workspaceRoot={workspacePath}
