@@ -136,7 +136,28 @@ From `docs/PRODUCTION_DELIVERY_PLAN.md`:
 - [ ] Allow clients to use their own domain (e.g., `wayofpi.acmecorp.com`)
 - [ ] Per-tenant branding (logo, colors via `settings_json`)
 
-### 6. Usage-Based Billing Metering
+### 6. S3 Object Storage for Tenant Data
+
+File storage currently lives on the local filesystem, which doesn't scale across containers or deployments. Planned migration to S3-compatible object storage:
+
+**Why S3 for multi-tenancy:**
+- Each tenant's files isolated via bucket prefix (`/workspaces/<tenant_id>/`)
+- Shared files across app instances (no local volume dependency)
+- Backup all tenant data to durable off-server storage
+- Tenant-level storage quotas and billing
+
+**Planned phases:**
+1. **Backups:** `rclone` + cron → S3 bucket for DB snapshots (Backblaze B2)
+2. **Uploads:** Replace local file serving with S3 signed URLs
+3. **Workspaces:** Migrate tenant workspace storage behind `StorageProvider` abstraction
+
+**Providers considered:** AWS S3, Cloudflare R2 (no egress fees), Backblaze B2 (cheapest), MinIO (self-hosted).
+
+**Planned env vars:** `WOP_STORAGE_BACKEND`, `WOP_S3_BUCKET`, `WOP_S3_ENDPOINT`, `WOP_S3_REGION`, `WOP_S3_ACCESS_KEY_ID`, `WOP_S3_SECRET_ACCESS_KEY`.
+
+**Files (planned):** `server/storage/provider.ts`, `server/storage/s3-provider.ts`, `server/storage/local-provider.ts`, `scripts/backup.sh`, `scripts/restore.sh`.
+
+### 7. Usage-Based Billing Metering
 
 From `docs/PRODUCTION_DELIVERY_PLAN.md`:
 - [ ] Track active users, storage, requests per tenant
@@ -174,6 +195,94 @@ From `docs/PRODUCTION_DELIVERY_PLAN.md`:
                   │    schema-per-tenant)   │
                   └─────────────────────────┘
 ```
+
+---
+
+---
+
+## Security Plan
+
+### 1. Multi-Tenant Isolation Principles
+
+Every table containing user-generated or tenant-specific data **must** have a `tenant_id` column — this is already enforced in `schema.sql`. Compound unique constraints (`UNIQUE(tenant_id, username)`) prevent cross-tenant collisions.
+
+**Planned:** Drizzle ORM for type-safe query building that verifies `tenant_id` inclusion at compile time.
+
+### 2. RBAC & Authorization
+
+**Current:** Role checks are per-endpoint (`!auth || auth.role !== "SUPER_ADMIN"`). Five roles exist: SUPER_ADMIN > ADMIN > LEADER > WORKER > CLIENT.
+
+**Planned:** Centralized RBAC middleware that enforces role hierarchy before route handlers, rejecting unauthorized requests (403) before reaching business logic. Reference: `plans/old/productionready/reference/PHASE1_IMPLEMENTATION.md:119-148`.
+
+### 3. Path Traversal Prevention
+
+Already implemented in `server/workspace-state.ts`:
+- `getPrimaryWorkspacePath(tenantId)` rejects `..` and `/` in tenant IDs (line 70)
+- Path resolution checks that resolved path stays within the base directory (lines 87-90)
+- Non-default tenants get isolated subdirectories (`baseWorkspace/<tenantId>/`)
+
+### 4. Authentication
+
+| Mechanism | Where | Details |
+|-----------|-------|---------|
+| JWT (HS256) | `server/auth.ts` | 24-hour expiry, `{ userId, tenantId }` in payload |
+| Password hash | `server/db.ts:96` | `Bun.password.hash()` (bcrypt/scrypt) |
+| Worker PIN | `server/index.ts:913` | 4-digit PIN for portal login |
+| Tunnel gate | `server/tunnel-gate.ts` | scrypt-hashed HTTP Basic Auth for public tunnels |
+
+**Security concerns:**
+- Fallback JWT secret `"way-of-pi-secret-key-change-me"` in `auth.ts:3` — **must** be overridden via `WOP_AUTH_SECRET` in production
+- Default admin credentials seeded in `db.ts` — requires first-login password change
+
+### 5. Audit Logging
+
+**Current:** `audit_logs` table logs file downloads (`index.ts:1295`) and client feedback (`index.ts:1469`) with `tenant_id`, `user_id`, `action`, `resource_type`, `details_json`.
+
+**Planned:** Expand audit logging to cover all sensitive actions (login, task create/approve/reject, tenant create, settings changes). Configure log redaction for sensitive fields (`pin`, `password`, `token`, `authorization`).
+
+### 6. Damage Control Rules (Agent Safety)
+
+**`apps/wayofpi-ui/src/extentions/damage-control-rules.yaml`** blocks destructive operations:
+- 44 bash patterns (rm -rf, chmod 777, git push --force, cloud provider deletes)
+- 42 zero-access paths (`.env`, secrets, keys)
+- 42 read-only config files
+- 31 no-delete protected files
+- SQL injection protections (DROP TABLE, DELETE FROM without WHERE)
+
+### 7. Execution Gating
+
+| Env Var | Purpose | Default |
+|---------|---------|---------|
+| `WOP_ALLOW_TERMINAL` | Gates terminal access | Disabled in production |
+| `WOP_ALLOW_RUN` | Gates npm/bun script execution | Disabled |
+| `WOP_ALLOW_SERVER_RESTART` | Gates server restart endpoint | — |
+| `WOP_ALLOW_MOCK_AUTH` | Mock auth for dev (planned) | Must never be true in production |
+
+### 8. Secrets Management
+
+**Current:**
+- `WOP_AUTH_SECRET` env var for JWT signing
+- Tunnel gate credentials stored under `WOP_HOME` as `tunnel-gate.v1.json`
+- Webhook secrets verified with constant-time comparison (`crypto.timingSafeEqual`)
+
+**Planned:**
+- Never commit secrets to git (enforced via `.gitignore` + damage control rules)
+- Rotate JWT signing keys monthly
+- Environment variable `.env` files excluded from version control
+- Use HashiCorp Vault or similar for production secret storage
+
+### 9. Key Security Files
+
+| File | What It Covers |
+|------|---------------|
+| `.pi/rules/securitypolicy.md` | Pi agent security policy (permissions, secrets, sandbox) |
+| `.pi/damage-control-rules.yaml` | Agent execution safety rules |
+| `apps/wayofpi-ui/src/extentions/damage-control-rules.yaml` | Comprehensive damage control (279 lines) |
+| `server/auth.ts` | JWT creation and verification |
+| `server/tunnel-gate.ts` | scrypt-hashed tunnel Basic Auth |
+| `server/workspace-state.ts` | Path traversal prevention |
+| `server/index.ts` | Tenant-scoped queries, audit logging, role checks |
+| `plans/old/productionready/reference/PHASE_1_SECURITY_DATA_GUIDE.md` | Security hardening guide |
 
 ---
 

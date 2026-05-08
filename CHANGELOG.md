@@ -6,9 +6,14 @@ All notable changes to the **Way of Pi** project.
 
 ### Added
 - **`docs/MULTI_TENANCY.md`**: Comprehensive document covering the multi-tenancy architecture — existing implementation (schema, JWT scoping, tenant-scoped API endpoints, workspace path isolation, admin UI, RBAC roles) and planned features (RBAC middleware, PostgreSQL migration, cloud deployment, onboarding automation, white-label domains, billing metering).
+- **`docs/MULTI_TENANCY.md`**: Added Security Plan section covering tenant isolation principles, RBAC, path traversal prevention, authentication, audit logging, damage control rules, execution gating, and secrets management.
+- **`docs/HOSTING_PLANS.md`**: Added Security Plan section covering auth per plan, network security, execution safety gates, tunnel security, Docker hardening, damage control, secrets management, and audit logging.
+- **`docs/HOSTING_PLANS.md`**: Added S3 Object Storage Plan covering 3-phase migration (backups → uploads → workspaces), provider comparison table, env vars, and planned scripts.
+- **`docs/MULTI_TENANCY.md`**: Added S3 Object Storage section for tenant data isolation via bucket prefixes, with planned provider abstraction layer.
 
 ### Added
 - **`docs/HOSTING_PLANS.md`**: Consolidated document covering all 7 hosting options — Desktop (Electron), Local Dev Server, ngrok Tunnel, Docker, Cloud SaaS, VM/Hypervisor, and Self-Hosted (On-Premise). Includes comparison matrix and related file index.
+- **`docs/HOSTING_PLANS.md`**: Added standalone Cloudflare Tunnel plan (Plan G) with setup commands, vs-ngrok comparison, and domain strategy.
 
 ### Fixed
 - **`SimpleApp.tsx`**: Left/right sidebars on narrow viewports (≤767px) now push the chat inline instead of rendering as fixed overlays. Removed drawer overlay pattern for both panels.

@@ -265,6 +265,220 @@ clientx.wayofpi.com      → Self-hosted client instance (Cloudflare Tunnel)
 
 ---
 
+---
+
+---
+
+## S3 Object Storage Plan
+
+### Why S3
+
+Currently all file storage is **local filesystem + SQLite BLOBs**. As the system scales to multiple tenants, object storage is needed for:
+- **Client uploads:** CAD files (.dwg, .rvt), PDFs, images, documents
+- **Workspace files:** Tenant workspace data that should persist across container restarts
+- **Database backups:** Automated daily snapshots stored off-server
+- **Multi-instance sharing:** Same file accessible from multiple app instances
+
+### Storage Architecture (Planned)
+
+```
+App Instance                    Object Store
+┌──────────────┐               ┌──────────────┐
+│ Way of Pi    │  GET/PUT      │  S3 Bucket   │
+│ Server       │──────────────>│              │
+│              │               │  /uploads/   │
+│ Local cache  │  <────────────│  /workspaces/ │
+│ (hot files)  │   signed URL  │  /backups/   │
+└──────────────┘               │  /static/    │
+                               └──────────────┘
+```
+
+### Implementation Plan
+
+**Phase 1 — Backups (immediate):**
+- [ ] Install `rclone`, configure S3-compatible endpoint
+- [ ] Write `scripts/backup.sh`: `pg_dump` + `rclone copy` to bucket
+- [ ] Daily cron: `0 3 * * * /path/to/scripts/backup.sh`
+- [ ] Write `scripts/restore.sh`: restore from S3 bucket
+
+**Phase 2 — File Uploads (medium-term):**
+- [ ] Add S3 client SDK to server (`@aws-sdk/client-s3` or Bun-native HTTP)
+- [ ] Config: `WOP_STORAGE_BACKEND=local|s3`, `WOP_S3_BUCKET`, `WOP_S3_REGION`, `WOP_S3_ENDPOINT`
+- [ ] Upload endpoint: `POST /api/files/upload` → PUT to S3, store metadata in SQLite
+- [ ] Serve via signed URLs: `GET /api/files/:id/download` → generate presigned GET URL
+- [ ] Cache hot files locally via `WOP_STORAGE_CACHE_DIR`
+
+**Phase 3 — Workspace Migration (long-term):**
+- [ ] Migrate tenant workspaces from filesystem to S3 prefix (`/workspaces/<tenant_id>/`)
+- [ ] Abstract filesystem access behind a `StorageProvider` interface
+- [ ] Lazy migration: fetch on first access, cache locally
+
+### S3-Compatible Providers
+
+| Provider | Free Tier | Cost | S3 Compatible | Notes |
+|----------|-----------|------|---------------|-------|
+| **AWS S3** | 5GB, 20k GET/mo | $0.023/GB/mo | Native | Global, expensive egress |
+| **Cloudflare R2** | 10GB, 1M GET/mo | $0.015/GB/mo, no egress fees | Yes | No egress charges, fast edge |
+| **Backblaze B2** | 10GB free | $0.006/GB/mo + $0.01/GB egress | Yes | Cheapest, good for backups |
+| **DigitalOcean Spaces** | 250GB, 1TB egress | $5/mo flat | Yes | Simple pricing |
+| **MinIO** (self-hosted) | Unlimited | Your infra cost | Full API | Self-managed, no egress |
+
+**Recommendation:** Start with **Backblaze B2** for backups (cheapest), use **Cloudflare R2** for file upload serving (no egress fees, fast via Cloudflare edge).
+
+### Env Vars (Planned)
+
+```
+WOP_STORAGE_BACKEND=s3           # "local" or "s3"
+WOP_S3_ENDPOINT=https://s3.us-east-1.amazonaws.com  # or R2/B2 endpoint
+WOP_S3_REGION=us-east-1
+WOP_S3_BUCKET=wayofpi-production
+WOP_S3_ACCESS_KEY_ID=...
+WOP_S3_SECRET_ACCESS_KEY=...
+WOP_STORAGE_CACHE_DIR=/tmp/wop-cache  # local cache for hot files
+```
+
+### Files (Planned)
+
+| File | Purpose |
+|------|---------|
+| `scripts/backup.sh` | Daily DB backup to S3 bucket |
+| `scripts/restore.sh` | Restore from S3 backup |
+| `server/storage/s3-provider.ts` | S3 upload/download/signed-url |
+| `server/storage/local-provider.ts` | Local filesystem fallback |
+| `server/storage/provider.ts` | Abstract StorageProvider interface |
+
+### Related TODO Items
+
+From `thoughts/shared/tickets/WOP-ALL-TODO.md:470-478`:
+- [ ] Install `rclone`, configure Backblaze B2
+- [ ] Write `scripts/backup.sh`: `pg_dump` + `rclone copy` to B2 bucket
+- [ ] Delete backups older than 30 days
+- [ ] Add daily cron
+- [ ] Write `scripts/restore.sh`
+
+---
+
+## Security Plan (Cross-Cutting)
+
+### 1. Authentication & Identity
+
+| Plan | Auth Method | Notes |
+|------|-------------|-------|
+| A. Desktop | None (local app) | Bun API auto-starts on localhost only |
+| B. Local Dev | None (LAN) | Vite `host: 0.0.0.0` — accessible to LAN |
+| C. ngrok Tunnel | Optional HTTP Basic Auth | scrypt-hashed passwords via tunnel-gate |
+| D. Docker | Per-container | Depends on deployment network setup |
+| E. Cloud SaaS | JWT + password | `WOP_AUTH_SECRET` required in production |
+| F. VM | Network-level | VLAN/firewall per VM |
+| G. Cloudflare Tunnel | Zero Trust / Access policies | Cloudflare auth before reaching app |
+| H. Self-Hosted | Depends on tunnel | Tunnel auth + app JWT |
+
+**JWT credentials:** `server/auth.ts` uses HS256 with 24h expiry. Default fallback secret `"way-of-pi-secret-key-change-me"` — **must** override with `WOP_AUTH_SECRET` env var in production.
+
+### 2. Network Security
+
+**Vite dev server:**
+- `host: 0.0.0.0` — binds to all interfaces (LAN accessible)
+- `cors: true` — permissive CORS (dev only; Bun API handles CORS headers in production)
+
+**Bun API server:**
+- No built-in TLS (intended to sit behind Vite proxy in dev, or Caddy/nginx in production)
+- Rate limiting: **not implemented** (planned for cloud deployment)
+- DDoS protection: Cloudflare proxy (orange cloud) recommended for public endpoints
+
+**Production recommendations:**
+- Deploy behind Caddy or nginx reverse proxy with auto TLS
+- Cloudflare proxy in front of cloud deployments for DDoS + CDN
+- Never expose Bun API directly to the internet without tunnel gate auth
+
+### 3. Execution Safety Gates
+
+| Env Var | What It Controls | Default | Security Impact |
+|---------|-----------------|---------|-----------------|
+| `WOP_ALLOW_TERMINAL` | Terminal access in UI | Disabled in prod | Prevents arbitrary shell access |
+| `WOP_ALLOW_RUN` | npm/bun script execution | Disabled | Prevents running arbitrary scripts |
+| `WOP_ALLOW_SERVER_RESTART` | HTTP server restart | — | Prevents denial-of-service |
+| `WOP_ALLOW_MOCK_AUTH` | Bypass auth (planned) | Must be false in prod | Prevents auth bypass |
+| `WOP_ALLOW_NGROK_SPAWN` | ngrok managed start/stop | Allowed | Prevents unauthorized tunnel creation |
+
+### 4. Tunnel Security
+
+**ngrok tunnels (Plan C):**
+- Free tier: no custom domain, 40 conn/min limit provides basic DoS protection
+- Optional HTTP Basic Auth via tunnel-gate (scrypt-hashed, constant-time comparison)
+- Tunnel gate credentials stored under `WOP_HOME` as `tunnel-gate.v1.json`
+- Detection via `Host` / `X-Forwarded-Host` containing `ngrok` or custom markers
+
+**Cloudflare Tunnel (Plan G):**
+- Zero Trust / Access policies: authenticate before traffic reaches your server
+- Custom domain with TLS termination at Cloudflare edge
+- No bandwidth throttling
+- Recommended for production self-hosting
+
+### 5. Docker Security
+
+**Current state:**
+- Dockerfile runs as root (needs hardening)
+- No HEALTHCHECK configured
+- No resource limits
+
+**Planned hardening (`docs/PRODUCTION_DELIVERY_PLAN.md`):**
+- [ ] Add non-root user (`USER wayofpi`)
+- [ ] Add `HEALTHCHECK --interval=30s`
+- [ ] Resource limits (`--cpus=2 --memory=2g`)
+- [ ] Read-only root filesystem where possible
+- [ ] No privileged containers
+- [ ] `--cap-drop ALL` for agent containers
+
+### 6. Damage Control & Agent Safety
+
+Comprehensive damage control rules at `apps/wayofpi-ui/src/extentions/damage-control-rules.yaml` (279 lines):
+- 44 bash patterns blocking: `rm -rf`, `chmod 777`, `git push --force`, cloud provider destructive commands
+- 42 zero-access paths: `.env`, secrets, SSH keys, kubeconfig
+- 42 read-only config files: package.json, tsconfig.json
+- 31 no-delete protected files: `.git/`, LICENSE, env files
+- SQL injection protection: DROP TABLE, DELETE FROM without WHERE
+
+### 7. Secrets & Environment Variables
+
+**Keep out of version control:**
+- `.env` files (in `.gitignore`)
+- ngrok authtokens (`~/.config/ngrok/ngrok.yml`)
+- Cloudflare API tokens
+- `WOP_AUTH_SECRET` (fallback in code but must be overridden)
+
+**Stored on disk:**
+- Tunnel gate credentials: `.wayofpi/tunnel-gate.v1.json` under WOP_HOME
+- Pi agent config: `.pi/` directory
+
+**Planned:**
+- Centralized secret management (HashiCorp Vault for cloud deploys)
+- Log redaction for sensitive fields (`pin`, `password`, `token`, `authorization`)
+- Per-deployment `.env` template with all secrets documented in `.env.sample`
+
+### 8. Audit Logging
+
+**Current:** `audit_logs` DB table logs file downloads and client feedback with `tenant_id`, `user_id`, `action`, `resource_type`.
+
+**Planned:** Expand to cover login attempts, tenant creation, settings changes, and all sensitive API operations across all hosting plans.
+
+### 9. Security Reference Files
+
+| File | Content |
+|------|---------|
+| `plans/old/productionready/reference/PHASE_1_SECURITY_DATA_GUIDE.md` | Database multi-tenancy, RBAC, path hardening, secrets guide |
+| `apps/wayofpi-ui/src/extentions/damage-control-rules.yaml` | Agent execution safety (279 lines) |
+| `.pi/rules/securitypolicy.md` | Pi agent permission scoping, secret handling, sandbox |
+| `.pi/damage-control-rules.yaml` | Agent damage control (92 lines) |
+| `server/auth.ts` | JWT creation and verification |
+| `server/tunnel-gate.ts` | scrypt-hashed tunnel Basic Auth |
+| `server/workspace-state.ts` | Path traversal prevention |
+| `docs/old/specs/damage-control.md` | Damage control extension specification |
+| `rules/pi agent rules/securitypolicy.md` | Extended security policy (571 lines) |
+| `pip/.pi/agents/wayofpiagents/wayofpi-security-developer.md` | Security developer agent template |
+
+---
+
 ## Related Files
 
 | File | Content |
