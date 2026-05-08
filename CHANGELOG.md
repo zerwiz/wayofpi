@@ -2,6 +2,20 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.21.10] - 2026-05-08
+
+### Added
+- **[PLAN] Production delivery plan**: Wrote `docs/PRODUCTION_DELIVERY_PLAN.md` — covers 4 delivery channels: Desktop installers (Windows .exe, macOS .dmg, Linux .AppImage/.deb), Cloud SaaS hosting (Docker multi-tenant on Railway/Fly/Hetzner), Local self-hosting (ngrok/Cloudflare Tunnel from your machine), and CI/CD pipeline (GitHub Actions matrix build, code signing, auto-update). Includes cost estimation ($300-500/yr signing, $12-60/mo per cloud client, $11-32/mo self-host), domain/SSL strategy, backup/recovery plan, monitoring, and a 4-phase implementation roadmap.
+- **[TICKET] WOP-009 production delivery**: Created `thoughts/shared/tickets/WOP-009-production-delivery.md` (4 sections: desktop, cloud, self-host, domain). Updated WOP-007 collective ticket table to include WOP-009.
+- **[TICKET] Master combined TODO**: Created `thoughts/shared/tickets/WOP-ALL-TODO.md` aggregating all tasks from WOP-001 through WOP-009 into one organized checklist by WOP-007 phase. Covers all 8 phases + completed items. Removed superseded `WOP-009-TODO.md`.
+
+## [0.21.09] - 2026-05-08
+
+### Added
+- **[UI/UX] Workspace plan doc**: Wrote `docs/UI_UX_WORKSPACE_PLAN.md` — per-role workspace designs (Worker, Leader, Client, Admin, Super Admin), navigation architecture, header types, visual design tokens, landing experiences, implementation phasing. Each workspace has a clear primary job, explicit CAN/CANNOT boundaries, and a consistent visual shell.
+- **[PLAN] Financial system PRD + 7 issues**: Wrote `issues/prd-financial-system.md` covering budgets, salaries, invoicing, multi-currency, expense tracking, and financial dashboards. Broke into 7 vertical-slice issue files (`issues/001`–`007`). Integrated into WOP-007 as Section 7 (parallel track starting after Phase 0). Updated ARCHITECTURE_TARGET.md capabilities table. Added `issues/` to project root.
+- **[DOCS] Community extension ecosystem**: Documented 5 pi.dev community packages in `docs/ARCHITECTURE_TARGET.md §12` — pi-web-access (web search/extraction), pi-markdown-preview (markdown/LaTeX/Mermaid preview), pi-mermaid (ASCII mermaid), rpiv-ask-user-question (structured user prompts), pi-lens (LSP/lint/format). Maps each to in-app code it replaces during Phase 6. Added `@/` path alias to `vite.config.ts` + `tsconfig.app.json` for shadcn-style imports (prepares Phase 0 build fix). Updated `thoughts/shared/tickets/WOP-007` Phase 6 with community extension migration section.
+
 ## [0.21.08] - 2026-05-08
 
 ### Fixed

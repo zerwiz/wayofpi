@@ -217,6 +217,11 @@ docs/
 ├── README.md                       # Docs hub: table of all documents
 ├── STRUCTURE.md                    # This file - full project structure
 ├── STARTUP_GUIDE.md                # Startup and usage guide
+├── LOCAL_HOSTING.md                # Local and remote deployment guide
+├── PRODUCTION_DELIVERY_PLAN.md     # Production delivery plan (desktop, cloud, self-host)
+├── ARCHITECTURE_TARGET.md          # Target architecture documentation
+├── UI_UX_WORKSPACE_PLAN.md         # Per-role workspace designs and wireframes
+├── UI_UX_ROUTING_AND_HEADER.md     # Routing and header implementation plan
 ├── debug/                          # Debug logs & status docs
 │   ├── 04-23-paths-debugging-log.md
 │   ├── CURRENT-STATUS-CONTROL.md

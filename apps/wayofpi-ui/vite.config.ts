@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@wayofpi-server": resolve(__dirname, "../wayofpi-server"),
+      "@": resolve(__dirname, "src"),
     },
   },
   server: {

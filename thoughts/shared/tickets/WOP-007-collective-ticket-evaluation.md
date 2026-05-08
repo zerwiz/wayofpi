@@ -12,6 +12,8 @@ We have **6 active tickets** tracking distinct problems. Despite their separate 
 | WOP-004 Server architecture evaluation | 🔴 Open | Critical |
 | WOP-005 App.tsx refactor | 🟡 In Progress | Medium |
 | WOP-006 Pi.dev version pinning | 🟡 Pending | High |
+| WOP-008 Financial system (budgets, salaries, invoicing) | 🟡 Planned (docs) | Medium |
+| WOP-009 Production delivery (desktop, cloud, self-host) | 🟡 Planned (docs) | High |
 
 ---
 
@@ -73,6 +75,10 @@ WOP-002 Phase 5 (kanban integration)
 
 WOP-004 (server migration)
   └── Depends on: stabilization via WOP-002 Phase 1 + WOP-003
+
+WOP-008 (financial system)
+  ├── Depends on: Phase 0 (clean build) — needs schema + API compilation
+  └── Independent of: Phases 1-6 — can run as parallel track
 ```
 
 **Critical path**: Fix build errors → stabilize runtime → auth/routing → everything else.
@@ -179,6 +185,18 @@ WOP-004 (server migration)
 
 ### Phase 6: SDK-Based Architecture — Eliminate Subprocess Layer (Future)
 
+**Community Extensions**: During SDK migration, also replace in-app implementations with pi.dev community extensions. See `docs/ARCHITECTURE_TARGET.md §12` for the full mapping:
+
+| In-app code | Replacement | Lines saved |
+|---|---|---|
+| `MarkdownPreviewPane.tsx` + `MermaidPreviewPane.tsx` | `pi-markdown-preview` (omaclaren) or `pi-mermaid` (Gurpartap) | ~600 |
+| Web fetch utilities in `src/utils/` + server proxy | `pi-web-access` (nicobailon) — web search, URL extract, YouTube, GitHub clone | ~500 |
+| Inline user prompt dialogs | `@juicesharp/rpiv-ask-user-question` — structured multi-question forms | ~300 |
+| `ProblemsPanelBody.tsx` + lint/format integration | `pi-lens` (apmantza) — 37 LSP servers, 26 formatters, 180+ rules | ~600+ |
+| **Total** | | **~2000+** |
+
+Install via `pi install npm:<name>`. These extensions run in the pi.dev agent session, not in React — the UI becomes a thinner display surface.
+
 **Architectural Insight**: pi.dev isn't just a CLI — it provides an **SDK** that can be imported directly:
 
 ```
@@ -224,11 +242,12 @@ apps/
 | 1 | Runtime stability | 1 | No — after build passes |
 | 2 | Unified auth & routing | 1-2 | No — after runtime stable |
 | 3 | App.tsx refactor | 1-2 | No — after auth settled |
-| 4 | Pi.dev version pin (lightweight) | <1 | **Yes** — can run parallel (just pin version in package.json + lockfile) |
-| 5 | Kanban integration | 1-2 | No — last |
-| 6 | SDK migration (eliminate subprocess) | 2-3 | No — after 0-3 stable, replaces the fragile pi.server code |
+| 4 | Pi.dev version pin (lightweight) | <1 | **Yes** — can run parallel |
+| 5 | Kanban integration | 1-2 | No — last of core |
+| 6 | SDK migration (eliminate subprocess) | 2-3 | No — after 0-3 stable |
+| 7 | **Financial system** (7 slices) | 4-6 | **Yes** — parallel track can start after Phase 0 |
 
-**Total**: 6-9 sessions for core path, Phase 4 can overlap with any phase.
+**Total**: 6-9 sessions for core path + 4-6 for financial system (parallel). Phase 4 can overlap with any phase.
 
 > **Note on Phase 4 vs Phase 6**: Phase 4 is the fast safety net — pin version in `package.json`, add lockfile enforcement, done. Phase 6 is the deeper architectural fix — switch from `pi --mode json` subprocess to `import { createAgentSession }` from the SDK, which eliminates the entire fragile subprocess layer and makes version pinning automatic through npm.
 
@@ -243,16 +262,70 @@ apps/
 | Auth refactor breaks existing pages | Keep old routing paths working during transition (dual-mode routing) |
 | Pi.dev ships another breaking update during work | Phase 4 (version pin) can be implemented in one sitting and protects against this |
 | Server extraction (Phase 6) never happens | The in-place architecture is workable if build passes and runtime is stable — migration is optional |
+| Financial system scope creep | 7 well-defined slices in `issues/`, each demoable independently — prevents unbounded expansion |
+| Financial system conflicts with Phase 2-3 refactors | Additive by design — reads existing data, doesn't modify time tracking or project structure |
 
 ---
 
 ## 6. Recommendation
 
-**Start with Phase 0 (import audit + clean build) immediately.** It unblocks every other ticket. Currently WOP-002, WOP-005, and WOP-004 all depend on a clean build, and every session so far has included "fix import paths" as incidental work that should be systematic.
+**Start with Phase 0 (import audit + clean build) immediately.** It unblocks every other ticket. Currently WOP-002, WOP-005, WOP-004, and WOP-008 (financial system) all depend on a clean build, and every session so far has included "fix import paths" as incidental work that should be systematic.
 
 **Run Phase 4 (pi.dev versioning) in parallel** — it's independent, high-impact, and takes one session. Without it, tomorrow's pi.dev update could undo all other progress.
+
+**Start financial system (WOP-008) after Phase 0** as a parallel track — it's additive, doesn't depend on auth/routing/App.tsx refactors, and can be demoed incrementally slice by slice.
+
+---
+
+---
+
+## 7. Financial System — Budgets, Salaries, Invoicing (Future)
+
+> **PRD**: `issues/prd-financial-system.md`
+> **Issues**: `issues/001-worker-financial-profiles.md` through `issues/007-financial-reports.md`
+
+A parallel workstream that adds financial tracking to the existing project/time tracking system. Designed as **additive** — it reads but never modifies existing time entries, projects, or kanban data.
+
+### Architecture at a Glance
+
+```
+Worker Profiles (hourly_rate, monthly_salary, billing_rate)
+  └── feeds into →
+        Budget Engine (propose/approve lifecycle, cost calc from time × rate + expenses)
+          └── feeds into →
+                Dashboard (summary cards, charts, burn rate, role-filtered)
+                Invoice System (aggregate billable time × billing_rate + expenses → PDF)
+                Reports (CSV + PDF export)
+```
+
+### 7 Slices (from PRD)
+
+| # | Slice | Depends on | Key user stories |
+|---|-------|-----------|-----------------|
+| 1 | **Worker Financial Profiles** — hourly_rate, monthly_salary, billing_rate, salary_allocation per worker | Phase 0 (clean build) | Admin sets rates, worker views own |
+| 2 | **Budget Engine** — propose/approve lifecycle, cost calc, alert thresholds | 1 | PM proposes, admin approves, spend auto-calculates |
+| 3 | **Expense Tracking** — manual line items + receipt upload + PM approval | 2 | Worker submits, PM approves, cost hits budget |
+| 4 | **Financial Dashboard** — summary cards, charts, burn rate, role-filtered | 2, 3 | PM/admin see budget health at a glance |
+| 5 | **Invoice System** — generation, PDF, lifecycle (Draft→Paid), partial payments | 2, 3 | Bill clients from time × billing_rate + expenses |
+| 6 | **Multi-Currency** — exchange rates (manual + API), reporting currency | 1, 2, 3, 5 (currency fields) | Global reporting currency conversion |
+| 7 | **Financial Reports** — budget + worker-cost CSV/PDF export | 4 | Export for meetings/analysis |
+
+### When to Start
+
+After Phase 0 (clean build). The financial system is **additive** — it doesn't depend on auth/routing refactors (Phase 2), App.tsx refactor (Phase 3), or SDK migration (Phase 6). It can run in parallel with Phases 1–6.
+
+### Effort
+
+~4-6 sessions total across all 7 slices. Slices 1-3 are foundational; 4-7 build on them. Multi-currency (slice 6) is cross-cutting and can be woven in during earlier slices.
+
+### Schema
+
+New tables: `worker_financial_profiles`, `budgets`, `budget_adjustments`, `expenses`, `invoices`, `invoice_payments`, `exchange_rates`
+
+Extended tables: `projects` (link to budgets), `time_entries` (add `billable` flag), `users` (link to financial profile)
 
 ---
 
 **Created**: 2026-05-08
-**Status**: Evaluation complete
+**Updated**: 2026-05-08
+**Status**: Evaluation complete — financial system scoped in Section 7

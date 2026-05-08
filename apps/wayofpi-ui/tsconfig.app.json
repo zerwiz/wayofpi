@@ -9,7 +9,8 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@wayofpi-server/*": ["../wayofpi-server/*"]
+      "@wayofpi-server/*": ["../wayofpi-server/*"],
+      "@/*": ["src/*"]
     },
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
