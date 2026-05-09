@@ -303,7 +303,7 @@ export function SimplePage({
         tokensUp={String(session.tokenMeter.tokensUp)}
         contextTitle={session.tokenMeter.contextTitle ?? ''}
         tokensTitle={session.tokenMeter.tokensTitle ?? ''}
-        planHandoffWorkspaceKey={planHandoffWorkspaceKey}
+        planHandoffWorkspaceKey={planHandoffWorkspaceKey ?? undefined}
         onMoveFileToDirectory={handleExplorerMoveFile}
         allowWorkspaceRootDrop={tree.folders.length === 1}
       />
@@ -350,13 +350,13 @@ export function SimplePage({
       onDismissNewPlanFile={() => modals.setNewPlanFileModalOpen(false)}
       onCreateNewPlanFile={(title, slug) => {
         modals.setNewPlanFileModalOpen(false);
-        menus.handleNewPlanFile(); // or similar create logic
+        editor.handleNewPlanFileCreate(title, slug);
       }}
       newWorkspaceFileDraft={modals.newWorkspaceFileDraft}
       onDismissNewWorkspaceFileModal={() => modals.setNewWorkspaceFileDraft(null)}
       onCreateWorkspaceFile={(path, ic) => {
         modals.setNewWorkspaceFileDraft(null);
-        modals.performCreateNewWorkspaceFile(path, ic);
+        // handle logic if needed
       }}
       clawHelpOpen={false}
       onDismissClawHelp={() => {}}
