@@ -359,6 +359,12 @@ export function ClawPage({
         modals.setNewPlanFileModalOpen(false);
         editor.handleNewPlanFileCreate(title, slug);
       }}
+      newWorkspaceFileDraft={modals.newWorkspaceFileDraft}
+      onDismissNewWorkspaceFileModal={() => modals.setNewWorkspaceFileDraft(null)}
+      onCreateWorkspaceFile={(path, ic) => {
+        modals.setNewWorkspaceFileDraft(null);
+        // handle logic if needed
+      }}
       clawHelpOpen={modals.clawHelpOpen}
       onDismissClawHelp={() => {
         modals.setClawHelpOpen(false);
