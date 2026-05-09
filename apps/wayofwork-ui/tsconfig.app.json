@@ -33,6 +33,7 @@
     "src/components/work/kanban",
     "src/pages/Dashboard.tsx",
     "src/components/ui/Overview.tsx",
-    "src/ReferenceApp.tsx"
+    "src/ReferenceApp.tsx",
+    "src/App copy.tsx"
   ]
 }
