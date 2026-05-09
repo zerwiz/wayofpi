@@ -1,6 +1,6 @@
 // components/terminal/TerminalMenu.tsx
 import React from "react";
-import { Menu } from "@mariozechner/pi-tui/menu";
+import { Menu } from "@earendil-works/pi-tui/menu";
 
 /**
  * TerminalMenu Component

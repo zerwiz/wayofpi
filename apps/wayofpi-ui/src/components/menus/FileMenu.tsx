@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Menu } from "@mariozechner/pi-tui/menu";
+import { Menu } from "@earendil-works/pi-tui/menu";
 import { useUiMode } from "../../hooks/useUiMode";
 import { useSimplePreferences } from "../../hooks/useSimplePreferences";
 import { useWorkspaceTree } from "../../hooks/useWorkspaceTree";
@@ -82,7 +82,7 @@ export function FileMenu() {
   );
 }
 
-declare module "@mariozechner/pi-tui/menu" {
+declare module "@earendil-works/pi-tui/menu" {
   interface MenuHandlers {
     onOpenFile: () => void;
     onOpenFolder: () => void;

@@ -77,6 +77,7 @@ import {
 } from "./hooks/useWayOfPiSession";
 import { useWorkspaceTree } from "./hooks/useWorkspaceTree";
 import { useWorkspaceStaticAnalysis } from "./hooks/useWorkspaceStaticAnalysis";
+import { RefactorProvider } from "./context/RefactorContext";
 import type { PiModelConfigPath } from "./constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "./constants/piModelConfigPaths";
 import type { FileMenuProps } from "./types/fileMenu";
@@ -271,7 +272,7 @@ const isAdmin = window.location.pathname === "/admin" || window.location.pathnam
 const isSuperAdmin = window.location.pathname === "/super-admin" || window.location.pathname.startsWith("/super-admin/");
 const isProfile = window.location.pathname === "/profile" || window.location.pathname.startsWith("/profile/");
 
-export default function App() {
+function AppShellInternal() {
 	const { mode: uiMode, setMode: setUiMode } = useUiMode();
 	/** IDE-style shell (Technical or Claw); Simple uses `SimpleApp`. */
 	const technical = uiMode !== "simple";
@@ -4815,5 +4816,13 @@ description:
 			) : null}
 		</div>
 		</WorkspaceStaticAnalysisProvider>
+	);
+}
+
+export default function App() {
+	return (
+		<RefactorProvider>
+			<AppShellInternal />
+		</RefactorProvider>
 	);
 }

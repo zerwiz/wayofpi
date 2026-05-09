@@ -2,7 +2,7 @@
 // Location: .pi/agent/extensions/teams/index.ts
 // Auto-discovered team manager for Way of Pi
 // See: https://pi.dev/extensions/
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 
 // Team orchestrator extension

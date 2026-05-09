@@ -1,4 +1,4 @@
-declare module "@mariozechner/pi-tui/menu" {
+declare module "@earendil-works/pi-tui/menu" {
   export const Menu: any;
   export const menu: any;
   export const submenu: any;

@@ -24,8 +24,8 @@ export function writeLeftSidebarVisible(visible: boolean): void {
 	}
 }
 
-/** Where the agent / session chat dock sits (Zed-style dock regions — subset). */
-export type ChatDockRegion = "right" | "bottom";
+import type { ChatDockRegion } from "../types/technicalShell";
+export type { ChatDockRegion };
 
 export interface TechnicalDockLayout {
 	chatDock: ChatDockRegion;

@@ -3549,7 +3549,8 @@ export function MenuBar({
 							<strong className="font-semibold text-[#e0e0e0]">folder you open</strong> as the workspace. Upstream Pi
 							is{" "}
 							<a
-								href="https://github.com/mariozechner/pi-coding-agent"
+								href="https://github.com/earendil-works/pi-mono"
+
 								className="text-[#3794ff] underline"
 								target="_blank"
 								rel="noreferrer"

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      "@technicalIDE": resolve(__dirname, "../technicalIDE"),
       "@wayofpi-server": resolve(__dirname, "../wayofpi-server"),
       "@": resolve(__dirname, "src"),
     },

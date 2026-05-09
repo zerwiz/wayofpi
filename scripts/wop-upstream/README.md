@@ -6,7 +6,8 @@ Checks **Pi’s upstream GitHub** and **npm** for newer versions, and **optional
 
 | Command | What it does |
 |---------|----------------|
-| **`bun scripts/wop-pi-upstream.ts check`** | Queries GitHub tags for **`pi-mono`**, npm **`latest`** for **`@mariozechner/pi-coding-agent`**, compares to **`wop.upstream.lock.json`**, prints whether an update exists, **updates lock metadata** (last seen remote). **Does not** download or change vendor files. |
+| **`bun scripts/wop-pi-upstream.ts check`** | Queries GitHub tags for **`pi-mono`**, npm **`latest`** for **`@earendil-works/pi-coding-agent`**,
+ compares to **`wop.upstream.lock.json`**, prints whether an update exists, **updates lock metadata** (last seen remote). **Does not** download or change vendor files. |
 | **`sync … --dry-run`** | Shows where files would land under **`vendor/wop-upstream/pi-mono/<tag>/…`**. |
 | **`sync … --apply`** | Downloads the tag tarball, copies configured subtrees, rewrites paths per **`config.json`**, updates **`pinnedRef`** in the lock. |
 

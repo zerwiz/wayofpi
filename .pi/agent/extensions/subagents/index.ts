@@ -2,7 +2,7 @@
 // Location: .pi/agent/extensions/subagents/index.ts
 // Auto-discovered by pi.dev for subagent orchestration
 // See: https://pi.dev/extensions/
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 
 // Type definitions for subagent orchestration
@@ -24,8 +24,9 @@ export interface OrchestratorState {
   agents: Record<string, SubAgentState>;
 }
 
-// Create subagents from existing agent definitions
-export function createSubagents(api: ExtensionAPI): void {
+export default function (api: ExtensionAPI) {
+  console.log("Initializing Way of Pi subagents...");
+
   // Planner subagent - breaks down goals into sub-tasks
   api.registerTool({
     name: "subagent:planner",
@@ -35,12 +36,6 @@ export function createSubagents(api: ExtensionAPI): void {
       goal: Type.String({ description: "The goal to decompose" }),
     }),
     async execute(toolCallId: string, params: { goal: string }) {
-      // Planner would:
-      // 1. Analyze the goal
-      // 2. Decompose into sub-tasks
-      // 3. Assign to sub-agents
-      // 4. Return task graph
-      
       const steps = [
         "Analyze the goal requirements",
         "Identify knowledge gaps",
@@ -48,7 +43,7 @@ export function createSubagents(api: ExtensionAPI): void {
         "Estimate resources needed",
         "Create execution plan"
       ];
-      
+
       return {
         content: [
           { 
@@ -75,11 +70,6 @@ export function createSubagents(api: ExtensionAPI): void {
       domains: Type.Optional(Type.Array(Type.String())),
     }),
     async execute(toolCallId: string, params: { query: string; domains?: string[] }) {
-      // Researcher would:
-      // 1. Search documentation, knowledge bases
-      // 2. Synthesize findings
-      // 3. Return summarized results
-      
       return {
         content: [
           { 
@@ -106,11 +96,6 @@ export function createSubagents(api: ExtensionAPI): void {
       context: Type.Optional(Type.String({ description: "Files or code context" })),
     }),
     async execute(toolCallId: string, params: { task: string; context?: string }) {
-      // Coder would:
-      // 1. Generate code from specifications
-      // 2. Write tests
-      // 3. Run tests and fix issues
-      
       return {
         content: [
           { 
@@ -137,11 +122,6 @@ export function createSubagents(api: ExtensionAPI): void {
       timeout: Type.Optional(Type.Integer({ default: 60, description: "Execution timeout in seconds" })),
     }),
     async execute(toolCallId: string, params: { command: string; timeout?: number }) {
-      // Executor would:
-      // 1. Run the command
-      // 2. Capture output
-      // 3. Return results
-      
       return {
         content: [
           { 
@@ -167,11 +147,6 @@ export function createSubagents(api: ExtensionAPI): void {
       style: Type.Optional(Type.String({ description: "Review style" })),
     }),
     async execute(toolCallId: string, params: { content: string; style?: string }) {
-      // Reviewer would:
-      // 1. Analyze code quality
-      // 2. Check for bugs and issues
-      // 3. Suggest improvements
-      
       return {
         content: [
           { 
@@ -201,11 +176,6 @@ export function createSubagents(api: ExtensionAPI): void {
       agentId: Type.Optional(Type.String({ description: "Agent ID to target" })),
     }),
     async execute(toolCallId: string, params: { action: string; agentId?: string }) {
-      // Orchestrator would:
-      // 1. Manage subagent pool
-      // 2. Assign tasks to available agents
-      // 3. Reassign when load changes
-      
       return {
         content: [
           { 
@@ -230,11 +200,6 @@ export function createSubagents(api: ExtensionAPI): void {
   api.on("message_start", async () => {
     // Log subagent activity
   });
-}
 
-// Initialize subagents in the current session
-api.on("session_start", async () => {
-  console.log("Initializing Way of Pi subagents...");
-  createSubagents(api);
   console.log("Subagents ready!");
-}).catch(console.error);
+}

@@ -177,7 +177,7 @@ bun scripts/pi-models-scoped-priority.ts
 
 ## Way of Pi upstream (Pi GitHub / npm)
 
-- **`scripts/wop-pi-upstream.ts`** — **`check`**: compares **`badlogic/pi-mono`** tags and **`@mariozechner/pi-coding-agent`** npm **`latest`** to **`wop.upstream.lock.json`** (no downloads). **`sync`**: optional tarball of a **tag** into **`vendor/wop-upstream/`** with path rewrites (**`--dry-run`** | **`--apply`**). See **`scripts/wop-upstream/README.md`**, **`docs/WOP_UPSTREAM_SYNC.md`**.
+- **`scripts/wop-pi-upstream.ts`** — **`check`**: compares **`earendil-works/pi-mono`** tags and **`@earendil-works/pi-coding-agent`** npm **`latest`** to **`wop.upstream.lock.json`** (no downloads). **`sync`**: optional tarball of a **tag** into **`vendor/wop-upstream/`** with path rewrites (**`--dry-run`** | **`--apply`**). See **`scripts/wop-upstream/README.md`**, **`docs/WOP_UPSTREAM_SYNC.md`**.
 - **`just wop-upstream-check`** · **`just wop-upstream-sync --source pi-mono --ref v0.66.1 --dry-run`**
 
 ## `./doctor.sh` (repo root) — portable paths

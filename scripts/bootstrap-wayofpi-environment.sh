@@ -299,7 +299,8 @@ if ! have_cmd rg; then
 fi
 if ! have_cmd pi; then
 	echo "* pi (Pi Coding Agent CLI):"
-	echo "  https://github.com/mariozechner/pi-coding-agent"
+	echo "  https://github.com/earendil-works/pi-mono"
+
 	echo ""
 fi
 if ! have_cmd ollama && ! ollama_reachable; then

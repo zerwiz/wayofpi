@@ -486,6 +486,7 @@ Comprehensive damage control rules at `apps/wayofpi-ui/src/extentions/damage-con
 | `docs/PRODUCTION_DELIVERY_PLAN.md` | Full delivery plan (desktop, cloud, self-host, CI/CD) |
 | `docs/LOCAL_HOSTING.md` | Local deployment guide (Docker, ngrok, VMs) |
 | `docs/old/wayofpi/WOP_NGROK.md` | ngrok integration details |
+| `thoughts/shared/hosting/hosting-architecture.md` | **WOP-012 hosting architecture** — SaaS/on-prem/hybrid with Strix Halo premium tier, cost breakdowns, AI inference hosting |
 | `thoughts/shared/tickets/WOP-009-production-delivery.md` | Active delivery ticket |
 | `thoughts/shared/tickets/WOP-ALL-TODO.md` (Phase 8) | Granular hosting task list |
 | `apps/wayofpi-ui/Dockerfile` | Production Docker build |

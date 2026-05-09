@@ -9,6 +9,7 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
+      "@technicalIDE/*": ["../technicalIDE/*"],
       "@wayofpi-server/*": ["../wayofpi-server/*"],
       "@/*": ["src/*"]
     },

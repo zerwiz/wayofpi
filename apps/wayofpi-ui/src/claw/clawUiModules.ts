@@ -15,6 +15,7 @@ export const CLAW_BUILTIN_TAB_IDS = [
 	"team",
 	"schedule",
 	"channels",
+	"management",
 	"files",
 	"settings",
 ] as const;

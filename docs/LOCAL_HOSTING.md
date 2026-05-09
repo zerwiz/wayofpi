@@ -75,6 +75,25 @@ If you require strict OS-level isolation (e.g., testing native Electron capabili
 4. Start `./start-wayofpi.sh --web` on boot using systemd.
 5. Use a Reverse Proxy (like Nginx Proxy Manager or Cloudflare Tunnels) on your main network router to map domains (e.g., `clientx.yourdomain.com`) to the specific VM's internal IP.
 
+## 5. WOP-012: ÄTA Ticket System Hosting
+
+For the new digital ticket system (WOP-012), see the dedicated hosting architecture document:
+
+[`thoughts/shared/hosting/hosting-architecture.md`](../thoughts/shared/hosting/hosting-architecture.md)
+
+Covers:
+- SaaS/on-prem/hybrid three-mode deployment
+- Intel NUC 12 Pro (recommended on-prem) vs Raspberry Pi 5 vs AMD Strix Halo AI+
+- Cloudflare Tunnel vs Tailscale vs offline-only
+- Cost breakdowns for all scenarios
+- AI inference hosting (cloud APIs vs on-prem LLM on Strix Halo)
+
+**Key differences from general hosting:**
+- ÄTA system uses **SQLite** (not PostgreSQL) — single-file, no daemon, ideal for on-prem
+- On-prem box is **preloaded** — ship with Ubuntu + Bun + WOP server + Tunnel preconfigured
+- Hybrid mode uses **Tailscale mesh VPN** + periodic SQLite rsync instead of real-time replication
+- AI inference layer is optional and configurable per tenant
+
 ## Conclusion
 - **For quick, isolated instances:** Use **Docker**. It is lightweight and perfect for running 5-10 separate instances on a single machine.
 - **For remote sharing:** Use **ngrok** (or Cloudflare Tunnels) to safely expose local Docker containers or raw processes to the internet.

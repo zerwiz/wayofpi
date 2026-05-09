@@ -2,6 +2,53 @@
 
 All notable changes to the **Way of Pi** project.
 
+## [0.21.18] - 2026-05-09
+
+### Added
+- **`thoughts/shared/tickets/WOP-014-app-refactoring-plan.md`**: Three-tier plan for deconstructing the ~5000-line App.tsx monolith into hooks, page shells, and a lean entry point. Split into 4 phases: Modal Extraction → Action Hooks → Page Shells → Final Thinning.
+- **`thoughts/shared/tickets/WOP-015-claw-leadership-modules.md`**: Ticket for extending Claw Mission Control with Review, Financials, Office, and Compliance modules for Work Leaders and Admins. Includes messaging (workers/clients) and automation (scheduled/event-driven) capabilities. Marked as BLOCKED on WOP-014 (App.tsx refactor).
+
+### Changed
+- **`thoughts/shared/tickets/WOP-ALL-TODO.md`**: Restructured to 9-phase roadmap. Added Phase 8 (Claw Leadership Modules) explicitly blocked on Phase 3 (App.tsx thinning). Updated dependency quick reference to reflect current focus on Phase 3.
+- **`thoughts/shared/tickets/WOP-014-app-refactoring-plan.md`**: Updated with dual-agent parallel execution strategy — Track A (Logic & Hooks) and Track B (Page Shells). Added current progress and conflict-free zone map for 2-agent concurrency.
+- **`thoughts/shared/tickets/WOP-015-claw-leadership-modules.md`**: Added "Locked Down by Default" design philosophy with tiered access model (User/Power User/Admin), 6 lockdown mechanisms, and future sandboxed custom functions plan.
+- **`docs/LOCAL_HOSTING.md`**: Added **Section 5: WOP-012 ÄTA Ticket System Hosting** covering SQLite-first approach, preloaded on-prem box pattern, Tailscale hybrid sync, and cross-reference to `hosting-architecture.md`.
+- **`docs/HOSTING_PLANS.md`**: Added cross-reference to `thoughts/shared/hosting/hosting-architecture.md` in Related Files table.
+- **`thoughts/shared/tickets/WOP-012-ATA-ticket-system.md`**: Updated status from OPEN to IN PROGRESS (Phase 1), marked `shared/ticket-types.ts` as complete.
+- **`thoughts/shared/tickets/WOP-012-ui-needs-analysis.md`**: Updated API client and shared types inventory to reflect completed `apiDeleteJson` helper and `ticket-types.ts`.
+
+### Added (App.tsx Refactoring — Track B)
+- **`src/pages/DocsPage.tsx`**: Extracted Docs mode render block from App.tsx into standalone page component.
+- **`src/pages/WorkPage.tsx`**: Extracted Work mode render block from App.tsx into standalone page component.
+- **`src/components/IdeLayout.tsx`**: Shared layout component wrapping MenuBar + hidden file input for all IDE modes (Claw, Simple, Technical), eliminating ~40 lines of repeated wrapper JSX per mode.
+- **`src/components/ModalsRenderer.tsx`**: Centralized modal registry rendering all 12 shared modals (CommandPalette, LlmFixModal, HostDoctorModal, IndexingDocsModal, HonchoSettingsModal, AgentPermissionsModal, MitLicenseModal, RestartServerModal, HowToUseModal, LaunchConfigAddModal, InstallDebuggersModal, NewPlanFileModal, ClawHelpModal) from a single component, eliminating 3x duplication across Claw/Simple/Technical modes (~200 lines saved).
+
+## [0.21.17] - 2026-05-09
+
+### Added
+- **`thoughts/shared/hosting/hosting-architecture.md`**: Added AMD Strix Halo AI+ Workstation as premium on-prem tier in hardware comparison table, with unified memory advantages over NVIDIA for local LLM inference, cost vs cloud GPU comparison, and caveats.
+- **`thoughts/shared/hosting/hosting-architecture.md`**: Added **Section 10: AI Inference Hosting** covering cloud API vs on-prem model serving options, software stack architecture diagram, hybrid AI mode, and implementation checklist for ticket classification, OCR, time log summarization, and budget prediction endpoints.
+- **`apps/wayofpi-ui/shared/ticket-types.ts`**: Added `FortnoxConnection` interface with `access_token`, `refresh_token`, `expires_at`, `client_secret_encrypted`, `last_sync_at` fields for encrypted OAuth2 credential storage.
+
+### Changed
+- **`docs/LOCAL_HOSTING.md`**: Added **Section 5: WOP-012 ÄTA Ticket System Hosting** covering SQLite-first approach, preloaded on-prem box pattern, Tailscale hybrid sync, and cross-reference to `hosting-architecture.md`.
+- **`docs/HOSTING_PLANS.md`**: Added cross-reference to `thoughts/shared/hosting/hosting-architecture.md` in Related Files table.
+- **`thoughts/shared/tickets/WOP-012-ATA-ticket-system.md`**: Updated status from OPEN to IN PROGRESS (Phase 1), marked `shared/ticket-types.ts` as complete.
+- **`thoughts/shared/tickets/WOP-012-ui-needs-analysis.md`**: Updated API client and shared types inventory to reflect completed `apiDeleteJson` helper and `ticket-types.ts`.
+
+## [0.21.16] - 2026-05-09
+
+### Added
+- **`apps/wayofpi-ui/shared/ticket-types.ts`**: Shared TypeScript interfaces for the ÄTA Ticket System (Tickets, Time Blocks, Time Sessions, Price Lists, and Sync Logs), enabling type-safe interaction between frontend and backend.
+
+### Fixed
+- **`apps/wayofpi-ui/src/api/client.ts`**: Added `apiDeleteJson` helper to the centralized API client to support deletion operations for time blocks and price lists.
+
+### Changed
+- **`thoughts/shared/tickets/WOP-012-ATA-ticket-system.md`**: Refined legal and security compliance strategies. Added **Offline Resilience** (local queuing for check-in/out and drafts) and **Secure Signed URLs** for ticket evidence links (S3 short-lived URLs for bookkeeping systems).
+- **`thoughts/shared/tickets/WOP-012-ui-needs-analysis.md`**: Codified **Offline Resilience** as a mandatory architectural decision for the Worker Portal to handle site connectivity issues.
+- **`thoughts/shared/tickets/WOP-ALL-TODO.md`**: Updated Phase 7b with tasks for shared types, API helpers, RBAC formalization, S3 signed URL generation, and offline queuing logic.
+
 ## [0.21.15] - 2026-05-08
 
 ### Added
@@ -10,6 +57,7 @@ All notable changes to the **Way of Pi** project.
 - **`docs/HOSTING_PLANS.md`**: Added Security Plan section covering auth per plan, network security, execution safety gates, tunnel security, Docker hardening, damage control, secrets management, and audit logging.
 - **`docs/HOSTING_PLANS.md`**: Added S3 Object Storage Plan covering 3-phase migration (backups → uploads → workspaces), provider comparison table, env vars, and planned scripts.
 - **`docs/MULTI_TENANCY.md`**: Added S3 Object Storage section for tenant data isolation via bucket prefixes, with planned provider abstraction layer.
+- **`thoughts/shared/tickets/WOP-012-ATA-ticket-system.md`**: Created ticket for Swedish ÄTA digital time block approval system — workers log time blocks on structured tickets, leaders review, clients digitally approve, export to Fortnox/Visma for invoicing. 5-phase plan: data model/API → Worker UI → Leader review → Client sign-off → invoicing export. Updated WOP-ALL-TODO.md with Phase 7b.
 
 ### Added
 - **`docs/HOSTING_PLANS.md`**: Consolidated document covering all 7 hosting options — Desktop (Electron), Local Dev Server, ngrok Tunnel, Docker, Cloud SaaS, VM/Hypervisor, and Self-Hosted (On-Premise). Includes comparison matrix and related file index.
@@ -80,7 +128,7 @@ All notable changes to the **Way of Pi** project.
 - **[Phase 0 Step 2] Type fixes for 200+ build errors**: Expanded `UiMode` to union of 10 string modes. Added 20 missing properties to `UseWayOfPiSessionReturn`. Added 17 missing properties to `ServerConfig`. Created 7 MenuBar hook stubs with type exports. Created `types/chat.ts` module with `ChatRow`, `LogRow`, `ChatSessionTab`. Added missing exports to `constants.ts`, `types/commands.ts`, `utils/workspace.ts`.
 
 ### Fixed
-- **`@mariozechner/pi-tui/menu`**: Added `Menu` named export to `globals.d.ts` declaration.
+- **`@earendil-works/pi-tui/menu`**: Added `Menu` named export to `globals.d.ts` declaration.
 - **`useAgents.ts`**: Fixed `getTeamMap` return type (`AgentTeamMap` record), added `teams` to data object, fixed `UseAgentsReturn` to include `loading`, `reload`, `error`, `teams`.
 - **`useServerConfig.ts`**: Changed `capabilities` type from `string[]` to `Record<string, boolean>` to fix property access errors.
 - **`useSimplePreferences.ts`**: Rewrote hook to return `colorMode`, `markdownPaneMode`, `isDark`, `approvalQueue`, `setApprovalQueue`, `setColorMode`, `setMarkdownPaneMode` as direct values matching component usage.
@@ -101,6 +149,25 @@ All notable changes to the **Way of Pi** project.
 
 ### Changed
 - **[useAgents] State Cleanup**: Renamed internal setters (e.g., `setChatAgent` → `_`), removed unused state setters.
+
+## [0.21.13] - 2026-05-08
+
+### Added
+- **[UX] Role-Based Header Matrix (WOP-013)**: Created `thoughts/shared/tickets/WOP-013-role-based-header-matrix.md` which maps every top-level header button (Perspectives, Apps, Portals, Menus, Search) to user roles. It defines exactly how the "File", "View", "Go", and "Agents" menus adapt for Clients and Workers (e.g., File → "New Task" for Workers vs "Save File" for Admins).
+- **[SETTINGS] Role-Specific Settings**: Mapped setting options for each role, ensuring Clients/Workers only see relevant preferences (PIN, Dark Mode, Work View) while Super Admins retain full multi-tenant and runtime control.
+
+## [0.21.12] - 2026-05-08
+
+### Added
+- **[STRATEGY] Agentic OS Shell Pivot**: Transitioned project vision from a monolithic IDE to an **Agentic Operating System**. The new architecture uses a thin "Web OS" shell (`src/shell/`) to host strictly isolated subsystems (`src/apps/`) for IDE, Kanban, and ÄTA Construction ERP.
+- **[ARCH] Global AI Sidebar**: Formalized the plan to extract the AI chat interface into a persistent shell-level component, allowing AI context to survive subsystem navigation.
+- **[PLAN] WOP-011 Shell Architecture**: Created dedicated plan for the "App Shell" refactor and subsystem routing.
+
+### Changed
+- **[ROADMAP] Strategic Realignment**: Updated `WOP-ALL-TODO.md` to reflect the Agentic OS roadmap. 
+    - **Phase 2** is now "Agentic OS Shell & Unified Routing".
+    - **Phase 4** (SDK Migration) has been **accelerated** to provide a stable foundation for the new shell.
+    - **Phase 7** has been replaced by the isolated **ÄTA Construction ERP (WOP-012)** subsystem, pruning the generic financial scope.
 
 ## [0.21.11] - 2026-05-08
 
@@ -231,7 +298,7 @@ All notable changes to the **Way of Pi** project.
 - **Time Management View:** `plans/WOP_TIME_MANAGEMENT_PLAN.md` - new `"work"` UI mode for workers to submit time/tasks, leaders to approve/manage.
 - **Docs Mode Improvements:** `plans/WOP_DOCS_MODE_IMPROVEMENTS.md` - redesign Docs mode for project managers (document browser, markdown viewer, PM-focused chat).
 - **WhatsApp Plan:** `plans/WOP_WHATSAPP_PLAN.md` (in `docs/wayofpi/`) - detailed WhatsApp integration with `whatsapp-pi` extension.
-- **Pi Integration in Docker:** `plans/PI_INTEGRATION_DOCKER_PLAN.md` - install Pi (`www.pi.dev`) via `npm install -g @mariozechner/pi-coding-agent` in Docker, run as non-root user (UID 1001), integrate with Work Leader System.
+- **Pi Integration in Docker:** `plans/PI_INTEGRATION_DOCKER_PLAN.md` - install Pi (`www.pi.dev`) via `npm install -g @earendil-works/pi-coding-agent` in Docker, run as non-root user (UID 1001), integrate with Work Leader System.
 - **Production Readiness:** `plans/PRODUCTION_READINESS_PLAN.md` - complete cross-platform distribution (curl | bash, Electron Builder, Docker/VM) with multi-tenancy + auth.
 - **UI Components Created:**
   - `pages/WorkerPortal.tsx` - Worker login (ID+PIN) + dashboard (tasks, files, time entries)
@@ -564,7 +631,7 @@ All notable changes to the **Way of Pi** project.
 
 - **Planning** — **[docs/WOP_STANDALONE_SYSTEM_PLAN.md](docs/WOP_STANDALONE_SYSTEM_PLAN.md)** and **[docs/WOP_NAMESPACE.md](docs/WOP_NAMESPACE.md)**: **critical** requirement to **rename Way of Pi backend** files, packages, and log/service identifiers so they are **not** named **`pi`** / **`ppi`** in ways that confuse them with **upstream Pi**; production checklist + backlog note.
 
-- **Way of Pi upstream sync** — **`scripts/wop-pi-upstream.ts`**: **`check`** queries **`badlogic/pi-mono`** tags and **`@mariozechner/pi-coding-agent`** npm **`latest`** vs **`wop.upstream.lock.json`**; **`sync --apply`** downloads a tag and copies configured subtrees into **`vendor/wop-upstream/`** with **`pathRewrites`** (gitignored). **`just wop-upstream-check`**, **`just wop-upstream-sync`**. Docs **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)**, **`scripts/wop-upstream/README.md`**, **`scripts/README.md`**.
+- **Way of Pi upstream sync** — **`scripts/wop-pi-upstream.ts`**: **`check`** queries **`earendil-works/pi-mono`** tags and **`@earendil-works/pi-coding-agent`** npm **`latest`** vs **`wop.upstream.lock.json`**; **`sync --apply`** downloads a tag and copies configured subtrees into **`vendor/wop-upstream/`** with **`pathRewrites`** (gitignored). **`just wop-upstream-check`**, **`just wop-upstream-sync`**. Docs **[docs/WOP_UPSTREAM_SYNC.md](docs/WOP_UPSTREAM_SYNC.md)**, **`scripts/wop-upstream/README.md`**, **`scripts/README.md`**.
 
 - **Docs** — **[docs/WOP_OPEN_TODOS.md](docs/WOP_OPEN_TODOS.md)** aggregates missing Way of Pi / **`apps/wayofpi-ui`** / script work; indexed from **`docs/README.md`**, **`docs/WOP_PLANNING.md`**, **`docs/REPO_INDEX.md`**, root **`README.md`**.
 
@@ -588,7 +655,7 @@ All notable changes to the **Way of Pi** project.
 
 ### Added
 
-- **`scripts/pi-standard`**, **`just pi-standard`**, **`install-global`** → **`~/.local/bin/pi-standard`**, **`ppi-pi-standard`** — Runs Pi with **`--no-extensions --no-skills --no-themes --no-prompt-templates`** (upstream [CLI Reference](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/README.md)); sources playground **`.env`**; optional leading **`.`** dropped. **`scripts/README.md`**, **`README.md`**.
+- **`scripts/pi-standard`**, **`just pi-standard`**, **`install-global`** → **`~/.local/bin/pi-standard`**, **`ppi-pi-standard`** — Runs Pi with **`--no-extensions --no-skills --no-themes --no-prompt-templates`** (upstream [CLI Reference](https://github.com/earendil-works/pi-mono/blob/main/packages/coding-agent/README.md)); sources playground **`.env`**; optional leading **`.`** dropped. **`scripts/README.md`**, **`README.md`**.
 
 - **`scripts/ppi`** — **`pi-e backup`** and **`pi-e restore`** recover an interrupted **`pi-e`** / **`pi-launch-from-project`** session: restore **`.pi/settings.json`** from **`.pi/.settings.json.pi-e-restore`**, and **`./tools`** from a single **`.pi/.pi-tools-shadow.*`** if **`./tools`** is missing; then run **`just pi-e`**. **`pi-e help`** lists usage. **`scripts/README.md`**, **`pi-launch-from-project.sh`** header comment.
 

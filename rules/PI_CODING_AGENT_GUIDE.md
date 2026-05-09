@@ -470,7 +470,7 @@ import {
   createAgentSession, 
   ModelRegistry, 
   SessionManager 
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 
 const authStorage = AuthStorage.create();
 const modelRegistry = ModelRegistry.create(authStorage);
@@ -659,19 +659,19 @@ pi --thinking high "Solve this complex problem"
 
 
 
-- [@mariozechner/pi-ai](https://github.com/badlogic/pi-mono): Core LLM toolkit
-- [@mariozechner/pi-agent](https://github.com/badlogic/pi-mono): Agent framework
-- [@mariozechner/pi-tui](https://github.com/badlogic/pi-mono): Terminal UI components
+- [@earendil-works/pi-ai](https://github.com/earendil-works/pi-mono): Core LLM toolkit
+- [@earendil-works/pi-agent](https://github.com/earendil-works/pi-mono): Agent framework
+- [@earendil-works/pi-tui](https://github.com/earendil-works/pi-mono): Terminal UI components
 
 ---
 
 ## Repository Information
 
-- **Package:** `@mariozechner/pi-coding-agent`
+- **Package:** `@earendil-works/pi-coding-agent`
 - **Version:** 0.67.6
 - **License:** MIT
-- **Homepage:** github.com/badlogic/pi-mono
-- **Repository:** github.com/badlogic/pi-mono
+- **Homepage:** github.com/earendil-works/pi-mono
+- **Repository:** github.com/earendil-works/pi-mono
 
 ---
 

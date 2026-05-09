@@ -1,4 +1,4 @@
-import { CalendarDays, Cog, Cpu, Files, HelpCircle, MessageCircle, Puzzle, Radio, Radar, Users } from "lucide-react";
+import { Briefcase, CalendarDays, Cog, Cpu, Files, HelpCircle, MessageCircle, Puzzle, Radio, Radar, Users } from "lucide-react";
 import { listClawUiModules, type ClawTabId } from "../../claw/clawUiModules";
 import type { ClawHelpSectionId } from "./ClawHelpModal";
 

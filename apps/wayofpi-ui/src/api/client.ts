@@ -40,3 +40,15 @@ export async function apiPutJson<T>(path: string, body: unknown): Promise<T> {
 	}
 	return res.json() as Promise<T>;
 }
+
+export async function apiDeleteJson<T>(path: string): Promise<T> {
+	const res = await fetch(path, {
+		method: "DELETE",
+		headers: { Accept: "application/json", ...getAuthHeaders() },
+	});
+	if (!res.ok) {
+		const t = await res.text();
+		throw new Error(`${res.status}: ${t}`);
+	}
+	return res.json() as Promise<T>;
+}

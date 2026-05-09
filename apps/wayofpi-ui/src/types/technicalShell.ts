@@ -1,5 +1,7 @@
 export type TechnicalActivity = "explorer" | "search" | "scm" | "extensions" | "planning" | "settings";
 
+export type ChatDockRegion = "right" | "bottom";
+
 import type { UiViewCatalogEntry } from "./uiViewsCatalog";
 
 export type BottomPanelTab =

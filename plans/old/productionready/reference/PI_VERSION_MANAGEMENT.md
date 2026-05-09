@@ -10,7 +10,7 @@ Pi (`www.pi.dev`) updates frequently. To prevent breaking your development envir
 
 ### ❌ WRONG (Global/Dynamic)
 ```bash
-npm install -g @mariozechner/pi-coding-agent          # Global - affects all projects
+npm install -g @earendil-works/pi-coding-agent          # Global - affects all projects
 npm install -g @earendil-works/pi-coding-agent@latest  # Dynamic - breaks on updates
 ```
 
