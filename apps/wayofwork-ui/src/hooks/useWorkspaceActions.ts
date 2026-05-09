@@ -3,7 +3,7 @@ import { useRefactor } from "../context/RefactorContext";
 import { apiPostJson, apiPutJson } from "../api/client";
 import { ancestorDirPaths } from "../utils/posixPath";
 import { createPlanArtifactInWorkspace } from "../utils/planModeWorkspace";
-import { mutateAppendLaunchSnippet, type LaunchSnippetId } from "../utils/launchJsonMutate";
+import { mergeSnippetIntoLaunchJson, type LaunchSnippetId } from "../utils/launchJsonMutate";
 
 export function useWorkspaceActions() {
   const {
@@ -135,7 +135,7 @@ export function useWorkspaceActions() {
   const appendLaunchConfigurationSnippet = useCallback(async (id: LaunchSnippetId) => {
     try {
       const res = await apiGet<{ content: string }>("/api/file?path=.vscode/launch.json");
-      const next = mutateAppendLaunchSnippet(res.content, id);
+      const next = mergeSnippetIntoLaunchJson(res.content, id);
       await apiPutJson("/api/file", { path: ".vscode/launch.json", content: next });
       await refresh();
       setSelectedPath(".vscode/launch.json");
@@ -143,7 +143,7 @@ export function useWorkspaceActions() {
       // If file doesn't exist, create it with a skeleton
       try {
          const skeleton = JSON.stringify({ version: "0.2.0", configurations: [] }, null, 2);
-         const next = mutateAppendLaunchSnippet(skeleton, id);
+         const next = mergeSnippetIntoLaunchJson(skeleton, id);
          await apiPutJson("/api/file", { path: ".vscode/launch.json", content: next });
          await refresh();
          setSelectedPath(".vscode/launch.json");

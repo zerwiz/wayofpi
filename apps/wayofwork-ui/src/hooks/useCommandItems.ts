@@ -4,7 +4,7 @@ import type { CommandItem } from "../components/CommandPalette";
 import { flattenTreeFiles } from "../utils/flattenTree";
 import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
 import { apiGet } from "../api/client";
-import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../utils/planModeArtifacts";
+import { buildImplementPlanPrompt, buildReviewPlanPrompt } from "../utils/planModeComposerTemplates";
 import { useWorkspaceActions } from "./useWorkspaceActions";
 import { useEditorCommandHandlers } from "./useEditorCommandHandlers";
 import { useNavigationHandlers } from "./useNavigationHandlers";
