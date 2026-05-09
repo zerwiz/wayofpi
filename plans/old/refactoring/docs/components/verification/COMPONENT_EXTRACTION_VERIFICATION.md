@@ -4,20 +4,20 @@
 **File Location:** `/Way of pi/plans/refactoring/docs/components/verification/COMPONENT_EXTRACTION_VERIFICATION.md`  
 **Date:** 2026-04-22  
 **Status:** VERIFIED — All Components Extracted and Documented  
-**Source:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx`
+**Source:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx`
 
 ---
 
 ## 🔴 **CRITICAL REQUIREMENTS — MANDATORY**
 
 **EVERY VALIDATION RUN MUST READ THE REFERENCE FILE:**
-- **MANDATORY:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx`
+- **MANDATORY:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx`
 - **PRODUCTION READY:** Every extracted component must be 100% functional
 - **NO OMISSIONS:** Every function, event handler, prop, and feature from ReferenceApp.tsx must be present
 - **VALIDATION PATTERN:**
   ```bash
   # Read reference section
-  grep -A 100 "Component X" /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui/src/ReferenceApp.tsx > /tmp/reference.txt
+  grep -A 100 "Component X" /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui/src/ReferenceApp.tsx > /tmp/reference.txt
   # Compare with extracted component
   diff /tmp/reference.txt "$COMPONENT_PATH"
   ```
@@ -1238,7 +1238,7 @@ This section tracks the verification of each extracted component file against it
 **Last Updated:** 2026-04-22  
 **Verification Method:** Direct read of ReferenceApp.tsx sections
 
-**Reference File:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx`
+**Reference File:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx`
 
 **MANDATORY:** Every validation run must read the reference file to ensure no functionality is left out.
 

@@ -9,13 +9,13 @@ All current options for deploying and accessing Way of Pi.
 **What it is:** A native desktop application for Windows, macOS, and Linux. The app bundles the Bun API server + built React frontend in an Electron shell.
 
 **How it works:**
-- `apps/wayofpi-ui/electron/electron-main.mjs` loads the UI from the Vite dev server (dev) or from `dist/` (production)
+- `apps/wayofwork-ui/electron/electron-main.mjs` loads the UI from the Vite dev server (dev) or from `dist/` (production)
 - Bun API server auto-starts when health check fails
 - Preload script bridges IPC
 
 **Commands:**
 ```bash
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 bun run electron:dev        # Dev mode (Vite hot reload + Electron)
 bun run pack                # Build unsigned installer
 bun run electron:prod       # Production (build + serve static)
@@ -30,7 +30,7 @@ bun run electron:prod       # Production (build + serve static)
 
 **Auto-update:** `electron-updater` with GitHub Releases.
 
-**Files:** `apps/wayofpi-ui/package.json` (electron-builder config), `electron/electron-main.mjs`, `electron/preload.cjs`
+**Files:** `apps/wayofwork-ui/package.json` (electron-builder config), `electron/electron-main.mjs`, `electron/preload.cjs`
 
 ---
 
@@ -43,7 +43,7 @@ bun run electron:prod       # Production (build + serve static)
 ./start-wayofpi.sh           # Starts both Vite (:5173) + Bun API (:3333)
 ./start-wayofpi.sh --web     # Forces browser mode (no Electron)
 just wayofpi-full             # Via justfile (same as above)
-bun run dev                   # From apps/wayofpi-ui/
+bun run dev                   # From apps/wayofwork-ui/
 ```
 
 **Architecture:**
@@ -52,7 +52,7 @@ Browser → Vite :5173 → proxy → Bun API :3333
   (serves UI modules)          (API + WebSocket)
 ```
 
-**Files:** `start-wayofpi.sh`, `apps/wayofpi-ui/vite.config.ts`
+**Files:** `start-wayofpi.sh`, `apps/wayofwork-ui/vite.config.ts`
 
 ---
 
@@ -91,18 +91,18 @@ ngrok http 5173
 
 **What it is:** Single Way of Pi instance in a Docker container. Can be extended to multi-tenant with docker-compose.
 
-**Dockerfile** (`apps/wayofpi-ui/Dockerfile`):
+**Dockerfile** (`apps/wayofwork-ui/Dockerfile`):
 - Multi-stage: `oven/bun:latest` → build UI → copy dist/ + server/ to production image
 - Exposes port 3333
 - `NODE_ENV=production`
 
 ```bash
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 docker compose up -d        # Starts Way of Pi + Ollama
 docker build -t wayofpi .   # Or build manually
 ```
 
-**docker-compose.yml** (`apps/wayofpi-ui/docker-compose.yml`):
+**docker-compose.yml** (`apps/wayofwork-ui/docker-compose.yml`):
 ```yaml
 services:
   wayofpi:
@@ -174,7 +174,7 @@ services:
 [Service]
 User=wayofpi
 WorkingDirectory=/home/wayofpi/Way of pi
-ExecStart=/home/wayofpi/.bun/bin/bun run apps/wayofpi-ui/server/index.ts
+ExecStart=/home/wayofpi/.bun/bin/bun run apps/wayofwork-ui/server/index.ts
 Restart=on-failure
 ```
 
@@ -432,7 +432,7 @@ From `thoughts/shared/tickets/WOP-ALL-TODO.md:470-478`:
 
 ### 6. Damage Control & Agent Safety
 
-Comprehensive damage control rules at `apps/wayofpi-ui/src/extentions/damage-control-rules.yaml` (279 lines):
+Comprehensive damage control rules at `apps/wayofwork-ui/src/extentions/damage-control-rules.yaml` (279 lines):
 - 44 bash patterns blocking: `rm -rf`, `chmod 777`, `git push --force`, cloud provider destructive commands
 - 42 zero-access paths: `.env`, secrets, SSH keys, kubeconfig
 - 42 read-only config files: package.json, tsconfig.json
@@ -467,7 +467,7 @@ Comprehensive damage control rules at `apps/wayofpi-ui/src/extentions/damage-con
 | File | Content |
 |------|---------|
 | `plans/old/productionready/reference/PHASE_1_SECURITY_DATA_GUIDE.md` | Database multi-tenancy, RBAC, path hardening, secrets guide |
-| `apps/wayofpi-ui/src/extentions/damage-control-rules.yaml` | Agent execution safety (279 lines) |
+| `apps/wayofwork-ui/src/extentions/damage-control-rules.yaml` | Agent execution safety (279 lines) |
 | `.pi/rules/securitypolicy.md` | Pi agent permission scoping, secret handling, sandbox |
 | `.pi/damage-control-rules.yaml` | Agent damage control (92 lines) |
 | `server/auth.ts` | JWT creation and verification |
@@ -489,9 +489,9 @@ Comprehensive damage control rules at `apps/wayofpi-ui/src/extentions/damage-con
 | `thoughts/shared/hosting/hosting-architecture.md` | **WOP-012 hosting architecture** — SaaS/on-prem/hybrid with Strix Halo premium tier, cost breakdowns, AI inference hosting |
 | `thoughts/shared/tickets/WOP-009-production-delivery.md` | Active delivery ticket |
 | `thoughts/shared/tickets/WOP-ALL-TODO.md` (Phase 8) | Granular hosting task list |
-| `apps/wayofpi-ui/Dockerfile` | Production Docker build |
-| `apps/wayofpi-ui/docker-compose.yml` | Docker Compose (Way of Pi + Ollama) |
-| `apps/wayofpi-ui/package.json` | Electron-builder config |
+| `apps/wayofwork-ui/Dockerfile` | Production Docker build |
+| `apps/wayofwork-ui/docker-compose.yml` | Docker Compose (Way of Pi + Ollama) |
+| `apps/wayofwork-ui/package.json` | Electron-builder config |
 | `scripts/install-ngrok-optional.sh` | ngrok system installer |
 | `scripts/host-for-demo.sh` | Quick demo hosting script |
 | `plans/old/productionready/hosting/URGENT_DEPLOY_CLIENT_DEMO.md` | Urgent demo deployment |

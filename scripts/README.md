@@ -13,7 +13,7 @@
 # CI: fail if Bun / git / node / npm missing or Bun below UI minimum (1.1.x)
 ./scripts/bootstrap-wayofpi-environment.sh --check-only
 
-# Install Bun (official installer) + npm install in apps/wayofpi-ui (non-interactive)
+# Install Bun (official installer) + npm install in apps/wayofwork-ui (non-interactive)
 ./scripts/bootstrap-wayofpi-environment.sh --install -y
 
 # Create .env from .env.sample if missing
@@ -48,7 +48,7 @@ just install-ngrok-optional
 
 After install: open **Way of Pi → Settings → ngrok (optional)** → paste **Your Authtoken** from the ngrok dashboard → **Save** → start the tunnel (dev), or run **`ngrok http <port>`** yourself. The UI tunnels **Vite’s port** (default **5173**), not **80**, unless you changed your dev layout.
 
-**Alternative without apt:** **`(cd apps/wayofpi-ui && npm install)`** installs optional npm package **`ngrok`** → **`node_modules/ngrok/bin`** (skip with **`npm install --omit=optional`**).
+**Alternative without apt:** **`(cd apps/wayofwork-ui && npm install)`** installs optional npm package **`ngrok`** → **`node_modules/ngrok/bin`** (skip with **`npm install --omit=optional`**).
 
 ---
 

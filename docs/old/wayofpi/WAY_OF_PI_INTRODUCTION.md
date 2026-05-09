@@ -85,7 +85,7 @@ Sometimes you want a **temporary public `https` link** to the computer where Way
 
 ## Next steps
 
-- **[README.md](../README.md)** — clone, prerequisites, run **Electron** or browser dev (`./start-wayofpi-electron.sh`, `./start-wayofpi-ui.sh`).
+- **[README.md](../README.md)** — clone, prerequisites, run **Electron** or browser dev (`./start-wayofpi-electron.sh`, `./start-wayofwork-ui.sh`).
 - **[WOP_PRODUCT_CAPABILITIES.md](./WOP_PRODUCT_CAPABILITIES.md)** — what is shipped vs still being wired.
 - **[WOP_PRODUCT_OVERVIEW.md](./WOP_PRODUCT_OVERVIEW.md)** — product story and onboarding narratives.
 - **[WOP_NGROK.md](./WOP_NGROK.md)** — public dev links with ngrok (optional).

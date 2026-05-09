@@ -3,7 +3,7 @@
 # Runs in background when main app starts
 
 # Configuration
-APP_ROOT="/home/zerwiz/CodeP/Way of pi/apps/wayofpi-server"
+APP_ROOT="/home/zerwiz/CodeP/Way of pi/apps/wayofwork-server"
 PORT=3333
 PID_FILE="/home/zerwiz/CodeP/Way of pi/.pi/pty-server.pid"
 LOG_FILE="/home/zerwiz/CodeP/Way of pi/.pi/pty-server.log"

@@ -61,8 +61,8 @@ function DropdownMenuComponent({ children, ...props }: { children: React.ReactNo
 
 ## Files Modified
 
-- `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/components/ai-model-dropdown.tsx`
-- `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/components/ui/DropdownMenu.tsx` (created new file)
+- `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/components/ai-model-dropdown.tsx`
+- `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/components/ui/DropdownMenu.tsx` (created new file)
 
 ## Additional Work in Related Files
 

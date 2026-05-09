@@ -6,38 +6,54 @@ This file is loaded by Pi, Gemini, OpenCode, and other AI coding agents. Follow 
 
 - **CHANGELOG.md**: Always update `~/Way of pi/CHANGELOG.md` when making code changes.
 - **STRUCTURE.md**: Keep `~/Way of pi/docs/STRUCTURE.md` up to date when modifying the project layout.
+- **`thoughts/shared/tickets/WOP-ALL-TODO.md`**: Master TODO with agent division of labor. Check before starting work.
+
+## Agent Communication
+
+Both agents (OpenCode and Gemini) work on this repo. Coordinate through these shared files:
+1. **WOP-ALL-TODO.md** — task status and ownership (update after completing tasks)
+2. **CHANGELOG.md** — log all significant changes
+3. **AGENTS.md** — this file, keep current state
 
 ## Runtime & Tooling
 - **Runtime**: Bun (not npm). Use `bun run <script>` not `npm run`.
 - **Task runner**: `just` (see `~/Way of pi/justfile` for all commands).
-- **Pi extensions**: loaded via `pi -e ~/Way of pi/.pi/extensions/util/pi-loader.ts` or `PI_STACK` env var.
-- **Pi interactive selector**: `just pi-e` (stacks extensions in one session).
 
 ## Build & Dev Commands
 ```bash
-# wayofpi-ui (Vite + React + Electron)
-cd ~/Way of pi/apps/wayofpi-ui
-bun run build          # tsc -b && vite build (currently 60+ errors, see WOP-002)
+# wayofwork-ui (Vite + React + Electron)
+cd ~/Way of pi/apps/wayofwork-ui
+bun run build          # tsc -b && vite build
 bun run dev            # Vite :5173 + Bun API :3333
-just wayofpi-full      # Bun API + Vite dev (same as npm run dev)
-just wayofpi-electron  # Electron window (Vite :5173 + Bun API :3333)
+
+# wayofpi/technicalIDE (Way of Pi standalone)
+cd ~/Way of pi/apps/wayofpi/technicalIDE
+bun run build          # tsc -b && vite build (passing ✅)
+bun run dev            # Vite :5174 + Bun API proxy :3334
 ```
 
-## Path Aliases (vite.config.ts)
-- `@wayofpi-server` → `../wayofpi-server`
+## Path Aliases
+- `@technicalIDE` → `apps/wayofpi/technicalIDE/` (in wayofwork-ui vite.config.ts + tsconfig)
+- `@wop` → `apps/wayofwork-ui/src/` (in technicalIDE vite.config.ts + tsconfig)
+- `@wayofwork-server` → `../wayofwork-server` (legacy, may need update)
 
-## Current Known Issues
-- **WOP-002**: 60+ TypeScript build errors in `~/Way of pi/apps/wayofpi-ui`. Plan: `~/Way of pi/thoughts/shared/tickets/WOP-002-fix-remaining-build-errors.md`
-- **Routing**: No React Router — uses `window.location.pathname` for route detection.
-- **Auth**: JWT-based, `/login` page exists but not yet integrated into `App.tsx`.
+## Architecture (FINAL)
+```
+apps/
+├── wayofpi/
+│   ├── technicalIDE/       →  "Way of Pi"        — Standalone Technical IDE (port 5174)
+│   └── server/              →  "Way of Pi API"    — Bun proxy port 3334 → 3333
+├── wayofwork-ui/            →  "Way of Work"      — Main app: Claw, Simple, Docs, Work
+├── wayofwork-server/        →  "Way of Work API"  — Bun API server port 3333
+└── workerportal/            →  "Worker Portal"    — Worker self-service portal
+```
 
-## Architecture Notes
-- **Electron-first** UI in `~/Way of pi/apps/wayofpi-ui/` (Vite + React 19, Tailwind 3).
-- **Server**: Bun API in `~/Way of pi/apps/wayofpi-ui/server/` (port 3333), proxied by Vite in dev.
-- **Pi agents**: `~/Way of pi/.pi/agents/*.ts`, extensions: `~/Way of pi/.pi/extensions/*.ts`.
-- **Hermes**: External CLI at `~/.hermes/hermes-agent/venv/bin/hermes`.
+## Status
+- **WOP-016**: Technical IDE extraction — **DONE ✅**. Build passes standalone.
+- **WOP-017/018**: Renaming to wayofwork — **DONE ✅**.
+- **Phase 2**: Routing (react-router-dom) — for Gemini.
+- **Phase 3b Track A/B**: Hooks extraction, page shells — for Gemini.
 
-## Conventions
-- Extensions are standalone `.ts` files loaded by Pi's jiti runtime.
-- Agent tools registered at top level, not inside event handlers.
-- No test suite configured for `~/Way of pi/apps/wayofpi-ui` (no `test` script).
+## Division of Labor
+- **OpenCode**: Track C (Technical IDE). **DONE** — standalone, build passing.
+- **Gemini**: Fix SimplePage.tsx build error, Phase 2 routing, Track A/B hooks/page shells.

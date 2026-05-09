@@ -1,6 +1,6 @@
-# Planning: extension appearances → web UI views (`wayofpi-ui`)
+# Planning: extension appearances → web UI views (`wayofwork-ui`)
 
-**Purpose:** Plan how **Pi playground appearance choices** (the `just pi-e` menu and equivalent extension stacks) map to **different views** in **`apps/wayofpi-ui/`** using the **modular dock shell**, instead of one fixed layout or a forked component tree per profile.
+**Purpose:** Plan how **Pi playground appearance choices** (the `just pi-e` menu and equivalent extension stacks) map to **different views** in **`apps/wayofwork-ui/`** using the **modular dock shell**, instead of one fixed layout or a forked component tree per profile.
 
 **Last updated:** 2026-04-11
 
@@ -14,7 +14,7 @@ Pi’s **`extensions/agent-team.ts`** draws a **footer widget** (`setWidget("age
 - A **grid** of boxed **cards** (column count follows roster size: ≤3 → N cols, 4 → 2, else 3)  
 - Per card: **display name**, **`⎆` resolved model**, **status** (○ idle / ● running / ✓ done / ✗ error) + elapsed, **`[#---]` context %**, **token** in/out, optional **stream detail** (`⚙` last tool, `τ` last thinking), **wrapped work** lines (task/lastWork or agent description)
 
-**`wayofpi-ui`** mirrors that **layout and fields** on the **Team Pulse** tab inside **`ChatPanel`**, using **`teams.yaml`** rosters and scanned agents from **`GET /api/agents`** (`AgentTeamPulseGrid.tsx`). **Idle** placeholders are shown until **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** (or equivalent) feeds real **`AgentTeamPulseMember`** state. **Stream detail** toggles like Pi **`/agents-stream`** (default on).
+**`wayofwork-ui`** mirrors that **layout and fields** on the **Team Pulse** tab inside **`ChatPanel`**, using **`teams.yaml`** rosters and scanned agents from **`GET /api/agents`** (`AgentTeamPulseGrid.tsx`). **Idle** placeholders are shown until **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** (or equivalent) feeds real **`AgentTeamPulseMember`** state. **Stream detail** toggles like Pi **`/agents-stream`** (default on).
 
 ---
 
@@ -23,7 +23,7 @@ Pi’s **`extensions/agent-team.ts`** draws a **footer widget** (`setWidget("age
 Today:
 
 - **Pi (TUI)** loads a session with **`extensions[]` from `.pi/settings.json`** and/or a **stacked `-e` list** from the **`pi-e`** menu (see **[PLAYGROUND.md](PLAYGROUND.md)** and **`.cursor/rules/pi-pi-e-playground-modes.mdc`**).
-- **`wayofpi-ui`** has **simple** vs **technical** mode ([`useUiMode.ts`](../apps/wayofpi-ui/src/hooks/useUiMode.ts)) and persisted technical layout ([`technicalLayoutStorage.ts`](../apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts)), but **no first-class “appearance”** that mirrors the **`pi-e`** inventory.
+- **`wayofwork-ui`** has **simple** vs **technical** mode ([`useUiMode.ts`](../apps/wayofwork-ui/src/hooks/useUiMode.ts)) and persisted technical layout ([`technicalLayoutStorage.ts`](../apps/wayofwork-ui/src/utils/technicalLayoutStorage.ts)), but **no first-class “appearance”** that mirrors the **`pi-e`** inventory.
 
 **Goal:** Treat each **appearance** (aggregate setup + optional extension stack) as a **composition of docks**—default visibility, default strip tabs, chat placement—so “busy playground” vs “minimal + agent-team” vs “pure-focus” are **presets** on one shell, per **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)**.
 
@@ -96,7 +96,7 @@ User overrides remain **per-appearance or global** (product decision); document 
 | Phase | Deliverable | Notes |
 |-------|-------------|--------|
 | **P0 — Inventory** | Table above + extension → “suggested dock role” matrix | Maintain **one** canonical table; link from **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** if manifest lists tools per extension. |
-| **P1 — Presets without Pi** | Built-in **`appearanceId`** presets in **`wayofpi-ui`** (simple / technical / “dense IDE” / “focus”) | Validates **dock JSON** schema; no Pi process required. |
+| **P1 — Presets without Pi** | Built-in **`appearanceId`** presets in **`wayofwork-ui`** (simple / technical / “dense IDE” / “focus”) | Validates **dock JSON** schema; no Pi process required. |
 | **P2 — Pi-e parity** | Optional UI: “load preset from **`pi-e`** selection” or paste **`-e`** list → maps to **`appearanceId`** + dock preset | May read **`.pi/settings.json`** locally via existing server for **FULL** vs **empty `extensions[]`**. |
 | **P3 — Live session sync** | Web reflects **actual** loaded Pi extensions (future headless/session API) | Depends on **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** / agent bridge. |
 

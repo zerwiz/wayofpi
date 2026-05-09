@@ -1,8 +1,8 @@
 # Way of Pi — Build vs Plan chat mode
 
-**Purpose:** How to use the **Build** | **Plan** toggle in **`wayofpi-ui`**, how it relates to **Cursor-style Plan Mode**, and what **Way of Pi** adds or limits today.
+**Purpose:** How to use the **Build** | **Plan** toggle in **`wayofwork-ui`**, how it relates to **Cursor-style Plan Mode**, and what **Way of Pi** adds or limits today.
 
-**Code:** WebSocket **`set_chat_mode`** and system composition live in **`apps/wayofpi-ui/server/index.ts`** and **`apps/wayofpi-ui/server/session-prompts.ts`**. UI: **`ChatPanel`**, **`SimpleChatView`**, **`PlanningSidePanel`** (`TechnicalSidePanels.tsx`), **Settings** menu (Build/Plan + new plan file), status hint in **`StatusBar`**. Path/template helpers: **`src/utils/planModeArtifacts.ts`**, **`src/utils/planModeWorkspace.ts`**, **`GET /api/plans`** (`server/plans-catalog.ts`), composer inject bus **`src/utils/chatComposerInjectBus.ts`** (command palette + **From plan** / **Review plan** buttons).
+**Code:** WebSocket **`set_chat_mode`** and system composition live in **`apps/wayofwork-ui/server/index.ts`** and **`apps/wayofwork-ui/server/session-prompts.ts`**. UI: **`ChatPanel`**, **`SimpleChatView`**, **`PlanningSidePanel`** (`TechnicalSidePanels.tsx`), **Settings** menu (Build/Plan + new plan file), status hint in **`StatusBar`**. Path/template helpers: **`src/utils/planModeArtifacts.ts`**, **`src/utils/planModeWorkspace.ts`**, **`GET /api/plans`** (`server/plans-catalog.ts`), composer inject bus **`src/utils/chatComposerInjectBus.ts`** (command palette + **From plan** / **Review plan** buttons).
 
 ---
 

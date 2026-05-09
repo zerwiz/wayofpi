@@ -55,7 +55,7 @@ agents:
       - tool
 
   - name: editor
-    location: apps/wayofpi-ui/agent/editor.agent.yml
+    location: apps/wayofwork-ui/agent/editor.agent.yml
     packages:
       - damage-control.ts
     permissions:
@@ -63,7 +63,7 @@ agents:
       - write
 
   - name: terminal
-    location: apps/wayofpi-ui/agent/terminal.agent.yml
+    location: apps/wayofwork-ui/agent/terminal.agent.yml
     packages:
       - damage-control.ts
     permissions:

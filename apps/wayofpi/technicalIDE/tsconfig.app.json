@@ -10,7 +10,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@wop/*": ["../wayofpi-ui/src/*"]
+      "@wop/*": ["../../wayofwork-ui/src/*"],
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
     },
     "allowImportingTsExtensions": true,
     "isolatedModules": true,

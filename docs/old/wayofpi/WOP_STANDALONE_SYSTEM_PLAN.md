@@ -11,7 +11,7 @@
 | Commands / tools / extensions → UI | **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** |
 | Multi-agent WebSocket events | **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)** |
 | Safe skills, extensions, packages, updates | **[WOP_SAFE_CUSTOMIZATION.md](WOP_SAFE_CUSTOMIZATION.md)** |
-| Current technical UI increment (Bun server + Vite React) | **[../apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)** |
+| Current technical UI increment (Bun server + Vite React) | **[../apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)** |
 | **Upstream check + sync** | **[WOP_UPSTREAM_SYNC.md](WOP_UPSTREAM_SYNC.md)**, **`scripts/wop-pi-upstream.ts`**, **`just wop-upstream-check`** |
 | **Living backlog (missing work)** | **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** |
 | **Merged build checklist (all plans)** | **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** — includes this doc **§15** + planning hub **§16** |
@@ -101,7 +101,7 @@ See **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**. Summary: user-facing **`wop`**; en
 - Name **Way of Pi backend** entrypoints, directories, npm/workspace packages, systemd units, container images, and **log `service` / process titles** with **`wop`**, **`wayofpi`**, or **neutral** names (`gateway`, `api-server`) — never a standalone **`pi`** that could mean the product server.
 - Keep **`pi`** / **Pi** only where you **explicitly mean upstream**: e.g. **`WOP_PI_BINARY`**, “headless **Pi** subprocess”, links to Pi docs.
 
-**Backlog (examples):** audit **`apps/wayofpi-ui/server`**, package **`name`**, API **`service` fields**, scripts, and future **`wop serve`** implementation; rename files/modules and strings so **Way of Pi** and **upstream Pi** are always distinguishable. Full rules: **[WOP_NAMESPACE.md — Backend naming](WOP_NAMESPACE.md#backend-code-files-and-identifiers-critical)**.
+**Backlog (examples):** audit **`apps/wayofwork-ui/server`**, package **`name`**, API **`service` fields**, scripts, and future **`wop serve`** implementation; rename files/modules and strings so **Way of Pi** and **upstream Pi** are always distinguishable. Full rules: **[WOP_NAMESPACE.md — Backend naming](WOP_NAMESPACE.md#backend-code-files-and-identifiers-critical)**.
 
 ## Information architecture (sitemap)
 
@@ -134,7 +134,7 @@ See **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**. Summary: user-facing **`wop`**; en
 
 **Persistence:** UI stores **`wayofpi.uiMode`** in `localStorage` (`simple` | `technical`). **Technical** does **not** bypass **approval** policies.
 
-**Implementation:** [apps/wayofpi-ui](../apps/wayofpi-ui/) ships a first **toggle** in the shell; full IDE parity is phased.
+**Implementation:** [apps/wayofwork-ui](../apps/wayofwork-ui/) ships a first **toggle** in the shell; full IDE parity is phased.
 
 ## UI visual spec (tokens and breakpoints)
 
@@ -145,7 +145,7 @@ See **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**. Summary: user-facing **`wop`**; en
 - **Breakpoints:** **≥1280px** — three-column shell when applicable; **1024–1279** — collapse sidebars to drawers; **&lt;1024** — hamburger + bottom nav pattern (chat priority).  
 - **Accessibility:** focus rings, `aria-live` for streaming completion, modal focus traps.
 
-**Component inventory (shell + MVP):** app shell (**MenuBar**, primary **nav**, **workspace** selector), **Chat** transcript + **composer**, **Models** picker, **Sessions** list, **Diagnostics** checklist, **Settings** (including UI mode), **Files** tree / edited list, **Orchestration** card grid + **Focus** drawer, **Tools** timeline + approval modal, **Command palette**, **StatusBar** / optional **bottom panel** (Technical). The reference implementation in **[apps/wayofpi-ui](../apps/wayofpi-ui/)** currently ships **MenuBar**, **ActivityBar**, **ExplorerSidebar**, **EditorPanel**, **ChatPanel**, **BottomPanel**, **StatusBar** plus **Simple / Technical** toggle.
+**Component inventory (shell + MVP):** app shell (**MenuBar**, primary **nav**, **workspace** selector), **Chat** transcript + **composer**, **Models** picker, **Sessions** list, **Diagnostics** checklist, **Settings** (including UI mode), **Files** tree / edited list, **Orchestration** card grid + **Focus** drawer, **Tools** timeline + approval modal, **Command palette**, **StatusBar** / optional **bottom panel** (Technical). The reference implementation in **[apps/wayofwork-ui](../apps/wayofwork-ui/)** currently ships **MenuBar**, **ActivityBar**, **ExplorerSidebar**, **EditorPanel**, **ChatPanel**, **BottomPanel**, **StatusBar** plus **Simple / Technical** toggle.
 
 ## Control inventory (by area)
 
@@ -229,7 +229,7 @@ Before calling a build “production ready” for **hosted** or **non-technical*
 - Exact Pi CLI for `pi install` / `pi update` per pinned version.  
 - Subprocess sandbox policy (same user vs restricted).  
 - Session storage format shared with Pi JSONL or separate.  
-- Concrete rename map for existing repo paths (e.g. server layout under **`apps/wayofpi-ui`**) vs semver / import churn — schedule with the **backend naming** milestone.
+- Concrete rename map for existing repo paths (e.g. server layout under **`apps/wayofwork-ui`**) vs semver / import churn — schedule with the **backend naming** milestone.
 
 ---
 

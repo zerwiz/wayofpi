@@ -46,7 +46,7 @@ The application supports three distinct shell modes, each with their own compone
 
 ### Mode 1: Simple App
 
-**File:** `apps/wayofpi-ui/src/components/simple/SimpleApp.tsx`
+**File:** `apps/wayofwork-ui/src/components/simple/SimpleApp.tsx`
 
 #### Left Rail (Activity Bar):
 1. **`ActivityBar`** - Shows Simple tabs
@@ -112,7 +112,7 @@ The application supports three distinct shell modes, each with their own compone
 
 ### Mode 2: Claw App
 
-**File:** `apps/wayofpi-ui/src/components/claw/ClawApp.tsx`
+**File:** `apps/wayofwork-ui/src/components/claw/ClawApp.tsx`
 
 #### Left Nav Rail:
 1. **`ClawNavRail`** - Claw-specific navigation with:
@@ -170,7 +170,7 @@ The application supports three distinct shell modes, each with their own compone
 
 ### Mode 3: Technical Mode
 
-**File:** `apps/wayofpi-ui/src/components/technical/TechnicalPrimarySidebar.tsx`
+**File:** `apps/wayofwork-ui/src/components/technical/TechnicalPrimarySidebar.tsx`
 
 #### Left Sidebar:
 1. **`TechnicalPrimarySidebar`** - Full IDE sidebar with:

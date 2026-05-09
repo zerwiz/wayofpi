@@ -9,7 +9,7 @@ This document tracks the development of the Way of Pi Electron desktop applicati
 ### ✅ Completed Changes
 
 1. **Script Renaming**
-   - Renamed `start-wayofpi-ui.sh` → `start-wayofpi.sh`
+   - Renamed `start-wayofwork-ui.sh` → `start-wayofpi.sh`
    - Added Electron launch as default behavior
    - Modified to use `WOP_USE_ELECTRON=1` by default (changed from 0)
    - Updated comments to reflect new default behavior
@@ -27,8 +27,8 @@ This document tracks the development of the Way of Pi Electron desktop applicati
 ### ⚠️ Remaining Issues
 
 1. **Module Resolution**
-   - Vite cannot resolve `@wayofpi-server/session` import
-   - Server module in `node_modules/@wayofpi-server` may not be properly linked
+   - Vite cannot resolve `@wayofwork-server/session` import
+   - Server module in `node_modules/@wayofwork-server` may not be properly linked
    - Missing `package.json` exports field or symlink configuration
 
 2. **JSX Loader Issue**
@@ -46,7 +46,7 @@ This document tracks the development of the Way of Pi Electron desktop applicati
 - **Electron Launch**: ✅ Working (default mode)
 - **Vite Server**: ✅ Starts on port 5173
 - **Bun API Server**: ✅ Starts on port 3333
-- **Module Imports**: ❌ Failing for `@wayofpi-server/session`
+- **Module Imports**: ❌ Failing for `@wayofwork-server/session`
 - **JSX Files**: ❌ Failing due to extension mismatch
 
 ## Known Configuration
@@ -60,7 +60,7 @@ This document tracks the development of the Way of Pi Electron desktop applicati
 ### Scripts
 
 ```bash
-# Main script (renamed from start-wayofpi-ui.sh)
+# Main script (renamed from start-wayofwork-ui.sh)
 ./start-wayofpi.sh
 
 # Full system (same as before)
@@ -73,16 +73,16 @@ just wayofpi-full
 
 - `start-wayofpi.sh` - Main startup script
 - `start-wayofpi-debug.sh` - Debug variant
-- `wayofpi-server/package.json` - Updated for ES modules
-- `wayofpi-server/src/SessionManager.js` - Converted to ES modules
-- `wayofpi-server/src/ScreenBuffer.js` - Converted to ES modules
-- `wayofpi-ui/package.json` - Updated dependencies (removed problematic exports field)
+- `wayofwork-server/package.json` - Updated for ES modules
+- `wayofwork-server/src/SessionManager.js` - Converted to ES modules
+- `wayofwork-server/src/ScreenBuffer.js` - Converted to ES modules
+- `wayofwork-ui/package.json` - Updated dependencies (removed problematic exports field)
 
 ## Next Steps
 
 1. Fix module resolution by:
-   - Properly linking `@wayofpi-server` in `node_modules`
-   - Adding exports field to `wayofpi-ui/package.json`
+   - Properly linking `@wayofwork-server` in `node_modules`
+   - Adding exports field to `wayofwork-ui/package.json`
    - Or using absolute path imports
 
 2. Fix JSX files:
@@ -100,7 +100,7 @@ just debug-full
 ./start-wayofpi.sh
 
 # Check module resolution
-cd apps/wayofpi-ui && npm list @wayofpi-server
+cd apps/wayofwork-ui && npm list @wayofwork-server
 
 # Check file extensions
 ls -la src/logs/*.js src/logs/*.jsx

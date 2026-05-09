@@ -2,7 +2,7 @@
 
 **Purpose:** Single backlog for making the **technical UI** a **modular, movable dock system**: equal chrome between the editor and **other docks** (same **tabs + body** model), drag-and-drop layout, optional **N** horizontal dock instances, **agent** and **primary sidebar** as repositionable docks—not fixed geometry forever.
 
-**Cursor rule (implementation discipline):** [`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc) (applies when editing `apps/wayofpi-ui/**`).
+**Cursor rule (implementation discipline):** [`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc) (applies when editing `apps/wayofwork-ui/**`).
 
 **Rule → what to build:** [WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md](WOP_MODULAR_DOCKS_RULE_FUNCTIONAL_PLAN.md) (rebuild / add / extend traceability).
 
@@ -101,7 +101,7 @@ Goal: **ChatPanel** and **primary sidebar** become **movable dock regions**, not
 
 Goal: Zed/VS Code–class **arbitrary splits** (editor + tools + chat in one grid).
 
-**Partial (shipped):** **`TechnicalWorkspaceGrid`** — up to **3 columns × 4 rows**, each cell = **`WorkspacePane`** + own **`PanelDockLayout`** + (when grid > **1×1**) own **`useFileEditor`**. Layout uses **nested flex** + **`DockSplitHandle`** (**`rowWeights` / `colWeights`** in **`wayofpi.technical.workspaceGrid.v1`**). **View → Editor Layout** presets (**`EditorLayoutPreset`** `workspace_grid_*`). **`WorkspaceCellDropSurface`** per cell: **edge/center snap** overlay; **`growWorkspaceGridForEdgeDrop`** on drop when the implied neighbor was missing (**1×1**, **N×1**, **1×N** outer edges). **Cross-cell** **panel tab** moves (surface + **tab bar** with insert order). Not a **layout graph** yet — see **`docs/WOP_TECHNICAL_UI.md`**, **`apps/wayofpi-ui/src/utils/workspaceGridStorage.ts`**.
+**Partial (shipped):** **`TechnicalWorkspaceGrid`** — up to **3 columns × 4 rows**, each cell = **`WorkspacePane`** + own **`PanelDockLayout`** + (when grid > **1×1**) own **`useFileEditor`**. Layout uses **nested flex** + **`DockSplitHandle`** (**`rowWeights` / `colWeights`** in **`wayofpi.technical.workspaceGrid.v1`**). **View → Editor Layout** presets (**`EditorLayoutPreset`** `workspace_grid_*`). **`WorkspaceCellDropSurface`** per cell: **edge/center snap** overlay; **`growWorkspaceGridForEdgeDrop`** on drop when the implied neighbor was missing (**1×1**, **N×1**, **1×N** outer edges). **Cross-cell** **panel tab** moves (surface + **tab bar** with insert order). Not a **layout graph** yet — see **`docs/WOP_TECHNICAL_UI.md`**, **`apps/wayofwork-ui/src/utils/workspaceGridStorage.ts`**.
 
 - [ ] **E1** — Spec **layout graph** (nodes: region type, children, sizes); version field for migrations.
 - [ ] **E2** — **Split drop targets** / DnD that **subdivides** cells beyond the current **edge-grow** rules; generalize beyond fixed **cols×rows**.
@@ -164,5 +164,5 @@ Checklist:
 | Doc / file | Role |
 |------------|------|
 | [WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md) | Current topology, components, persistence keys |
-| [apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts](../apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts) | `ToolDockLayout`, `DockStripEntry`, migrations |
+| [apps/wayofwork-ui/src/utils/technicalLayoutStorage.ts](../apps/wayofwork-ui/src/utils/technicalLayoutStorage.ts) | `ToolDockLayout`, `DockStripEntry`, migrations |
 | [WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md) | Product phases, production checklist |

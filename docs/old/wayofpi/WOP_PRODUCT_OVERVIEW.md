@@ -46,14 +46,14 @@ flowchart LR
 | Piece | You get |
 |-------|---------|
 | **Playground** | Experiment with **TypeScript extensions**, **`.pi/settings.json`**, **skills**, **`.pi/agents`**, **`teams.yaml`**, **`just` / `ppi`** recipes, and **`projects/<slug>/`** notes—same concepts as upstream Pi. |
-| **Shell (`apps/wayofpi-ui`)** | **Electron** (recommended) or **browser** dev: **Simple** chat-first UI or **Technical** IDE-style layout (multi-pane grid, docks), **workspace-scoped** file operations, **WebSocket** chat, diagnostics, and controls that align with **`WOP_*`** isolation (**[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**). |
+| **Shell (`apps/wayofwork-ui`)** | **Electron** (recommended) or **browser** dev: **Simple** chat-first UI or **Technical** IDE-style layout (multi-pane grid, docks), **workspace-scoped** file operations, **WebSocket** chat, diagnostics, and controls that align with **`WOP_*`** isolation (**[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**). |
 
 ---
 
 ## 4. Typical journeys
 
 1. **Customize Pi in the terminal** — Clone or open this repo, run **`just pi`** / **`ppi pi`**, edit **`extensions/`** and **`.pi/`**, use **`/reload`** in Pi. Deep guides: **[EXTENSIONS.md](EXTENSIONS.md)**, **[AGENTS.md](AGENTS.md)**, **[SKILLS.md](SKILLS.md)**.
-2. **Work on another codebase in the GUI** — Start **`./start-wayofpi-electron.sh`** or **`./start-wayofpi-ui.sh`**, **open a folder** as the workspace (that folder is the scope for **`/api/file`**, tree, and Pi **cwd**—not “whatever tab is open”). **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)**.
+2. **Work on another codebase in the GUI** — Start **`./start-wayofpi-electron.sh`** or **`./start-wayofwork-ui.sh`**, **open a folder** as the workspace (that folder is the scope for **`/api/file`**, tree, and Pi **cwd**—not “whatever tab is open”). **[apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)**.
 3. **Plan shipping Way of Pi as a product** — Read the **namespace and headless Pi** plan (**[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**), the **API and WebSocket wiring** map (**[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)**), and the **open backlog** (**[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)**).
 
 ---
@@ -67,7 +67,7 @@ flowchart LR
 | **All roadmap links** | **[WOP_PLANNING.md](WOP_PLANNING.md)** |
 | **Repo layout** | **[REPO_INDEX.md](REPO_INDEX.md)** |
 | **Shell components** (grid, panes, persistence) | **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** |
-| **Boot, ports, scripts** | Root **[README.md](../README.md)**, **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)** |
+| **Boot, ports, scripts** | Root **[README.md](../README.md)**, **[apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)** |
 
 ---
 

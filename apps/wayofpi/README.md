@@ -13,7 +13,7 @@ apps/wayofpi/
 - **Frontend**: Port 5174 (dev), connects to shared backend API on port 3333
 - **Server**: Bun.serve on port 3334, proxies HTTP + WebSocket to main API
 - **Terminal**: WebSocket proxied to main server — PTY context persists across sessions
-- **Shared code**: Reuses components from `apps/wayofpi-ui/src/` via `@wop` alias
+- **Shared code**: Reuses components from `apps/wayofwork-ui/src/` via `@wop` alias
 
 ## Quick Start
 
@@ -23,7 +23,7 @@ bun install
 bun run dev         # Vite dev on :5174
 ```
 
-Requires the main API server running on port 3333 (`apps/wayofpi-ui/server/`).
+Requires the main API server running on port 3333 (`apps/wayofwork-ui/server/`).
 
 ## Features
 

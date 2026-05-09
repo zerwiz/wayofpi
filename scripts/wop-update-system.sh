@@ -113,7 +113,7 @@ do_backup() {
         cp -r scripts/ "$backup_dir/" 2>/dev/null || true
         cp -r projects/ "$backup_dir/" 2>/dev/null || true
         cp -r images/ "$backup_dir/" 2>/dev/null || true
-        cp -r apps/wayofpi-ui/ "$backup_dir/" 2>/dev/null || true
+        cp -r apps/wayofwork-ui/ "$backup_dir/" 2>/dev/null || true
         cp -r specs/ "$backup_dir/" 2>/dev/null || true
         cp -r tools/ "$backup_dir/" 2>/dev/null || true
     fi
@@ -167,8 +167,8 @@ rebuild_deps() {
     fi
     
     # Install UI dependencies
-    if [ -f "apps/wayofpi-ui/package.json" ]; then
-        cd apps/wayofpi-ui
+    if [ -f "apps/wayofwork-ui/package.json" ]; then
+        cd apps/wayofwork-ui
         bun install || npm install
         printf "${GREEN}UI dependencies installed\n"
         cd ../..
@@ -177,14 +177,14 @@ rebuild_deps() {
 
 # Update Electron app
 update_electron() {
-    if [ ! -d "apps/wayofpi-ui/node_modules" ]; then
+    if [ ! -d "apps/wayofwork-ui/node_modules" ]; then
         printf "${YELLOW}Electron dependencies not installed yet\n"
         return
     fi
     
     if [ "$FORCE" = true ]; then
         printf "${YELLOW}Removing old Electron app...\n"
-        rm -rf apps/wayofpi-ui/node_modules/.cache/
+        rm -rf apps/wayofwork-ui/node_modules/.cache/
     fi
     
     printf "${BLUE}Electron app is up to date on this commit\n"

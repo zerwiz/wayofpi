@@ -1,6 +1,6 @@
 # IDE shell parity: Explorer and related UI (Cursor, Zed, Way of Pi)
 
-This document compares how **Cursor** (VS Code–family), **Zed**, and the **Way of Pi** web technical shell (`apps/wayofpi-ui`) handle the file explorer and adjacent IDE affordances. It is meant for product and implementation planning, not as a license of any vendor’s UI.
+This document compares how **Cursor** (VS Code–family), **Zed**, and the **Way of Pi** web technical shell (`apps/wayofwork-ui`) handle the file explorer and adjacent IDE affordances. It is meant for product and implementation planning, not as a license of any vendor’s UI.
 
 ## Reference: Cursor and VS Code
 
@@ -35,7 +35,7 @@ Sources: [Zed features](https://zed.dev/features), [Finding & Navigating](https:
 
 ## Way of Pi technical shell (current)
 
-Implemented in `apps/wayofpi-ui` (technical layout). When **View → Editor Layout** uses a **workspace grid** (multiple **`WorkspacePane`** cells), **Open** from the explorer targets the **focused** cell (orange ring); click a cell first to choose where files open. **Dragging** a file onto a **workspace cell edge** can **grow** the grid when it was still **1×1** (or an **N×1** / **1×N** outer edge) so the drop lands in a new neighbor pane — see **`docs/WOP_TECHNICAL_UI.md`**.
+Implemented in `apps/wayofwork-ui` (technical layout). When **View → Editor Layout** uses a **workspace grid** (multiple **`WorkspacePane`** cells), **Open** from the explorer targets the **focused** cell (orange ring); click a cell first to choose where files open. **Dragging** a file onto a **workspace cell edge** can **grow** the grid when it was still **1×1** (or an **N×1** / **1×N** outer edge) so the drop lands in a new neighbor pane — see **`docs/WOP_TECHNICAL_UI.md`**.
 
 | Feature | Status |
 |---------|--------|
@@ -72,4 +72,4 @@ Implemented in `apps/wayofpi-ui` (technical layout). When **View → Editor Layo
 
 - **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** — product plan and UI phases.  
 - **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** — backlog and stubs.  
-- **`apps/wayofpi-ui/README.md`** — running the UI server and workspace env vars.
+- **`apps/wayofwork-ui/README.md`** — running the UI server and workspace env vars.

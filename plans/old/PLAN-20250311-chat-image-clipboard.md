@@ -68,10 +68,10 @@ Two critical chat UI issues require fix in Way of Pi client repository:
 ---
 
 ## Files to Modify
-- `apps/wayofpi-ui/src/components/**/PaneView*.tsx`
-- `apps/wayofpi-ui/src/components/**/ChatPanel.tsx`
-- `apps/wayofpi-ui/src/components/**/FilePicker.tsx`
-- `apps/wayofpi-ui/src/hooks/**`
+- `apps/wayofwork-ui/src/components/**/PaneView*.tsx`
+- `apps/wayofwork-ui/src/components/**/ChatPanel.tsx`
+- `apps/wayofwork-ui/src/components/**/FilePicker.tsx`
+- `apps/wayofwork-ui/src/hooks/**`
 - Any keep button component location
 - Any file refresh/mount hook location
 
@@ -82,7 +82,7 @@ Two critical chat UI issues require fix in Way of Pi client repository:
 ### Step 1: Clone or access Way of Pi client repository
 ```bash
 git clone [WAYOFPI_CLIENT_REPO_URL]
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 npm install
 ```
 

@@ -4,7 +4,7 @@
 
 ## What Exists Now
 
-### 1. Database Schema (`apps/wayofpi-ui/server/schema.sql`)
+### 1. Database Schema (`apps/wayofwork-ui/server/schema.sql`)
 
 Every data table has `tenant_id TEXT NOT NULL` with `REFERENCES tenants(id) ON DELETE CASCADE`:
 
@@ -242,7 +242,7 @@ Already implemented in `server/workspace-state.ts`:
 
 ### 6. Damage Control Rules (Agent Safety)
 
-**`apps/wayofpi-ui/src/extentions/damage-control-rules.yaml`** blocks destructive operations:
+**`apps/wayofwork-ui/src/extentions/damage-control-rules.yaml`** blocks destructive operations:
 - 44 bash patterns (rm -rf, chmod 777, git push --force, cloud provider deletes)
 - 42 zero-access paths (`.env`, secrets, keys)
 - 42 read-only config files
@@ -277,7 +277,7 @@ Already implemented in `server/workspace-state.ts`:
 |------|---------------|
 | `.pi/rules/securitypolicy.md` | Pi agent security policy (permissions, secrets, sandbox) |
 | `.pi/damage-control-rules.yaml` | Agent execution safety rules |
-| `apps/wayofpi-ui/src/extentions/damage-control-rules.yaml` | Comprehensive damage control (279 lines) |
+| `apps/wayofwork-ui/src/extentions/damage-control-rules.yaml` | Comprehensive damage control (279 lines) |
 | `server/auth.ts` | JWT creation and verification |
 | `server/tunnel-gate.ts` | scrypt-hashed tunnel Basic Auth |
 | `server/workspace-state.ts` | Path traversal prevention |

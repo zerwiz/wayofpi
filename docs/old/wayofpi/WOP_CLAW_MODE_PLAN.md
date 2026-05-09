@@ -1,6 +1,6 @@
 # Claw mode plan (`docs/WOP_CLAW_MODE_PLAN.md`)
 
-**Claw** is a third **UI mode** in **`apps/wayofpi-ui`** (alongside **Simple** and **Technical**). It has its own dedicated shell — a mission-control layout with a left nav rail, session tabs, file panel, and agent workspace — completely separate from both the Technical IDE shell and the Simple chat view.
+**Claw** is a third **UI mode** in **`apps/wayofwork-ui`** (alongside **Simple** and **Technical**). It has its own dedicated shell — a mission-control layout with a left nav rail, session tabs, file panel, and agent workspace — completely separate from both the Technical IDE shell and the Simple chat view.
 
 This document is the **product and engineering plan** for growing **Claw-class** capabilities: persistent, tool-using agents with optional **channels** (messengers, email), **schedules**, and **clear operator control**—in the same spirit as popular **"open claw"**-style autonomous agent stacks, without forking Pi into a second runtime in Bun (see **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**).
 

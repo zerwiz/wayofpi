@@ -68,7 +68,7 @@ chmod +x "$OUTPUT_DIR/start-wayofpi-electron.sh"
 
 # Copy main start scripts
 [ -f "$SOURCE_DIR/start-wayofpi-electron.sh" ] && cp "$SOURCE_DIR/start-wayofpi-electron.sh" "$OUTPUT_DIR/"
-[ -f "$SOURCE_DIR/start-wayofpi-ui.sh" ] && cp "$SOURCE_DIR/start-wayofpi-ui.sh" "$OUTPUT_DIR/"
+[ -f "$SOURCE_DIR/start-wayofwork-ui.sh" ] && cp "$SOURCE_DIR/start-wayofwork-ui.sh" "$OUTPUT_DIR/"
 [ -f "$SOURCE_DIR/start-wayofpi.sh" ] && cp "$SOURCE_DIR/start-wayofpi.sh" "$OUTPUT_DIR/"
 
 # Copy LICENSE if exists

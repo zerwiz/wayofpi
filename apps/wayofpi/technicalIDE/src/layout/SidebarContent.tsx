@@ -34,7 +34,7 @@ interface SidebarContentProps {
   git: any;
   refresh: () => void;
   config: ServerConfig | null;
-  refreshServerConfig: () => void;
+  refreshServerConfig: () => Promise<void>;
   chatMode: ChatSessionMode;
   onChatModeChange: (m: ChatSessionMode) => void;
   streaming: boolean;

@@ -1,6 +1,6 @@
 # Way of Pi — open TODOs and missing work
 
-Single place to track **what is not done yet** for the **Way of Pi** direction (web UI + headless Pi + `WOP_*` isolation), the **`apps/wayofpi-ui`** shell, supporting **scripts**, and **planning follow-through**. It complements checkbox lists in other docs (e.g. **[SUPERPOWERS_TODO.md](SUPERPOWERS_TODO.md)**) without duplicating every playground extension idea.
+Single place to track **what is not done yet** for the **Way of Pi** direction (web UI + headless Pi + `WOP_*` isolation), the **`apps/wayofwork-ui`** shell, supporting **scripts**, and **planning follow-through**. It complements checkbox lists in other docs (e.g. **[SUPERPOWERS_TODO.md](SUPERPOWERS_TODO.md)**) without duplicating every playground extension idea.
 
 **Merged build checklist (all WOP plans):** **[WOP_COMBINED_BUILD_TODO.md](WOP_COMBINED_BUILD_TODO.md)** — trim there and here when you ship.
 
@@ -62,11 +62,11 @@ Items from **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** pr
 
 ---
 
-## `apps/wayofpi-ui` — server and APIs
+## `apps/wayofwork-ui` — server and APIs
 
 | Status | Item |
 |--------|------|
-| Missing | **Pi subprocess** (or official headless API) for chat, tools, extensions, skills — see **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)**. |
+| Missing | **Pi subprocess** (or official headless API) for chat, tools, extensions, skills — see **[apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)**. |
 | Missing | **Tool execution** / approvals / bash pipeline from the web UI. |
 | Partial | **`GET /api/manifest`** — **static** scan (**`.pi/settings.json`** `extensions[]` + **`.pi/extensions/*.ts`**); **tools** / **slash commands** still need **headless Pi** runtime — **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)**. |
 | Partial | **`GET /api/diagnostics`** + **`GET /api/upstream`** (read-only lock/config). Full **`wop-pi-upstream` check** (GitHub/npm + lock write) remains **CLI**: **`scripts/wop-pi-upstream.ts`**. |
@@ -74,7 +74,7 @@ Items from **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** pr
 
 ---
 
-## `apps/wayofpi-ui` — Technical UI shell
+## `apps/wayofwork-ui` — Technical UI shell
 
 **Menu bar parity matrix (File → Help, palette, AI shell commands):** **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)** — maintained backlog; **Plan / Build** side panel summarizes next steps and links to it.
 
@@ -93,14 +93,14 @@ Items from **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** pr
 
 ---
 
-## `apps/wayofpi-ui` — Simple UI shell
+## `apps/wayofwork-ui` — Simple UI shell
 
 | Area | Missing / stub |
 |------|----------------|
 | **SimpleNavRail / views** | Any view that is a stub should be listed in its component (e.g. **Projects**, **Team**, **Models** depth varies). |
 | **Quick run** | **SimpleRightPanel** (or related) **quick run** hook reserved — no project runner wired. |
 
-*(Audit Simple layout files under **`apps/wayofpi-ui/src/components/simple/`** when adding rows.)*
+*(Audit Simple layout files under **`apps/wayofwork-ui/src/components/simple/`** when adding rows.)*
 
 ---
 

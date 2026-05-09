@@ -53,7 +53,7 @@ import {
 } from "@wop/utils/panelDockLayout";
 import {
   chatSizePxWhenSwitchingDock, clampChatHeight, clampChatWidth,
-  clampLeftSidebarWidth, DEFAULT_COMPACT_BOTTOM_CHAT_HEIGHT_PX,
+  clampLeftSidebarWidth, clampBottomPanelHeight, DEFAULT_COMPACT_BOTTOM_CHAT_HEIGHT_PX,
   DOCK_DEFAULTS, readDockLayout, readLeftSidebarVisibleInitial,
   writeDockLayout, writeLeftSidebarVisible, type ChatDockRegion, type TechnicalDockLayout,
 } from "@wop/utils/technicalLayoutStorage";
@@ -95,7 +95,36 @@ const WOP_PUBLIC_REPO_URL = "https://github.com/zerwiz/wayofpi";
 const WOP_FEEDBACK_CONTACT_URL = "https://whynotproductions.netlify.app/contact/";
 const WOP_SUPPORT_HOME_URL = "https://whynotproductions.netlify.app/";
 const TASKS_JSON_REL = ".vscode/tasks.json";
+const TASKS_JSON_TEMPLATE = `{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "bun run build",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
+`;
 const LAUNCH_JSON_REL = ".vscode/launch.json";
+const LAUNCH_JSON_TEMPLATE = `{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "\${workspaceFolder}/index.ts"
+    }
+  ]
+}
+`;
 
 function languageFromPath(path: string | null): string {
   if (!path) return "Plain Text";
@@ -148,6 +177,8 @@ export function TechnicalApp() {
   );
   const { config, refresh: refreshServerConfig } = useServerConfig();
   const agentsApi = useAgents();
+  const staticAnalysisEnabled = !!(folders[0]?.path ?? root);
+  const workspaceStaticAnalysis = useWorkspaceStaticAnalysis(staticAnalysisEnabled);
   const chatSurfaceId: ChatSessionSurfaceId = "technical";
   const session = useWayOfPiSession();
   const teamPulseSessionTokenSummary = useMemo(
@@ -888,9 +919,6 @@ export function TechnicalApp() {
     });
   }, [updateDockLayout]);
 
-  const staticAnalysisEnabled = !!(folders[0]?.path ?? root);
-  const workspaceStaticAnalysis = useWorkspaceStaticAnalysis(staticAnalysisEnabled);
-
   const openProblemLocation = useCallback((relPath: string, line: number, column: number) => {
     const path = relPath.replace(/^[/\\]+/, "");
     if (!path) return;
@@ -1362,6 +1390,7 @@ export function TechnicalApp() {
   const workspaceEmbeddedChat = useCallback(
     () => (
       <ChatPanel
+        uiMode="technical"
         rows={session.rows}
         chatTabs={session.chatTabs}
         activeChatTabId={session.activeChatTabId ?? ''}
@@ -1637,7 +1666,326 @@ export function TechnicalApp() {
       { id: "problems", label: "Panel: Problems", run: () => focusToolTab("problems") },
       { id: "agent_chat", label: "Panel: Agent chat", run: () => setPanelDock((prev) => applyShowToolTab(prev, "agent_chat")) },
       { id: "output", label: "Panel: Output", run: () => focusToolTab("output") },
-      { id: "debug_console", label: "Panel: Debug console", run: () => focusToolTab("debug_console") },
     ];
   }, [leftSidebarVisible, toggleLeftSidebar, persistLeftSidebar, focusToolTab, openHostDoctor, handleChatModeChange, agentsApi.data?.agents, session.setChatAgent, saveAndRefresh, reloadFocusedOrMain, refresh, copyWorkspacePath, handleNewPlanFile, apiGet, injectIntoChatComposer, buildImplementPlanPrompt, buildReviewPlanPrompt, openPlanFileForReview, updateDockLayout, dockLayout.agentPanelVisible, setPanelDock]);
 
+  const leftPanel = useMemo(() => (
+    <SidebarContent
+      activity={activity}
+      nodes={nodes}
+      rootLabel={rootLabel}
+      selectedPath={selectedPath}
+      onExplorerSelectFile={onExplorerSelectFile}
+      setExplorerContextDir={setExplorerContextDir}
+      handleExplorerMoveFile={handleExplorerMoveFile}
+      folders={folders}
+      handleExplorerRenameNode={handleExplorerRenameNode}
+      handleExplorerDeleteNode={handleExplorerDeleteNode}
+      handleExplorerCopyPath={handleExplorerCopyPath}
+      handleNewFile={handleNewFile}
+      handleNewFolder={handleNewFolder}
+      treeLoading={treeLoading}
+      treeError={treeError}
+      treeExpand={treeExpand}
+      refreshQuiet={refreshTreeQuietShell}
+      persistLeftSidebar={persistLeftSidebar}
+      setActivity={setActivity}
+      root={root ?? ""}
+      git={git}
+      refresh={refresh}
+      config={config}
+      refreshServerConfig={refreshServerConfig}
+      chatMode={session.chatMode}
+      onChatModeChange={handleChatModeChange}
+      streaming={session.streaming}
+      workspaceOperational={workspaceOperational}
+      focusWorkspaceFileFromMenu={focusWorkspaceFileFromMenu}
+      openTeamsYamlFromMenu={openTeamsYamlFromMenu}
+      focusToolTab={(t: string) => focusToolTab(t as BottomPanelTab)}
+    />
+  ), [activity, nodes, rootLabel, selectedPath, onExplorerSelectFile, setExplorerContextDir, handleExplorerMoveFile, folders, handleExplorerRenameNode, handleExplorerDeleteNode, handleExplorerCopyPath, handleNewFile, handleNewFolder, treeLoading, treeError, treeExpand, refreshTreeQuietShell, persistLeftSidebar, setActivity, root, git, refresh, config, refreshServerConfig, session.chatMode, handleChatModeChange, session.streaming, workspaceOperational, focusWorkspaceFileFromMenu, openTeamsYamlFromMenu, focusToolTab]);
+
+  const workspaceEditorBody = useMemo(() => (
+    <WorkspaceEditor
+      isWsMulti={isWsMulti}
+      workspaceGrid={workspaceGrid}
+      patchWorkspaceCellDock={patchWorkspaceCellDock}
+      wsFocusedCell={wsFocusedCell}
+      setWsFocusedCell={setWsFocusedCell}
+      onTechFocusedReport={onTechFocusedReport}
+      onTechFocusedCursor={onTechFocusedCursor}
+      workspaceEditorRef={workspaceEditorRef}
+      logs={session.logs}
+      workspaceDockFileActions={workspaceDockFileActions}
+      onOpenToolPanelForCell={onOpenToolPanelForCell}
+      refresh={refresh}
+      workspaceDockActionsMain={workspaceDockActionsMain}
+      editorWordWrap={chrome.editorWordWrap}
+      breadcrumbsVisible={chrome.breadcrumbsVisible}
+      openWorkspaceSearch={openWorkspaceSearch}
+      bumpEditorMenu={bumpEditorMenu}
+      bumpSelectionPrefs={bumpSelectionPrefs}
+      autoSave={autoSave}
+      workspaceOpenSignal={workspaceOpenSignal}
+      workspaceCloseEditorSignal={workspaceCloseEditorSignal}
+      onWorkspaceSurfaceDrop={onWorkspaceSurfaceDrop}
+      splitEditorRight={splitEditorRight}
+      gridCols={workspaceGrid.cols}
+      wsMaximizedCell={wsMaximizedCell}
+      onToggleWorkspaceMaximizeCell={onToggleWorkspaceMaximizeCell}
+      removeWorkspaceCellFromGrid={removeWorkspaceCellFromGrid}
+      workspaceGridToolbar={workspaceGridToolbar}
+      agentTeamWorkspacePane={agentTeamWorkspacePane}
+      workspaceEmbeddedChat={workspaceEmbeddedChat}
+      movePanelTabBetweenCells={movePanelTabBetweenCells}
+      onWorkspaceGridRowResize={onWorkspaceGridRowResize}
+      onWorkspaceGridColResize={onWorkspaceGridColResize}
+      onBindMultiCellSaveApi={onBindMultiCellSaveApi}
+      onMultiCellAnyDirtyChange={onMultiCellAnyDirtyChange}
+      rootLabel={rootLabel}
+      nodes={nodes}
+      refreshQuiet={refreshTreeQuietShell}
+      panelDock={panelDock}
+      setWorkspaceActiveIndex={setWorkspaceActiveIndex}
+      onDockEntryMove={onDockEntryMove}
+      onDockEntryClose={onDockEntryClose}
+      selectedPath={selectedPath}
+      setContent={setContent}
+      content={content}
+      fileLoading={fileLoading}
+      fileError={fileError}
+      dirty={dirty}
+      persistEncoding={persistEncoding}
+      workspaceCenterFilePreview={workspaceCenterFilePreview}
+      save={save}
+      discardUnsavedChanges={discardUnsavedChanges}
+      onCursor={onCursor}
+      workspaceGitFileReviewActions={workspaceGitFileReviewActions}
+      gitReviewHasAnyMarked={gitReviewHasAnyMarked}
+      gitReviewCanAdvanceNext={gitReviewCanAdvanceNext}
+    />
+  ), [isWsMulti, workspaceGrid, patchWorkspaceCellDock, wsFocusedCell, setWsFocusedCell, onTechFocusedReport, onTechFocusedCursor, workspaceEditorRef, session.logs, workspaceDockFileActions, onOpenToolPanelForCell, refresh, workspaceDockActionsMain, chrome.editorWordWrap, chrome.breadcrumbsVisible, openWorkspaceSearch, bumpEditorMenu, bumpSelectionPrefs, autoSave, workspaceOpenSignal, workspaceCloseEditorSignal, onWorkspaceSurfaceDrop, splitEditorRight, workspaceGrid.cols, wsMaximizedCell, onToggleWorkspaceMaximizeCell, removeWorkspaceCellFromGrid, workspaceGridToolbar, agentTeamWorkspacePane, workspaceEmbeddedChat, movePanelTabBetweenCells, onWorkspaceGridRowResize, onWorkspaceGridColResize, onBindMultiCellSaveApi, onMultiCellAnyDirtyChange, rootLabel, nodes, refreshTreeQuietShell, panelDock, setWorkspaceActiveIndex, onDockEntryMove, onDockEntryClose, selectedPath, setContent, content, fileLoading, fileError, dirty, persistEncoding, workspaceCenterFilePreview, save, discardUnsavedChanges, onCursor, workspaceGitFileReviewActions, gitReviewHasAnyMarked, gitReviewCanAdvanceNext]);
+
+  return (
+    <WorkspaceStaticAnalysisProvider value={workspaceStaticAnalysisApi}>
+    <div
+      data-ui-mode="technical"
+      className="flex h-screen w-full flex-col overflow-hidden bg-[#1e1e1e] font-sans text-[#cccccc] selection:bg-[#9a3412] wop-density-compact"
+    >
+      <input
+        ref={workspaceFileInputRef}
+        type="file"
+        accept=".code-workspace,.json,application/json"
+        className="hidden"
+        aria-hidden
+        onChange={onWorkspaceFileChange}
+      />
+      {chrome.menuBarVisible ? (
+        <MenuBar
+          modelLabel={modelLabel}
+          uiMode="technical"
+          onUiModeChange={() => {}}
+          config={config}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onSave={saveAndRefresh}
+          canSave={!!effSelectedPath && effDirty}
+          onRevertFile={() => void reloadFocusedOrMain()}
+          canRevert={!!effSelectedPath && effDirty}
+          onRefreshWorkspace={refresh}
+          onCopyWorkspacePath={copyWorkspacePath}
+          onSelectActivity={selectActivityWithSidebar}
+          onFocusBottomTab={focusToolTab}
+          leftSidebarVisible={leftSidebarVisible}
+          onToggleLeftSidebar={toggleLeftSidebar}
+          agentPanelVisible={dockLayout.agentPanelVisible}
+          agentChatDock={dockLayout.chatDock}
+          onSetAgentChatDock={(r) => updateDockLayout((d) => ({ ...d, chatDock: r, agentPanelVisible: true, chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, r, d.chatSizePx) }))}
+          onToggleAgentPanel={() => updateDockLayout((d) => ({ ...d, agentPanelVisible: !d.agentPanelVisible }))}
+          fileMenu={fileMenu}
+          editMenu={editMenu}
+          selectionMenu={selectionMenu}
+          goMenu={goMenu}
+          runMenu={runMenu}
+          terminalMenu={terminalMenu}
+          helpMenu={helpMenu}
+          onOpenAgentSetup={openAgentSetupFromMenu}
+          onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
+          settingsMenu={settingsMenuHandlers}
+          onOpenTeamsYaml={openTeamsYamlFromMenu}
+          onCreateAgentMarkdown={createNewAgentMarkdownFromMenu}
+          onReloadAgents={agentsApi.reload}
+          onOpenPiModelConfig={openPiModelConfigInEditor}
+          chatSessionControls={{ mode: session.chatMode, switchDisabled: session.streaming, onSetMode: handleChatModeChange }}
+          onNewPlanFile={() => void handleNewPlanFile()}
+          newPlanFileDisabled={!workspaceOperational}
+          viewTechnical={viewTechnicalOptions}
+        />
+      ) : (
+        <div className="flex h-8 shrink-0 items-center gap-2 border-b border-[#252526] bg-[#2d2d2d] px-2">
+          <button type="button" onClick={() => setChrome((c) => ({ ...c, menuBarVisible: true }))} className="rounded px-2 py-0.5 text-[11px] text-[#fed7aa] hover:bg-[#3c3c3c]">⋯ Show menu bar</button>
+          {zenMode ? <button type="button" onClick={() => exitZen()} className="rounded px-2 py-0.5 text-[11px] text-[#ce9178] hover:bg-[#3c3c3c]">Exit Zen (Esc)</button> : null}
+        </div>
+      )}
+
+      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} items={commandItems} />
+      <LlmFixModal open={showLlmFixModal} onClose={dismissLlmFixModal} onClearError={session.clearError} errorMessage={session.error ?? ""} appearanceDark={llmFixModalAppearanceDark} uiMode="technical" onOpenSimpleAiBrains={openLlmFixSimpleBrains} onOpenProviderCatalog={openLlmFixProviderCatalog} />
+      <HostDoctorModal open={hostDoctorOpen} onClose={() => setHostDoctorOpen(false)} appearanceDark={llmFixModalAppearanceDark} onWorkspaceFileSaved={() => void refresh()} />
+      <IndexingDocsModal open={indexingDocsOpen} onClose={() => setIndexingDocsOpen(false)} appearanceDark={llmFixModalAppearanceDark} />
+      <HonchoSettingsModal open={honchoSettingsOpen} onClose={() => setHonchoSettingsOpen(false)} appearanceDark={llmFixModalAppearanceDark} integrationDocUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/docs/HONCHO_INTEGRATION.md`} />
+      <AgentPermissionsModal open={agentPermissionsOpen} onClose={() => setAgentPermissionsOpen(false)} appearanceDark={llmFixModalAppearanceDark} />
+      <NewWorkspaceFileModal open={newWorkspaceFileDraft != null} defaultPath={newWorkspaceFileDraft?.defaultPath ?? ""} initialContent={newWorkspaceFileDraft?.initialContent} onDismiss={() => setNewWorkspaceFileDraft(null)} onCreate={(path, ic) => { setNewWorkspaceFileDraft(null); void performCreateNewWorkspaceFile(path, ic); }} />
+      <NewPlanFileModal open={newPlanFileModalOpen} onDismiss={() => setNewPlanFileModalOpen(false)} onCreate={(title, slug) => void handleNewPlanFileCreate(title, slug)} />
+      <LaunchConfigAddModal open={launchConfigAddOpen} onDismiss={() => setLaunchConfigAddOpen(false)} onPick={(id) => void appendLaunchConfigurationSnippet(id)} />
+      <InstallDebuggersModal open={installDebuggersModalOpen} onDismiss={() => setInstallDebuggersModalOpen(false)} />
+      <MitLicenseModal open={mitLicenseModalOpen} onDismiss={() => setMitLicenseModalOpen(false)} repoLicenseUrl={`${WOP_PUBLIC_REPO_URL}/blob/main/LICENSE`} />
+      <RestartServerModal open={restartServerModalOpen} onClose={() => setRestartServerModalOpen(false)} appearanceDark={llmFixModalAppearanceDark} onReconnectIfStillUp={session.reconnectWebSocket} />
+      <HowToUseModal open={howToUseModalOpen} onDismiss={() => setHowToUseModalOpen(false)} repoBlobBase={`${WOP_PUBLIC_REPO_URL}/blob/main`} />
+
+      <div className="flex min-h-0 flex-1 overflow-hidden" style={{ zoom: chrome.uiZoomPercent / 100 }}>
+        {!zenMode ? <ActivityBar active={activity} onSelect={selectActivityWithSidebar} /> : null}
+        {leftSidebarVisible ? (
+          <>
+            <TechnicalPrimarySidebar widthPx={dockLayout.leftSidebarWidthPx}>{leftPanel}</TechnicalPrimarySidebar>
+            <DockSplitHandle orientation="vertical" ariaLabel="Resize primary sidebar" onDelta={(dx) => updateDockLayout((d) => ({ ...d, leftSidebarWidthPx: clampLeftSidebarWidth(d.leftSidebarWidthPx + dx) }))} />
+          </>
+        ) : null}
+
+        <main className={`flex min-w-0 flex-1 flex-col bg-[#1e1e1e] ${chrome.centeredEditorLayout ? "mx-auto w-full max-w-[1400px]" : ""}`}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+              {dockLayout.agentPanelVisible && dockLayout.chatDock === "right" ? (
+                <>
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{workspaceEditorBody}</div>
+                  <DockSplitHandle orientation="vertical" ariaLabel="Resize editor vs agent panel width" onDelta={(dx) => updateDockLayout((d) => ({ ...d, chatSizePx: clampChatWidth(d.chatSizePx - dx) }))} />
+                  <div className="flex min-h-0 shrink-0 flex-col overflow-hidden" style={{ width: dockLayout.chatSizePx, minWidth: 220, maxWidth: 1280 }}>
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
+                      <ChatPanel
+                        uiMode="technical"
+                        rows={session.rows}
+                        chatTabs={session.chatTabs}
+                        activeChatTabId={session.activeChatTabId ?? ''}
+                        onSelectChatTab={session.selectChatTab}
+                        onCloseChatTab={session.closeChatTab}
+                        streaming={session.streaming}
+                        connected={session.connected}
+                        error={session.error}
+                        onSend={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
+                        onStop={session.stop}
+                        onClearError={session.clearError}
+                        onReopenLlmFixModal={reopenLlmFixModal}
+                        onNewSession={session.startNewSession}
+                        chatMode={session.chatMode}
+                        onChatModeChange={handleChatModeChange}
+                        agents={agentsApi.data?.agents ?? []}
+                        agentsLoading={agentsApi.loading}
+                        agentTeams={agentsApi.data?.teams ?? {}}
+                        onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+                        openTeamPulseSignal={teamPulseDockSignal}
+                        onEditTeam={openAgentSetupFromMenu}
+                        chatAgentName={session.chatAgentName}
+                        dispatchTurnAgent={session.chatAgentName}
+                        onChatAgentChange={session.setChatAgent}
+                        chatQueuePending={Number(session.chatQueuePending)}
+                        chatQueueItems={session.chatQueueItems}
+                        editChatQueueItem={session.editChatQueueItem}
+                        deleteChatQueueItem={session.deleteChatQueueItem}
+                        forceChatQueueItem={session.forceChatQueueItem}
+                        chatPulseMeters={session.chatPulseMeters}
+                        contextTitle={session.tokenMeter.contextTitle ?? ''}
+                        sessionTokenSummary={teamPulseSessionTokenSummary}
+                        dockPanelFrame
+                        onOpenPlanFileForReview={openPlanFileForReview}
+                        planHandoffWorkspaceKey={planHandoffWorkspaceKey}
+                        technicalDock={{ region: "right", sizePx: dockLayout.chatSizePx, onSetRegion: (r) => updateDockLayout((d) => ({ ...d, chatDock: r, chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, r, d.chatSizePx) })), onHidePanel: () => updateDockLayout({ agentPanelVisible: false }) }}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : dockLayout.agentPanelVisible && dockLayout.chatDock === "bottom" ? (
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{workspaceEditorBody}</div>
+                  <DockSplitHandle orientation="horizontal" ariaLabel="Resize agent session doc height" onDelta={(_dx, dy) => updateDockLayout((d) => ({ ...d, chatSizePx: clampChatHeight(d.chatSizePx - dy) }))} />
+                  <div className="flex min-h-0 shrink-0 flex-col overflow-hidden" style={{ height: dockLayout.chatSizePx, minHeight: 120, maxHeight: 720 }}>
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-[#3c3c3c] bg-[#1e1e1e]">
+                      <ChatPanel
+                        uiMode="technical"
+                        rows={session.rows}
+                        chatTabs={session.chatTabs}
+                        activeChatTabId={session.activeChatTabId ?? ''}
+                        onSelectChatTab={session.selectChatTab}
+                        onCloseChatTab={session.closeChatTab}
+                        streaming={session.streaming}
+                        connected={session.connected}
+                        error={session.error}
+                        onSend={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
+                        onStop={session.stop}
+                        onClearError={session.clearError}
+                        onReopenLlmFixModal={reopenLlmFixModal}
+                        onNewSession={session.startNewSession}
+                        chatMode={session.chatMode}
+                        onChatModeChange={handleChatModeChange}
+                        agents={agentsApi.data?.agents ?? []}
+                        agentsLoading={agentsApi.loading}
+                        agentTeams={agentsApi.data?.teams ?? {}}
+                        onOpenAgentTeamInPane={openTeamPulseInAgentDock}
+                        openTeamPulseSignal={teamPulseDockSignal}
+                        onEditTeam={openAgentSetupFromMenu}
+                        chatAgentName={session.chatAgentName}
+                        dispatchTurnAgent={session.chatAgentName}
+                        onChatAgentChange={session.setChatAgent}
+                        chatQueuePending={Number(session.chatQueuePending)}
+                        chatQueueItems={session.chatQueueItems}
+                        editChatQueueItem={session.editChatQueueItem}
+                        deleteChatQueueItem={session.deleteChatQueueItem}
+                        forceChatQueueItem={session.forceChatQueueItem}
+                        chatPulseMeters={session.chatPulseMeters}
+                        contextTitle={session.tokenMeter.contextTitle ?? ''}
+                        sessionTokenSummary={teamPulseSessionTokenSummary}
+                        dockPanelFrame
+                        onOpenPlanFileForReview={openPlanFileForReview}
+                        planHandoffWorkspaceKey={planHandoffWorkspaceKey}
+                        technicalDock={{ region: "bottom", sizePx: dockLayout.chatSizePx, onSetRegion: (r) => updateDockLayout((d) => ({ ...d, chatDock: r, chatSizePx: chatSizePxWhenSwitchingDock(d.chatDock, r, d.chatSizePx) })), onHidePanel: () => updateDockLayout({ agentPanelVisible: false }) }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden">
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{workspaceEditorBody}</div>
+                  <button type="button" title="Show agent panel" aria-label="Show agent panel" onClick={() => updateDockLayout({ agentPanelVisible: true })} className="flex w-7 shrink-0 flex-col items-center justify-center gap-1 border-l border-[#252526] bg-[#333333] py-2 text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc]">
+                    <MessageSquare size={16} className="shrink-0 opacity-90" />
+                    <span className="max-w-[1.25rem] text-center font-mono text-[8px] uppercase leading-tight tracking-tight text-[#858585]" style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}>Agents</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {chrome.statusBarVisible ? (
+        <StatusBar
+          uiMode="technical"
+          workspaceRoot={(folders[0]?.path ?? root) || "—"}
+          connected={session.connected}
+          line={line}
+          col={col}
+          language={languageFromPath(selectedPath)}
+          contextPct={String(session.tokenMeter.contextPct ?? 0)}
+          tokensDown={session.tokenMeter.tokensDown}
+          tokensUp={session.tokenMeter.tokensUp}
+          contextTitle={session.tokenMeter.contextTitle ?? ''}
+          tokensTitle={session.tokenMeter.tokensTitle ?? ''}
+          onCopyWorkspacePath={copyWorkspacePath}
+          chatMode={session.chatMode}
+          chatAgentName={session.chatAgentName}
+          technicalZedStrip={technicalZedStrip}
+          technicalToolDock={{ onReveal: (id) => focusToolTab(id as BottomPanelTab), isVisible: (id) => toolTabVisible(dockForZedStrip, id as ToolTabId) }}
+          diagnosticsSummary={{ total: workspaceStaticAnalysis.totalCount, errors: workspaceStaticAnalysis.errorCount, warnings: workspaceStaticAnalysis.warningCount, onOpenProblems: () => focusToolTab("problems") }}
+        />
+      ) : null}
+    </div>
+    </WorkspaceStaticAnalysisProvider>
+  );
+
+}

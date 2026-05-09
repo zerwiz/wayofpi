@@ -13,7 +13,7 @@
     3. `pip/.pi/extensions/` (Upstream Fluent)
     4. `.pi/extensions/local/` (Project Custom)
 
-## UI & Server Integration (`apps/wayofpi-ui`)
+## UI & Server Integration (`apps/wayofwork-ui`)
 - [ ] Update server to set `PI_STACK` dynamically.
 - [ ] Set `WOP_PI_LOADER_PATH` to point to PIP's `pi-loader.ts`.
 - [ ] Update spawn logic to use `pi -e $WOP_PI_LOADER_PATH`.

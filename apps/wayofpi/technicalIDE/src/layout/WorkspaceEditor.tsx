@@ -1,4 +1,4 @@
-import { type RefObject } from "react";
+import { type RefObject, type Dispatch, type SetStateAction } from "react";
 import { TechnicalWorkspaceGrid, type TechnicalWorkspaceCellSnapshot } from "@wop/components/TechnicalWorkspaceGrid";
 import { WorkspaceCellDropSurface } from "@wop/components/WorkspaceCellDropSurface";
 import { WorkspacePane } from "@wop/components/WorkspacePane";
@@ -17,14 +17,14 @@ interface WorkspaceEditorProps {
   workspaceGrid: WorkspaceGridState;
   patchWorkspaceCellDock: (cellIndex: number, update: any) => void;
   wsFocusedCell: number;
-  setWsFocusedCell: (c: number) => void;
+  setWsFocusedCell: Dispatch<SetStateAction<number>>;
   onTechFocusedReport: (s: TechnicalWorkspaceCellSnapshot) => void;
   onTechFocusedCursor: (l: number, c: number) => void;
   workspaceEditorRef: RefObject<WorkspaceEditorRef | null>;
   logs: LogRow[];
   workspaceDockFileActions: any;
   onOpenToolPanelForCell: (cellIndex: number, tab: any) => void;
-  refresh: () => void;
+  refresh: () => Promise<void>;
   workspaceDockActionsMain: any;
   editorWordWrap: boolean;
   breadcrumbsVisible: boolean;
@@ -160,7 +160,7 @@ export function WorkspaceEditor({
         onSelectFileTab={(p) => setWorkspaceActiveIndex(panelDock.tabs.findIndex((t) => t.type === "file" && t.path === p))}
         onReorderTab={onDockEntryMove}
         onCloseTab={onDockEntryClose}
-        onAddTool={onOpenToolPanelForCell}
+        onAddTool={(tab) => onOpenToolPanelForCell(0, tab)}
         fileActions={workspaceDockFileActions}
         logs={logs}
         editorPath={selectedPath}

@@ -29,7 +29,7 @@
 | **UX** | **Web UI** + future **`wop`** CLI; browser talks to **Way of Pi server**, server **spawns or drives Pi** with **`WOP_PI_BINARY`**, cwd = workspace, isolated **`WOP_*`** / **`WOP_HOME`** per **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**. |
 | **Out of scope for v1 plugin-compat** | Rewriting chat/tools without a Pi subprocess (per product plan). |
 
-**Today’s gap:** **`apps/wayofpi-ui/server/chat.ts`** streams completions via **Ollama / OpenRouter** directly. That stack is **real** for editing and files but is **not** Pi — no `registerTool`, no slash commands, no `dispatch_agent`, no extension hooks.
+**Today’s gap:** **`apps/wayofwork-ui/server/chat.ts`** streams completions via **Ollama / OpenRouter** directly. That stack is **real** for editing and files but is **not** Pi — no `registerTool`, no slash commands, no `dispatch_agent`, no extension hooks.
 
 **Engineering bias (critical):** Treat that direct-LLM path as **interim** only. **Maximize Pi as backend** — new capabilities should default to **Pi subprocess / tunnel / manifest parity**, not a second implementation inside Bun. Enforced in **`.cursor/rules/wop-ui-pi-backend-parity.mdc`** (`alwaysApply`).
 
@@ -39,13 +39,13 @@
 
 | Component | Role |
 |-----------|------|
-| **Vite** (dev) | Serves React; **proxies** `/api` and `/ws` to Bun (**`apps/wayofpi-ui/vite.config.ts`**). |
+| **Vite** (dev) | Serves React; **proxies** `/api` and `/ws` to Bun (**`apps/wayofwork-ui/vite.config.ts`**). |
 | **Bun** (`WOP_SERVER_PORT`, default **3333**) | REST + WebSocket + optional **`dist/`** static assets (**`server/index.ts`**). |
 | **Browser** | Relative **`/api/*`**, **`/ws`**, **`/ws/terminal`** — no hard-coded API port. |
 
 **Operational note:** If the SPA is served **without** this Bun process (static files only), **`/api/*`** returns **404** — see **[WOP_WORKSPACE_AGENTS_UI_PLAN.md](WOP_WORKSPACE_AGENTS_UI_PLAN.md)** Phase A.
 
-**Electron (recommended):** In dev, the **Electron** window loads the **Vite** origin (**`WOP_ELECTRON_DEV_URL`**, default **`http://127.0.0.1:5173/`**), so **`/api`**, **`/ws`**, **`/api/manifest`**, and **`/ws/terminal`** hit the same **Bun** backend as the browser via **Vite’s proxy** — no separate API base URL in client code. Production: Electron loads **`WOP_ELECTRON_PROD_URL`** (default Bun **`dist/`** origin on **`WOP_SERVER_PORT`**). See **`apps/wayofpi-ui/README.md`** § Electron first, **`electron/electron-main.mjs`**.
+**Electron (recommended):** In dev, the **Electron** window loads the **Vite** origin (**`WOP_ELECTRON_DEV_URL`**, default **`http://127.0.0.1:5173/`**), so **`/api`**, **`/ws`**, **`/api/manifest`**, and **`/ws/terminal`** hit the same **Bun** backend as the browser via **Vite’s proxy** — no separate API base URL in client code. Production: Electron loads **`WOP_ELECTRON_PROD_URL`** (default Bun **`dist/`** origin on **`WOP_SERVER_PORT`**). See **`apps/wayofwork-ui/README.md`** § Electron first, **`electron/electron-main.mjs`**.
 
 ---
 
@@ -55,7 +55,7 @@
 
 **Principle:** Prefer **more Pi backend**, less parallel Bun logic — see **§1** (engineering bias) and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**.
 
-### Bun server (`apps/wayofpi-ui/server/`) — process boundary
+### Bun server (`apps/wayofwork-ui/server/`) — process boundary
 
 | Area | Hits Pi process? | What runs today | Change lever (toward Pi) |
 |------|------------------|-----------------|---------------------------|
@@ -237,16 +237,16 @@ Short version: every **user-visible** control that implies Pi behavior **either*
 
 | Concern | Location |
 |---------|----------|
-| HTTP router | `apps/wayofpi-ui/server/index.ts` → `handleApi` |
-| Chat / LLM (interim) | `apps/wayofpi-ui/server/chat.ts`, `streamChatCompletion` |
-| Orchestrator Bun tools (interim) | `apps/wayofpi-ui/server/chat-orchestrator-tools.ts`, `orchestrator-tools-exec.ts` |
-| Pi JSON chat (Phase 2 slice) | `apps/wayofpi-ui/server/pi-agent-runtime.ts` + **`pi-json-mode-chat.ts`** — **`runPiChatTurn`** / **`streamPiJsonChatTurn`** |
-| Static manifest | `apps/wayofpi-ui/server/web-manifest.ts`, `GET /api/manifest` |
-| System prompt merge | `apps/wayofpi-ui/server/session-prompts.ts`, `applyLeadSystem` |
-| Agent scan | `apps/wayofpi-ui/server/agents.ts` |
-| Client session | `apps/wayofpi-ui/src/hooks/useWayOfPiSession.ts` |
-| Agent catalog | `apps/wayofpi-ui/src/hooks/useAgents.ts` |
-| Shell | `apps/wayofpi-ui/src/App.tsx`, `ChatPanel`, `SimpleApp` |
+| HTTP router | `apps/wayofwork-ui/server/index.ts` → `handleApi` |
+| Chat / LLM (interim) | `apps/wayofwork-ui/server/chat.ts`, `streamChatCompletion` |
+| Orchestrator Bun tools (interim) | `apps/wayofwork-ui/server/chat-orchestrator-tools.ts`, `orchestrator-tools-exec.ts` |
+| Pi JSON chat (Phase 2 slice) | `apps/wayofwork-ui/server/pi-agent-runtime.ts` + **`pi-json-mode-chat.ts`** — **`runPiChatTurn`** / **`streamPiJsonChatTurn`** |
+| Static manifest | `apps/wayofwork-ui/server/web-manifest.ts`, `GET /api/manifest` |
+| System prompt merge | `apps/wayofwork-ui/server/session-prompts.ts`, `applyLeadSystem` |
+| Agent scan | `apps/wayofwork-ui/server/agents.ts` |
+| Client session | `apps/wayofwork-ui/src/hooks/useWayOfPiSession.ts` |
+| Agent catalog | `apps/wayofwork-ui/src/hooks/useAgents.ts` |
+| Shell | `apps/wayofwork-ui/src/App.tsx`, `ChatPanel`, `SimpleApp` |
 
 ---
 

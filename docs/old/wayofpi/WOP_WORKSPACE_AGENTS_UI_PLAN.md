@@ -1,6 +1,6 @@
 # Way of Pi — workspace agents in the web UI (plan)
 
-**Goal:** **Simple** and **technical** **`wayofpi-ui`** surfaces should use the same **workspace agent** definitions as Pi (**`.pi/agents/*.md`**, **`teams.yaml`**, Pi-style scan roots) so the user can **pick a persona** reliably, understand **teams**, and (longer term) align **organizer / dispatcher** behavior with **`agent-team`** — without confusing **browser chat** with **full Pi tool runtime**.
+**Goal:** **Simple** and **technical** **`wayofwork-ui`** surfaces should use the same **workspace agent** definitions as Pi (**`.pi/agents/*.md`**, **`teams.yaml`**, Pi-style scan roots) so the user can **pick a persona** reliably, understand **teams**, and (longer term) align **organizer / dispatcher** behavior with **`agent-team`** — without confusing **browser chat** with **full Pi tool runtime**.
 
 **Problem seen in UI (screenshots):** Red banners like **`404: {"error":"Not found"}`** on **My AI Team** and **AI Brains** when **`GET /api/agents`** or **`GET /api/llm/models`** fail. That is almost always **no API server** in front of the SPA (static hosting or wrong port), not “no agents on disk.”
 
@@ -10,7 +10,7 @@
 
 | Layer | Responsibility |
 |--------|------------------|
-| **`apps/wayofpi-ui/server/agents.ts`** | **`loadWorkspaceAgents()`** — recursive `*.md` under Pi scan roots; first `name` wins; loads **`.pi/agents/teams.yaml`** from the **primary** workspace folder. |
+| **`apps/wayofwork-ui/server/agents.ts`** | **`loadWorkspaceAgents()`** — recursive `*.md` under Pi scan roots; first `name` wins; loads **`.pi/agents/teams.yaml`** from the **primary** workspace folder. |
 | **`GET /api/agents`** | JSON: **`agents`**, **`teams`**, **`teamsPath`**. |
 | **`useAgents()`** | Client hook; **shared** by simple + technical flows. |
 | **WebSocket** (`server/index.ts`) | User selects **`name`** → **`getAgentBodyByName`** → **`cachedAgentBody`** + **`applyLeadSystem`**. |
@@ -22,7 +22,7 @@
 
 ## Phase A — Reliability and operator clarity (fixes 404 class errors)
 
-1. **Document the runtime contract** in **`apps/wayofpi-ui/README.md`** (and root README if needed): the SPA expects the **Bun server** for **`/api/*`** and **`/ws`**; **`just` / dev** uses Vite proxy to **`127.0.0.1:3333`** (see **`vite.config.ts`**).
+1. **Document the runtime contract** in **`apps/wayofwork-ui/README.md`** (and root README if needed): the SPA expects the **Bun server** for **`/api/*`** and **`/ws`**; **`just` / dev** uses Vite proxy to **`127.0.0.1:3333`** (see **`vite.config.ts`**).
 2. **User-visible diagnostics:** On **`/api/agents`** or **`/api/llm/models`** failure, show a short message: e.g. “API unreachable — run the Way of Pi server” and link **`GET /api/health`** when useful (optional **health poll** on app mount).
 3. **Multi-root workspaces:** Confirm **`loadWorkspaceAgents`** labeling and **`teams.yaml`** path match product expectations when multiple folders are open (already partially handled; verify edge cases).
 
@@ -89,4 +89,4 @@
 | **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** | Technical shell components |
 | **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** | Web + headless Pi product boundaries |
 
-**Implementation entrypoints:** `apps/wayofpi-ui/server/agents.ts`, `apps/wayofpi-ui/server/index.ts`, `apps/wayofpi-ui/server/session-prompts.ts`, `apps/wayofpi-ui/src/hooks/useAgents.ts`, `apps/wayofpi-ui/src/components/simple/SimpleTeamView.tsx`, `apps/wayofpi-ui/src/components/simple/SimpleChatView.tsx`, `apps/wayofpi-ui/src/components/ChatPanel.tsx`.
+**Implementation entrypoints:** `apps/wayofwork-ui/server/agents.ts`, `apps/wayofwork-ui/server/index.ts`, `apps/wayofwork-ui/server/session-prompts.ts`, `apps/wayofwork-ui/src/hooks/useAgents.ts`, `apps/wayofwork-ui/src/components/simple/SimpleTeamView.tsx`, `apps/wayofwork-ui/src/components/simple/SimpleChatView.tsx`, `apps/wayofwork-ui/src/components/ChatPanel.tsx`.

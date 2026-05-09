@@ -2,7 +2,7 @@
 
 **Purpose:** Explain **why upstream Pi often reports lower context usage** than heavyweight agent UIs, cite **official Pi sources**, and list **concrete habits and product choices** for this repo (Pi TUI, extensions, Way of Pi shell) so we **do not blast tokens** by accident.
 
-**Related:** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** (engine ownership) · **[AGENT_MEMORY.md](AGENT_MEMORY.md)** (sessions, `/remember`, compaction in Pi) · **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** (`WOP_MODEL_CONTEXT_TOKENS`) · **`apps/wayofpi-ui/server/chat-usage.ts`** (usage normalization) · **`extensions/context-local-hints.ts`** (local provider hints)
+**Related:** **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** (engine ownership) · **[AGENT_MEMORY.md](AGENT_MEMORY.md)** (sessions, `/remember`, compaction in Pi) · **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)** (`WOP_MODEL_CONTEXT_TOKENS`) · **`apps/wayofwork-ui/server/chat-usage.ts`** (usage normalization) · **`extensions/context-local-hints.ts`** (local provider hints)
 
 ---
 
@@ -51,7 +51,7 @@ Use this in **Pi TUI** and when configuring **Way of Pi + workspace**.
 
 ## 4. Repo enforcement (Way of Pi server)
 
-Before each chat completion (**`streamChatCompletion`**, orchestrator tool loop, or headless Pi prompt build), **`apps/wayofpi-ui/server/chat-context-budget.ts`** may **drop oldest full user turns** from the in-memory transcript (after the leading **`system`** block) so the **non-system** tail stays within:
+Before each chat completion (**`streamChatCompletion`**, orchestrator tool loop, or headless Pi prompt build), **`apps/wayofwork-ui/server/chat-context-budget.ts`** may **drop oldest full user turns** from the in-memory transcript (after the leading **`system`** block) so the **non-system** tail stays within:
 
 - **`WOP_CHAT_MAX_MESSAGES`** (default **120**), and  
 - **`WOP_CHAT_MAX_INPUT_CHARS`** (default **120000** approximate chars).

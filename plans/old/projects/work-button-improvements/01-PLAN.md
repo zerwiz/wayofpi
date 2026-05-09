@@ -196,7 +196,7 @@ When Work button is clicked, show unified dashboard with:
 4. Implement login/logout functionality
 
 **Changes Required:**
-- Create Navigation component in apps/wayofpi-ui/src/components/Navigation.tsx
+- Create Navigation component in apps/wayofwork-ui/src/components/Navigation.tsx
 - Implement role-based conditional rendering
 - Integrate WorkerPortal with navigation
 - Fix App.tsx routing for portal/client/admin/profile
@@ -331,12 +331,12 @@ DELETE /api/work/tasks/:id      # Complete task
 ## Related Documents
 
 ### Core Infrastructure
-- [WorkspacePane Component](../../apps/wayofpi-ui/src/components/WorkspacePane.tsx)
-- [WorkApp Component](../../apps/wayofpi-ui/src/components/work/WorkApp.tsx)
-- [WorkerPortal Component](../../apps/wayofpi-ui/src/pages/WorkerPortal.tsx)
-- [Navigation Component](../../apps/wayofpi-ui/src/components/Navigation.tsx) (create)
-- [UseUiMode Hook](../../apps/wayofpi-ui/src/hooks/useUiMode.ts)
-- [App.tsx Routing](../../apps/wayofpi-ui/src/App.tsx)
+- [WorkspacePane Component](../../apps/wayofwork-ui/src/components/WorkspacePane.tsx)
+- [WorkApp Component](../../apps/wayofwork-ui/src/components/work/WorkApp.tsx)
+- [WorkerPortal Component](../../apps/wayofwork-ui/src/pages/WorkerPortal.tsx)
+- [Navigation Component](../../apps/wayofwork-ui/src/components/Navigation.tsx) (create)
+- [UseUiMode Hook](../../apps/wayofwork-ui/src/hooks/useUiMode.ts)
+- [App.tsx Routing](../../apps/wayofwork-ui/src/App.tsx)
 
 ### UI Mode Improvements (Aligned Capabilities)
 - [WOP_DOCS_MODE_IMPROVEMENTS.md](../ref/WOP_DOCS_MODE_IMPROVEMENTS.md) - **Docs → Plans**: Document-centric UI redesign (filter code files, markdown rendering, project manager chat)
@@ -350,7 +350,7 @@ DELETE /api/work/tasks/:id      # Complete task
 | UI Mode Redesign - Docs | WOP_DOCS_MODE_IMPROVEMENTS.md | MEDIUM | Phase 3 |
 | UI Mode Redesign - Work | WOP_TIME_MANAGEMENT_PLAN.md | LOW | Phase 4 |
 | Infrastructure - ngrok | TODO.md | CRITICAL | Phase 0
-- [TechnicalWorkspaceGrid](../../apps/wayofpi-ui/src/components/TechnicalWorkspaceGrid.tsx)
+- [TechnicalWorkspaceGrid](../../apps/wayofwork-ui/src/components/TechnicalWorkspaceGrid.tsx)
 
 ---
 
@@ -381,7 +381,7 @@ DELETE /api/work/tasks/:id      # Complete task
 
 ## Related Documents
 
-- [WorkspacePane Component](../../apps/wayofpi-ui/src/components/WorkspacePane.tsx)
-- [WorkApp Component](../../apps/wayofpi-ui/src/components/work/WorkApp.tsx)
+- [WorkspacePane Component](../../apps/wayofwork-ui/src/components/WorkspacePane.tsx)
+- [WorkApp Component](../../apps/wayofwork-ui/src/components/work/WorkApp.tsx)
 - [Navigation Bar](../../docs/NAVIGATION.md) (create if needed)
 - [Task Management Spec](../specs/tasks.md) (create if needed)

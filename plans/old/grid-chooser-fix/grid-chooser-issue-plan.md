@@ -11,9 +11,9 @@ in this dokument there is a problem. hover state should stay. the dropdown shoul
 The `WorkspaceGridLayoutPicker` component exists in the codebase and appears correct on inspection, but the dropdown grid chooser does not appear when clicking the button with the 4-square grid icon. This prevents users from changing the workspace grid layout (columns × rows).
 
 ## Component Location
-- **File**: `apps/wayofpi-ui/src/components/WorkspaceGridLayoutPicker.tsx`
-- **Usage in**: `apps/wayofpi-ui/src/components/WorkspacePane.tsx` and `apps/wayofpi-ui/src/components/TechnicalWorkspaceGrid.tsx`
-- **Config passed from**: `apps/wayofpi-ui/src/App.tsx` via `workspaceGridToolbar`
+- **File**: `apps/wayofwork-ui/src/components/WorkspaceGridLayoutPicker.tsx`
+- **Usage in**: `apps/wayofwork-ui/src/components/WorkspacePane.tsx` and `apps/wayofwork-ui/src/components/TechnicalWorkspaceGrid.tsx`
+- **Config passed from**: `apps/wayofwork-ui/src/App.tsx` via `workspaceGridToolbar`
 
 ## Current Implementation Analysis
 
@@ -190,9 +190,9 @@ onClick={() => setOpen((v) => !v)}
 
 ## References
 
-- Component: `apps/wayofpi-ui/src/components/WorkspaceGridLayoutPicker.tsx`
-- Usage: `apps/wayofpi-ui/src/components/WorkspacePane.tsx`
-- Config: `apps/wayofpi-ui/src/App.tsx`
+- Component: `apps/wayofwork-ui/src/components/WorkspaceGridLayoutPicker.tsx`
+- Usage: `apps/wayofwork-ui/src/components/WorkspacePane.tsx`
+- Config: `apps/wayofwork-ui/src/App.tsx`
 - Icon: `lucide-react`'s `LayoutGrid`
 </think>
 
@@ -206,9 +206,9 @@ onClick={() => setOpen((v) => !v)}
 The `WorkspaceGridLayoutPicker` component exists in the codebase and appears correct on inspection, but the dropdown grid chooser does not appear when clicking the button with the 4-square grid icon. This prevents users from changing the workspace grid layout (columns × rows).
 
 ## Component Location
-- **File**: `apps/wayofpi-ui/src/components/WorkspaceGridLayoutPicker.tsx`
-- **Usage in**: `apps/wayofpi-ui/src/components/WorkspacePane.tsx` and `apps/wayofpi-ui/src/components/TechnicalWorkspaceGrid.tsx`
-- **Config passed from**: `apps/wayofpi-ui/src/App.tsx` via `workspaceGridToolbar`
+- **File**: `apps/wayofwork-ui/src/components/WorkspaceGridLayoutPicker.tsx`
+- **Usage in**: `apps/wayofwork-ui/src/components/WorkspacePane.tsx` and `apps/wayofwork-ui/src/components/TechnicalWorkspaceGrid.tsx`
+- **Config passed from**: `apps/wayofwork-ui/src/App.tsx` via `workspaceGridToolbar`
 
 ## Current Implementation Analysis
 
@@ -385,9 +385,9 @@ onClick={() => setOpen((v) => !v)}
 
 ## References
 
-- Component: `apps/wayofpi-ui/src/components/WorkspaceGridLayoutPicker.tsx`
-- Usage: `apps/wayofpi-ui/src/components/WorkspacePane.tsx`
-- Config: `apps/wayofpi-ui/src/App.tsx`
+- Component: `apps/wayofwork-ui/src/components/WorkspaceGridLayoutPicker.tsx`
+- Usage: `apps/wayofwork-ui/src/components/WorkspacePane.tsx`
+- Config: `apps/wayofwork-ui/src/App.tsx`
 - Icon: `lucide-react`'s `LayoutGrid`
 </think>
 

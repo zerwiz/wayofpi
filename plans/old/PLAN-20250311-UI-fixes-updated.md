@@ -100,19 +100,19 @@ Multiple chat UI issues require fixes in Way of Pi client repository, plus Git w
 
 ## Files to Modify
 ```bash
-apps/wayofpi-ui/src/components/**/PaneView*.tsx
-apps/wayofpi-ui/src/components/**/ChatPanel.tsx
-apps/wayofpi-ui/src/components/**/FilePicker.tsx
-apps/wayofpi-ui/src/components/**/ContextMeter*.tsx
-apps/wayofpi-ui/src/components/**/FileTree*.tsx
-apps/wayofpi-ui/src/components/**/PreviewButton*.tsx
-apps/wayofpi-ui/src/components/**/MessageQueue*.tsx
-apps/wayofpi-ui/src/components/**/AgentWorkIndicator*.tsx
-apps/wayofpi-ui/src/components/**/StatusBar*.tsx
-apps/wayofpi-ui/src/components/**/StatusStrip*.tsx
-apps/wayofpi-ui/src/components/**/BottomView*.tsx
-apps/wayofpi-ui/src/components/**/Footer*.tsx
-apps/wayofpi-ui/src/hooks/**
+apps/wayofwork-ui/src/components/**/PaneView*.tsx
+apps/wayofwork-ui/src/components/**/ChatPanel.tsx
+apps/wayofwork-ui/src/components/**/FilePicker.tsx
+apps/wayofwork-ui/src/components/**/ContextMeter*.tsx
+apps/wayofwork-ui/src/components/**/FileTree*.tsx
+apps/wayofwork-ui/src/components/**/PreviewButton*.tsx
+apps/wayofwork-ui/src/components/**/MessageQueue*.tsx
+apps/wayofwork-ui/src/components/**/AgentWorkIndicator*.tsx
+apps/wayofwork-ui/src/components/**/StatusBar*.tsx
+apps/wayofwork-ui/src/components/**/StatusStrip*.tsx
+apps/wayofwork-ui/src/components/**/BottomView*.tsx
+apps/wayofwork-ui/src/components/**/Footer*.tsx
+apps/wayofwork-ui/src/hooks/**
 ```
 
 ---
@@ -165,14 +165,14 @@ git merge feature/chat-ui-fixes  # Or use pull request
 ### Step 1: Clone or access Way of Pi client repository
 ```bash
 git clone [WAYOFPI_CLIENT_REPO_URL]
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 npm install
 ```
 
 ### Step 2: Verify issues in running UI
 ```bash
 git clone [WAYOFPI_CLIENT_REPO_URL]
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 npm install
 ng serve --host
 # Or bun run dev

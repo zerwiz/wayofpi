@@ -20,7 +20,7 @@
 ## 🎯 **What MUST Work**
 
 ### **1. Module Resolution**
-- ✅ Symlink: `node_modules/@wayofpi-server` → `/apps/wayofpi-server`
+- ✅ Symlink: `node_modules/@wayofwork-server` → `/apps/wayofwork-server`
 - ✅ Package exports: `package.json` has proper `exports` field
 - ✅ TypeScript imports resolve without errors
 
@@ -45,18 +45,18 @@
 
 ### **Option A: Quick Start (Recommended)**
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm run dev
 ```
 
 ### **Option B: Manual Control**
 ```bash
 # Start WebSocket server first
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-server
 tsx src/server/SessionManager.ts
 
 # Then start Vite UI
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm run dev
 ```
 
@@ -70,7 +70,7 @@ pkill -9 -f "vite"
 rm -rf node_modules/.cache
 
 # Restart both
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm run dev
 ```
 
@@ -89,7 +89,7 @@ npm run dev
 curl http://localhost:3333/api/health
 # Returns:
 # {
-#   "service": "wayofpi-ui-server",
+#   "service": "wayofwork-ui-server",
 #   "port": 3333,
 #   "pid": <number>
 # }
@@ -209,7 +209,7 @@ npm cache clean --force
 
 ### **Restart Cleanly**
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm run dev
 ```
 
@@ -219,7 +219,7 @@ npm run dev
 tail -f ./node_modules/.cache/vite/dev.txt
 
 # Bun logs
-tail -f ../wayofpi-server/src/server/logs.txt 2>/dev/null || echo "No logs"
+tail -f ../wayofwork-server/src/server/logs.txt 2>/dev/null || echo "No logs"
 ```
 
 ---
@@ -247,7 +247,7 @@ Description=Way of Pi Server
 After=network.target
 
 [Service]
-ExecStart=/home/zerwiz/.bun/bin/node apps/wayofpi-ui/node_modules/.bin/vite
+ExecStart=/home/zerwiz/.bun/bin/node apps/wayofwork-ui/node_modules/.bin/vite
 
 [Install]
 WantedBy=multi-user.target
@@ -262,7 +262,7 @@ If you see an error:
 2. Verify process is running (`pgrep`)
 3. Try clean restart (Option C)
 4. Check logs (`vite` in UI dir)
-5. Check module resolution (`node_modules/@wayofpi-server`)
+5. Check module resolution (`node_modules/@wayofwork-server`)
 
 ---
 
@@ -306,13 +306,13 @@ After starting, we should see:
 ```
 /home/zerwiz/CodeP/Way of pi/
 ├── apps/
-│   ├── wayofpi-server/
+│   ├── wayofwork-server/
 │   │   ├── src/
 │   │   │   ├── server/
 │   │   │   ├── SessionManager.ts
 │   │   │   └── ScreenBuffer.ts
 │   │   └── index.js
-│   └── wayofpi-ui/
+│   └── wayofwork-ui/
 │       ├── src/
 │       │   ├── App.tsx
 │       │   └── main.tsx

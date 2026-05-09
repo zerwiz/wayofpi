@@ -236,7 +236,7 @@ Phase 6 (Week 5):
 
 ## 7. Key Architectural Decisions
 
-1. **Shared types** must be importable from both frontend and backend — place in `apps/wayofpi-ui/shared/` (not `src/shared/`, since server code may need them too)
+1. **Shared types** must be importable from both frontend and backend — place in `apps/wayofwork-ui/shared/` (not `src/shared/`, since server code may need them too)
 2. **Photo upload** needs S3 integration — UI component should abstract the upload (show preview, call `/api/upload`, display progress)
 3. **Check-in/out** needs real-time state — poll `GET /api/time-sessions/active` or use WebSocket push
 4. **Status badges** should be a reusable `TicketStatusBadge` component since they appear in 4+ places

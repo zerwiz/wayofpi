@@ -55,7 +55,7 @@ App.tsx (Root)
 ### File Structure
 
 ```
-apps/wayofpi-ui/src/
+apps/wayofwork-ui/src/
 ├── components/
 │   ├── documenthandler/
 │   │   ├── DocsApp.tsx          # Documentation viewer
@@ -278,7 +278,7 @@ PDF files show error on load due to missing rendering library.
 
 ### Browser Development
 ```bash
-./start-wayofpi-ui.sh
+./start-wayofwork-ui.sh
 ```
 
 ### Electron Development
@@ -329,7 +329,7 @@ bun run ws
 ### Related Documents
 - [WOP_TECHNICAL_UI.md](/dev/null/path/to/WOP_TECHNICAL_UI.md) — Technical UI specification
 - [WOP_PI_BACKEND_WIRING_PLAN.md](/dev/null/path/to/WOP_PI_BACKEND_WIRING_PLAN.md) — Backend integration
-- [wayofpi-ui/README.md](/dev/null/path/to/wayofpi-ui/README.md) — UI app documentation
+- [wayofwork-ui/README.md](/dev/null/path/to/wayofwork-ui/README.md) — UI app documentation
 
 ### External Resources
 - [PDF.js Documentation](https://mozilla.github.io/pdf.js/)

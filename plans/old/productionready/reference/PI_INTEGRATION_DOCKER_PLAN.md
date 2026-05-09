@@ -76,7 +76,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json bun.lockb ./
-COPY apps/wayofpi-ui/package.json ./apps/wayofpi-ui/
+COPY apps/wayofwork-ui/package.json ./apps/wayofwork-ui/
 
 # Install dependencies
 RUN bun install
@@ -85,7 +85,7 @@ RUN bun install
 COPY . .
 
 # Build UI
-WORKDIR /app/apps/wayofpi-ui
+WORKDIR /app/apps/wayofwork-ui
 RUN bun run build
 
 # Production stage
@@ -101,10 +101,10 @@ WORKDIR /app
 RUN npm install -g @mariozechner/pi-coding-agent
 
 # Copy built artifacts from builder
-COPY --from=builder /app/apps/wayofpi-ui/dist ./apps/wayofpi-ui/dist
-COPY --from=builder /app/apps/wayofpi-ui/server ./apps/wayofpi-ui/server
+COPY --from=builder /app/apps/wayofwork-ui/dist ./apps/wayofwork-ui/dist
+COPY --from=builder /app/apps/wayofwork-ui/server ./apps/wayofwork-ui/server
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/wayofpi-ui/package.json ./apps/wayofpi-ui/package.json
+COPY --from=builder /app/apps/wayofwork-ui/package.json ./apps/wayofwork-ui/package.json
 
 # Switch to non-root user
 USER piuser
@@ -124,7 +124,7 @@ ENV PI_HOME=/home/piuser/.pi
 EXPOSE 3333
 
 # Run server (not as root)
-CMD ["bun", "run", "apps/wayofpi-ui/server/index.ts"]
+CMD ["bun", "run", "apps/wayofwork-ui/server/index.ts"]
 ```
 
 ## 3. Verify Pi Installation in Docker
@@ -368,7 +368,7 @@ services:
   wayofpi:
     build:
       context: .
-      dockerfile: apps/wayofpi-ui/Dockerfile
+      dockerfile: apps/wayofwork-ui/Dockerfile
     ports:
       - "3333:3333"
     volumes:

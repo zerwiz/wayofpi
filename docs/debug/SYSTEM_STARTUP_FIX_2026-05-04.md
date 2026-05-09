@@ -32,7 +32,7 @@ The `justfile` had several broken or missing targets:
 
 ### B. Justfile Cleanup
 - Restored the `wayofpi-full` target name and pointed it to the working `start-wayofpi.sh`.
-- Updated `wayofpi-electron` to run `bun run electron:dev` directly from the `apps/wayofpi-ui` directory.
+- Updated `wayofpi-electron` to run `bun run electron:dev` directly from the `apps/wayofwork-ui` directory.
 
 ## 4. Verification
 - **Cold Start:** Verified that the script starts both servers and waits for the UI to be ready.

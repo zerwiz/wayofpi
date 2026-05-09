@@ -9,7 +9,7 @@
 
 ## 🎯 Executive Summary
 
-The **Hermes Terminal Page** exists in the codebase at `apps/wayofpi-ui/src/pages/hermes/` but is **not visible or accessible** in the Way of Pi UI. This is due to missing exports and routing conditions, unlike other dashboard pages (WorkerPortal, ClientDashboard, etc.) which are fully integrated.
+The **Hermes Terminal Page** exists in the codebase at `apps/wayofwork-ui/src/pages/hermes/` but is **not visible or accessible** in the Way of Pi UI. This is due to missing exports and routing conditions, unlike other dashboard pages (WorkerPortal, ClientDashboard, etc.) which are fully integrated.
 
 This document details the investigation findings, root causes, and required fixes.
 
@@ -21,12 +21,12 @@ This document details the investigation findings, root causes, and required fixe
 
 | File | Location | Status |
 |------|----------|--------|
-| **HermesPage** | `apps/wayofpi-ui/src/pages/hermes/HermesPage.tsx` | ✅ Exists |
-| **HermesTypes** | `apps/wayofpi-ui/src/pages/hermes/types/hermes.ts` | ✅ Exists |
-| **HermesTerminalView** | `apps/wayofpi-ui/src/components/hermes/` | ✅ Exists |
-| **HermesFileBrowser** | `apps/wayofpi-ui/src/components/hermes/` | ✅ Exists |
-| **pages/index.ts** | `apps/wayofpi-ui/src/pages/index.ts` | ❌ Missing Hermes export |
-| **App.tsx** | `apps/wayofpi-ui/src/App.tsx` | ❌ Missing hermes condition |
+| **HermesPage** | `apps/wayofwork-ui/src/pages/hermes/HermesPage.tsx` | ✅ Exists |
+| **HermesTypes** | `apps/wayofwork-ui/src/pages/hermes/types/hermes.ts` | ✅ Exists |
+| **HermesTerminalView** | `apps/wayofwork-ui/src/components/hermes/` | ✅ Exists |
+| **HermesFileBrowser** | `apps/wayofwork-ui/src/components/hermes/` | ✅ Exists |
+| **pages/index.ts** | `apps/wayofwork-ui/src/pages/index.ts` | ❌ Missing Hermes export |
+| **App.tsx** | `apps/wayofwork-ui/src/App.tsx` | ❌ Missing hermes condition |
 
 ### Other Pages (Reference)
 
@@ -44,7 +44,7 @@ This document details the investigation findings, root causes, and required fixe
 
 ### Issue #1: Missing Export
 
-**File:** `apps/wayofpi-ui/src/pages/index.ts`
+**File:** `apps/wayofwork-ui/src/pages/index.ts`
 
 **Current State:**
 ```typescript
@@ -61,7 +61,7 @@ export { UserProfilePage as UserProfile } from "./UserProfile";
 
 ### Issue #2: Missing Routing Condition
 
-**File:** `apps/wayofpi-ui/src/App.tsx`
+**File:** `apps/wayofwork-ui/src/App.tsx`
 
 **Current State (lines 262-269):**
 ```typescript
@@ -95,7 +95,7 @@ if (isProfile) {
 
 ### Fix #1: Add Hermes Export to pages/index.ts
 
-**File:** `apps/wayofpi-ui/src/pages/index.ts`
+**File:** `apps/wayofwork-ui/src/pages/index.ts`
 
 **Action:** Add HermesPage export
 
@@ -105,7 +105,7 @@ export { HermesTerminalPage as HermesPage } from "./hermes/HermesPage";
 
 ### Fix #2: Add Hermes Routing Condition to App.tsx
 
-**File:** `apps/wayofpi-ui/src/App.tsx`
+**File:** `apps/wayofwork-ui/src/App.tsx`
 
 **Action:** Add after `isProfile` definition (around line 268):
 
@@ -123,7 +123,7 @@ if (isHermes) {
 
 ### Fix #3: Add Hermes to MenuBar Navigation (Optional)
 
-**File:** `apps/wayofpi-ui/src/components/MenuBar.tsx`
+**File:** `apps/wayofwork-ui/src/components/MenuBar.tsx`
 
 **Action:** Consider adding "Hermes" menu item for direct navigation (if appropriate for UI design)
 
@@ -133,13 +133,13 @@ if (isHermes) {
 
 ### Step 1: Export HermesPage
 
-1. Edit `apps/wayofpi-ui/src/pages/index.ts`
+1. Edit `apps/wayofwork-ui/src/pages/index.ts`
 2. Add export statement for HermesPage
 3. Verify TypeScript compilation succeeds
 
 ### Step 2: Add Routing Condition
 
-1. Edit `apps/wayofpi-ui/src/App.tsx`
+1. Edit `apps/wayofwork-ui/src/App.tsx`
 2. Add `isHermes` condition after `isProfile` (line 268-269)
 3. Add conditional render after `isProfile` block (line 341-343)
 4. Test navigation to `/hermes` route
@@ -154,7 +154,7 @@ if (isHermes) {
 
 ## 🔍 Additional Pages Investigation
 
-After reviewing all page files in `apps/wayofpi-ui/src/pages/`, here's the complete inventory:
+After reviewing all page files in `apps/wayofwork-ui/src/pages/`, here's the complete inventory:
 
 ### All Page Files Found
 

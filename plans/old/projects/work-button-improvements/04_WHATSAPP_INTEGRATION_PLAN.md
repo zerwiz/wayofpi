@@ -380,16 +380,16 @@ See [WhatsApp CLI Spec](./ref/WHATSAPP_PI_CLAW_INTEGRATION_SPEC.md) for two-bot 
 ## UI Components to Create/Modify
 
 ### New Components
-1. `apps/wayofpi-ui/src/components/team/TeamPortal.tsx`
-2. `apps/wayofpi-ui/src/components/team/ChatView.tsx`
-3. `apps/wayofpi-ui/src/components/team/ChannelList.tsx`
-4. `apps/wayofpi-ui/src/components/team/MessageInput.tsx`
-5. `apps/wayofpi-ui/src/components/team/MessageList.tsx`
-6. `apps/wayofpi-ui/src/components/team/ChannelSettings.tsx`
+1. `apps/wayofwork-ui/src/components/team/TeamPortal.tsx`
+2. `apps/wayofwork-ui/src/components/team/ChatView.tsx`
+3. `apps/wayofwork-ui/src/components/team/ChannelList.tsx`
+4. `apps/wayofwork-ui/src/components/team/MessageInput.tsx`
+5. `apps/wayofwork-ui/src/components/team/MessageList.tsx`
+6. `apps/wayofwork-ui/src/components/team/ChannelSettings.tsx`
 
 ### Modified Components
-1. `apps/wayofpi-ui/src/components/WorkApp.tsx` - Add Team Portal section
-2. `apps/wayofpi-ui/src/components/UiModeToggle.tsx` - Add Team Chat option
+1. `apps/wayofwork-ui/src/components/WorkApp.tsx` - Add Team Portal section
+2. `apps/wayofwork-ui/src/components/UiModeToggle.tsx` - Add Team Chat option
 
 ---
 
@@ -488,7 +488,7 @@ See [WhatsApp CLI Spec](./ref/WHATSAPP_PI_CLAW_INTEGRATION_SPEC.md) for two-bot 
 - [Time Management Plan](./ref/WOP_TIME_MANAGEMENT_PLAN.md) - Work mode time tracking
 - [WhatsApp CLI Spec](./ref/WHATSAPP_PI_CLAW_INTEGRATION_SPEC.md) - Two-bot architecture
 - [Work Leader System](./ref/WORK_LEADER_SYSTEM_QUICK_REF.md) - Leader/Worker bot overview
-- [WorkerPortal Component](../../apps/wayofpi-ui/src/pages/WorkerPortal.tsx) - Portal implementation
+- [WorkerPortal Component](../../apps/wayofwork-ui/src/pages/WorkerPortal.tsx) - Portal implementation
 
 ---
 
@@ -913,16 +913,16 @@ Event: {
 ## UI Components to Create/Modify
 
 ### New Components
-1. `apps/wayofpi-ui/src/components/team/TeamPortal.tsx`
-2. `apps/wayofpi-ui/src/components/team/ChatView.tsx`
-3. `apps/wayofpi-ui/src/components/team/ChannelList.tsx`
-4. `apps/wayofpi-ui/src/components/team/MessageInput.tsx`
-5. `apps/wayofpi-ui/src/components/team/MessageList.tsx`
-6. `apps/wayofpi-ui/src/components/team/ChannelSettings.tsx`
+1. `apps/wayofwork-ui/src/components/team/TeamPortal.tsx`
+2. `apps/wayofwork-ui/src/components/team/ChatView.tsx`
+3. `apps/wayofwork-ui/src/components/team/ChannelList.tsx`
+4. `apps/wayofwork-ui/src/components/team/MessageInput.tsx`
+5. `apps/wayofwork-ui/src/components/team/MessageList.tsx`
+6. `apps/wayofwork-ui/src/components/team/ChannelSettings.tsx`
 
 ### Modified Components
-1. `apps/wayofpi-ui/src/components/WorkApp.tsx` - Add Team Portal section
-2. `apps/wayofpi-ui/src/components/UiModeToggle.tsx` - Add Team Chat option
+1. `apps/wayofwork-ui/src/components/WorkApp.tsx` - Add Team Portal section
+2. `apps/wayofwork-ui/src/components/UiModeToggle.tsx` - Add Team Chat option
 
 ---
 
@@ -1017,7 +1017,7 @@ Event: {
 
 - [Time Management Plan](./WOP_TIME_MANAGEMENT_PLAN.md)
 - [Work Button Plan](../01-PLAN.md)
-- [WorkerPortal Component](../../apps/wayofpi-ui/src/pages/WorkerPortal.tsx)
+- [WorkerPortal Component](../../apps/wayofwork-ui/src/pages/WorkerPortal.tsx)
 
 ---
 

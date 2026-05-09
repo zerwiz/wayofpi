@@ -14,11 +14,11 @@
 **Root Cause**: Database path mismatch between `db.ts` and server runtime workspace
 
 **Fixes Applied**:
-- Updated `server/db.ts` line 5: Changed DB path from `join(import.meta.dir, "..", "..", ".pi", "db")` to `join(import.meta.dir, "..", "..", "wayofpi-server", "db")`
+- Updated `server/db.ts` line 5: Changed DB path from `join(import.meta.dir, "..", "..", ".pi", "db")` to `join(import.meta.dir, "..", "..", "wayofwork-server", "db")`
 - Updated `server/init-db.ts` to use same path as `db.ts`
 - Fixed `tenants` INSERT query (line 89) to include required `slug` column
 - Added `projects`, `tasks`, `time_entries` table creation to `db.ts`
-- Database now correctly located at: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-server/db/wayofpi.sqlite`
+- Database now correctly located at: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-server/db/wayofpi.sqlite`
 
 **Result**: Tables now create successfully: `tenants`, `users`, `projects`, `tasks`, `time_entries`, `workspace_files`, `whatsapp_sessions`, `audit_logs`
 
@@ -154,7 +154,7 @@ console.log(token);
 **Files Modified This Session**:
 1. `docs/UI_UX_ROUTING_AND_HEADER.md` - Created & Expanded Architecture Blueprint
 2. `plans/STATUS-UI-TRANSPORT.md` - Updated with Logic-First status
-3. `apps/wayofpi-ui/src/pages/LoginPage.tsx` - Initial implementation (pending App.tsx integration)
-4. `apps/wayofpi-ui/src/pages/index.ts` - Exported LoginPage
+3. `apps/wayofwork-ui/src/pages/LoginPage.tsx` - Initial implementation (pending App.tsx integration)
+4. `apps/wayofwork-ui/src/pages/index.ts` - Exported LoginPage
 5. `CHANGELOG.md` - Recorded architectural planning progress
 ...

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UI_DIR="$ROOT/apps/wayofpi-ui"
+UI_DIR="$ROOT/apps/wayofwork-ui"
 PORT="${2:-3333}"
 
 WITH_NGROK=0

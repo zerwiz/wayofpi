@@ -162,7 +162,7 @@ Phase 4 (4 remaining):
 
 ### Current Mobile State (from `plans/mobile/README.md`):
 ```
-apps/wayofpi-ui/src/components/mobile/
+apps/wayofwork-ui/src/components/mobile/
 ├── chrome/
 │   └── MobileChrome.tsx               # Shared header + Desktop escape
 ├── claw/

@@ -1,4 +1,4 @@
-apps/wayofpi-ui/src/components/mobile/
+apps/wayofwork-ui/src/components/mobile/
 ├── chrome/
 │   ├── MobileChrome.tsx                    # Shared top chrome + desktop escape
 │   ├── MobileStatusBar.tsx                 # Bottom sticky bar (workspace, messages)
@@ -54,7 +54,7 @@ apps/wayofpi-ui/src/components/mobile/
 |------|:--------|
 | `docs/WOP_MOBILE_UI_PLAN.md` | High-level mobile UI plan; tracks + non-goals |
 | `docs/WOP_TECHNICAL_UI.md` | Desktop shell reference for parity |
-| `apps/wayofpi-ui/README.md` | Shell entry points, Electron vs browser |
+| `apps/wayofwork-ui/README.md` | Shell entry points, Electron vs browser |
 | `.cursor/rules/wop-ui-pi-backend-parity.mdc` | Parity rules: no fake Pi |
 
 ---
@@ -70,7 +70,7 @@ See section 1 for full structure.
 Mobile does **not** duplicate agents or the WebSocket client. State is managed by the same `useWayOfPiSession(surfaceId)` with `surfaceId` in `simple` | `technical` | `claw` | `mobile`.
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useWayOfPiSession.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useWayOfPiSession.ts
 import { useWayOfPiSession } from "../../../simple/useWayOfPiSession";
 
 export function useWayOfPiSessionMobile(surfaceId: string) {
@@ -81,7 +81,7 @@ export function useWayOfPiSessionMobile(surfaceId: string) {
 ### 2.3 Mobile-Specific State
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/store/mobileStore.ts
+// apps/wayofwork-ui/src/components/mobile/store/mobileStore.ts
 import { produce } from "immer";
 
 interface MobileState {
@@ -139,7 +139,7 @@ Mobile mode is entered via:
 On next visit, the shell restores the last mode.
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/useShellMobile.ts
+// apps/wayofwork-ui/src/components/mobile/useShellMobile.ts
 export function useShellMobile() {
 	// reads query, path, localStorage
 	// returns { shellMobile, setShellMobile }
@@ -149,7 +149,7 @@ export function useShellMobile() {
 ### 2.5 Safe Area Handling
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/chrome/MobileSafeArea.tsx
+// apps/wayofwork-ui/src/components/mobile/chrome/MobileSafeArea.tsx
 import { useRef } from "react";
 
 export function MobileSafeArea({ children }: { children: React.ReactNode }) {
@@ -187,7 +187,7 @@ Shared header components with mode selection and desktop escape.
 ### 3.3 Orientation and Viewport Hooks
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useOrientation.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useOrientation.ts
 import { useEffect, useState } from 'react';
 
 export function useOrientation() {
@@ -210,7 +210,7 @@ export function useOrientation() {
 ### 3.4 Network Status Detection
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useNetworkStatus.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useNetworkStatus.ts
 export function useNetworkStatus() {
   const [network, setNetwork] = useState('online');
   
@@ -231,7 +231,7 @@ export function useNetworkStatus() {
 ### 3.5 Offline Cache Configuration
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/utils/offlineSupport.ts
+// apps/wayofwork-ui/src/components/mobile/utils/offlineSupport.ts
 interface OfflineConfig {
   cacheWorkspaces: boolean;
   cacheAgents: boolean;
@@ -477,7 +477,7 @@ interface MobileStatusBarProps {
 ### 5.1 Touch Gestures
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/utils/touchGestures.ts
+// apps/wayofwork-ui/src/components/mobile/utils/touchGestures.ts
 import { GestureHandler as G } from 'react-gesture-handler';
 
 export interface TouchGestures {
@@ -516,7 +516,7 @@ const TOUCH_GAP = 16;        // pixels between elements
 ### 5.3 Mobile Keyboard Handling
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useMobileKeyboard.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useMobileKeyboard.ts
 export function useMobileKeyboard() {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
@@ -536,7 +536,7 @@ export function useMobileKeyboard() {
 ### 5.4 Voice Input
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useVoiceInput.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useVoiceInput.ts
 export function useVoiceInput() {
   const [isRecording, setIsRecording] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
@@ -567,7 +567,7 @@ export function useVoiceInput() {
 ### 5.5 Mobile Navigation
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useMobileNavigation.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useMobileNavigation.ts
 interface MobileNavigation {
   activeView: 'chat' | 'files' | 'preview';
   setActiveView: (view: 'chat' | 'files' | 'preview') => void;
@@ -587,7 +587,7 @@ export function useMobileNavigation(): MobileNavigation {
 ### 5.6 Offline Support
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useBackgroundSync.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useBackgroundSync.ts
 interface OfflineConfig {
   cacheWorkspaces: boolean;
   cacheAgents: boolean;
@@ -611,7 +611,7 @@ export function useBackgroundSync(): BackgroundSync {
 ### 5.7 Storage Management
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/hooks/useLocalStorage.ts
+// apps/wayofwork-ui/src/components/mobile/hooks/useLocalStorage.ts
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === 'undefined') return initialValue;
@@ -642,7 +642,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
 ### 5.8 Device Detection
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/utils/deviceDetection.ts
+// apps/wayofwork-ui/src/components/mobile/utils/deviceDetection.ts
 export function detectDevice(): DeviceInfo {
   const ua = navigator.userAgent;
   
@@ -663,7 +663,7 @@ export function detectDevice(): DeviceInfo {
 ### 5.9 Breakpoints
 
 ```typescript
-// apps/wayofpi-ui/src/components/mobile/utils/responsiveBreakpoints.ts
+// apps/wayofwork-ui/src/components/mobile/utils/responsiveBreakpoints.ts
 export const BREAKPOINTS = {
   mobile: 768,
   tablet: 1024,
@@ -905,7 +905,7 @@ The document handler component provides a unified interface for document browsin
 ### 14.2 Component Structure
 
 ```
-apps/wayofpi-ui/src/components/documenthandler/
+apps/wayofwork-ui/src/components/documenthandler/
 ├── index.ts
 ├── DocsApp.tsx                    # Main document handler container
 ├── Chat.tsx

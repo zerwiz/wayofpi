@@ -25,9 +25,9 @@ Deliver Way of Pi to clients via three channels:
 ## 1. Desktop Application Delivery
 
 ### 1.1 Current State
-- Electron app at `apps/wayofpi-ui/`
+- Electron app at `apps/wayofwork-ui/`
 - `electron-builder` configured in `package.json` for macOS (dmg), Windows (nsis), Linux (AppImage + deb)
-- Output directory: `apps/wayofpi-ui/release/`
+- Output directory: `apps/wayofwork-ui/release/`
 - Command: `bun run pack`
 
 ### 1.2 What Needs to Ship in the Installer
@@ -49,7 +49,7 @@ The Electron app bundles:
 
 ```bash
 # Local dev build (unsigned, self-test)
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 bun run pack
 
 # CI build (signed, published to GitHub Releases)
@@ -269,7 +269,7 @@ After=network.target
 Type=simple
 User=wayofpi
 WorkingDirectory=/home/wayofpi/Way of pi
-ExecStart=/home/wayofpi/.bun/bin/bun run apps/wayofpi-ui/server/index.ts
+ExecStart=/home/wayofpi/.bun/bin/bun run apps/wayofwork-ui/server/index.ts
 Environment=NODE_ENV=production
 Environment=WOP_SERVER_PORT=3333
 Restart=on-failure
@@ -327,22 +327,22 @@ strategy:
 FROM oven/bun:latest AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
-COPY apps/wayofpi-ui/package.json ./apps/wayofpi-ui/
+COPY apps/wayofwork-ui/package.json ./apps/wayofwork-ui/
 RUN bun install --frozen-lockfile
 COPY . .
-WORKDIR /app/apps/wayofpi-ui
+WORKDIR /app/apps/wayofwork-ui
 RUN bun run build
 
 FROM oven/bun:latest
 WORKDIR /app
-COPY --from=builder /app/apps/wayofpi-ui/dist ./apps/wayofpi-ui/dist
-COPY --from=builder /app/apps/wayofpi-ui/server ./apps/wayofpi-ui/server
-COPY --from=builder /app/apps/wayofpi-ui/package.json ./apps/wayofpi-ui/package.json
+COPY --from=builder /app/apps/wayofwork-ui/dist ./apps/wayofwork-ui/dist
+COPY --from=builder /app/apps/wayofwork-ui/server ./apps/wayofwork-ui/server
+COPY --from=builder /app/apps/wayofwork-ui/package.json ./apps/wayofwork-ui/package.json
 COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3333
 ENV NODE_ENV=production
 ENV WOP_SERVER_PORT=3333
-CMD ["bun", "run", "apps/wayofpi-ui/server/index.ts"]
+CMD ["bun", "run", "apps/wayofwork-ui/server/index.ts"]
 ```
 
 ### 4.4 Release Process

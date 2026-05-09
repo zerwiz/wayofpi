@@ -24,7 +24,7 @@ Way of Pi is **not** Scintilla-based; we approximate the same expectations with 
 
 ## 3. Canonical implementation (`WorkspaceTextBuffer`)
 
-**File:** `apps/wayofpi-ui/src/components/WorkspaceTextBuffer.tsx`
+**File:** `apps/wayofwork-ui/src/components/WorkspaceTextBuffer.tsx`
 
 - **Logical lines** — `content.split("\n")`; the gutter renders **one label per logical line** (`1`, `2`, …).
 - **Word wrap on** — `useLayoutEffect` measures each logical line’s **wrapped height** in a hidden div that copies **computed styles from the textarea** (`measureSoftWrappedLineHeightsPx`). Each gutter cell gets `minHeight` in pixels so the number stays vertically associated with that logical line’s wrapped block.
@@ -35,7 +35,7 @@ Way of Pi is **not** Scintilla-based; we approximate the same expectations with 
 
 ## 4. Shared chrome constants
 
-**File:** `apps/wayofpi-ui/src/constants/workspaceEditorChrome.ts`
+**File:** `apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts`
 
 Tailwind class strings for:
 
@@ -69,7 +69,7 @@ If a **new** feature shows **multi-line editable workspace file text**, it shoul
 |-----|--------|
 | **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)** | Doc ↔ code line citations; binary preview (no gutter). |
 | **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** | `WorkspacePane`, grid, docks. |
-| **`apps/wayofpi-ui/README.md`** | Dev entry and shell overview. |
+| **`apps/wayofwork-ui/README.md`** | Dev entry and shell overview. |
 
 ## 7. External references (editor UX)
 

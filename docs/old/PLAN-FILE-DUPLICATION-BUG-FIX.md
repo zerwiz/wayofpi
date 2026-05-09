@@ -90,7 +90,7 @@ This ensures:
 
 ## 🔗 Files
 
-- Location: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/App.tsx`
+- Location: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/App.tsx`
 - Function: `openPlanFileForReview()` (line 3136)
 - Related: `onExplorerSelectFile()` (line 3157) - works correctly
 

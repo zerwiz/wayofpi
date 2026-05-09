@@ -123,12 +123,12 @@ This is more work but gives better multi-project isolation. Build only if Path A
 | `docs/WOP_TELEGRAM_PLAN.md` (this file) | Plan and decision record |
 | `.claw/workspace/TOOLS.md` template | Documents `pi-telegram` setup for the agent |
 | `.claw/workspace/HEARTBEAT.md` template | Placeholder for future Telegram heartbeat checks |
-| `apps/wayofpi-ui/src/components/claw/ClawWorkspaceCard.tsx` | UI card showing `.claw/workspace/` bundle status |
-| `apps/wayofpi-ui/src/hooks/useClawWorkspace.ts` | Hook: check which `.claw/workspace/` files exist + scaffold |
-| `apps/wayofpi-ui/server/claw-telegram-status.ts` | Server-only scan for Telegram integration hints (no secrets) |
-| `apps/wayofpi-ui/shared/claw-telegram-status.ts` | Shared **`ClawTelegramStatusV1`** type |
-| `apps/wayofpi-ui/src/hooks/useClawTelegramStatus.ts` | Client poll + refresh: **`GET /api/config`** → **`clawTelegramStatus`**, fallback **`GET /api/claw/telegram/status`** |
-| `apps/wayofpi-ui/src/components/claw/ClawChannelsView.tsx` | Channels tab: Telegram card wired to status API |
+| `apps/wayofwork-ui/src/components/claw/ClawWorkspaceCard.tsx` | UI card showing `.claw/workspace/` bundle status |
+| `apps/wayofwork-ui/src/hooks/useClawWorkspace.ts` | Hook: check which `.claw/workspace/` files exist + scaffold |
+| `apps/wayofwork-ui/server/claw-telegram-status.ts` | Server-only scan for Telegram integration hints (no secrets) |
+| `apps/wayofwork-ui/shared/claw-telegram-status.ts` | Shared **`ClawTelegramStatusV1`** type |
+| `apps/wayofwork-ui/src/hooks/useClawTelegramStatus.ts` | Client poll + refresh: **`GET /api/config`** → **`clawTelegramStatus`**, fallback **`GET /api/claw/telegram/status`** |
+| `apps/wayofwork-ui/src/components/claw/ClawChannelsView.tsx` | Channels tab: Telegram card wired to status API |
 
 ---
 

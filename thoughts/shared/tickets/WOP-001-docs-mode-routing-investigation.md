@@ -1,7 +1,7 @@
 # Docs Mode Document Routing Investigation
 
 **Investigation Date:** 2026-01-04  
-**Path:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/components/docs/`  
+**Path:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/components/docs/`  
 **Status:** 🟡 Investigating (NO CODE CHANGES)
 
 ---
@@ -470,7 +470,7 @@ This is a clean, predictable routing pattern.
 
 ## 📂 DocumentBrowser Component Investigation
 
-**Location:** `/apps/wayofpi-ui/src/components/docs/DocumentBrowser.tsx` (57 lines)
+**Location:** `/apps/wayofwork-ui/src/components/docs/DocumentBrowser.tsx` (57 lines)
 
 ### **What It's Supposed To Do:**
 - Document-centric file browser (not code-focused)

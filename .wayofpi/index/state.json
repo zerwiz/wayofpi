@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "syncedAt": "2026-05-09T12:22:01.739Z",
-  "fileCount": 31638,
+  "syncedAt": "2026-05-09T15:02:54.564Z",
+  "fileCount": 31679,
   "truncated": false,
-  "merkleRoot": "0863453be600c4a4",
+  "merkleRoot": "700ad40cf598c013",
   "samplePaths": [
     ".claude/commands/prime.md",
     ".claw/AGENTS.md",

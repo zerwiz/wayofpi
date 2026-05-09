@@ -150,8 +150,8 @@ The existing `WorkBoard.tsx` (`src/components/work/kanban/WorkBoard.tsx`) is the
 - [ ] Verify all 9 component files in `src/components/kanban/` compile without errors
 
 ## Automated Verification
-- [ ] Build completes: `bun run build` (wayofpi-ui) - zero errors
-- [ ] Tests pass: `bun run test` (wayofpi-ui)
+- [ ] Build completes: `bun run build` (wayofwork-ui) - zero errors
+- [ ] Tests pass: `bun run test` (wayofwork-ui)
 
 ## Manual Verification
 - [ ] Unauthenticated user hitting any protected route → redirected to `/login`

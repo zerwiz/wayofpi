@@ -2,7 +2,7 @@
 
 ## Overview
 
-Way of Pi is a Pi coding agent playground with extensions, agents, skills, and a web UI (`wayofpi-ui`). It includes tooling for project management, session memory, agent teams, and integration with Hermes/Honcho.
+Way of Pi is a Pi coding agent playground with extensions, agents, skills, and a web UI (`wayofwork-ui`). It includes tooling for project management, session memory, agent teams, and integration with Hermes/Honcho.
 
 ---
 
@@ -15,12 +15,22 @@ Way of pi/
 ├── agent-sessions/                 # Legacy agent sessions (empty)
 ├── AGENTS.md                       # Orchestrator agent config & project rules
 ├── apps/                           # Applications
-│   ├── wayofpi-server/             # Bun-based API/WS backend
+│   ├── wayofpi/                      # "Way of Pi" — Standalone Technical IDE
+│   │   ├── technicalIDE/            # Vite + React Technical IDE (port 5174)
+│   │   │   ├── src/                 # React source (TechnicalApp.tsx, boot, layout)
+│   │   │   ├── index.html           # Entry HTML
+│   │   │   ├── vite.config.ts       # Port 5174, @wop alias
+│   │   │   ├── tsconfig*.json       # Strict TS config
+│   │   │   └── package.json
+│   │   └── server/                  # Bun proxy server (port 3334 → 3333)
+│   │       ├── index.ts             # Bun.serve with WS + HTTP proxy
+│   │       └── package.json
+│   ├── wayofwork-server/             # Bun-based API/WS backend
 │   │   ├── bundled/               # Bundled output
 │   │   ├── src/                   # Server source code
 │   │   ├── index.js               # Entry point
 │   │   └── package.json
-│   ├── wayofpi-ui/                # Electron + Vite + React frontend
+│   ├── wayofwork-ui/                # Electron + Vite + React frontend
 │   │   ├── agent/                  # UI agent definitions
 │   │   ├── electron/               # Electron main process
 │   │   ├── server/                 # UI dev server
@@ -105,7 +115,7 @@ Way of pi/
 │   └── auto-start-pty-server.sh
 ├── start-wayofpi.sh                # Main startup script (Electron + server)
 ├── start-wayofpi-electron.sh       # Electron startup script
-├── start-wayofpi-ui.sh -> start-wayofpi.sh  # Symlink to main startup script
+├── start-wayofwork-ui.sh -> start-wayofpi.sh  # Symlink to main startup script
 ├── storage/                        # Runtime storage
 │   ├── config.json                 # Stored config
 │   ├── last-extension.json         # Last used extension
@@ -602,6 +612,8 @@ The `docs/wayofpi/` content has been moved to `docs/old/wayofpi/` for archival. 
 | `AGENTS.md` | Orchestrator agent config, project conventions, team definitions |
 | `justfile` | Command recipes (1444 lines): `just wayofpi-electron`, `just hermes-*`, etc. |
 | `CHANGELOG.md` | Comprehensive project changelog (88KB) |
+| `apps/wayofpi/technicalIDE/` | Standalone Way of Pi Technical IDE (port 5174, build passing) |
+| `apps/wayofpi/server/` | Way of Pi API proxy (port 3334 → 3333, WebSocket + HTTP) |
 | `start-wayofpi.sh` | Main startup: launches Electron + Bun server |
 | `settings.json` | Pi settings: models, theme, extensions |
 | `.pi/settings.json` | Pi runtime settings: extension enable/disable, teams |

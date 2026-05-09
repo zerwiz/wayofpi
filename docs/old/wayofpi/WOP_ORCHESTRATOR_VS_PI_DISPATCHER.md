@@ -23,7 +23,7 @@ So “more capable” depends on **which engine** is answering and **what you co
 
 ## 2. Two engines in Way of Pi (critical split)
 
-**Code:** `apps/wayofpi-ui/server/index.ts` — `usePiChat` vs `useOrchestratorTools`.
+**Code:** `apps/wayofwork-ui/server/index.ts` — `usePiChat` vs `useOrchestratorTools`.
 
 | Mode | When it applies | What runs the tools |
 |------|-----------------|---------------------|
@@ -77,10 +77,10 @@ Anything that exists **only inside Pi** (extension **`registerTool`**, **`/skill
 
 | Topic | Location |
 |-------|----------|
-| Turn routing (Pi vs Bun tools vs plain completion) | `apps/wayofpi-ui/server/index.ts` (`runChatTurn`, `usePiChat`, `useOrchestratorTools`) |
-| Bun tool loop | `apps/wayofpi-ui/server/chat-orchestrator-tools.ts` |
-| Bun tool execution | `apps/wayofpi-ui/server/orchestrator-tools-exec.ts` |
-| Headless Pi turn | `apps/wayofpi-ui/server/pi-json-mode-chat.ts` (and callers) |
+| Turn routing (Pi vs Bun tools vs plain completion) | `apps/wayofwork-ui/server/index.ts` (`runChatTurn`, `usePiChat`, `useOrchestratorTools`) |
+| Bun tool loop | `apps/wayofwork-ui/server/chat-orchestrator-tools.ts` |
+| Bun tool execution | `apps/wayofwork-ui/server/orchestrator-tools-exec.ts` |
+| Headless Pi turn | `apps/wayofwork-ui/server/pi-json-mode-chat.ts` (and callers) |
 | Pi dispatcher + `dispatch_agent` | `extensions/agent-team.ts` |
 
 ---

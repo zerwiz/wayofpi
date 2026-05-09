@@ -322,7 +322,7 @@ From [Functional backlog (today → web)](WOP_STANDALONE_SYSTEM_PLAN.md#function
 
 ### Critical: backend naming audit (plan § + [WOP_NAMESPACE](WOP_NAMESPACE.md))
 
-- [ ] Audit **`apps/wayofpi-ui/server`**, package **`name`**, API **`service`** fields, scripts, future **`wop serve`** — no ambiguous **`pi`** / **`ppi`** for *our* artifacts  
+- [ ] Audit **`apps/wayofwork-ui/server`**, package **`name`**, API **`service`** fields, scripts, future **`wop serve`** — no ambiguous **`pi`** / **`ppi`** for *our* artifacts  
 
 ### Non-goals / risks → engineering mitigations
 
@@ -338,7 +338,7 @@ From [Non-goals and risks](WOP_STANDALONE_SYSTEM_PLAN.md#non-goals-and-risks):
 - [ ] Exact Pi CLI for **`pi install` / `pi update`** per pinned version  
 - [ ] **Subprocess sandbox** policy (same user vs restricted)  
 - [ ] **Session storage** format: shared with Pi JSONL vs separate  
-- [ ] **Rename map** for repo paths (e.g. under **`apps/wayofpi-ui`**) vs semver / import churn — schedule with **backend naming** milestone  
+- [ ] **Rename map** for repo paths (e.g. under **`apps/wayofwork-ui`**) vs semver / import churn — schedule with **backend naming** milestone  
 
 ---
 

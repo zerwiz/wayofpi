@@ -57,7 +57,7 @@ If you are developing the system and want to see real-time logs in your terminal
 
 ### Web UI Only (Browser)
 ```bash
-./start-wayofpi-ui.sh --web
+./start-wayofwork-ui.sh --web
 ```
 
 ### Troubleshooting

@@ -1,16 +1,16 @@
 # Phase 1 Implementation Guide (Step-by-Step)
 
 ## Correct Paths
-- **Server root**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/`
-- **Database**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/wayofpi.sqlite`
-- **UI src**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/`
+- **Server root**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/`
+- **Database**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/wayofpi.sqlite`
+- **UI src**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/`
 
 ---
 
 ## Step 1: Database Foundation (SQLite Setup)
 
 ### 1.1 Update DB Path in Server
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/index.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/index.ts`
 
 ```typescript
 // At top of index.ts, replace any .pi references:
@@ -26,11 +26,11 @@ db.run("PRAGMA foreign_keys = ON");
 ```
 
 ### 1.2 Initialize Schema
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/schema.sql` (already created)
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/schema.sql` (already created)
 
 Run:
 ```bash
-cd "/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server"
+cd "/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server"
 bun init-db.ts
 ```
 
@@ -45,7 +45,7 @@ sqlite3 wayofpi.sqlite ".tables"
 ## Step 2: Tenant Isolation (getPrimaryWorkspacePath Hardening)
 
 ### 2.1 Fix Path Traversal in `paths.ts`
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/paths.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/paths.ts`
 
 ```typescript
 import { resolve, normalize, sep } from "node:path";
@@ -99,7 +99,7 @@ export function resolveUnderWorkspace(relPath: string, tenantId: string = "defau
 ```
 
 ### 2.2 Update `workspace-state.ts`
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/workspace-state.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/workspace-state.ts`
 
 Find `getPrimaryWorkspacePath` calls and add `tenantId` parameter:
 ```typescript
@@ -113,7 +113,7 @@ const root = getPrimaryWorkspacePath(auth?.tenantId || "default");
 ## Step 3: RBAC Engine (4-Tier Role System)
 
 ### 3.1 Add Role Checks to Server
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/index.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/index.ts`
 
 Add after auth verification (around line 942):
 ```typescript
@@ -148,7 +148,7 @@ if (p.startsWith("/api/admin") && !hasRole(auth?.role, ["SUPER_ADMIN", "ADMIN"])
 ```
 
 ### 3.2 Update Login to Return Role
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/index.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/index.ts`
 
 In `/api/login` and `/api/portal/login` handlers, ensure response includes role:
 ```typescript
@@ -168,12 +168,12 @@ return json({
 ## Step 4: Remove Mock Auth & Wire Real APIs
 
 ### 4.1 Update UI to Store User Info
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/api/client.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/api/client.ts`
 
 Already done (sends JWT in Authorization header).
 
 ### 4.2 Update Worker Portal to Use Real Data
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/pages/WorkerPortal.tsx`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/pages/WorkerPortal.tsx`
 
 Replace TODO placeholders with real API calls:
 ```typescript
@@ -206,7 +206,7 @@ async function loadPortalData() {
 ```
 
 ### 4.3 Implement Real API Endpoints
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/index.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/index.ts`
 
 Update the stub endpoints (already added earlier):
 ```typescript
@@ -242,7 +242,7 @@ if (p === "/api/portal/tasks" && req.method === "GET") {
 ## Step 5: Audit Log (Security)
 
 ### 5.1 Add Audit Logging
-**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server/index.ts`
+**File**: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server/index.ts`
 
 ```typescript
 function auditLog(tenantId: string | null, userId: string | null, action: string, resourceType: string, resourceId: string, details: object) {
@@ -307,7 +307,7 @@ After each step, verify:
 
 ```bash
 # 1. Navigate to server directory
-cd "/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/server"
+cd "/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/server"
 
 # 2. Initialize database
 bun init-db.ts
@@ -320,7 +320,7 @@ curl http://localhost:3333/api/health
 curl http://localhost:3333/api/portal/me -H "Authorization: Bearer test"
 
 # 5. Start UI dev server
-cd "/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui"
+cd "/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui"
 npm run dev
 ```
 

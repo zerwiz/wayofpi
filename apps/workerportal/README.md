@@ -12,7 +12,7 @@ Worker self-service portal for the Way of Work platform. Provides a clean, focus
 
 ## Architecture
 
-Part of the multi-app platform sharing the backend API at `apps/wayofpi-server/` (port 3333).
+Part of the multi-app platform sharing the backend API at `apps/wayofwork-server/` (port 3333).
 
 - Port **5175** (Vite dev)
 - Port **3333** (API backend, shared)

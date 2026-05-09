@@ -64,8 +64,8 @@ Work **strictly** in this order: finish the **exit criteria** for a track before
 
 | Task | Output |
 |------|--------|
-| **`shell=mobile` + persistence** | Parse query + **`localStorage`**; **`App.tsx`** gate. **`useShellMobile`** lives in **`apps/wayofpi-ui/src/components/mobile/useShellMobile.ts`**. |
-| **Shared mobile chrome** | **`apps/wayofpi-ui/src/components/mobile/chrome/MobileChrome.tsx`** (safe area, top bar, “desktop layout” escape). |
+| **`shell=mobile` + persistence** | Parse query + **`localStorage`**; **`App.tsx`** gate. **`useShellMobile`** lives in **`apps/wayofwork-ui/src/components/mobile/useShellMobile.ts`**. |
+| **Shared mobile chrome** | **`apps/wayofwork-ui/src/components/mobile/chrome/MobileChrome.tsx`** (safe area, top bar, “desktop layout” escape). |
 | **Hooks unchanged** | **`useWayOfPiSession`**, **`useServerConfig`**, **`useWorkspaceTree`** consumed from mobile leaves — **no** duplicate WS client. |
 
 ---
@@ -136,7 +136,7 @@ Work **strictly** in this order: finish the **exit criteria** for a track before
 
 | When | Update |
 |------|--------|
-| After Track 0 | **`apps/wayofpi-ui/README.md`** — **`?shell=mobile`**, **`uiMode`** interaction. |
+| After Track 0 | **`apps/wayofwork-ui/README.md`** — **`?shell=mobile`**, **`uiMode`** interaction. |
 | After Track 1 | **`docs/WOP_CLAW_UI_PLAN.md`** — mobile subsection or pointer here; **`docs/WOP_TECHNICAL_UI.md`** Scope row **Claw mobile**. |
 | After Track 2 | **`docs/WOP_TECHNICAL_UI.md`** — **Simple mobile** row. |
 | After Track 3 | **`docs/WOP_TECHNICAL_UI.md`** — **Technical mobile** row. |

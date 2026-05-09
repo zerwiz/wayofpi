@@ -66,4 +66,4 @@ If the app fails to start because "Port is already in use", the startup scripts 
 The scripts automatically check for `node_modules` and run `bun install` if they are missing or out of date.
 
 ### Backward Compatibility
-A symlink `start-wayofpi-ui.sh` points to `start-wayofpi.sh` for compatibility with older documentation and scripts.
+A symlink `start-wayofwork-ui.sh` points to `start-wayofpi.sh` for compatibility with older documentation and scripts.

@@ -10,7 +10,7 @@ wop-upstream-check:
 wop-upstream-sync *args:
     bun scripts/wop-pi-upstream.ts sync {{args}}
 
-# Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofpi-ui `npm run dev`
+# Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofwork-ui `npm run dev`
 wayofpi-full:
     set -euo pipefail
     exec "{{justfile_directory()}}/start-wayofpi.sh --web"

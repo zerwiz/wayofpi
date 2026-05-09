@@ -250,7 +250,7 @@ Use the interactive docs to **list sessions**, **fetch messages**, and call read
 
 ### Way of Pi web UI (planned)
 
-**`apps/wayofpi-ui`** (**Simple**, **Technical**, and **Claw** modes) does not yet surface Honcho connection state or memory browsing. Planned work: health and **`HONCHO_*`** transparency in each mode, optional read-only API helpers from the Way of Pi server where justified—see **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)** and planning hub **[WOP_PLANNING.md](WOP_PLANNING.md)** (Honcho paragraph). Heavy “ask Honcho” loops remain **Pi / Hermes** tool paths, not a Bun-parallel agent.
+**`apps/wayofwork-ui`** (**Simple**, **Technical**, and **Claw** modes) does not yet surface Honcho connection state or memory browsing. Planned work: health and **`HONCHO_*`** transparency in each mode, optional read-only API helpers from the Way of Pi server where justified—see **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md#honcho-and-way-of-pi-ui)** and planning hub **[WOP_PLANNING.md](WOP_PLANNING.md)** (Honcho paragraph). Heavy “ask Honcho” loops remain **Pi / Hermes** tool paths, not a Bun-parallel agent.
 
 ### If you want a richer UI (directions, not one-click here)
 

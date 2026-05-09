@@ -30,11 +30,11 @@
 
 ```bash
 # 1. Start Server
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-server
 node src/server/SessionManager.ts
 
 # 2. Start UI
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm run build
 npm start
 

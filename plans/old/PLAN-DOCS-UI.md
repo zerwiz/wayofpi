@@ -47,7 +47,7 @@ UiMode = "simple" | "technical" | "claw" | "docs"
 - [ ] Revert `SimpleApp.tsx` - remove DocsApp import and rendering
 
 ### 2. Create `DocsApp.tsx` as Standalone Mode
-Location: `apps/wayofpi-ui/src/components/docs/DocsApp.tsx`
+Location: `apps/wayofwork-ui/src/components/docs/DocsApp.tsx`
 
 **Layout** (3-panel, responsive):
 ```

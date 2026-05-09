@@ -134,7 +134,7 @@ Claw **can access any workspace file** via the Files tab or Pi tools — this is
 
 ## 8. Non-goals
 
-- **Rebuilding OpenClaw’s gateway** inside **`apps/wayofpi-ui/server`** as the “real” agent runtime.
+- **Rebuilding OpenClaw’s gateway** inside **`apps/wayofwork-ui/server`** as the “real” agent runtime.
 - **Shipping a beautiful Claw dashboard** that implies features **not** backed by **`WOP_PI_BINARY`** or documented bridges.
 - **Hiding** Bun vs Pi behind vague “AI is working” copy — operator trust requires **engine labels**.
 - **Mixing `.claw/` documents into Simple project files** or Technical workspace docks.

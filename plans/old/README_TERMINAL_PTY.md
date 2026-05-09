@@ -35,7 +35,7 @@ It provides a **real terminal experience** (not just rows of chat) using:
 ### **Architecture**:
 
 ```
-Browser (wayofpi-ui)
+Browser (wayofwork-ui)
     ↓ WebSocket
 Server (SessionManager)
     ↓ forkpty()
@@ -50,7 +50,7 @@ Shell (bash/zsh)
 
 ### **Server Files:**
 ```
-apps/wayofpi-server/src/server/
+apps/wayofwork-server/src/server/
 ├── SessionManager.ts    # WebSocket server + PTY
 ├── ScreenBuffer.ts      # Virtual buffer
 ├– ANSIParser.ts         # Escape code parser
@@ -60,7 +60,7 @@ apps/wayofpi-server/src/server/
 
 ### **UI Components:**
 ```
-apps/wayofpi-ui/src/logs/
+apps/wayofwork-ui/src/logs/
 ├── LogsPanel.tsx        # Terminal display
 ├── TerminalInput.tsx    # User input
 ├– TerminalRow.jsx       # Single row display
@@ -69,7 +69,7 @@ apps/wayofpi-ui/src/logs/
 
 ### **App Integration:**
 ```
-apps/wayofpi-ui/src/
+apps/wayofwork-ui/src/
 ├– App.tsx              # Main app
 └– AppContainer.tsx     # Terminal container
 ```
@@ -81,10 +81,10 @@ apps/wayofpi-ui/src/
 ### **1. Install Dependencies:**
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-server
 npm install
 
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm install
 ```
 
@@ -99,7 +99,7 @@ npm start
 ### **3. Build UI:**
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm run build
 npm start
 ```

@@ -147,7 +147,7 @@ hermes chat --resume <SESSION_ID>
 
 The Way of Pi UI has Hermes pages at:
 ```
-apps/wayofpi-ui/src/pages/hermes/
+apps/wayofwork-ui/src/pages/hermes/
 ```
 
 **Terminal panel**: Run Hermes commands interactively  

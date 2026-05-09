@@ -25,7 +25,32 @@
         }
       ],
       "trend": "stable"
+    },
+    "apps/wayofwork-ui/src/App.tsx": {
+      "latest": {
+        "commit": "5edc3b4",
+        "timestamp": "2026-05-09T15:05:29.070Z",
+        "mi": 0,
+        "cognitive": 1797,
+        "nesting": 8,
+        "lines": 4099,
+        "maxCyclomatic": 1361,
+        "entropy": 8.5
+      },
+      "history": [
+        {
+          "commit": "5edc3b4",
+          "timestamp": "2026-05-09T15:05:29.070Z",
+          "mi": 0,
+          "cognitive": 1797,
+          "nesting": 8,
+          "lines": 4099,
+          "maxCyclomatic": 1361,
+          "entropy": 8.5
+        }
+      ],
+      "trend": "stable"
     }
   },
-  "capturedAt": "2026-05-08T17:34:43.499Z"
+  "capturedAt": "2026-05-09T15:05:34.071Z"
 }

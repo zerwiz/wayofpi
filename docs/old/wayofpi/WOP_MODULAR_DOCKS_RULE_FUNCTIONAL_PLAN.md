@@ -2,7 +2,7 @@
 
 **Purpose:** Map **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)** to **what must be rebuilt, extended, or newly built** so the **Way of Pi web UI** actually satisfies the rule—not only stylistically, but as a **data-driven, migratable dock system**.
 
-**Pairs with:** **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** (phased checklists A–E) · **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** (today’s topology) · **`apps/wayofpi-ui/src/utils/technicalLayoutStorage.ts`**
+**Pairs with:** **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** (phased checklists A–E) · **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** (today’s topology) · **`apps/wayofwork-ui/src/utils/technicalLayoutStorage.ts`**
 
 **Last updated:** 2026-04-11
 

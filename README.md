@@ -62,7 +62,7 @@ Role-based access control (RBAC) ensures everyone sees what they need:
    ```
 3. Initialize the database:
    ```bash
-   bun run apps/wayofpi-ui/server/init-db.ts
+   bun run apps/wayofwork-ui/server/init-db.ts
    ```
 
 ### Running Pi
@@ -85,8 +85,8 @@ Way of Pi uses a **project-local** Pi installation to ensure stability.
 
 ## 📂 Project Structure
 
-- `apps/wayofpi-ui`: Main React frontend and Electron shell.
-- `apps/wayofpi-ui/server`: The Bun-powered backend serving APIs and agent orchestration.
+- `apps/wayofwork-ui`: Main React frontend and Electron shell.
+- `apps/wayofwork-ui/server`: The Bun-powered backend serving APIs and agent orchestration.
 - `.pi/agents`: Definitions for all AI agents.
 - `.pi/skills`: Reusable agent instruction sets.
 - `docs/`: Comprehensive technical documentation.

@@ -4,12 +4,12 @@
 
 | Feature | Status | Files |
 |---------|-------|-------|
-| Server (SessionManager.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofpi-server/src/server/SessionManager.ts) |
-| Screen Buffer (ScreenBuffer.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofpi-server/src/server/ScreenBuffer.ts) |
-| Terminal UI (LogsPanel.tsx) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofpi-ui/src/logs/LogsPanel.tsx) |
-| ANSI Parser (AnsiParser.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofpi-server/src/server/AnsiParser.ts) |
-| Window Resizer (WindowResizer.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofpi-server/src/server/WindowResizer.ts) |
-| App Integration (App.tsx) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofpi-ui/src/App.tsx) |
+| Server (SessionManager.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofwork-server/src/server/SessionManager.ts) |
+| Screen Buffer (ScreenBuffer.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofwork-server/src/server/ScreenBuffer.ts) |
+| Terminal UI (LogsPanel.tsx) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofwork-ui/src/logs/LogsPanel.tsx) |
+| ANSI Parser (AnsiParser.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofwork-server/src/server/AnsiParser.ts) |
+| Window Resizer (WindowResizer.ts) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofwork-server/src/server/WindowResizer.ts) |
+| App Integration (App.tsx) | ✅ Complete | [View](/home/zerwiz/CodeP/Way%20of%20pi/apps/wayofwork-ui/src/App.tsx) |
 
 **Total Files:** 8
 
@@ -138,7 +138,7 @@ interface ScreenBuffer {
 ### **Step 1: Setup**
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-server
 npm install
 ```
 
@@ -151,7 +151,7 @@ node src/server/SessionManager.ts
 ### **Step 3: Start UI**
 
 ```bash
-cd ../../../apps/wayofpi-ui
+cd ../../../apps/wayofwork-ui
 npm install
 npm run build
 npm start

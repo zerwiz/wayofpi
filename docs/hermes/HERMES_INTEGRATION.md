@@ -168,7 +168,7 @@ If Honcho is down, Hermes often reports something like **`Honcho init failed: Co
 
 ## 🎨 Hermes UI Shared Header & Menu
 
-**Located in:** `apps/wayofpi-ui/src/layouts/WayOfPiLayout.tsx`
+**Located in:** `apps/wayofwork-ui/src/layouts/WayOfPiLayout.tsx`
 
 The Hermes page uses the same header and menu as other Way of Pi pages:
 

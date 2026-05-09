@@ -10,7 +10,7 @@ Two runtime errors prevent the app from working in dev mode, plus a persistent w
 
 2. **WebSocket ECONNRESET**: Client connects to `ws://localhost:5173/ws`, Vite proxies to Bun `:3333`, but Bun resets the connection during the WebSocket upgrade. Vite logs `[vite] ws proxy socket error: Error: read ECONNRESET`.
 
-3. **ENOENT pi binary**: Sending a chat message triggers `Bun.spawn` which fails with ENOENT. Error surfaces as a dismissable dialog: *"Failed to spawn Pi process: ENOENT: no such file or directory, posix_spawn '/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/node_modules/.bin/pi'"*. Chat is non-functional.
+3. **ENOENT pi binary**: Sending a chat message triggers `Bun.spawn` which fails with ENOENT. Error surfaces as a dismissable dialog: *"Failed to spawn Pi process: ENOENT: no such file or directory, posix_spawn '/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/node_modules/.bin/pi'"*. Chat is non-functional.
 
 ## Root Cause Analysis
 
@@ -111,9 +111,9 @@ The symlink chain:
 
 ## Files Changed
 
-- `apps/wayofpi-ui/server/index.ts` — try/catch on WebSocket open + message handlers ✅
-- `apps/wayofpi-ui/server/pi-json-mode-chat.ts` — improved node resolution + spawn error handling ✅
-- `apps/wayofpi-ui/server/pi-binary.ts` — removed realpathSync, returns symlink path as-is ✅
-- `apps/wayofpi-ui/src/hooks/useWayOfPiSession.ts` — cleanup only closes OPEN WebSockets ✅
-- `apps/wayofpi-ui/electron/electron-main.mjs` — updated preload path reference ✅
-- `apps/wayofpi-ui/electron/preload.mjs` → `preload.cjs` — renamed & switched to CommonJS ✅
+- `apps/wayofwork-ui/server/index.ts` — try/catch on WebSocket open + message handlers ✅
+- `apps/wayofwork-ui/server/pi-json-mode-chat.ts` — improved node resolution + spawn error handling ✅
+- `apps/wayofwork-ui/server/pi-binary.ts` — removed realpathSync, returns symlink path as-is ✅
+- `apps/wayofwork-ui/src/hooks/useWayOfPiSession.ts` — cleanup only closes OPEN WebSockets ✅
+- `apps/wayofwork-ui/electron/electron-main.mjs` — updated preload path reference ✅
+- `apps/wayofwork-ui/electron/preload.mjs` → `preload.cjs` — renamed & switched to CommonJS ✅

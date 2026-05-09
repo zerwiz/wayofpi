@@ -11,7 +11,7 @@
 **Components**:
 
 - Core Pi agent (`.pi/agents/wop-agents/pi.agent.yml`)
-- Sub-agents (`apps/wayofpi-ui/agent/`)
+- Sub-agents (`apps/wayofwork-ui/agent/`)
 - Extensions (`.pi/extensions/`)
 - Skills (`.pi/skills/`)
 - Tools (`.pi/tools/`)

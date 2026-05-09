@@ -876,7 +876,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	if (p === "/api/health") {
 		return json({
 			ok: true,
-			service: "wayofpi-ui-server",
+			service: "wayofwork-ui-server",
 			time: new Date().toISOString(),
 			/** Bump clients (Vite/Electron “Start service”) so they do not treat an old Bun on this port as healthy. */
 			capabilities: {
@@ -977,7 +977,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 				v === "0" || v === "false" || v === "no" || v === "off"
 					? "WOP_ALLOW_SERVER_RESTART disables this exit. Unset it for the usual dev default (on), or set it to 1, then use Settings → Restart server again."
 					: process.env.NODE_ENV === "production"
-						? "Set WOP_ALLOW_SERVER_RESTART=1 on the Way of Pi Bun process, then use Settings → Restart server again. Otherwise stop and start your dev command in the terminal (e.g. npm run dev from apps/wayofpi-ui)."
+						? "Set WOP_ALLOW_SERVER_RESTART=1 on the Way of Pi Bun process, then use Settings → Restart server again. Otherwise stop and start your dev command in the terminal (e.g. npm run dev from apps/wayofwork-ui)."
 						: `Unrecognized WOP_ALLOW_SERVER_RESTART value. Use 1, true, yes, or on; unset for the dev default. Current: ${raw || "(empty)"}`;
 			return json(
 				{
@@ -1016,7 +1016,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		try {
 			const { join: pathJoin } = await import("node:path");
 			const { readFileSync, writeFileSync } = await import("node:fs");
-			// server/ → wayofpi-ui/ → apps/ → repo root
+			// server/ → wayofwork-ui/ → apps/ → repo root
 			const dotEnvPath = pathJoin(import.meta.dir, "..", "..", "..", ".env");
 			let src = "";
 			try { src = readFileSync(dotEnvPath, "utf8"); } catch { /* file may not exist yet */ }
@@ -1071,7 +1071,7 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 			engine: "none",
 			problems: [],
 			exitCode: null,
-			log: "No analysis run yet — open the Problems panel and choose Run analysis. (Requires ESLint or tsconfig at workspace root, or under apps/wayofpi-ui in this monorepo.)",
+			log: "No analysis run yet — open the Problems panel and choose Run analysis. (Requires ESLint or tsconfig at workspace root, or under apps/wayofwork-ui in this monorepo.)",
 		} satisfies WorkspaceProblemsRunResult);
 	}
 

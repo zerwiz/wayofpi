@@ -3,7 +3,7 @@
  *
  * Starts a Bun.serve instance on port 3334.
  * Handles terminal WebSocket connections natively (proxied to main server).
- * Shares the same SQLite database as wayofpi-ui.
+ * Shares the same SQLite database as wayofwork-ui.
  *
  * Run: `bun run server/index.ts`
  */
@@ -11,7 +11,7 @@
 import { serve, file } from "bun";
 
 const PORT = 3334;
-const DB_PATH = import.meta.resolveSync("../wayofpi-ui/server/wayofpi.sqlite");
+const DB_PATH = import.meta.resolveSync("../wayofwork-ui/server/wayofpi.sqlite");
 const UPSTREAM_HTTP = "http://127.0.0.1:3333";
 const UPSTREAM_WS = "ws://127.0.0.1:3333";
 

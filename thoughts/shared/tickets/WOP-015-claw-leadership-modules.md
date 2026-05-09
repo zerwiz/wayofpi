@@ -127,7 +127,7 @@ Leaders and Admins need to communicate directly from Claw without switching cont
 
 ### Backend: Database & API
 
-The server-side implementation will reside in `apps/wayofpi-ui/server/` and utilize the existing SQLite infrastructure in `db.ts`.
+The server-side implementation will reside in `apps/wayofwork-ui/server/` and utilize the existing SQLite infrastructure in `db.ts`.
 
 1.  **Database Extensions (`db.ts`)**:
     *   **Tickets Table**: Track ÄTA requests, categories (ändring, tillägg, avgående), and status (draft → pending_review → pending_approval → approved → invoiced).

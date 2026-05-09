@@ -34,8 +34,8 @@ Docs mode is a core feature of Way of Pi UI; broken components hinder document m
 - [x] Consolidate file selection logic (Path A/B) - DocsApp now updates both selectedPath and DocumentHandlerContext on file select
 
 ### Automated Verification
-- [x] Build completes: `bun run build` (wayofpi-ui) - DocsApp.tsx and DocumentBrowser.tsx errors fixed
-- [ ] Tests pass: `bun run test` (wayofpi-ui)
+- [x] Build completes: `bun run build` (wayofwork-ui) - DocsApp.tsx and DocumentBrowser.tsx errors fixed
+- [ ] Tests pass: `bun run test` (wayofwork-ui)
 
 ### Manual Verification
 - [ ] FileExplorer displays populated file tree when Docs mode is opened (requires server running)
@@ -51,13 +51,13 @@ Docs mode is a core feature of Way of Pi UI; broken components hinder document m
 ## Technical Notes
 
 ### Affected Components
-- `apps/wayofpi-ui/src/components/docs/FileExplorer.tsx` - Fix file loading mechanism (added missing props)
-- `apps/wayofpi-ui/src/components/docs/ChatPanel.tsx` - Initialize chat rows/sessions (added missing props)
-- `apps/wayofpi-ui/src/components/docs/ChatMessages.tsx` - Display chat history
-- `apps/wayofpi-ui/src/components/docs/DocumentBrowser.tsx` - Integrated into DocsApp, fixed loadFiles, added CSS
-- `apps/wayofpi-ui/src/components/docs/DocsApp.tsx` - Added DocumentBrowser integration with toggle
-- `apps/wayofpi-ui/src/components/docs/DocumentBrowser.css` - Created proper styles
-- `apps/wayofpi-ui/src/components/documenthandler/DocumentHandlerContext.tsx` - Verify context state updates
+- `apps/wayofwork-ui/src/components/docs/FileExplorer.tsx` - Fix file loading mechanism (added missing props)
+- `apps/wayofwork-ui/src/components/docs/ChatPanel.tsx` - Initialize chat rows/sessions (added missing props)
+- `apps/wayofwork-ui/src/components/docs/ChatMessages.tsx` - Display chat history
+- `apps/wayofwork-ui/src/components/docs/DocumentBrowser.tsx` - Integrated into DocsApp, fixed loadFiles, added CSS
+- `apps/wayofwork-ui/src/components/docs/DocsApp.tsx` - Added DocumentBrowser integration with toggle
+- `apps/wayofwork-ui/src/components/docs/DocumentBrowser.css` - Created proper styles
+- `apps/wayofwork-ui/src/components/documenthandler/DocumentHandlerContext.tsx` - Verify context state updates
 
 ---
 

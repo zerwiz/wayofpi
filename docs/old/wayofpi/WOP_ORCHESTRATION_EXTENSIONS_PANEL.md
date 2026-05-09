@@ -1,8 +1,8 @@
 # Extensions activity: Orchestration and Pi extensions
 
-This document describes the **Extensions** side panel in **Technical** UI mode (`apps/wayofpi-ui`): the **Orchestration** card (Plan / Build, chat backend summary, runtime toggles) and the **Pi extensions** card (workspace `extensions[]` in `.pi/settings.json`).
+This document describes the **Extensions** side panel in **Technical** UI mode (`apps/wayofwork-ui`): the **Orchestration** card (Plan / Build, chat backend summary, runtime toggles) and the **Pi extensions** card (workspace `extensions[]` in `.pi/settings.json`).
 
-**Code:** `apps/wayofpi-ui/src/components/TechnicalSidePanels.tsx` (`ExtensionsSidePanel`). **Server:** `apps/wayofpi-ui/server/index.ts` (`GET` / `POST` `/api/config`), `server/pi-agent-runtime.ts`, `server/orchestrator-tools-exec.ts`. **Related:** [WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md), [WOP_BUILD_PLAN_MODE.md](WOP_BUILD_PLAN_MODE.md), [WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md), [WOP_NAMESPACE.md](WOP_NAMESPACE.md).
+**Code:** `apps/wayofwork-ui/src/components/TechnicalSidePanels.tsx` (`ExtensionsSidePanel`). **Server:** `apps/wayofwork-ui/server/index.ts` (`GET` / `POST` `/api/config`), `server/pi-agent-runtime.ts`, `server/orchestrator-tools-exec.ts`. **Related:** [WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md), [WOP_BUILD_PLAN_MODE.md](WOP_BUILD_PLAN_MODE.md), [WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md), [WOP_NAMESPACE.md](WOP_NAMESPACE.md).
 
 ---
 
@@ -76,7 +76,7 @@ Returns JSON including at least:
 
 The handler lives in the **same Bun server** that serves **`GET /api/config`**. A 404 here almost always means the process on **`WOP_SERVER_PORT`** (default **3333**) is an **older build** that does not register **`POST /api/config`** for these keys.
 
-**Fix:** stop the old Bun API (find the process listening on the port, or stop `npm run dev` / `bun run server/index.ts`), then start the app again from **`apps/wayofpi-ui`** so server code and UI stay in sync.
+**Fix:** stop the old Bun API (find the process listening on the port, or stop `npm run dev` / `bun run server/index.ts`), then start the app again from **`apps/wayofwork-ui`** so server code and UI stay in sync.
 
 In dev, Vite proxies **`/api`** to that Bun port; the browser is not wrong if the backend is stale.
 
@@ -92,8 +92,8 @@ In dev, Vite proxies **`/api`** to that Bun port; the browser is not wrong if th
 |---|-----------|
 | D1 | With a **matching** Bun build, **`POST /api/config`** always returns **200** and **`GET /api/config`** reflects the new **`piDrivesChat`**, **`orchestratorTools`**, and **`orchestratorBash`** values within one refresh. |
 | D2 | With a **stale** Bun on the port, the **shell** warns **before** the user clicks toggles (not only after a **404**). |
-| D3 | Any surface that shows **`piDrivesChat`** / orchestrator flags uses the same **`GET /api/config`** path (shared **`useServerConfig`** in `apps/wayofpi-ui`; no second client with different parsing). |
-| D4 | Docs and **`apps/wayofpi-ui/README.md`** API table stay aligned when routes or fields change. |
+| D3 | Any surface that shows **`piDrivesChat`** / orchestrator flags uses the same **`GET /api/config`** path (shared **`useServerConfig`** in `apps/wayofwork-ui`; no second client with different parsing). |
+| D4 | Docs and **`apps/wayofwork-ui/README.md`** API table stay aligned when routes or fields change. |
 
 ---
 
@@ -105,7 +105,7 @@ Do these in order when toggles return **404** or values look wrong:
    Example: `ss -tlnp | grep 3333` or `lsof -i :3333`. If two processes fight the port, stop extras.
 
 2. **Restart the Way of Pi Bun server** from the same checkout as the UI (same commit / branch).  
-   Examples: stop **`npm run dev`** / **`bun run server/index.ts`** / **`just wayofpi-electron`** stack, then start again from **`apps/wayofpi-ui`**.
+   Examples: stop **`npm run dev`** / **`bun run server/index.ts`** / **`just wayofpi-electron`** stack, then start again from **`apps/wayofwork-ui`**.
 
 3. **Smoke-test the API** (replace port if needed):
 
@@ -118,7 +118,7 @@ Do these in order when toggles return **404** or values look wrong:
 
    Second line must return JSON with **`"ok":true`**. If it returns **`{"error":"Not found"}`**, the running server binary is still **too old** for this feature — repeat step 2 from a tree that contains **`POST /api/config`** session handling in **`server/index.ts`**.
 
-4. **Electron dev:** if **Start service** says the port is healthy but toggles **404**, treat it as **stale API** (health answered but route set mismatched). Stop the old Bun on that port, then start again (see **`apps/wayofpi-ui/electron/electron-main.mjs`** and **`vite.config.ts`** “fresh vs stale” health logic — today keyed off **`capabilities.workspaceProblems`**).
+4. **Electron dev:** if **Start service** says the port is healthy but toggles **404**, treat it as **stale API** (health answered but route set mismatched). Stop the old Bun on that port, then start again (see **`apps/wayofwork-ui/electron/electron-main.mjs`** and **`vite.config.ts`** “fresh vs stale” health logic — today keyed off **`capabilities.workspaceProblems`**).
 
 5. **Pi drives chat “on” but stays off:** install **`pi`** or set **`WOP_PI_BINARY`**; confirm **`piBinaryResolved`** is **true** in **`GET /api/config`**.
 
@@ -130,11 +130,11 @@ Do these in order when toggles return **404** or values look wrong:
 
 | Step | Work | Status |
 |------|------|--------|
-| 1.1 | Add **`capabilities.configRuntimePost: true`** on **`GET /api/health`** and echo the same object on **`GET /api/config`** in **`apps/wayofpi-ui/server/index.ts`**. | **Done** |
-| 1.2 | Update **`apps/wayofpi-ui/vite.config.ts`** and **`apps/wayofpi-ui/electron/electron-main.mjs`** so **“fresh”** Bun requires **`workspaceProblems`** and **`configRuntimePost`** on **`/api/health`**. | **Done** |
+| 1.1 | Add **`capabilities.configRuntimePost: true`** on **`GET /api/health`** and echo the same object on **`GET /api/config`** in **`apps/wayofwork-ui/server/index.ts`**. | **Done** |
+| 1.2 | Update **`apps/wayofwork-ui/vite.config.ts`** and **`apps/wayofwork-ui/electron/electron-main.mjs`** so **“fresh”** Bun requires **`workspaceProblems`** and **`configRuntimePost`** on **`/api/health`**. | **Done** |
 | 1.3 | **Extensions** activity: top **help dock** (fix steps, **`curl`** smoke, **Re-check server**, link to **Tool log**, **Pi CLI** notes) when **`configRuntimePost`** is missing or a toggle returned **404**. | **Done** |
 
-**Files:** `server/index.ts`, `vite.config.ts`, `electron/electron-main.mjs`, `TechnicalSidePanels.tsx`, `useServerConfig.ts`, **`apps/wayofpi-ui/README.md`** (API table).
+**Files:** `server/index.ts`, `vite.config.ts`, `electron/electron-main.mjs`, `TechnicalSidePanels.tsx`, `useServerConfig.ts`, **`apps/wayofwork-ui/README.md`** (API table).
 
 ---
 
@@ -169,7 +169,7 @@ Until Phase 2 ships, the doc and UI should keep saying **until restart**.
 | Step | Work |
 |------|------|
 | 4.1 | Add a **small script** or **`bun test`** that starts or assumes server on a test port, **`POST`s** each key, **`GET`s** `/api/config`, asserts values — run in CI or **`just`** recipe. |
-| 4.2 | Document the command in **`apps/wayofpi-ui/README.md`** next to the API table. |
+| 4.2 | Document the command in **`apps/wayofwork-ui/README.md`** next to the API table. |
 
 ---
 

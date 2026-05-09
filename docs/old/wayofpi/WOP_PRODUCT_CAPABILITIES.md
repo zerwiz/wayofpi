@@ -117,8 +117,8 @@ Legend: **Shipped** = usable end-to-end in normal setup · **Partial** = works w
 
 | Capability | Status | Notes |
 |------------|--------|--------|
-| **Electron desktop** (recommended dev flow) | **Shipped** | **`./start-wayofpi-electron.sh`**, **`just wayofpi-electron`** — same **`/api`** / **`/ws`** as browser via Vite proxy. **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)**. |
-| **Browser dev** | **Shipped** | **`./start-wayofpi-ui.sh`**. |
+| **Electron desktop** (recommended dev flow) | **Shipped** | **`./start-wayofpi-electron.sh`**, **`just wayofpi-electron`** — same **`/api`** / **`/ws`** as browser via Vite proxy. **[apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)**. |
+| **Browser dev** | **Shipped** | **`./start-wayofwork-ui.sh`**. |
 | **Simple / Technical / Claw UI** toggle | **Shipped** | Chat-first vs IDE-style chrome; **Claw** reuses Technical shell with a roadmap banner — **[WOP_CLAW_MODE_PLAN.md](WOP_CLAW_MODE_PLAN.md)**, **[WOP_CLAW_UI_PLAN.md](WOP_CLAW_UI_PLAN.md)** (interface plan), **[WOP_SIMPLE_UI_VIEWS.md](WOP_SIMPLE_UI_VIEWS.md)**, **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**. |
 | **Technical workspace grid** (up to 3×4 panes, persistence, DnD) | **Shipped** | **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**. |
 | **Workspace file tree + editor** (text + markdown preview, binary read via base64) | **Shipped** | Jailed **`/api/tree`**, **`/api/file`**; workspace roots from **`WOP_WORKSPACE`** / folder pick — not "active tab = root." **[WOP_NAMESPACE.md](WOP_NAMESPACE.md)**. |

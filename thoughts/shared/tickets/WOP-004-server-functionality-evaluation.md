@@ -29,7 +29,7 @@ After extensive analysis of all server functionality issues, **the current serve
 
 ## 🎯 Problem Statement
 
-The server component (`apps/wayofpi-server/`) is experiencing **continuous build failures, runtime errors, and architectural debt** that cannot be resolved through incremental fixes alone. The current approach has led to:
+The server component (`apps/wayofwork-server/`) is experiencing **continuous build failures, runtime errors, and architectural debt** that cannot be resolved through incremental fixes alone. The current approach has led to:
 
 1. **Build Failures**: 60+ TypeScript errors preventing `bun run build` from completing
 2. **Runtime Instability**: WebSocket disconnections, ENOENT errors, white screen issues
@@ -47,7 +47,7 @@ The server component (`apps/wayofpi-server/`) is experiencing **continuous build
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     apps/wayofpi-server/                       │
+│                     apps/wayofwork-server/                       │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │  server/                                                 │ │
 │  │    - index.ts (Main server handler, WebSocket, APIs)    │ │
@@ -59,7 +59,7 @@ The server component (`apps/wayofpi-server/`) is experiencing **continuous build
 │  └─────────────────────────────────────────────────────────┘ │
 │                       ↓                                        │
 │  ┌─────────────────────────────────────────────────────────┐ │
-│  │  apps/wayofpi-ui/ (Client/Vite)                          │ │
+│  │  apps/wayofwork-ui/ (Client/Vite)                          │ │
 │  │    - src/ (React components)                              │ │
 │  │    - electron/ (Electron wrapper)                         │ │
 │  │    - server/ (Proxy layer, shared with above?)            │ │
@@ -72,7 +72,7 @@ The server component (`apps/wayofpi-server/`) is experiencing **continuous build
 
 | Issue | Impact | Root Cause |
 |-------|--------|-------------|
-| Server in client repo | Tight coupling | Server code is inside `apps/wayofpi-server/` but client repo expects certain structure |
+| Server in client repo | Tight coupling | Server code is inside `apps/wayofwork-server/` but client repo expects certain structure |
 | Mixed concerns | Hard to maintain | Server logic mixed with client proxies in same paths |
 | Import paths broken | Build failures | Missing `shared/`, `hooks/`, `types/` imports from server |
 | No clean API layer | 403 issues, proxy complications | Client makes direct API calls, proxy adds complexity |
@@ -281,7 +281,7 @@ Benefits:
 **Recommendation**: Extract server as **standalone Bun service**
 
 ```
-apps/wayofpi-server/ (Standalone Bun server)
+apps/wayofwork-server/ (Standalone Bun server)
 ├── server/
 │   ├── index.ts          # Main server + API + WebSocket
 │   ├── db.ts             # Database layer
@@ -294,7 +294,7 @@ apps/wayofpi-server/ (Standalone Bun server)
 ```
 
 ```
-apps/wayofpi-ui/ (Vite Client)
+apps/wayofwork-ui/ (Vite Client)
 ├── src/
 │   ├── components/
 │   ├── hooks/
@@ -315,7 +315,7 @@ apps/wayofpi-ui/ (Vite Client)
 
 **Migration Plan**:
 1. Extract server to standalone repo or separate directory
-2. Port all server logic from `wayofpi-ui/server/`
+2. Port all server logic from `wayofwork-ui/server/`
 3. Update client to call server via URLs (not local paths)
 4. Remove all client→server type sharing
 5. Deploy server on separate port (e.g., :3000 or :3333)
@@ -424,7 +424,7 @@ If server complexity is too high, consider:
 ### Current Stack (Issues)
 
 ```typescript
-// apps/wayofpi-server/ (Bun server)
+// apps/wayofwork-server/ (Bun server)
 server/index.ts           // Main handler + WebSocket + API
 server/db.ts              // Database
 server/auth.ts            // JWT
@@ -433,7 +433,7 @@ server/shared/*           // Shared types
 ```
 
 ```typescript
-// apps/wayofpi-ui/ (Vite client)
+// apps/wayofwork-ui/ (Vite client)
 src/                      // React components
 electron/                 // Electron wrapper
 server/                   // Client proxy layer (issues)

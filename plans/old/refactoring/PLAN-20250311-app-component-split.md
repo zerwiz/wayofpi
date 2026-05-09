@@ -8,7 +8,7 @@ Now its smaller under 100 lines, but it need to work!
 **Current State:** Single massive file with complex state management, but many components already extracted.
 
 **Target State:** Container-based architecture with dedicated components, reusable hooks, and clear separation of concerns. 
-- Extract each render function in /Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx so they work in App.tsx as its own component
+- Extract each render function in /Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx so they work in App.tsx as its own component
 
 **CRITICAL: NO PLACEHOLDER PAGES OR FUNCTIONS!!!! PRODUCTION READY: DO NOT COPY OVER THE FULL app.tsx, Do not restore it from old, Build every function one by one!!!!**
 
@@ -280,7 +280,7 @@ components/technical/
 **DO NOT DELETE** without verifying each file exists in proper component location first!
 
 **Approach:**
-- Extract each render function in /Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx so they work in App.tsx as its own component
+- Extract each render function in /Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx so they work in App.tsx as its own component
 - Start with simpler components (menubar items, toolbar buttons)
 - Work toward complex components (terminal menu, workspace grid)
 - Test each component in isolation before merging into App.tsx
@@ -308,7 +308,7 @@ components/technical/
 - No new bugs introduced
 - Components independently testable
 
-**Note:** ✅ All UI components now reside in `/apps/wayofpi-ui/src/` (not `/src/`)
+**Note:** ✅ All UI components now reside in `/apps/wayofwork-ui/src/` (not `/src/`)
 ---
 
 ### Phase 8: Final Refactoring & Cleanup (Week 17-18) ✅ **IN PROGRESS**
@@ -458,7 +458,7 @@ components/technical/
    - Check `components/`, `hooks/`, `menus/`, `layout/`, `modals/`, etc.
 
 2. **Search for files referencing wrong paths:**
-   - Run: `grep -r "import.*from.*\.\./\.\./" apps/wayofpi-ui/src/ | grep -v -E "(\\.vscode|agents|\\.pi|\\.claw|\\.wayofpi|agent|\\.kilo|\\.hermes|node_modules)"`
+   - Run: `grep -r "import.*from.*\.\./\.\./" apps/wayofwork-ui/src/ | grep -v -E "(\\.vscode|agents|\\.pi|\\.claw|\\.wayofpi|agent|\\.kilo|\\.hermes|node_modules)"`
    - Look for broken imports pointing to non-existent files
    - Identify files that might have been created elsewhere
 
@@ -478,7 +478,7 @@ components/technical/
 - ✅ Documented files in pi-extensions/
 
 **Phase 9.2: Migrate Hooks (In Progress)**
-- ⏳ Hooks in hooks-alongside/ need migration to apps/wayofpi-ui/src/hooks/
+- ⏳ Hooks in hooks-alongside/ need migration to apps/wayofwork-ui/src/hooks/
 - ⏳ Check if hooks in /hooks/ are duplicates to archive
 
 **Phase 9.3: Handle Extensions (Pending)**
@@ -514,7 +514,7 @@ Any file discovered in a wrong filepath must be logged with:
 ```
 
 **Common Wrong Path Patterns to Check:**
-- Files in `/src/` at repo root (should be in `/apps/wayofpi-ui/src/`)
+- Files in `/src/` at repo root (should be in `/apps/wayofwork-ui/src/`)
 - Files in wrong component directories (e.g., `components/menus/` vs `components/menus/subdir/`)
 - Files with duplicate names in different locations
 - Files created during agent runs that weren't cleaned up
@@ -546,19 +546,19 @@ Before creating ANY new file:
 
 | File Path | File Name | Size | Last Modified | Content Type | Action Taken | Discovery Date | Notes |
 |---|---|---|---|---|---|---|---|
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useAgents.ts` | `useAgents.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useSimplePreferences.ts` | `useSimplePreferences.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useWayOfPiSession.ts` | `useWayOfPiSession.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useUiMode.ts` | `useUiMode.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useUiViewsCatalog.ts` | `useUiViewsCatalog.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useServerConfig.ts` | `useServerConfig.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useWorkspaceStaticAnalysis.ts` | `useWorkspaceStaticAnalysis.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useMaxWidthMediaQuery.ts` | `useMaxWidthMediaQuery.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useWorkspaceTree.ts` | `useWorkspaceTree.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useShellMobile.ts` | `useShellMobile.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/hooks/` |
-| `/home/zerwiz/CodeP/Way of pi/piwithstuff/extensions/agent-team.ts` | `agent-team.ts` | - | - | Pi extension | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/extensions/` or `/extensions/` |
-| `/home/zerwiz/CodeP/Way of pi/piwithstuff/extensions/theme-cycler.ts` | `theme-cycler.ts` | - | - | Pi extension | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/extensions/` or `/extensions/` |
-| `/home/zerwiz/CodeP/Way of pi/piwithstuff/extensions/themeMap.ts` | `themeMap.ts` | - | - | Pi extension (theme) | migrate | 2026-04-22 | Should be in `/apps/wayofpi-ui/src/extensions/` or `/extensions/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useAgents.ts` | `useAgents.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useSimplePreferences.ts` | `useSimplePreferences.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useWayOfPiSession.ts` | `useWayOfPiSession.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useUiMode.ts` | `useUiMode.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useUiViewsCatalog.ts` | `useUiViewsCatalog.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useServerConfig.ts` | `useServerConfig.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useWorkspaceStaticAnalysis.ts` | `useWorkspaceStaticAnalysis.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useMaxWidthMediaQuery.ts` | `useMaxWidthMediaQuery.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useWorkspaceTree.ts` | `useWorkspaceTree.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/hooks-alongside/useShellMobile.ts` | `useShellMobile.ts` | - | - | custom hook | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/hooks/` |
+| `/home/zerwiz/CodeP/Way of pi/piwithstuff/extensions/agent-team.ts` | `agent-team.ts` | - | - | Pi extension | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/extensions/` or `/extensions/` |
+| `/home/zerwiz/CodeP/Way of pi/piwithstuff/extensions/theme-cycler.ts` | `theme-cycler.ts` | - | - | Pi extension | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/extensions/` or `/extensions/` |
+| `/home/zerwiz/CodeP/Way of pi/piwithstuff/extensions/themeMap.ts` | `themeMap.ts` | - | - | Pi extension (theme) | migrate | 2026-04-22 | Should be in `/apps/wayofwork-ui/src/extensions/` or `/extensions/` |
 | `/home/zerwiz/CodeP/Way of pi/hooks/useAgents.ts` | `useAgents.ts` | - | - | custom hook | archive/deprecate | 2026-04-22 | Duplicate of hooks-alongside, old location |
 | `/home/zerwiz/CodeP/Way of pi/hooks/useServerConfig.ts` | `useServerConfig.ts` | - | - | custom hook | archive/deprecate | 2026-04-22 | Duplicate of hooks-alongside, old location |
 
@@ -604,8 +604,8 @@ Files in `/agent/git/github.com/tmustier/pi-extensions/` are outside expected ap
 # Find all TypeScript/TSX files in unexpected locations (excluding system directories)
 find . -name "*.tsx" -o -name "*.ts" 2>/dev/null | grep -v -E "(node_modules|\.pi|\.vscode|agents|\.claw|\.wayofpi|agent|\.kilo|\.hermes)" | sort
 
-# Find files in /src/ at repo root (wrong location) - should be in apps/wayofpi-ui/src/
-find /home/zerwiz/CodeP/Way\ of\ pi -path "*/src/*.tsx" 2>/dev/null | grep -v apps/wayofpi-ui | grep -v -E "(node_modules|\.pi|\.vscode|agents|\.claw|\.wayofpi|agent|\.kilo|\.hermes)"
+# Find files in /src/ at repo root (wrong location) - should be in apps/wayofwork-ui/src/
+find /home/zerwiz/CodeP/Way\ of\ pi -path "*/src/*.tsx" 2>/dev/null | grep -v apps/wayofwork-ui | grep -v -E "(node_modules|\.pi|\.vscode|agents|\.claw|\.wayofpi|agent|\.kilo|\.hermes)"
 
 # Search for duplicate component names (excluding system directories)
 find . -name "CommandPalette.tsx" -o -name "WorkspacePane.tsx" -o -name "*.tsx" 2>/dev/null | grep -v -E "(node_modules|\.pi|\.vscode|agents|\.claw|\.wayofpi|agent|\.kilo|\.hermes)" | sort
@@ -616,7 +616,7 @@ find . -name "CommandPalette.tsx" -o -name "WorkspacePane.tsx" -o -name "*.tsx" 
 ## 🏗️ Directory Structure
 
 ```
-apps/wayofpi-ui/src/
+apps/wayofwork-ui/src/
 ├── hooks/
 │   ├── useAgents.ts
 │   ├── useFileEditor.ts
@@ -683,7 +683,7 @@ apps/wayofpi-ui/src/
 └── App.css                  # Styles
 ```
 
-**IMPORTANT:** ⚠️ All UI components must reside in `/apps/wayofpi-ui/src/`
+**IMPORTANT:** ⚠️ All UI components must reside in `/apps/wayofwork-ui/src/`
 **DO NOT:** Create components in `/src/` at the project root - that directory should NOT exist
 
 ---
@@ -728,7 +728,7 @@ apps/wayofpi-ui/src/
 - ✅ Use components-alongside for staging
 - ✅ Organize technical components in `components/technical/`
 - ✅ Start Phase 7 by extracting simplest components first
-- ✅ Place all UI in `/apps/wayofpi-ui/src/` only
+- ✅ Place all UI in `/apps/wayofwork-ui/src/` only
 - ✅ DO NOT use `/src/` at project root - should NOT exist
 
 ### DO NOT:
@@ -737,7 +737,7 @@ apps/wayofpi-ui/src/
 - ❌ Batch fix multiple errors
 - ❌ Make large multi-part changes
 - ❌ Mix technical and simple/claw components
-- ❌ Create components outside `/apps/wayofpi-ui/src/`
+- ❌ Create components outside `/apps/wayofwork-ui/src/`
 
 ---
 
@@ -746,13 +746,13 @@ apps/wayofpi-ui/src/
 **📁 Reference Files:**
 
 **1. New Smaller App.tsx**
-- **Path:** [`/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/App.tsx`](/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/App.tsx)
+- **Path:** [`/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/App.tsx`](/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/App.tsx)
 - **Status:** **CURRENT ACTIVE** — This is the actively refactored, modular version
 - **Purpose:** Contains the modern, componentized App with extracted hooks, components, and proper architecture
 - **DO:** Work with this file for all active development
 
 **2. Reference Old App.tsx**
-- **Path:** [`/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx`](/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/ReferenceApp.tsx)
+- **Path:** [`/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx`](/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/ReferenceApp.tsx)
 - **Status:** **REFERENCE ONLY** — Do not use for active development
 - **Contains:** Original monolithic App.tsx (~6000+ lines) with useful constants
 - **Key Constants Defined:**
@@ -832,7 +832,7 @@ This ensures no valuable work is accidentally lost during cleanup.
   - `./piwithstuff/extensions/theme-cycler.ts`
   - `./piwithstuff/extensions/themeMap.ts`
   - `./piwithstuff/extensions/web-tools.ts`
-  - plus other agent-specific extensions under `piwithstuff/extensions/` should be moved to `/apps/wayofpi-ui/src/extensions/`.
+  - plus other agent-specific extensions under `piwithstuff/extensions/` should be moved to `/apps/wayofwork-ui/src/extensions/`.
 - **Reference snippets:** All `./ref/*.ts` files (e.g., `./ref/context-local-hints.ts`, `./ref/pi/extensions/agent-team.ts`, etc.) are reference implementations for development only; they should not be referenced by production code.
 
 ## 📞 Current Status (Updated: 2026-04-22)
@@ -976,8 +976,8 @@ This ensures no valuable work is accidentally lost during cleanup.
 
 ## 📣 Update: Misplaced Files Handling
 
-- Hooks in `hooks-alongside/` and duplicate hooks in `/hooks/` have been moved to `/apps/wayofpi-ui/src/hooks/` and deprecated.
-- Extension files in `piwithstuff/extensions/` have been relocated to `/apps/wayofpi-ui/src/extensions/`.
+- Hooks in `hooks-alongside/` and duplicate hooks in `/hooks/` have been moved to `/apps/wayofwork-ui/src/hooks/` and deprecated.
+- Extension files in `piwithstuff/extensions/` have been relocated to `/apps/wayofwork-ui/src/extensions/`.
 - Placeholder UI components in `components/ui/` will be cleaned up after final verification.
 
 ---

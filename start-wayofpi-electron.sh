@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start Way of Pi application in Electron
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-UI_DIR="$ROOT/apps/wayofpi-ui"
+UI_DIR="$ROOT/apps/wayofwork-ui"
 
 if [[ ! -d "$UI_DIR" ]]; then
 	echo "error: missing $UI_DIR" >&2
@@ -78,7 +78,7 @@ for PORT in 3333 5173; do
 done
 
 # Extra cleanup: kill common app processes
-pkill -9 -f "wayofpi-ui" 2>/dev/null || true
+pkill -9 -f "wayofwork-ui" 2>/dev/null || true
 pkill -9 -f "concurrently" 2>/dev/null || true
 pkill -9 -f "vite" 2>/dev/null || true
 pkill -9 -f "node.*server" 2>/dev/null || true

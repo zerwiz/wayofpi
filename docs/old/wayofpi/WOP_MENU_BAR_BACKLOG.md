@@ -4,7 +4,7 @@
 
 **No third-party product names** — this doc speaks only in terms of **capabilities** and **Way of Pi** implementation.
 
-**Living implementation:** `apps/wayofpi-ui/src/components/MenuBar.tsx`, `App.tsx` (handlers, shortcuts), `CommandPalette.tsx`, `types/workspaceEditor.ts` (`*MenuHandlers`).
+**Living implementation:** `apps/wayofwork-ui/src/components/MenuBar.tsx`, `App.tsx` (handlers, shortcuts), `CommandPalette.tsx`, `types/workspaceEditor.ts` (`*MenuHandlers`).
 
 **Related:** **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)** · **[WOP_UI_MANIFEST.md](WOP_UI_MANIFEST.md)** · **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** · **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)**
 

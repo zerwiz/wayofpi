@@ -39,7 +39,7 @@ Code was brought in from at least **3 external sources** without fixing import p
 
 ### Root Cause #3: Server in Client Repo
 
-`apps/wayofpi-ui/server/` is a full Bun backend living inside the frontend project. This causes:
+`apps/wayofwork-ui/server/` is a full Bun backend living inside the frontend project. This causes:
 - Shared types between server and client (broken `shared/` path)
 - Vite proxy complexity for WebSocket
 - Build process confusion (what does `bun run build` even build?)
@@ -218,7 +218,7 @@ React UI → Bun server → import createAgentSession() → typed events → sta
 
 Shared "root" dependency:
 apps/
-├── wayofpi-ui/         → imports @earendil-works/pi-coding-agent
+├── wayofwork-ui/         → imports @earendil-works/pi-coding-agent
 ├── another-ui/         → imports @earendil-works/pi-coding-agent (same version, same root)
 └── package.json        → "@earendil-works/pi-coding-agent": "0.74.0" (single source of truth)
 ```

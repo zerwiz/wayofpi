@@ -15,7 +15,7 @@
 | `/start-server.ts` | Auto-start entry point | ✅ Created |
 | `/package.json` | Server app config | ✅ Created |
 | `/startup-scripts/auto-start-pty-server.sh` | Legacy bash fallback | ✅ Created |
-| `/apps/wayofpi-ui/server/index.ts` | Vite server integration | ✅ Updated |
+| `/apps/wayofwork-ui/server/index.ts` | Vite server integration | ✅ Updated |
 | `/PTY_AUTO_START_INTEGRATION.md` | Integration docs | ✅ Created |
 | `/PTY_SERVER_AUTO_START_COMPLETE.md` | This file | ✅ Created |
 
@@ -60,7 +60,7 @@ Add to root `/package.json`:
 {
   "scripts": {
     "start": "npm run start:pty && npm run start:app",
-    "start:pty": "tsx apps/wayofpi-server/start-server.ts",
+    "start:pty": "tsx apps/wayofwork-server/start-server.ts",
     "start:app": "electron ."
   }
 }
@@ -68,7 +68,7 @@ Add to root `/package.json`:
 
 ### Server Entry Point
 
-Created: `apps/wayofpi-server/start-server.ts`
+Created: `apps/wayofwork-server/start-server.ts`
 
 This script:
 - Starts SessionManager
@@ -94,7 +94,7 @@ This script:
                    │
                    ▼
 ┌─────────────────────────────────────────┐
-│  apps/wayofpi-server/start-server.ts    │
+│  apps/wayofwork-server/start-server.ts    │
 │  → Starts SessionManager.ts             │
 │  → WebSocket server on port 3333        │
 └─────────────────────────────────────────┘
@@ -199,7 +199,7 @@ npm run electron:start
 ## 📝 Summary
 
 **What:** PTY WebSocket server auto-starts with main app  
-**Where:** `/apps/wayofpi-server/start-server.ts`  
+**Where:** `/apps/wayofwork-server/start-server.ts`  
 **How:** Through package.json scripts  
 **Status:** ✅ Ready to test!  
 

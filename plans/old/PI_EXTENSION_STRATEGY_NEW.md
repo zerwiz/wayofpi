@@ -1,7 +1,7 @@
 # Way of Pi: Protected vs. Fluent Extension Strategy (with PIP)
 
 ## 1. Vision
-Maintain a stable, high-performance UI experience in `apps/wayofpi-ui` (Electron/Web) while staying agile and following the latest developments from `www.pi.dev` (Upstream Pi) for CLI/TUI usage. This is achieved by utilizing **PIP (Pi Infrastructure Package)** as a core dependency.
+Maintain a stable, high-performance UI experience in `apps/wayofwork-ui` (Electron/Web) while staying agile and following the latest developments from `www.pi.dev` (Upstream Pi) for CLI/TUI usage. This is achieved by utilizing **PIP (Pi Infrastructure Package)** as a core dependency.
 
 ## 2. The Tiered Architecture
 
@@ -9,7 +9,7 @@ We will categorize extensions into three tiers to isolate stability from agility
 
 ### Tier 1: Protected (Stable / UI-Critical)
 *   **Location:** `.pi/extensions/protected/` (Way of Pi)
-*   **Purpose:** Extensions required for the `wayofpi-ui` backend. These are "frozen" or surgically updated only after full UI regression testing.
+*   **Purpose:** Extensions required for the `wayofwork-ui` backend. These are "frozen" or surgically updated only after full UI regression testing.
 *   **Safety:** Protected from upstream Pi updates that might change tool signatures or UI widget behavior.
 
 ### Tier 2: Fluent (Agile / PIP Upstream)
@@ -62,7 +62,7 @@ The PIP loader will handle the `web_search` conflict by:
 ---
 
 ## 6. UI Backend Parity
-The `apps/wayofpi-ui` server will:
+The `apps/wayofwork-ui` server will:
 1.  Set `PI_STACK` based on the active view.
 2.  Set `WOP_PI_LOADER_PATH` to the PIP loader.
 3.  Execute `pi -e $WOP_PI_LOADER_PATH`.

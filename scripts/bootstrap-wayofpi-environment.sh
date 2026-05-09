@@ -11,15 +11,15 @@
 # Usage (from repo root):
 #   ./scripts/bootstrap-wayofpi-environment.sh              # report only + hints
 #   ./scripts/bootstrap-wayofpi-environment.sh --check-only   # exit 1 if bun/git/node/npm missing
-#   ./scripts/bootstrap-wayofpi-environment.sh --install -y    # install Bun (if needed) + npm in apps/wayofpi-ui
+#   ./scripts/bootstrap-wayofpi-environment.sh --install -y    # install Bun (if needed) + npm in apps/wayofwork-ui
 #
 set -euo pipefail
 
 SCRIPT_NAME="bootstrap-wayofpi-environment"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UI_DIR="$ROOT/apps/wayofpi-ui"
+UI_DIR="$ROOT/apps/wayofwork-ui"
 
-# Minimum Bun for apps/wayofpi-ui server; full playground README recommends ≥1.3.2 for Pi stack.
+# Minimum Bun for apps/wayofwork-ui server; full playground README recommends ≥1.3.2 for Pi stack.
 BUN_MIN_UI="1.1.0"
 BUN_MIN_PLAYGROUND="1.3.2"
 
@@ -35,7 +35,7 @@ Way of Pi — bootstrap / environment probe
   ./scripts/bootstrap-wayofpi-environment.sh [--check-only] [--install] [-y] [--init-env]
 
   --check-only   Exit 1 if bun, git, node, or npm missing, or Bun < UI minimum (CI).
-  --install      Offer (or with -y, run) Bun install script and npm install in apps/wayofpi-ui.
+  --install      Offer (or with -y, run) Bun install script and npm install in apps/wayofwork-ui.
   -y, --yes      Non-interactive yes for --install prompts.
   --init-env     Copy .env.sample to .env at repo root if .env does not exist.
 EOF
@@ -208,7 +208,7 @@ if [[ "$OS" == "windows-msys" ]]; then
 	warn "Git Bash / MSYS detected. This script targets Unix-like shells."
 	echo "  Use WSL2 (Ubuntu) and clone the repo there, or follow:"
 	echo "  https://bun.sh/docs/installation#windows"
-	echo "  Then: cd apps/wayofpi-ui && npm install"
+	echo "  Then: cd apps/wayofwork-ui && npm install"
 	if [[ "$CHECK_ONLY" == 1 ]]; then exit 1; fi
 	exit 0
 fi
@@ -259,7 +259,7 @@ if have_cmd bun; then
 		warn "Bun $BUN_VER is below UI minimum $BUN_MIN_UI; upgrade recommended."
 	fi
 else
-	warn "Bun is missing (required for apps/wayofpi-ui server)."
+	warn "Bun is missing (required for apps/wayofwork-ui server)."
 fi
 
 CRITICAL_OK=1
@@ -310,7 +310,7 @@ fi
 if ! have_cmd ngrok && [[ ! -x "$UI_DIR/node_modules/ngrok/bin/ngrok" ]]; then
 	echo "* ngrok (optional — Settings → ngrok for public https URL to this dev machine):"
 	echo "  ./scripts/install-ngrok-optional.sh          # copy-paste apt + brew"
-	echo "  (cd apps/wayofpi-ui && npm install)         # bundled optional npm agent"
+	echo "  (cd apps/wayofwork-ui && npm install)         # bundled optional npm agent"
 	echo "  just install-ngrok-optional && ./scripts/install-ngrok-optional.sh --install -y   # advanced: apt via sudo"
 	echo ""
 fi
@@ -351,9 +351,9 @@ if [[ "$DO_INSTALL" == 1 ]]; then
 	fi
 
 	if have_cmd npm && [[ -d "$UI_DIR" ]]; then
-		if prompt_yes "Run npm install in apps/wayofpi-ui ?"; then
+		if prompt_yes "Run npm install in apps/wayofwork-ui ?"; then
 			(cd "$UI_DIR" && npm install)
-			log "npm install completed in apps/wayofpi-ui"
+			log "npm install completed in apps/wayofwork-ui"
 		fi
 	else
 		if [[ ! -d "$UI_DIR" ]]; then

@@ -36,7 +36,7 @@ fi
 if [ "$BACKUP" = true ]; then
     BACKUP_DIR=".wop-backup-$(date +%Y%m%d-%H%M%S)"
     mkdir -p "$BACKUP_DIR"
-    cp -r .pi agent extensions docs scripts apps/wayofpi-ui .env .env.sample "$BACKUP_DIR/" 2>/dev/null || true
+    cp -r .pi agent extensions docs scripts apps/wayofwork-ui .env .env.sample "$BACKUP_DIR/" 2>/dev/null || true
     echo "Backup created: $BACKUP_DIR"
 fi
 
@@ -53,14 +53,14 @@ fi
 # Install dependencies
 echo "Installing dependencies..."
 bun install
-cd apps/wayofpi-ui && npm install && cd ../..
+cd apps/wayofwork-ui && npm install && cd ../..
 
 # Restore from backup if needed
 if [ "$BACKUP" = true ] && [ "$FORCE" != true ]; then
     LATEST_BACKUP=$(ls -t .wop-backup-* 2>/dev/null | head -1)
     if [ -n "$LATEST_BACKUP" ]; then
         echo "Restoring from backup: $LATEST_BACKUP"
-        rm -rf .env .pi agent extensions docs scripts apps/wayofpi-ui
+        rm -rf .env .pi agent extensions docs scripts apps/wayofwork-ui
         cp -r "$LATEST_BACKUP"/* . 2>/dev/null || true
     fi
 fi

@@ -4,7 +4,7 @@ This guide provides procedures for updating the Way of Pi system without getting
 
 ## 1. Why Updates Get "Stuck"
 Common reasons for update failures in Way of Pi:
-- **Port Conflicts:** The `start-wayofpi-ui.sh` script forcefully kills processes on ports 3333 and 5173. If an update is triggered from within the app's terminal, it may kill itself.
+- **Port Conflicts:** The `start-wayofwork-ui.sh` script forcefully kills processes on ports 3333 and 5173. If an update is triggered from within the app's terminal, it may kill itself.
 - **Dependency Mismatch:** Using `npm install` instead of `bun install` can lead to lockfile conflicts.
 - **Breaking Changes:** Recent refactors (e.g., moving `.wayofpi` data to `.claw/workspace`) may require manual migration of old data.
 - **Unpinned Pi Version:** If `@mariozechner/pi-coding-agent` updates upstream and introduces breaking changes to the `--mode json` output, the Way of Pi server may fail to parse turns.
@@ -38,7 +38,7 @@ git pull --rebase origin main
 bun install
 
 # UI & Server
-cd apps/wayofpi-ui
+cd apps/wayofwork-ui
 rm -rf node_modules
 bun install
 ```

@@ -1,6 +1,6 @@
 # Way of Pi — generated files, indexing, and line-number parity
 
-This document ties together how **Cursor**, **Zed**, and **GitHub** treat **generated / binary / large** files, and how **`wayofpi-ui`** should keep **editor line numbers** aligned with **documentation** references. For the technical shell layout, see **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**.
+This document ties together how **Cursor**, **Zed**, and **GitHub** treat **generated / binary / large** files, and how **`wayofwork-ui`** should keep **editor line numbers** aligned with **documentation** references. For the technical shell layout, see **[WOP_TECHNICAL_UI.md](WOP_TECHNICAL_UI.md)**.
 
 ## 1. Cursor: AI context vs indexing
 
@@ -41,11 +41,11 @@ When docs say “see line 42” or cite `path:line`:
 2. **After edits** — re-check citations; CI or a doc lint can grep for `path:line` patterns.
 3. **Generated files** — do not cite volatile line numbers inside generated output; cite the **generator** or **source** instead.
 
-**`wayofpi-ui`** text editor shows **one line number per logical newline** in the buffer (`WorkspaceTextBuffer`), matching the file on disk for UTF-8 text. **Binary** and **raster images** use a **preview** path (no line gutter) so we do not pretend a PNG is text.
+**`wayofwork-ui`** text editor shows **one line number per logical newline** in the buffer (`WorkspaceTextBuffer`), matching the file on disk for UTF-8 text. **Binary** and **raster images** use a **preview** path (no line gutter) so we do not pretend a PNG is text.
 
 Implementation detail (gutter vs body font metrics, soft wrap measurement, and all call sites): **[WOP_CODE_EDITOR_LINE_NUMBERS.md](WOP_CODE_EDITOR_LINE_NUMBERS.md)**.
 
-## 4. Behavior in `wayofpi-ui` (implementation)
+## 4. Behavior in `wayofwork-ui` (implementation)
 
 | Case | Server `GET /api/file` | UI |
 |------|-------------------------|-----|
@@ -53,7 +53,7 @@ Implementation detail (gutter vs body font metrics, soft wrap measurement, and a
 | Known images (`png`, `jpeg`, …) | `{ encoding: "base64", mimeType, content }` | Scrollable **image** preview (`object-contain`, full image scrollable when larger than viewport). |
 | Other binary (e.g. contains `NUL`) | `base64` + `application/octet-stream` | Read-only **binary** notice; no save. |
 
-See **`apps/wayofpi-ui/README.md`** for the API table.
+See **`apps/wayofwork-ui/README.md`** for the API table.
 
 ## 5. Related docs
 

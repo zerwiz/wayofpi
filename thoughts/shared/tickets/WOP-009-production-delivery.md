@@ -165,6 +165,6 @@ WOP-009 Sections 1-4
 - `docs/PRODUCTION_DELIVERY_PLAN.md` — Full plan with cost estimation, architecture, and roadmap
 - `docs/LOCAL_HOSTING.md` — Existing guide (ngrok, Docker, VMs)
 - `docs/STARTUP_GUIDE.md` — Current startup instructions
-- `apps/wayofpi-ui/package.json` — electron-builder config (lines 22-51)
-- `apps/wayofpi-ui/Dockerfile` — Current Dockerfile (needs hardening)
-- `apps/wayofpi-ui/electron/electron-main.mjs` — Electron main process
+- `apps/wayofwork-ui/package.json` — electron-builder config (lines 22-51)
+- `apps/wayofwork-ui/Dockerfile` — Current Dockerfile (needs hardening)
+- `apps/wayofwork-ui/electron/electron-main.mjs` — Electron main process

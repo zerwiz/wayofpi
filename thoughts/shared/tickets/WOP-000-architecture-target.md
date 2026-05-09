@@ -15,7 +15,7 @@
                    │              apps/ (workspace root)              │
                    │                                                  │
                    │  ┌─────────────────┐  ┌─────────────────┐       │
-                   │  │   wayofpi-ui    │  │   another-ui     │  ...  │
+                   │  │   wayofwork-ui    │  │   another-ui     │  ...  │
                    │  │  (React/Electron)│  │  (React/Web)    │       │
                    │  └──────┬──────────┘  └──────┬──────────┘       │
                    │         │                     │                  │
@@ -62,7 +62,7 @@
 | Event streaming | Parse JSONL lines from stdout | Typed `AgentSessionEvent` subscription |
 | Version pinning | Must check `pi --version` manually | `package.json` exact version + lockfile |
 | Build status | 60+ errors, `bun run build` fails | Zero errors, CI-enforced |
-| Server location | Inside `apps/wayofpi-ui/server/` | Clean separation (shared lib or standalone) |
+| Server location | Inside `apps/wayofwork-ui/server/` | Clean separation (shared lib or standalone) |
 | Auth | Inline login forms per page | Unified `/login` + AuthGate for all roles |
 | App.tsx | 4826-line monolith | ~200-line coordinator + hooks + page shells |
 | Multiple UIs | Not possible | `apps/<name>/` each imports the same pi.dev SDK |
@@ -203,13 +203,13 @@ apps/
 ├── package.json                    # Shared workspace config
 ├── tsconfig.base.json              # Shared TypeScript config
 │
-├── wayofpi-ui/                     # Main desktop app (Electron + React)
+├── wayofwork-ui/                     # Main desktop app (Electron + React)
 │   ├── server/                     # Bun API + WebSocket
 │   ├── src/                        # React components
 │   ├── electron/                   # Electron shell
 │   └── package.json
 │
-├── wayofpi-server/                 # Standalone Bun server (deployable)
+├── wayofwork-server/                 # Standalone Bun server (deployable)
 │   ├── src/                        # Server source
 │   └── package.json
 │
@@ -565,7 +565,7 @@ Electron app:
 
 ## 11. Files Referenced in This Document
 
-### UI Source (`apps/wayofpi-ui/src/`)
+### UI Source (`apps/wayofwork-ui/src/`)
 
 | File | Role in target |
 |------|---------------|
@@ -583,7 +583,7 @@ Electron app:
 | `components/work/kanban/WorkBoard.tsx` | Simplified worker kanban (unchanged) |
 | `components/modals/*.tsx` | Canonical modal components |
 
-### Server (`apps/wayofpi-ui/server/`)
+### Server (`apps/wayofwork-ui/server/`)
 
 | File | Role in target |
 |------|---------------|

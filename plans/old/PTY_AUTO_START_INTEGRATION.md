@@ -11,7 +11,7 @@ When the main Way of Pi Electron/Vite app starts, the PTY WebSocket server will 
 ### 1. Install Dependencies
 
 ```bash
-cd /home/zerwiz/CodeP/Way of pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way of pi/apps/wayofwork-server
 npm install tsx
 ```
 
@@ -25,7 +25,7 @@ Add to root `package.json`:
 {
   "scripts": {
     "start:app": "npm run start:pty && concurrently \"npm run start:app:main\" \"npm run start:pty:watch\"",
-    "start:pty": "./apps/wayofpi-server/start-server.ts",
+    "start:pty": "./apps/wayofwork-server/start-server.ts",
     "start:app:main": "npm run electron:start",
     "start:pty:watch": "sleep 2 && npm run watch"
   }
@@ -130,7 +130,7 @@ The server will:
   "scripts": {
     "start": "npm run start:app",
     "start:app": "npm run start:pty && npm run start:app:main",
-    "start:pty": "tsx apps/wayofpi-server/start-server.ts",
+    "start:pty": "tsx apps/wayofwork-server/start-server.ts",
     "start:app:main": "electron .",
     "watch": "ts-node-dev --respawn src/server/SessionManager.ts"
   }

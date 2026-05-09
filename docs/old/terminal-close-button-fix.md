@@ -14,7 +14,7 @@ Terminal sessions in the technical view were closable by users, which interrupte
 
 ## Solution
 
-Modified [`WorkspacePane.tsx`](../../Way of pi/apps/wayofpi-ui/src/components/WorkspacePane.tsx#L764-L775) to prevent closing terminal tabs by default.
+Modified [`WorkspacePane.tsx`](../../Way of pi/apps/wayofwork-ui/src/components/WorkspacePane.tsx#L764-L775) to prevent closing terminal tabs by default.
 
 ### Change Summary
 
@@ -75,8 +75,8 @@ Modified [`WorkspacePane.tsx`](../../Way of pi/apps/wayofpi-ui/src/components/Wo
 
 ## Related Files
 
-- [`apps/wayofpi-ui/src/components/WorkspacePane.tsx`](../../Way of pi/apps/wayofpi-ui/src/components/WorkspacePane.tsx)
-- [`apps/wayofpi-ui/src/utils/panelDockLayout.ts`](../../Way of pi/apps/wayofpi-ui/src/utils/panelDockLayout.ts) (defines default terminal tab)
+- [`apps/wayofwork-ui/src/components/WorkspacePane.tsx`](../../Way of pi/apps/wayofwork-ui/src/components/WorkspacePane.tsx)
+- [`apps/wayofwork-ui/src/utils/panelDockLayout.ts`](../../Way of pi/apps/wayofwork-ui/src/utils/panelDockLayout.ts) (defines default terminal tab)
 
 ---
 
@@ -104,7 +104,7 @@ Terminal sessions in the technical view were closable by users, which interrupte
 
 ## Solution
 
-Modified [`WorkspacePane.tsx`](../../Way of pi/apps/wayofpi-ui/src/components/WorkspacePane.tsx#L764-L775) to prevent closing terminal tabs by default.
+Modified [`WorkspacePane.tsx`](../../Way of pi/apps/wayofwork-ui/src/components/WorkspacePane.tsx#L764-L775) to prevent closing terminal tabs by default.
 
 ### Change Summary
 
@@ -165,8 +165,8 @@ Modified [`WorkspacePane.tsx`](../../Way of pi/apps/wayofpi-ui/src/components/Wo
 
 ## Related Files
 
-- [`apps/wayofpi-ui/src/components/WorkspacePane.tsx`](../../Way of pi/apps/wayofpi-ui/src/components/WorkspacePane.tsx)
-- [`apps/wayofpi-ui/src/utils/panelDockLayout.ts`](../../Way of pi/apps/wayofpi-ui/src/utils/panelDockLayout.ts) (defines default terminal tab)
+- [`apps/wayofwork-ui/src/components/WorkspacePane.tsx`](../../Way of pi/apps/wayofwork-ui/src/components/WorkspacePane.tsx)
+- [`apps/wayofwork-ui/src/utils/panelDockLayout.ts`](../../Way of pi/apps/wayofwork-ui/src/utils/panelDockLayout.ts) (defines default terminal tab)
 
 ---
 

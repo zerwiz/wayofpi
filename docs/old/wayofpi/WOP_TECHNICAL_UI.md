@@ -1,12 +1,12 @@
 # Way of Pi — technical UI (architecture)
 
-This document describes the **IDE-style technical shell** in `apps/wayofpi-ui`: **dock regions** and the **strips** (tab bars + bodies) hosted in them, plus the Bun-backed client.
+This document describes the **IDE-style technical shell** in `apps/wayofwork-ui`: **dock regions** and the **strips** (tab bars + bodies) hosted in them, plus the Bun-backed client.
 
 **Modular dock vision + phased TODO plan:** **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** (parity, N strips, movable agent/sidebar, layout graph). **Cursor rule** for agents working in the UI tree: **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)**.
 
 For product scope and roadmap, see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)**.
 
-**CRITICAL — Pi backend:** Chat and **agent tools/extensions** must eventually run through **headless Pi** (`WOP_PI_BINARY`), not only Bun/Ollama prompts — see **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** §0 and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**. **`apps/wayofpi-ui/server/pi-agent-runtime.ts`** routes **`WOP_CHAT_ENGINE=pi`** / **`auto`** through **`pi --mode json`** when the CLI resolves (full Pi tools for all personas; long-lived Pi + **`/ws`** tunnel still planned). For Explorer parity with common IDE trees, see **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)**. For **generated/binary files**, **Cursor/Zed-style** repo conventions, and **line-number parity** with docs, see **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)**. For **menu bar / command coverage**, see **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)**. For run/setup and API tables, see **`apps/wayofpi-ui/README.md`**.
+**CRITICAL — Pi backend:** Chat and **agent tools/extensions** must eventually run through **headless Pi** (`WOP_PI_BINARY`), not only Bun/Ollama prompts — see **[WOP_PI_BACKEND_WIRING_PLAN.md](WOP_PI_BACKEND_WIRING_PLAN.md)** §0 and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**. **`apps/wayofwork-ui/server/pi-agent-runtime.ts`** routes **`WOP_CHAT_ENGINE=pi`** / **`auto`** through **`pi --mode json`** when the CLI resolves (full Pi tools for all personas; long-lived Pi + **`/ws`** tunnel still planned). For Explorer parity with common IDE trees, see **[IDE_EXPLORER_PARITY.md](IDE_EXPLORER_PARITY.md)**. For **generated/binary files**, **Cursor/Zed-style** repo conventions, and **line-number parity** with docs, see **[WOP_GENERATED_FILES_AND_LINE_PARITY.md](WOP_GENERATED_FILES_AND_LINE_PARITY.md)**. For **menu bar / command coverage**, see **[WOP_MENU_BAR_BACKLOG.md](WOP_MENU_BAR_BACKLOG.md)**. For run/setup and API tables, see **`apps/wayofwork-ui/README.md`**.
 
 ### Terminology (plans + UX)
 
@@ -20,7 +20,7 @@ For product scope and roadmap, see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDAL
 
 | Item | Detail |
 |------|--------|
-| **Components** | **`WorkspacePane`** (`components/WorkspacePane.tsx`) — tab row (**`data-wop-workspace-tab-bar`**) + **`WorkspaceTextBuffer`** / **`ToolPanelBody`** (line gutter + textarea typography: **`docs/WOP_CODE_EDITOR_LINE_NUMBERS.md`**, constants **`apps/wayofpi-ui/src/constants/workspaceEditorChrome.ts`**). **`TechnicalWorkspaceGrid`** (`components/TechnicalWorkspaceGrid.tsx`) — nested **flex** rows/columns, **`DockSplitHandle`** between panes, focus ring on active cell, **`externalOpenFile`** so Explorer / dock actions open into the **focused** cell. **`WorkspaceCellDropSurface`** per cell — snap overlay + **`onDropPayload(e, surfaceCellIndex, zone)`**. |
+| **Components** | **`WorkspacePane`** (`components/WorkspacePane.tsx`) — tab row (**`data-wop-workspace-tab-bar`**) + **`WorkspaceTextBuffer`** / **`ToolPanelBody`** (line gutter + textarea typography: **`docs/WOP_CODE_EDITOR_LINE_NUMBERS.md`**, constants **`apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts`**). **`TechnicalWorkspaceGrid`** (`components/TechnicalWorkspaceGrid.tsx`) — nested **flex** rows/columns, **`DockSplitHandle`** between panes, focus ring on active cell, **`externalOpenFile`** so Explorer / dock actions open into the **focused** cell. **`WorkspaceCellDropSurface`** per cell — snap overlay + **`onDropPayload(e, surfaceCellIndex, zone)`**. |
 | **Layout presets** | **View → Editor Layout**: **Single** resets agent UI preset **and** workspace grid to **1×1**. **Workspace grid (2×2)**, **(3×4 max)**, **Three columns (workspace)** (3×1), **Three rows (workspace)** (1×3) — **`EditorLayoutPreset`** in **`types/technicalShell.ts`**, handled in **`App.tsx`** **`applyEditorLayoutPreset`**. **Grid (2×2)** next to them still refers to **agent panel** layout only (unchanged). |
 | **Persistence** | **`writeWorkspaceGridState` / `readWorkspaceGridState`** — clamps **1–3** cols, **1–4** rows; **`cells[]`** length **`cols * rows`**, row-major; optional **`rowWeights`** / **`colWeights`**. Changing grid shape from the menu clears custom weights (equal split). **`writePanelDockLayout`** remains for migration / compatibility paths. |
 | **`TechnicalDockLayout`** | **`readDockLayout`** / **`wayofpi.technical.dockLayout`** — agent dock side, **`leftSidebarWidthPx`**, **`chatSizePx`**, **`horizontalToolDockHeightsPx`** (**`top`** / **`bottom`** keys retained in JSON for splitter state; the **main column** no longer hosts separate **`PanelDockBand`** rows around the editor). |
@@ -49,7 +49,7 @@ For product scope and roadmap, see **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDAL
 **Implementation types (shipped names in code):**
 
 ```ts
-// apps/wayofpi-ui/src/utils/panelDockLayout.ts
+// apps/wayofwork-ui/src/utils/panelDockLayout.ts
 type PanelTab =
   | { type: "tool"; id: ToolTabId }
   | { type: "file"; path: string };
@@ -96,16 +96,16 @@ If a new split inverts by mistake, fix the sign in the **`onDelta`** handler rat
 
 The renderer always calls **relative** URLs (`/api/...`, `/ws`, `/api/manifest`, …), so the UI does not hard-code the API port — works the same in **Chrome** and in the **Electron** window (dev: both load the **Vite** origin, so the **Vite → Bun** proxy applies).
 
-**Product default:** treat the **Electron** desktop as the **primary** Way of Pi shell for daily dev and demos; use the **browser** flow when you explicitly need a normal tab (e.g. DevTools layout, sharing a URL). See **`apps/wayofpi-ui/README.md`** § **Electron first**.
+**Product default:** treat the **Electron** desktop as the **primary** Way of Pi shell for daily dev and demos; use the **browser** flow when you explicitly need a normal tab (e.g. DevTools layout, sharing a URL). See **`apps/wayofwork-ui/README.md`** § **Electron first**.
 
 ### Boot from the repo root (Electron vs browser)
 
 | Entry | Effect |
 |-------|--------|
-| **`./start-wayofpi-electron.sh`** or **`just wayofpi-electron`** (**recommended**) | **`npm run electron:dev`** in **`apps/wayofpi-ui`**: Bun + Vite + **Electron** window (no browser tab). Same **`WOP_ELECTRON_DEV_URL`** / Vite proxy stack as below. |
-| **`./start-wayofpi-ui.sh`** or **`./start-full-system.sh`** | **`npm run dev`**: Bun + Vite; opens the **default browser** when **5173** responds. Sources repo **`.env`** when present; sets **`WOP_WORKSPACE`** default. |
-| **`WOP_USE_ELECTRON=1 ./start-wayofpi-ui.sh`** | Same as **`start-wayofpi-electron.sh`**. |
-| **`apps/wayofpi-ui`** only | **`npm run dev`** (browser), **`npm run electron:dev`** (full stack + Electron), **`npm run electron:only`** (Electron only — Vite must already be running on **5173**). See **`apps/wayofpi-ui/README.md`**. |
+| **`./start-wayofpi-electron.sh`** or **`just wayofpi-electron`** (**recommended**) | **`npm run electron:dev`** in **`apps/wayofwork-ui`**: Bun + Vite + **Electron** window (no browser tab). Same **`WOP_ELECTRON_DEV_URL`** / Vite proxy stack as below. |
+| **`./start-wayofwork-ui.sh`** or **`./start-full-system.sh`** | **`npm run dev`**: Bun + Vite; opens the **default browser** when **5173** responds. Sources repo **`.env`** when present; sets **`WOP_WORKSPACE`** default. |
+| **`WOP_USE_ELECTRON=1 ./start-wayofwork-ui.sh`** | Same as **`start-wayofpi-electron.sh`**. |
+| **`apps/wayofwork-ui`** only | **`npm run dev`** (browser), **`npm run electron:dev`** (full stack + Electron), **`npm run electron:only`** (Electron only — Vite must already be running on **5173**). See **`apps/wayofwork-ui/README.md`**. |
 
 **Electron** loads the **same Vite dev URL** as the browser (`electron-main.mjs` → **`WOP_ELECTRON_DEV_URL`**); **`electron/`** also has **`preload.mjs`**, **`wait-prod.mjs`** (production window after **`npm run build`** + **`bun run start`**).
 
@@ -195,7 +195,7 @@ Defined in **`src/types/technicalShell.ts`** and **`src/utils/technicalLayoutSto
 | **WorkspacePane** | `components/WorkspacePane.tsx` | **Main workspace:** **`h-9`** tab row (**Dock** chip, **`dockChrome.ts`**) + **`WorkspaceTextBuffer`** / **`ToolPanelBody`**; Zed-style tab DnD (**`PANEL_TAB_DND_TYPE`**). **`data-wop-workspace-pane`**. |
 | **TechnicalWorkspaceGrid** | `components/TechnicalWorkspaceGrid.tsx` | **3×4 max** matrix of **`WorkspacePane`** cells (flex + **`DockSplitHandle`**); focus ring; **`onFocusedReport`** syncs menus; **`externalOpenFile`** for explorer → focused cell; **`onWorkspaceGridRowResize`** / **`onWorkspaceGridColResize`** from **`App`**. |
 | **WorkspaceCellDropSurface** | `components/WorkspaceCellDropSurface.tsx` | Per-cell Zed-style **snap zones** on drag-over; delegates drop to **`onWorkspaceSurfaceDrop`** with **`surfaceCellIndex`** + **`WopDropZone`**; overlay suppressed over **`data-wop-workspace-tab-bar`** so tab-strip insert hints win. |
-| **ChatPanel** | `components/ChatPanel.tsx` | Session / agent chat; **docked** right or bottom via **`technicalDock`**; dock toolbar (**PanelRight** / **PanelBottom** / hide); transcript, send/stop, **New session**. **Team Pulse** tab: roster grid ([`AgentTeamPulseGrid.tsx`](../apps/wayofpi-ui/src/components/AgentTeamPulseGrid.tsx)); live multi-agent streams — **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)**. |
+| **ChatPanel** | `components/ChatPanel.tsx` | Session / agent chat; **docked** right or bottom via **`technicalDock`**; dock toolbar (**PanelRight** / **PanelBottom** / hide); transcript, send/stop, **New session**. **Team Pulse** tab: roster grid ([`AgentTeamPulseGrid.tsx`](../apps/wayofwork-ui/src/components/AgentTeamPulseGrid.tsx)); live multi-agent streams — **[WOP_MULTI_AGENT_WEBSOCKET.md](WOP_MULTI_AGENT_WEBSOCKET.md)**. |
 | **DockSplitHandle** | `components/DockSplitHandle.tsx` | Pointer-driven splitters between dock regions (resize). |
 | **PanelDockBand** | `components/PanelDockBand.tsx` | Legacy / auxiliary strip host (same **`PanelTab`** model); **not** used for the main editor column in current **`App.tsx`**. |
 | **ToolPanelBody** | `components/ToolPanelBody.tsx` | Problems / Output / Tool log / Terminal body inside an **active tool tab** of **`WorkspacePane`**. **Tool log** lines come from the **chat** WebSocket (`/ws`): chat/LLM server logs plus **Pi-style tool mirrors** — **`read`** / **`write`** / **`mkdir`** / **`touch`** on **`/api/file`** and **`/api/fs/entry`**, **`cd`**-style workspace folder ops, **`bash`** on integrated terminal stdin (line-buffered) and **`bun run …`** from Run script (`server/tool-log-broadcast.ts` fans out to all chat sockets). |
@@ -248,7 +248,7 @@ Supporting utilities:
 | **useServerConfig** | `hooks/useServerConfig.ts` | `GET /api/config` | Provider/model labels for UI. |
 | **useWayOfPiSession** | `hooks/useWayOfPiSession.ts` | WebSocket `/ws` | Chat rows, streaming flag, server log lines; optional tree refresh callback. **Pi-style `/` lines** (e.g. `/models`, `/help`, `/clear`) are handled on the server in **`server/chat-slash-commands.ts`** before the LLM turn. |
 
-**Create file/folder** uses **`apiPostJson("/api/fs/entry", { path, kind })`** (see server and **`apps/wayofpi-ui/README.md`**).
+**Create file/folder** uses **`apiPostJson("/api/fs/entry", { path, kind })`** (see server and **`apps/wayofwork-ui/README.md`**).
 
 ## Tree and file types
 
@@ -262,7 +262,7 @@ Supporting utilities:
 
 ## Adding a feature (checklist)
 
-1. **Server** — If new persistence or tools: extend **`server/index.ts`** (and **`paths.ts`** if path rules change). Document the route in **`apps/wayofpi-ui/README.md`**.
+1. **Server** — If new persistence or tools: extend **`server/index.ts`** (and **`paths.ts`** if path rules change). Document the route in **`apps/wayofwork-ui/README.md`**.
 2. **Client API** — Add helpers in **`src/api/client.ts`** if needed.
 3. **Hook** — Prefer a dedicated hook if the feature has subscription/lifecycle (mirror **`useWorkspaceTree`**).
 4. **UI** — New side activity: extend **`TechnicalActivity`** and **`ActivityBar` ITEMS**, add a panel branch in `App.tsx` `leftPanel`, and register commands in **`commandItems`**.
@@ -276,6 +276,6 @@ Supporting utilities:
 | **[WOP_STANDALONE_SYSTEM_PLAN.md](WOP_STANDALONE_SYSTEM_PLAN.md)** | Product plan, phases, production. |
 | **[WOP_OPEN_TODOS.md](WOP_OPEN_TODOS.md)** | Known gaps and stubs. |
 | **[WOP_MODULAR_DOCKS_PLAN.md](WOP_MODULAR_DOCKS_PLAN.md)** | Modular dock TODO: parity, N strips, movable agent/sidebar, phases. |
-| **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)** | Agent rule when editing **`apps/wayofpi-ui`**. |
-| **`apps/wayofpi-ui/README.md`** | Commands, env vars, API table, WebSocket summary. |
+| **[`.cursor/rules/wop-ui-modular-docks.mdc`](../.cursor/rules/wop-ui-modular-docks.mdc)** | Agent rule when editing **`apps/wayofwork-ui`**. |
+| **`apps/wayofwork-ui/README.md`** | Commands, env vars, API table, WebSocket summary. |
 | **[WOP_MOBILE_UI_PLAN.md](WOP_MOBILE_UI_PLAN.md)** | **Mobile layouts** for **Claw**, **Simple**, **Technical** (distinct per shell; build **Claw → Simple → Technical**). |

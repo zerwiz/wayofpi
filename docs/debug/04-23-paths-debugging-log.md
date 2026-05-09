@@ -23,8 +23,8 @@
 ```bash
 ✅ /home/zerwiz/CodeP
 ✅ /home/zerwiz/CodeP/apps
-✅ /home/zerwiz/CodeP/apps/wayofpi-ui
-✅ /home/zerwiz/CodeP/apps/wayofpi-server
+✅ /home/zerwiz/CodeP/apps/wayofwork-ui
+✅ /home/zerwiz/CodeP/apps/wayofwork-server
 ✅ /home/zerwiz/CodeP/plans
 ✅ /home/zerwiz/CodeP/docs
 ✅ /home/zerwiz/CodeP/Way of pi
@@ -35,26 +35,26 @@
 ### **2. Directory Structure:**
 
 - ✅ **Apps**:
-  - ✅ `/apps/wayofpi-ui` (React frontend, Vite dev server)
-  - ✅ `/apps/wayofpi-server` (Bun server, WebSocket PTY)
+  - ✅ `/apps/wayofwork-ui` (React frontend, Vite dev server)
+  - ✅ `/apps/wayofwork-server` (Bun server, WebSocket PTY)
 
 - ✅ **Server**:
-  - ✅ `/apps/wayofpi-server/src/server/SessionManager.ts`
-  - ✅ `/apps/wayofpi-server/src/ScreenBuffer.ts`
-  - ✅ `/apps/wayofpi-server/index.js` (export barrel)
+  - ✅ `/apps/wayofwork-server/src/server/SessionManager.ts`
+  - ✅ `/apps/wayofwork-server/src/ScreenBuffer.ts`
+  - ✅ `/apps/wayofwork-server/index.js` (export barrel)
 
 - ✅ **UI**:
-  - ✅ `/apps/wayofpi-ui/src/App.tsx`
-  - ✅ `/apps/wayofpi-ui/src/main.tsx`
-  - ✅ `/apps/wayofpi-ui/index.html`
-  - ✅ `/apps/wayofpi-ui/vite.config.ts`
+  - ✅ `/apps/wayofwork-ui/src/App.tsx`
+  - ✅ `/apps/wayofwork-ui/src/main.tsx`
+  - ✅ `/apps/wayofwork-ui/index.html`
+  - ✅ `/apps/wayofwork-ui/vite.config.ts`
 
 - ✅ **Plans**:
   - ✅ `/plans/terminal-implementations/`
   - ✅ `/plans/terminal-implementations/real_pty_implementation/`
 
 - ✅ **Config**:
-  - ✅ `/apps/wayofpi-server/bundled/config.json`
+  - ✅ `/apps/wayofwork-server/bundled/config.json`
 
 ---
 
@@ -62,11 +62,11 @@
 
 ### **1. Import Resolution Errors:**
 
-- **[ISSUE]**: Vite failed to resolve `@wayofpi-server/session` from `src/App.tsx`
+- **[ISSUE]**: Vite failed to resolve `@wayofwork-server/session` from `src/App.tsx`
   ```
-  Failed to resolve import "@wayofpi-server/session" from "src/App.tsx"
+  Failed to resolve import "@wayofwork-server/session" from "src/App.tsx"
   ```
-- **[CAUSE]**: `wayofpi-server` package JSON missing proper `exports` field for ES module subpath imports
+- **[CAUSE]**: `wayofwork-server` package JSON missing proper `exports` field for ES module subpath imports
   ```json
   {"exports": {
     ".": "./index.js",
@@ -109,7 +109,7 @@
 ### **1. Files Created/Updated:**
 
 1. **Created**:
-   - ✅ `package.json` with exports field in `wayofpi-server`
+   - ✅ `package.json` with exports field in `wayofwork-server`
 
 2. **Updated**:
    - ✅ `server/index.ts` - WebSocket PTY server (Bun)
@@ -138,7 +138,7 @@ NODE_ENV=development
 
 ### **3. Export Configuration:**
 
-**wayofpi-server package.json**:
+**wayofwork-server package.json**:
 ```json
 {
   "type": "module",
@@ -191,13 +191,13 @@ Render in Terminal UI
 
 ### **Components**:
 
-1. **Frontend** `/apps/wayofpi-ui`:
+1. **Frontend** `/apps/wayofwork-ui`:
    - React terminal UI
    - ANSI parsing (TerminalRender)
    - WebSocket client to port 3333
    - Vite dev server on port 5173
 
-2. **Backend Server** `/apps/wayofpi-server`:
+2. **Backend Server** `/apps/wayofwork-server`:
    - WebSocket server on port 3333
    - Process spawner (bash terminals)
    - Environment manager
@@ -247,7 +247,7 @@ $ exit
 # Health check:
 curl http://127.0.0.1:3333/api/health
 {
-  "service": "wayofpi-ui-server",
+  "service": "wayofwork-ui-server",
   "port": 3333,
   "pid": <number>
 }

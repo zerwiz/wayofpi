@@ -163,7 +163,7 @@ ngrok http 3333 -address 0.0.0.0 --authtoken <token>
 - `apps/wayofpi-api/index.ts` - Server entry
 - `apps/wayofpi-api/services/authentication.ts` - PIN check
 - `apps/wayofpi-api/routes/index.ts` - WebSocket routes
-- `apps/wayofpi-server/typings/protocol.d.ts` - WebSocket protocol
+- `apps/wayofwork-server/typings/protocol.d.ts` - WebSocket protocol
 
 ---
 

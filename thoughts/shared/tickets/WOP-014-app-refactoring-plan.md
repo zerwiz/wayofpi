@@ -1,7 +1,7 @@
 # [WOP-014] App.tsx Monolith Refactoring — Dual-Agent Coordination
 
 ## Problem
-`apps/wayofpi-ui/src/App.tsx` is ~4820 lines. Two agents need to refactor it in parallel without merge conflicts.
+`apps/wayofwork-ui/src/App.tsx` is ~4820 lines. Two agents need to refactor it in parallel without merge conflicts.
 
 ## Goal
 App.tsx → ~200 lines. Agents split by territory (not file ownership).

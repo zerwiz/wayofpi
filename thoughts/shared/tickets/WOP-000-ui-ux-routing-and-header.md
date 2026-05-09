@@ -124,14 +124,14 @@ This refactor involves changes across the core routing, layout, and portal pages
 
 | File Path | Description of Change |
 | :--- | :--- |
-| [**`App.tsx`**](../apps/wayofpi-ui/src/App.tsx) | Implement global Auth Gate and path-based layout logic (Header vs No Header). |
-| [**`MenuBar.tsx`**](../apps/wayofpi-ui/src/components/MenuBar.tsx) | Add `appNavigation` prop to host the `Navigation` component. Add Way of Pi logo. |
-| [**`Navigation.tsx`**](../apps/wayofpi-ui/src/components/Navigation.tsx) | Refine role-based visibility and styling for integration into the MenuBar. |
-| [**`LoginPage.tsx`**](../apps/wayofpi-ui/src/pages/LoginPage.tsx) | (New) Single entry point for all users. |
-| [**`ClientDashboard.tsx`**](../apps/wayofpi-ui/src/pages/ClientDashboard.tsx) | Remove internal login form. Rely on global auth. |
-| [**`WorkerPortal.tsx`**](../apps/wayofpi-ui/src/pages/WorkerPortal.tsx) | Remove internal login form. Rely on global auth. |
-| [**`AdminDashboard.tsx`**](../apps/wayofpi-ui/src/pages/AdminDashboard.tsx) | Standardize layout to receive Global Header via App.tsx. |
-| [**`SuperAdminDashboard.tsx`**](../apps/wayofpi-ui/src/pages/SuperAdminDashboard.tsx) | Standardize layout to receive Global Header via App.tsx. |
+| [**`App.tsx`**](../apps/wayofwork-ui/src/App.tsx) | Implement global Auth Gate and path-based layout logic (Header vs No Header). |
+| [**`MenuBar.tsx`**](../apps/wayofwork-ui/src/components/MenuBar.tsx) | Add `appNavigation` prop to host the `Navigation` component. Add Way of Pi logo. |
+| [**`Navigation.tsx`**](../apps/wayofwork-ui/src/components/Navigation.tsx) | Refine role-based visibility and styling for integration into the MenuBar. |
+| [**`LoginPage.tsx`**](../apps/wayofwork-ui/src/pages/LoginPage.tsx) | (New) Single entry point for all users. |
+| [**`ClientDashboard.tsx`**](../apps/wayofwork-ui/src/pages/ClientDashboard.tsx) | Remove internal login form. Rely on global auth. |
+| [**`WorkerPortal.tsx`**](../apps/wayofwork-ui/src/pages/WorkerPortal.tsx) | Remove internal login form. Rely on global auth. |
+| [**`AdminDashboard.tsx`**](../apps/wayofwork-ui/src/pages/AdminDashboard.tsx) | Standardize layout to receive Global Header via App.tsx. |
+| [**`SuperAdminDashboard.tsx`**](../apps/wayofwork-ui/src/pages/SuperAdminDashboard.tsx) | Standardize layout to receive Global Header via App.tsx. |
 
 ---
 

@@ -8,15 +8,16 @@ __pycache__/
 # API keys — never commit real credentials
 .env
 agent/auth.json
+.pi/agent/models.json
 
 # ngrok dashboard authtoken — local one-line file only (never commit)
-apps/wayofpi-ui/.ngrok-authtoken.local
+apps/wayofwork-ui/.ngrok-authtoken.local
 
 .pi/agent-sessions/
 
 # Local Pi agent state (machine-specific; do not publish chat logs)
 agent/sessions/
-apps/wayofpi-ui/agent/sessions/
+apps/wayofwork-ui/agent/sessions/
 agent/run-history.jsonl
 agent/bin/
 storage/sessions/

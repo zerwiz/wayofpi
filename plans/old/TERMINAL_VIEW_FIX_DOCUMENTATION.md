@@ -11,7 +11,7 @@ Creates a real terminal experience (not just rows of chat) using background PTY 
 ## 📁 Complete File Locations
 
 ### Server Files (PTY-Based Terminal Core)
-**Location:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-server/src/server/`
+**Location:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-server/src/server/`
 
 | File | Size | Purpose | Status |
 |------|------|---------|-------|
@@ -22,7 +22,7 @@ Creates a real terminal experience (not just rows of chat) using background PTY 
 | **WindowResizer.ts** | 3301 bytes | Window resize handling via ioctl | ✅ Complete |
 
 ### UI Component Files
-**Location:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/logs/`
+**Location:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/logs/`
 
 | File | Size | Purpose | Status |
 |------|------|---------|-------|
@@ -33,7 +33,7 @@ Creates a real terminal experience (not just rows of chat) using background PTY 
 | **index.js** | 552 bytes | Exports all terminal components | ✅ Complete |
 
 ### Application Files
-**Location:** `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/`
+**Location:** `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/`
 
 | File | Size | Purpose | Status |
 |------|------|---------|-------|
@@ -170,7 +170,7 @@ interface ScreenBuffer {
 
 ```bash
 # Navigate to server directory
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-server
 
 # Install dependencies
 npm install
@@ -191,7 +191,7 @@ npm start
 ### Build Frontend:
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm install
 npm run build
 ```
@@ -199,7 +199,7 @@ npm run build
 ### Run Development:
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm start
 ```
 

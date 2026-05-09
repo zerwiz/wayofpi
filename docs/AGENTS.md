@@ -27,11 +27,11 @@
 
 ### 2. Sub-Agents
 
-**Location**: `apps/wayofpi-ui/agent/`
+**Location**: `apps/wayofwork-ui/agent/`
 
 **Purpose**: UI-specific agents for specialized tasks (editor, file explorer, terminal, chat, etc.)
 
-**Implementation**: Located in `apps/wayofpi-ui/agent/*.yml`
+**Implementation**: Located in `apps/wayofwork-ui/agent/*.yml`
 
 **Integration**: Connected to core Pi via WebSocket and shared context.
 
@@ -61,7 +61,7 @@
   - [ ] Define damage control rules
 
 - [ ] **Sub-Agent Integration**
-  - [ ] Create `apps/wayofpi-ui/agent/*.yml`
+  - [ ] Create `apps/wayofwork-ui/agent/*.yml`
   - [ ] Wire WebSocket connections
   - [ ] Share context between agents
   - [ ] Handle multi-agent routing

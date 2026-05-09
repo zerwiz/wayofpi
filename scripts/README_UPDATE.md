@@ -55,7 +55,7 @@ The `wop-update-simple.sh` script automates the update flow:
 2. **Pulls updates** using git rebase (preserves your local changes)
 3. **Installs/upgrades dependencies**:
    - Bun dependencies in root
-   - npm dependencies in `apps/wayofpi-ui`
+   - npm dependencies in `apps/wayofwork-ui`
    - Electron build cache
 4. **Optional backup**: Saves current state before updating
 5. **Force mode**: Discards local changes if local is behind remote
@@ -119,7 +119,7 @@ git pull
 
 # Reinstall everything
 bun install
-cd apps/wayofpi-ui && npm install && cd ..
+cd apps/wayofwork-ui && npm install && cd ..
 ```
 
 ### Apply API keys
@@ -175,7 +175,7 @@ If dependencies are missing:
 
 ```bash
 bun install             # Root
-cd apps/wayofpi-ui && npm install
+cd apps/wayofwork-ui && npm install
 ```
 
 ### Port already in use
@@ -205,7 +205,7 @@ git reset --hard origin/main
 
 # Reinstall
 bun install
-cd apps/wayofpi-ui && npm install
+cd apps/wayofwork-ui && npm install
 
 # Restore .env
 cp ~/.pi/wop-reset-backup/.env .
@@ -242,7 +242,7 @@ If you're adding new features to Way of Pi:
 ## See Also
 
 - [scripts/README.md](./README.md) - All scripts reference
-- [apps/wayofpi-ui/README.md](./apps/wayofpi-ui/README.md) - Electron app docs
+- [apps/wayofwork-ui/README.md](./apps/wayofwork-ui/README.md) - Electron app docs
 - [CHANGELOG.md](./CHANGELOG.md) - What's been updated recently
 
 ---

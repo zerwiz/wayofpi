@@ -15,7 +15,7 @@ Fix 3 major issues in Docs mode UI: FileExplorer not displaying files, ChatPanel
 ## Phase 1: Fix FileExplorer File Tree Loading
 
 ### Step 1.1: Investigate FileExplorer Component
-- Read `apps/wayofpi-ui/src/components/docs/FileExplorer.tsx`
+- Read `apps/wayofwork-ui/src/components/docs/FileExplorer.tsx`
 - Identify why file tree isn't loading
 - Check if `nodes` prop is being passed correctly from DocsApp
 
@@ -112,12 +112,12 @@ Fix 3 major issues in Docs mode UI: FileExplorer not displaying files, ChatPanel
 
 ### Step 6.1: Run Tests
 ```bash
-cd apps/wayofpi-ui && bun run test
+cd apps/wayofwork-ui && bun run test
 ```
 
 ### Step 6.2: Build Check
 ```bash
-cd apps/wayofpi-ui && bun run build
+cd apps/wayofwork-ui && bun run build
 ```
 
 ### Step 6.3: Manual Testing Checklist
@@ -134,13 +134,13 @@ cd apps/wayofpi-ui && bun run build
 
 ## Files to Modify
 
-1. `apps/wayofpi-ui/src/components/docs/FileExplorer.tsx`
-2. `apps/wayofpi-ui/src/components/docs/ChatPanel.tsx`
-3. `apps/wayofpi-ui/src/components/docs/ChatMessages.tsx`
-4. `apps/wayofpi-ui/src/components/docs/DocumentBrowser.tsx`
-5. `apps/wayofpi-ui/src/components/docs/DocsApp.tsx`
-6. `apps/wayofpi-ui/src/components/docs/DocumentHandlerContext.tsx`
-7. `apps/wayofpi-ui/src/components/docs/DocumentBrowser.css` (create or remove)
+1. `apps/wayofwork-ui/src/components/docs/FileExplorer.tsx`
+2. `apps/wayofwork-ui/src/components/docs/ChatPanel.tsx`
+3. `apps/wayofwork-ui/src/components/docs/ChatMessages.tsx`
+4. `apps/wayofwork-ui/src/components/docs/DocumentBrowser.tsx`
+5. `apps/wayofwork-ui/src/components/docs/DocsApp.tsx`
+6. `apps/wayofwork-ui/src/components/docs/DocumentHandlerContext.tsx`
+7. `apps/wayofwork-ui/src/components/docs/DocumentBrowser.css` (create or remove)
 
 ---
 

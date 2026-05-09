@@ -20,7 +20,7 @@ Open **Settings → ngrok (optional)** (from the menu bar, often under **File** 
 
 ### 1. Install the agent
 
-- **Install ngrok into this app** runs **`bun install`** or **`npm install`** in **`apps/wayofpi-ui`** so the optional **`ngrok`** npm package can download the platform binary into **`node_modules/ngrok/bin`**.  
+- **Install ngrok into this app** runs **`bun install`** or **`npm install`** in **`apps/wayofwork-ui`** so the optional **`ngrok`** npm package can download the platform binary into **`node_modules/ngrok/bin`**.  
   Available whenever the Bun server serves these Settings routes (including **`npm start`** / **`NODE_ENV=production`**).
 - If you prefer a **system-wide** binary on `PATH`, use the collapsible **system install (apt / Homebrew)** block in that dialog, or from the repo root: **`./scripts/install-ngrok-optional.sh`** (see **[scripts/README.md](../scripts/README.md)**).
 
@@ -66,7 +66,7 @@ Open **Settings → ngrok (optional)** (from the menu bar, often under **File** 
 | **`WOP_TUNNEL_GATE_HOST_MARKERS`** | Optional comma-separated substrings; if the request hostname contains any, tunnel login may apply (in addition to hostnames containing **`ngrok`**). |
 | **`WOP_NGROK_WEB_ADDR`** | Optional host/port (e.g. **`127.0.0.1:4040`**) or **`http://…`** for the ngrok agent’s local inspector. Must match **`web_addr`** in your ngrok config if you changed it; Way of Pi uses it for **`/api/tunnels`** and passes **`--web-addr`** when starting the managed tunnel. |
 
-Full server env list: **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)** and **`apps/wayofpi-ui/.env.sample`**.
+Full server env list: **[apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)** and **`apps/wayofwork-ui/.env.sample`**.
 
 ---
 
@@ -89,7 +89,7 @@ These routes are served by the Way of Pi Bun server in **all** **`NODE_ENV`** va
 | **GET** / **POST** | **`/api/dev/tunnel-gate`** | Tunnel Basic Auth file status / save / clear. |
 | **GET** | **`/api/dev/share-url-hints`** | LAN URL guess + public URL hint from the local inspector. |
 
-Implementation: **`apps/wayofpi-ui/server/ngrok-tunnel-manager.ts`**, **`ngrok-binary.ts`**, **`ngrok-inspector.ts`**, **`tunnel-gate.ts`**.
+Implementation: **`apps/wayofwork-ui/server/ngrok-tunnel-manager.ts`**, **`ngrok-binary.ts`**, **`ngrok-inspector.ts`**, **`tunnel-gate.ts`**.
 
 ---
 
@@ -98,7 +98,7 @@ Implementation: **`apps/wayofpi-ui/server/ngrok-tunnel-manager.ts`**, **`ngrok-b
 - A public tunnel exposes **your dev server** to the internet for as long as it runs. Use **short-lived** tunnels and **stop** when finished.
 - Prefer **tunnel login** (section 4) so the ngrok URL is not a wide-open door.
 - **Do not** commit ngrok **authtokens** or tunnel passwords to git.
-- **`install-bundled`** and **`update-bundled`** run a package manager on disk under **`apps/wayofpi-ui`**; only use them on machines you trust.
+- **`install-bundled`** and **`update-bundled`** run a package manager on disk under **`apps/wayofwork-ui`**; only use them on machines you trust.
 
 ---
 
@@ -107,4 +107,4 @@ Implementation: **`apps/wayofpi-ui/server/ngrok-tunnel-manager.ts`**, **`ngrok-b
 - **[WAY_OF_PI_INTRODUCTION.md](./WAY_OF_PI_INTRODUCTION.md)** — short optional ngrok mention.
 - **[WOP_NAMESPACE.md](./WOP_NAMESPACE.md)** — **`WOP_*`** names and **`WOP_HOME`**.
 - **[WOP_PI_BACKEND_WIRING_PLAN.md](./WOP_PI_BACKEND_WIRING_PLAN.md)** — server and Pi integration map.
-- **[apps/wayofpi-ui/README.md](../apps/wayofpi-ui/README.md)** — dev server and API table.
+- **[apps/wayofwork-ui/README.md](../apps/wayofwork-ui/README.md)** — dev server and API table.

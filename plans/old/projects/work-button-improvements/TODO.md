@@ -6,8 +6,8 @@
 
 ### Implementation (apps/)
 - `/home/zerwiz/CodeP/Way of pi/apps/workerportal/` - Worker portal (✓)
-- `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/components/work/` - Work mode components (✓)
-- `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/src/components/docs/` - Docs mode components (✓)
+- `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/components/work/` - Work mode components (✓)
+- `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/src/components/docs/` - Docs mode components (✓)
 
 ### Planning (plans/projects/work-button-improvements/)
 - `01-PLAN.md` - Main plan
@@ -47,10 +47,10 @@
 - [ ] Implement login/logout functionality
 
 ### Files to Modify:
-- [x] `apps/wayofpi-ui/src/components/Navigation.tsx` - Created unified navigation (✓)
-- [x] `apps/wayofpi-ui/src/hooks/useUiMode.ts` - Add `"work"` mode (✓)
-- [x] `apps/wayofpi-ui/src/components/UiModeToggle.tsx` - Add Work button (✓)
-- [ ] `apps/wayofpi-ui/src/App.tsx` - Render `WorkApp`, handle routing
+- [x] `apps/wayofwork-ui/src/components/Navigation.tsx` - Created unified navigation (✓)
+- [x] `apps/wayofwork-ui/src/hooks/useUiMode.ts` - Add `"work"` mode (✓)
+- [x] `apps/wayofwork-ui/src/components/UiModeToggle.tsx` - Add Work button (✓)
+- [ ] `apps/wayofwork-ui/src/App.tsx` - Render `WorkApp`, handle routing
 
 ---
 
@@ -61,12 +61,12 @@
 - **Fixed**: 
   - ✅ Fixed `db.ts` to properly create all tables with `CREATE TABLE IF NOT EXISTS`
   - ✅ Fixed `tenants` INSERT to include required `slug` column
-  - ✅ Updated `db.ts` to use path: `apps/wayofpi-server/db/wayofpi.sqlite`
+  - ✅ Updated `db.ts` to use path: `apps/wayofwork-server/db/wayofpi.sqlite`
   - ✅ Updated `init-db.ts` to use same path as `db.ts`
   - ✅ Tables now created: `tenants`, `users`, `projects`, `tasks`, `time_entries`
 - **Database locations**:
-  - `db.ts` path: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-server/db/wayofpi.sqlite`
-  - Server workspace: `/home/zerwiz/CodeP/Way of pi/apps/wayofpi-ui/default/.pi/db/wayofpi.sqlite`
+  - `db.ts` path: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-server/db/wayofpi.sqlite`
+  - Server workspace: `/home/zerwiz/CodeP/Way of pi/apps/wayofwork-ui/default/.pi/db/wayofpi.sqlite`
 - **Status**: Database tables now create successfully, server restart needed for testing
 
 ---
@@ -101,7 +101,7 @@
 - [x] `POST /api/portal/tasks` - Create task (✓ in server/index.ts:1232-1260)
 - [x] `PUT /api/portal/tasks/:id/status` - Update task status (✓ in server/index.ts:1262-1290)
 
-**Status**: Database tables now created successfully in `apps/wayofpi-server/db/wayofpi.sqlite`
+**Status**: Database tables now created successfully in `apps/wayofwork-server/db/wayofpi.sqlite`
 
 ---
 
@@ -133,7 +133,7 @@
 - [x] Create `TeamDashboard.tsx` (✓)
 
 ### Storage (Server-side - USING SQLITE):
-- [x] `apps/wayofpi-server/db/wayofpi.sqlite` - All data in SQLite
+- [x] `apps/wayofwork-server/db/wayofpi.sqlite` - All data in SQLite
 - [x] Tables: `time_entries`, `tasks`, `projects`, `users`, `tenants`
 - [ ] Add data export to JSON backup feature
 
@@ -313,7 +313,7 @@ curl -s http://127.0.0.1:3333/api/portal/time -H "Authorization: Bearer <JWT_TOK
 - **Database**: `/home/zerwiz/CodeP/Way of pi/apps/workerportal/deploy/wayofpi-sqlite-init.sql`
 - **Config**: `/home/zerwiz/CodeP/Way of pi/apps/workerportal/.env.example`
 - **Docs**: `/home/zerwiz/CodeP/Way of pi/apps/workerportal/README.md`
-- **Server Paths**: Add to `apps/wayofpi-ui/server/paths.ts`:
+- **Server Paths**: Add to `apps/wayofwork-ui/server/paths.ts`:
   - `isDocumentFile()` helper
   - Time/task storage paths
 

@@ -5,7 +5,7 @@
 ### **1. Start the Server**
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-server
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-server
 node src/server/SessionManager.ts
 ```
 
@@ -19,7 +19,7 @@ node src/server/SessionManager.ts
 ### **2. Start the UI**
 
 ```bash
-cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofpi-ui
+cd /home/zerwiz/CodeP/Way\ of\ pi/apps/wayofwork-ui
 npm install
 npm run build
 npm start

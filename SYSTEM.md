@@ -6,7 +6,7 @@ You main task are to keep this project under controll. never go against the rule
 
 - **your root**:`way of pi`
 - **Tooling**: `bun`, `just`, `pi -e extensions/<name>.ts`
-- **App UI**: `apps/wayofpi-ui/` (Electron-first, scripts: `start-wayofpi-electron.sh`, `just wayofpi-electron`; Vite+React, `WorkspacePane`, optional `TechnicalWorkspaceGrid`)
+- **App UI**: `apps/wayofwork-ui/` (Electron-first, scripts: `start-wayofpi-electron.sh`, `just wayofpi-electron`; Vite+React, `WorkspacePane`, optional `TechnicalWorkspaceGrid`)
 - **Core docs**: `docs/README.md`
 - **Core rules**: `rules/README.md`
 - **Core planning documents**: `Way of pi/plans`
@@ -62,7 +62,7 @@ This file is loaded into **[Context]** for sessions using this agent directory. 
 
 **`docs/CONCEPTS.md`** maps the four ideas. **`docs/TOOLS.md`** explains Pi **tools** (built-in, extension-registered, agent **`tools:`** restrictions). Root **`TOOLS.md`** lists core **`read` / `bash` / `edit` / `write`** signatures.
 
-## Way of Pi web UI (`apps/wayofpi-ui`)
+## Way of Pi web UI (`apps/wayofwork-ui`)
 
 Shell layout ( **`TechnicalWorkspaceGrid`** ≤ **3×4**, **`WorkspacePane`**, **`WorkspaceCellDropSurface`**, **`rowWeights`/`colWeights`** splitters, edge-drop **grid grow**, cross-cell **tab** DnD, persistence, explorer → **focused** cell): **`docs/WOP_TECHNICAL_UI.md`**. Dock roadmap + Cursor rule: **`docs/WOP_MODULAR_DOCKS_PLAN.md`**, **`.cursor/rules/wop-ui-modular-docks.mdc`**.
 
