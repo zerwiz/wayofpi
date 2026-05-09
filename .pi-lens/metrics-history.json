@@ -50,7 +50,107 @@
         }
       ],
       "trend": "stable"
+    },
+    "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx": {
+      "latest": {
+        "commit": "384c7d9",
+        "timestamp": "2026-05-09T15:46:19.249Z",
+        "mi": 30.3,
+        "cognitive": 0,
+        "nesting": 2,
+        "lines": 161,
+        "maxCyclomatic": 1,
+        "entropy": 5.1
+      },
+      "history": [
+        {
+          "commit": "384c7d9",
+          "timestamp": "2026-05-09T15:46:19.249Z",
+          "mi": 30.3,
+          "cognitive": 0,
+          "nesting": 2,
+          "lines": 161,
+          "maxCyclomatic": 1,
+          "entropy": 5.1
+        }
+      ],
+      "trend": "stable"
+    },
+    "apps/wayofpi/electron/main.ts": {
+      "latest": {
+        "commit": "384c7d9",
+        "timestamp": "2026-05-09T15:50:17.271Z",
+        "mi": 50.9,
+        "cognitive": 5,
+        "nesting": 3,
+        "lines": 36,
+        "maxCyclomatic": 2,
+        "entropy": 4.89
+      },
+      "history": [
+        {
+          "commit": "384c7d9",
+          "timestamp": "2026-05-09T15:50:17.271Z",
+          "mi": 50.9,
+          "cognitive": 5,
+          "nesting": 3,
+          "lines": 36,
+          "maxCyclomatic": 2,
+          "entropy": 4.89
+        }
+      ],
+      "trend": "stable"
+    },
+    "apps/wayofpi/electron/server.ts": {
+      "latest": {
+        "commit": "384c7d9",
+        "timestamp": "2026-05-09T15:50:19.870Z",
+        "mi": 75.3,
+        "cognitive": 0,
+        "nesting": 0,
+        "lines": 9,
+        "maxCyclomatic": 1,
+        "entropy": 4.23
+      },
+      "history": [
+        {
+          "commit": "384c7d9",
+          "timestamp": "2026-05-09T15:50:19.870Z",
+          "mi": 75.3,
+          "cognitive": 0,
+          "nesting": 0,
+          "lines": 9,
+          "maxCyclomatic": 1,
+          "entropy": 4.23
+        }
+      ],
+      "trend": "stable"
+    },
+    "apps/wayofpi/server/index.ts": {
+      "latest": {
+        "commit": "384c7d9",
+        "timestamp": "2026-05-09T15:50:23.804Z",
+        "mi": 46.1,
+        "cognitive": 36,
+        "nesting": 5,
+        "lines": 85,
+        "maxCyclomatic": 9,
+        "entropy": 5.89
+      },
+      "history": [
+        {
+          "commit": "384c7d9",
+          "timestamp": "2026-05-09T15:50:23.804Z",
+          "mi": 46.1,
+          "cognitive": 36,
+          "nesting": 5,
+          "lines": 85,
+          "maxCyclomatic": 9,
+          "entropy": 5.89
+        }
+      ],
+      "trend": "stable"
     }
   },
-  "capturedAt": "2026-05-09T15:05:34.071Z"
+  "capturedAt": "2026-05-09T15:50:28.805Z"
 }

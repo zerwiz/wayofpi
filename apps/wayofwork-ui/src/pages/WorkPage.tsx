@@ -1,10 +1,7 @@
 import { WorkApp } from "../components/work";
+import { useRefactor } from "../context/RefactorContext";
 
-interface WorkPageProps {
-  uiMode: string;
-  setUiMode: (m: string) => void;
-}
-
-export function WorkPage({ uiMode, setUiMode }: WorkPageProps) {
+export function WorkPage() {
+  const { uiMode, setUiMode } = useRefactor();
   return <WorkApp uiMode={uiMode} setUiMode={setUiMode} />;
 }

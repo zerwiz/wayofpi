@@ -163,6 +163,16 @@
     },
     {
       "type": "file",
+      "name": "apps/workerportal/WORK_BUTTON.tsx",
+      "file": "apps/workerportal/WORK_BUTTON.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/workerportal.tsx",
+      "file": "apps/workerportal/workerportal.tsx"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/postcss.config.js",
       "file": "apps/wayofwork-ui/postcss.config.js"
     },
@@ -175,16 +185,6 @@
       "type": "file",
       "name": "apps/wayofwork-ui/vite.config.ts",
       "file": "apps/wayofwork-ui/vite.config.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/WORK_BUTTON.tsx",
-      "file": "apps/workerportal/WORK_BUTTON.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/workerportal.tsx",
-      "file": "apps/workerportal/workerportal.tsx"
     },
     {
       "type": "file",
@@ -280,6 +280,21 @@
       "type": "file",
       "name": ".pi/skills/context-loader/context-loader.ts",
       "file": ".pi/skills/context-loader/context-loader.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/electron/main.ts",
+      "file": "apps/wayofpi/electron/main.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/electron/preload.ts",
+      "file": "apps/wayofpi/electron/preload.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/electron/server.ts",
+      "file": "apps/wayofpi/electron/server.ts"
     },
     {
       "type": "file",
@@ -778,11 +793,6 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/extensions/teams/index.ts",
-      "file": ".pi/agent/extensions/teams/index.ts"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/extensions/subagents/coder.ts",
       "file": ".pi/agent/extensions/subagents/coder.ts"
     },
@@ -805,6 +815,11 @@
       "type": "file",
       "name": ".pi/agent/extensions/subagents/team-manager.ts",
       "file": ".pi/agent/extensions/subagents/team-manager.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/teams/index.ts",
+      "file": ".pi/agent/extensions/teams/index.ts"
     },
     {
       "type": "file",
@@ -835,6 +850,31 @@
       "type": "file",
       "name": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts",
       "file": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/PortalAuth.tsx",
+      "file": "apps/workerportal/src/components/PortalAuth.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/PortalHeader.tsx",
+      "file": "apps/workerportal/src/components/PortalHeader.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/PortalNavigation.tsx",
+      "file": "apps/workerportal/src/components/PortalNavigation.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/index.ts",
+      "file": "apps/workerportal/src/components/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/pages/TimeEntriesPage.tsx",
+      "file": "apps/workerportal/src/pages/TimeEntriesPage.tsx"
     },
     {
       "type": "file",
@@ -1113,6 +1153,31 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofwork-ui/src/claw/clawUiModules.ts",
+      "file": "apps/wayofwork-ui/src/claw/clawUiModules.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx",
+      "file": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/constants/mitLicenseText.ts",
+      "file": "apps/wayofwork-ui/src/constants/mitLicenseText.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts",
+      "file": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts",
+      "file": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/src/api/client.ts",
       "file": "apps/wayofwork-ui/src/api/client.ts"
     },
@@ -1128,13 +1193,23 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/claw/clawUiModules.ts",
-      "file": "apps/wayofwork-ui/src/claw/clawUiModules.ts"
+      "name": "apps/wayofwork-ui/src/context/AuthContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/AuthContext.tsx"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx",
-      "file": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx"
+      "name": "apps/wayofwork-ui/src/context/RefactorContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/RefactorContext.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/context/ToastContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/ToastContext.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx"
     },
     {
       "type": "file",
@@ -1438,43 +1513,73 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/AuthContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/AuthContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
+      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/RefactorContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/RefactorContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
+      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/ToastContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/ToastContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
+      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
+      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/constants/mitLicenseText.ts",
-      "file": "apps/wayofwork-ui/src/constants/mitLicenseText.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts",
-      "file": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts",
-      "file": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts"
+      "name": "apps/wayofwork-ui/src/lib/utils.ts",
+      "file": "apps/wayofwork-ui/src/lib/utils.ts"
     },
     {
       "type": "file",
       "name": "apps/wayofwork-ui/src/interfaces/agent.ts",
       "file": "apps/wayofwork-ui/src/interfaces/agent.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
+      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/index.tsx",
+      "file": "apps/wayofwork-ui/src/logs/index.tsx"
     },
     {
       "type": "file",
@@ -1683,71 +1788,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
-      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
-      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
-      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
-      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/utils.ts",
-      "file": "apps/wayofwork-ui/src/lib/utils.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
-      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/index.tsx",
-      "file": "apps/wayofwork-ui/src/logs/index.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/modals/ConfirmationModal.tsx",
       "file": "apps/wayofwork-ui/src/modals/ConfirmationModal.tsx"
     },
@@ -1905,6 +1945,126 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/shell/GlobalAISidebar.tsx",
       "file": "apps/wayofwork-ui/src/shell/GlobalAISidebar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/calendar.d.ts",
+      "file": "apps/wayofwork-ui/src/types/calendar.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/calendar.ts",
+      "file": "apps/wayofwork-ui/src/types/calendar.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/chat.ts",
+      "file": "apps/wayofwork-ui/src/types/chat.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/commands.ts",
+      "file": "apps/wayofwork-ui/src/types/commands.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/developmentWorkflow.ts",
+      "file": "apps/wayofwork-ui/src/types/developmentWorkflow.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/drive.d.ts",
+      "file": "apps/wayofwork-ui/src/types/drive.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/drive.ts",
+      "file": "apps/wayofwork-ui/src/types/drive.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/fileMenu.ts",
+      "file": "apps/wayofwork-ui/src/types/fileMenu.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/hermes.d.ts",
+      "file": "apps/wayofwork-ui/src/types/hermes.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/hermes.ts",
+      "file": "apps/wayofwork-ui/src/types/hermes.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/hostDoctor.ts",
+      "file": "apps/wayofwork-ui/src/types/hostDoctor.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/kanban.d.ts",
+      "file": "apps/wayofwork-ui/src/types/kanban.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/kanban.ts",
+      "file": "apps/wayofwork-ui/src/types/kanban.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/notes.d.ts",
+      "file": "apps/wayofwork-ui/src/types/notes.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/notes.ts",
+      "file": "apps/wayofwork-ui/src/types/notes.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/tasks.d.ts",
+      "file": "apps/wayofwork-ui/src/types/tasks.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/tasks.ts",
+      "file": "apps/wayofwork-ui/src/types/tasks.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/technicalShell.ts",
+      "file": "apps/wayofwork-ui/src/types/technicalShell.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/tree.ts",
+      "file": "apps/wayofwork-ui/src/types/tree.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts",
+      "file": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceEditor.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceEditor.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceFile.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceFile.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceIndex.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceIndex.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceProblems.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceProblems.ts"
     },
     {
       "type": "file",
@@ -2175,151 +2335,6 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/utils/workspaceRecent.ts",
       "file": "apps/wayofwork-ui/src/utils/workspaceRecent.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/PortalAuth.tsx",
-      "file": "apps/workerportal/src/components/PortalAuth.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/PortalHeader.tsx",
-      "file": "apps/workerportal/src/components/PortalHeader.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/PortalNavigation.tsx",
-      "file": "apps/workerportal/src/components/PortalNavigation.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/index.ts",
-      "file": "apps/workerportal/src/components/index.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/pages/TimeEntriesPage.tsx",
-      "file": "apps/workerportal/src/pages/TimeEntriesPage.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/calendar.d.ts",
-      "file": "apps/wayofwork-ui/src/types/calendar.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/calendar.ts",
-      "file": "apps/wayofwork-ui/src/types/calendar.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/chat.ts",
-      "file": "apps/wayofwork-ui/src/types/chat.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/commands.ts",
-      "file": "apps/wayofwork-ui/src/types/commands.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/developmentWorkflow.ts",
-      "file": "apps/wayofwork-ui/src/types/developmentWorkflow.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/drive.d.ts",
-      "file": "apps/wayofwork-ui/src/types/drive.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/drive.ts",
-      "file": "apps/wayofwork-ui/src/types/drive.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/fileMenu.ts",
-      "file": "apps/wayofwork-ui/src/types/fileMenu.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/hermes.d.ts",
-      "file": "apps/wayofwork-ui/src/types/hermes.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/hermes.ts",
-      "file": "apps/wayofwork-ui/src/types/hermes.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/hostDoctor.ts",
-      "file": "apps/wayofwork-ui/src/types/hostDoctor.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/kanban.d.ts",
-      "file": "apps/wayofwork-ui/src/types/kanban.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/kanban.ts",
-      "file": "apps/wayofwork-ui/src/types/kanban.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/notes.d.ts",
-      "file": "apps/wayofwork-ui/src/types/notes.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/notes.ts",
-      "file": "apps/wayofwork-ui/src/types/notes.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/tasks.d.ts",
-      "file": "apps/wayofwork-ui/src/types/tasks.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/tasks.ts",
-      "file": "apps/wayofwork-ui/src/types/tasks.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/technicalShell.ts",
-      "file": "apps/wayofwork-ui/src/types/technicalShell.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/tree.ts",
-      "file": "apps/wayofwork-ui/src/types/tree.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts",
-      "file": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceEditor.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceEditor.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceFile.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceFile.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceIndex.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceIndex.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceProblems.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceProblems.ts"
     },
     {
       "type": "file",
@@ -2878,6 +2893,16 @@
     },
     {
       "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts"
     },
@@ -2970,16 +2995,6 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/text.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/text.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
     },
     {
       "type": "file",
@@ -3303,6 +3318,21 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofpi/technicalIDE/dist/assets/_baseUniq-ChqUZ0sl.js",
       "file": "apps/wayofpi/technicalIDE/dist/assets/_baseUniq-ChqUZ0sl.js"
     },
@@ -3578,21 +3608,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts",
       "file": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts"
     },
@@ -3693,16 +3708,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx",
-      "file": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx",
-      "file": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/components/documenthandler/Chat.tsx",
       "file": "apps/wayofwork-ui/src/components/documenthandler/Chat.tsx"
     },
@@ -3788,38 +3793,13 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx"
+      "name": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx",
+      "file": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx"
+      "name": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx",
+      "file": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx"
     },
     {
       "type": "file",
@@ -3865,6 +3845,41 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/components/kanban/PushWorkflowToKanbanModal.tsx",
       "file": "apps/wayofwork-ui/src/components/kanban/PushWorkflowToKanbanModal.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx"
     },
     {
       "type": "file",
@@ -4328,11 +4343,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts",
-      "file": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/components/documenthandler/hooks/useChatMessages.ts",
       "file": "apps/wayofwork-ui/src/components/documenthandler/hooks/useChatMessages.ts"
     },
@@ -4348,6 +4358,11 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts",
+      "file": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/src/components/mobile/chrome/MobileChrome.tsx",
       "file": "apps/wayofwork-ui/src/components/mobile/chrome/MobileChrome.tsx"
     },
@@ -4358,13 +4373,13 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx",
-      "file": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx"
+      "name": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx",
+      "file": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx",
-      "file": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx"
+      "name": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx",
+      "file": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx"
     },
     {
       "type": "file",
@@ -4843,11 +4858,6 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts"
     },
@@ -4865,6 +4875,11 @@
       "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
     },
     {
       "type": "file",
@@ -5253,31 +5268,6 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js"
     },
@@ -5375,6 +5365,31 @@
       "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
     },
     {
       "type": "file",
@@ -5703,16 +5718,6 @@
     },
     {
       "type": "file",
-      "name": "extensions/protected/agent-team.ts",
-      "file": "extensions/protected/agent-team.ts"
-    },
-    {
-      "type": "file",
-      "name": "extensions/protected/context-loader.ts",
-      "file": "extensions/protected/context-loader.ts"
-    },
-    {
-      "type": "file",
       "name": "extensions/util/agent-dir-scan.ts",
       "file": "extensions/util/agent-dir-scan.ts"
     },
@@ -5735,6 +5740,16 @@
       "type": "file",
       "name": "extensions/util/themeMap.ts",
       "file": "extensions/util/themeMap.ts"
+    },
+    {
+      "type": "file",
+      "name": "extensions/protected/agent-team.ts",
+      "file": "extensions/protected/agent-team.ts"
+    },
+    {
+      "type": "file",
+      "name": "extensions/protected/context-loader.ts",
+      "file": "extensions/protected/context-loader.ts"
     },
     {
       "type": "file",
@@ -5917,6 +5932,16 @@
     },
     {
       "type": "file",
+      "name": "apps/workerportal/WORK_BUTTON.tsx",
+      "file": "apps/workerportal/WORK_BUTTON.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/workerportal.tsx",
+      "file": "apps/workerportal/workerportal.tsx"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/postcss.config.js",
       "file": "apps/wayofwork-ui/postcss.config.js"
     },
@@ -5929,16 +5954,6 @@
       "type": "file",
       "name": "apps/wayofwork-ui/vite.config.ts",
       "file": "apps/wayofwork-ui/vite.config.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/WORK_BUTTON.tsx",
-      "file": "apps/workerportal/WORK_BUTTON.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/workerportal.tsx",
-      "file": "apps/workerportal/workerportal.tsx"
     },
     {
       "type": "file",
@@ -6034,6 +6049,21 @@
       "type": "file",
       "name": ".pi/skills/context-loader/context-loader.ts",
       "file": ".pi/skills/context-loader/context-loader.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/electron/main.ts",
+      "file": "apps/wayofpi/electron/main.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/electron/preload.ts",
+      "file": "apps/wayofpi/electron/preload.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/electron/server.ts",
+      "file": "apps/wayofpi/electron/server.ts"
     },
     {
       "type": "file",
@@ -6532,11 +6562,6 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/extensions/teams/index.ts",
-      "file": ".pi/agent/extensions/teams/index.ts"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/extensions/subagents/coder.ts",
       "file": ".pi/agent/extensions/subagents/coder.ts"
     },
@@ -6559,6 +6584,11 @@
       "type": "file",
       "name": ".pi/agent/extensions/subagents/team-manager.ts",
       "file": ".pi/agent/extensions/subagents/team-manager.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/teams/index.ts",
+      "file": ".pi/agent/extensions/teams/index.ts"
     },
     {
       "type": "file",
@@ -6589,6 +6619,31 @@
       "type": "file",
       "name": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts",
       "file": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/PortalAuth.tsx",
+      "file": "apps/workerportal/src/components/PortalAuth.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/PortalHeader.tsx",
+      "file": "apps/workerportal/src/components/PortalHeader.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/PortalNavigation.tsx",
+      "file": "apps/workerportal/src/components/PortalNavigation.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/components/index.ts",
+      "file": "apps/workerportal/src/components/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/workerportal/src/pages/TimeEntriesPage.tsx",
+      "file": "apps/workerportal/src/pages/TimeEntriesPage.tsx"
     },
     {
       "type": "file",
@@ -6867,6 +6922,31 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofwork-ui/src/claw/clawUiModules.ts",
+      "file": "apps/wayofwork-ui/src/claw/clawUiModules.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx",
+      "file": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/constants/mitLicenseText.ts",
+      "file": "apps/wayofwork-ui/src/constants/mitLicenseText.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts",
+      "file": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts",
+      "file": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/src/api/client.ts",
       "file": "apps/wayofwork-ui/src/api/client.ts"
     },
@@ -6882,13 +6962,23 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/claw/clawUiModules.ts",
-      "file": "apps/wayofwork-ui/src/claw/clawUiModules.ts"
+      "name": "apps/wayofwork-ui/src/context/AuthContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/AuthContext.tsx"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx",
-      "file": "apps/wayofwork-ui/src/claw/clawUserUiModules.tsx"
+      "name": "apps/wayofwork-ui/src/context/RefactorContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/RefactorContext.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/context/ToastContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/ToastContext.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx",
+      "file": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx"
     },
     {
       "type": "file",
@@ -7192,43 +7282,73 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/AuthContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/AuthContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
+      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/RefactorContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/RefactorContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
+      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/ToastContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/ToastContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
+      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx",
-      "file": "apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx"
+      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
+      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/constants/mitLicenseText.ts",
-      "file": "apps/wayofwork-ui/src/constants/mitLicenseText.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts",
-      "file": "apps/wayofwork-ui/src/constants/piModelConfigPaths.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts",
-      "file": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts"
+      "name": "apps/wayofwork-ui/src/lib/utils.ts",
+      "file": "apps/wayofwork-ui/src/lib/utils.ts"
     },
     {
       "type": "file",
       "name": "apps/wayofwork-ui/src/interfaces/agent.ts",
       "file": "apps/wayofwork-ui/src/interfaces/agent.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
+      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/index.tsx",
+      "file": "apps/wayofwork-ui/src/logs/index.tsx"
     },
     {
       "type": "file",
@@ -7437,71 +7557,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
-      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
-      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
-      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
-      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/utils.ts",
-      "file": "apps/wayofwork-ui/src/lib/utils.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
-      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/index.tsx",
-      "file": "apps/wayofwork-ui/src/logs/index.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/modals/ConfirmationModal.tsx",
       "file": "apps/wayofwork-ui/src/modals/ConfirmationModal.tsx"
     },
@@ -7659,6 +7714,126 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/shell/GlobalAISidebar.tsx",
       "file": "apps/wayofwork-ui/src/shell/GlobalAISidebar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/calendar.d.ts",
+      "file": "apps/wayofwork-ui/src/types/calendar.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/calendar.ts",
+      "file": "apps/wayofwork-ui/src/types/calendar.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/chat.ts",
+      "file": "apps/wayofwork-ui/src/types/chat.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/commands.ts",
+      "file": "apps/wayofwork-ui/src/types/commands.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/developmentWorkflow.ts",
+      "file": "apps/wayofwork-ui/src/types/developmentWorkflow.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/drive.d.ts",
+      "file": "apps/wayofwork-ui/src/types/drive.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/drive.ts",
+      "file": "apps/wayofwork-ui/src/types/drive.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/fileMenu.ts",
+      "file": "apps/wayofwork-ui/src/types/fileMenu.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/hermes.d.ts",
+      "file": "apps/wayofwork-ui/src/types/hermes.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/hermes.ts",
+      "file": "apps/wayofwork-ui/src/types/hermes.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/hostDoctor.ts",
+      "file": "apps/wayofwork-ui/src/types/hostDoctor.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/kanban.d.ts",
+      "file": "apps/wayofwork-ui/src/types/kanban.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/kanban.ts",
+      "file": "apps/wayofwork-ui/src/types/kanban.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/notes.d.ts",
+      "file": "apps/wayofwork-ui/src/types/notes.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/notes.ts",
+      "file": "apps/wayofwork-ui/src/types/notes.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/tasks.d.ts",
+      "file": "apps/wayofwork-ui/src/types/tasks.d.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/tasks.ts",
+      "file": "apps/wayofwork-ui/src/types/tasks.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/technicalShell.ts",
+      "file": "apps/wayofwork-ui/src/types/technicalShell.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/tree.ts",
+      "file": "apps/wayofwork-ui/src/types/tree.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts",
+      "file": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceEditor.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceEditor.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceFile.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceFile.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceIndex.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceIndex.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/types/workspaceProblems.ts",
+      "file": "apps/wayofwork-ui/src/types/workspaceProblems.ts"
     },
     {
       "type": "file",
@@ -7929,151 +8104,6 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/utils/workspaceRecent.ts",
       "file": "apps/wayofwork-ui/src/utils/workspaceRecent.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/PortalAuth.tsx",
-      "file": "apps/workerportal/src/components/PortalAuth.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/PortalHeader.tsx",
-      "file": "apps/workerportal/src/components/PortalHeader.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/PortalNavigation.tsx",
-      "file": "apps/workerportal/src/components/PortalNavigation.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/components/index.ts",
-      "file": "apps/workerportal/src/components/index.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/workerportal/src/pages/TimeEntriesPage.tsx",
-      "file": "apps/workerportal/src/pages/TimeEntriesPage.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/calendar.d.ts",
-      "file": "apps/wayofwork-ui/src/types/calendar.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/calendar.ts",
-      "file": "apps/wayofwork-ui/src/types/calendar.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/chat.ts",
-      "file": "apps/wayofwork-ui/src/types/chat.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/commands.ts",
-      "file": "apps/wayofwork-ui/src/types/commands.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/developmentWorkflow.ts",
-      "file": "apps/wayofwork-ui/src/types/developmentWorkflow.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/drive.d.ts",
-      "file": "apps/wayofwork-ui/src/types/drive.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/drive.ts",
-      "file": "apps/wayofwork-ui/src/types/drive.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/fileMenu.ts",
-      "file": "apps/wayofwork-ui/src/types/fileMenu.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/hermes.d.ts",
-      "file": "apps/wayofwork-ui/src/types/hermes.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/hermes.ts",
-      "file": "apps/wayofwork-ui/src/types/hermes.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/hostDoctor.ts",
-      "file": "apps/wayofwork-ui/src/types/hostDoctor.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/kanban.d.ts",
-      "file": "apps/wayofwork-ui/src/types/kanban.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/kanban.ts",
-      "file": "apps/wayofwork-ui/src/types/kanban.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/notes.d.ts",
-      "file": "apps/wayofwork-ui/src/types/notes.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/notes.ts",
-      "file": "apps/wayofwork-ui/src/types/notes.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/tasks.d.ts",
-      "file": "apps/wayofwork-ui/src/types/tasks.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/tasks.ts",
-      "file": "apps/wayofwork-ui/src/types/tasks.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/technicalShell.ts",
-      "file": "apps/wayofwork-ui/src/types/technicalShell.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/tree.ts",
-      "file": "apps/wayofwork-ui/src/types/tree.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts",
-      "file": "apps/wayofwork-ui/src/types/uiViewsCatalog.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceEditor.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceEditor.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceFile.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceFile.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceIndex.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceIndex.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/types/workspaceProblems.ts",
-      "file": "apps/wayofwork-ui/src/types/workspaceProblems.ts"
     },
     {
       "type": "file",
@@ -8632,6 +8662,16 @@
     },
     {
       "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts"
     },
@@ -8724,16 +8764,6 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/text.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/text.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
     },
     {
       "type": "file",
@@ -9057,6 +9087,21 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofpi/technicalIDE/dist/assets/_baseUniq-ChqUZ0sl.js",
       "file": "apps/wayofpi/technicalIDE/dist/assets/_baseUniq-ChqUZ0sl.js"
     },
@@ -9332,21 +9377,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts",
       "file": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts"
     },
@@ -9447,16 +9477,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx",
-      "file": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx",
-      "file": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/components/documenthandler/Chat.tsx",
       "file": "apps/wayofwork-ui/src/components/documenthandler/Chat.tsx"
     },
@@ -9542,38 +9562,13 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx"
+      "name": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx",
+      "file": "apps/wayofwork-ui/src/components/hermes/HermesFileBrowser.tsx"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx"
+      "name": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx",
+      "file": "apps/wayofwork-ui/src/components/hermes/HermesTerminalView.tsx"
     },
     {
       "type": "file",
@@ -9619,6 +9614,41 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/components/kanban/PushWorkflowToKanbanModal.tsx",
       "file": "apps/wayofwork-ui/src/components/kanban/PushWorkflowToKanbanModal.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/EditMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/FileMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/GoMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/HelpMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/MenuBar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/RunMenu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/menus/ViewMenu.tsx"
     },
     {
       "type": "file",
@@ -10082,11 +10112,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts",
-      "file": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/components/documenthandler/hooks/useChatMessages.ts",
       "file": "apps/wayofwork-ui/src/components/documenthandler/hooks/useChatMessages.ts"
     },
@@ -10102,6 +10127,11 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts",
+      "file": "apps/wayofwork-ui/src/components/documenthandler/types/documenthandler.types.ts"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/src/components/mobile/chrome/MobileChrome.tsx",
       "file": "apps/wayofwork-ui/src/components/mobile/chrome/MobileChrome.tsx"
     },
@@ -10112,13 +10142,13 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx",
-      "file": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx"
+      "name": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx",
+      "file": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx"
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx",
-      "file": "apps/wayofwork-ui/src/components/mobile/simple/SimpleMobileTabBar.tsx"
+      "name": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx",
+      "file": "apps/wayofwork-ui/src/components/mobile/technical/MobileTechnicalShell.tsx"
     },
     {
       "type": "file",
@@ -10597,11 +10627,6 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts"
     },
@@ -10619,6 +10644,11 @@
       "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
     },
     {
       "type": "file",
@@ -11007,31 +11037,6 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js"
     },
@@ -11129,6 +11134,31 @@
       "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
     },
     {
       "type": "file",
@@ -11457,16 +11487,6 @@
     },
     {
       "type": "file",
-      "name": "extensions/protected/agent-team.ts",
-      "file": "extensions/protected/agent-team.ts"
-    },
-    {
-      "type": "file",
-      "name": "extensions/protected/context-loader.ts",
-      "file": "extensions/protected/context-loader.ts"
-    },
-    {
-      "type": "file",
       "name": "extensions/util/agent-dir-scan.ts",
       "file": "extensions/util/agent-dir-scan.ts"
     },
@@ -11492,6 +11512,16 @@
     },
     {
       "type": "file",
+      "name": "extensions/protected/agent-team.ts",
+      "file": "extensions/protected/agent-team.ts"
+    },
+    {
+      "type": "file",
+      "name": "extensions/protected/context-loader.ts",
+      "file": "extensions/protected/context-loader.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/.venv/lib64/python3.12/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
       "file": ".hermes/.venv/lib64/python3.12/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
     },
@@ -11510,5 +11540,5 @@
     }
   ],
   "unlistedDeps": [],
-  "summary": "Found 1150 issues"
+  "summary": "Found 1153 issues"
 }

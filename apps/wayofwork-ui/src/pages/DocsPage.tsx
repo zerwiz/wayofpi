@@ -1,44 +1,32 @@
 import { DocumentHandlerProvider } from "../components/documenthandler/context/DocumentHandlerContext";
 import { DocsApp } from "../components/docs/DocsApp";
-import type { TreeNode } from "../types/tree";
-import type { ChatRow } from "../hooks/useWayOfPiSession";
+import { useRefactor } from "../context/RefactorContext";
 
-interface DocsPageProps {
-  uiMode: string;
-  setUiMode: (m: string) => void;
-  nodes: TreeNode[];
-  treeLoading: boolean;
-  treeError: string | null;
-  refreshTree: () => void;
-  selectedPath: string | null;
-  setSelectedPath: (p: string | null) => void;
-  rows: ChatRow[];
-  streaming: boolean;
-  connected: boolean;
-  sendChat: (t: string) => void;
-  stop: () => void;
-}
+export function DocsPage() {
+  const {
+    uiMode,
+    setUiMode,
+    tree: { nodes, loading, error, refresh },
+    selectedPath,
+    setSelectedPath,
+    session: { rows, streaming, connected, sendChat, stop }
+  } = useRefactor();
 
-export function DocsPage({
-  uiMode, setUiMode, nodes, treeLoading, treeError,
-  refreshTree, selectedPath, setSelectedPath,
-  rows, streaming, connected, sendChat, stop,
-}: DocsPageProps) {
   return (
     <DocumentHandlerProvider>
       <DocsApp
         uiMode={uiMode}
         setUiMode={setUiMode}
         nodes={nodes}
-        treeLoading={treeLoading}
-        treeError={treeError}
-        refreshTree={refreshTree}
+        treeLoading={loading}
+        treeError={error}
+        refreshTree={refresh}
         selectedPath={selectedPath}
         setSelectedPath={setSelectedPath}
         rows={rows}
         streaming={streaming}
         connected={connected}
-        sendChat={sendChat}
+        sendChat={(text) => void sendChat(text)}
         stop={stop}
       />
     </DocumentHandlerProvider>
