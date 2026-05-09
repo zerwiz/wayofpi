@@ -217,7 +217,7 @@ Thus, **2‑3 clients at $1,500/mo** already deliver a healthy margin, while **4
 
 ---  
 
-*Prepared by:* **[Your Name] – AI‑Infrastructure Analyst**  
-*Contact:* **youremail@example.com**  
+*Prepared by:* **Way-Of Engineering – AI‑Infrastructure Analyst**  
+*Contact:* **engineering@way-of.com**  
 
 *All numbers are based on public pricing (Q4 2025, US market) and standard assumptions. Adjust for local electricity rates, tax, or additional compliance requirements as needed.*
