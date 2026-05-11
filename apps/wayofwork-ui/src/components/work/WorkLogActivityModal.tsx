@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Clock, FileText, Calendar as CalendarIcon, Save } from "lucide-react";
 import type { BoardCard } from "../../types/kanban";
 

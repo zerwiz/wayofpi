@@ -4,7 +4,16 @@ export interface CardAssignee {
   userId: string;
   email: string;
   displayName: string;
+  phone?: string;
   avatar?: string;
+}
+
+export interface CardNotification {
+  id: string;
+  type: 'status_change' | 'due_date' | 'overdue' | 'comment' | 'admin_manual';
+  message: string;
+  sentAt: number;
+  recipientPhone: string;
 }
 
 export interface CardComment {
@@ -69,6 +78,8 @@ export interface BoardCard {
   labels: string[];
   tags?: string[];
   completed?: boolean;
+  enableWhatsApp?: boolean;
+  notifications?: CardNotification[];
   checklists: CardChecklist[];
   comments: CardComment[];
   attachments: CardAttachment[];

@@ -34,13 +34,15 @@ const DEFAULT_COLUMNS: Omit<BoardColumn, 'boardId'>[] = [
 ];
 
 const SEED_USERS = [
-  { id: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' },
-  { id: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith' },
-  { id: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams' },
-  { id: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' },
-  { id: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' },
-  { id: 'demo-client', email: 'client@example.com', displayName: 'Demo Client' },
+  { id: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson', phone: '+46701234567' },
+  { id: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith', phone: '+46702345678' },
+  { id: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams', phone: '+46703456789' },
+  { id: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin', phone: '+46704567890' },
+  { id: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker', phone: '+46705678901' },
+  { id: 'demo-client', email: 'client@example.com', displayName: 'Demo Client', phone: '+46706789012' },
 ];
+
+const userStore = new Map(SEED_USERS.map(u => [u.id, u]));
 
 // ── Seed Data ──
 function seedInitialData() {
@@ -380,27 +382,160 @@ function seedInitialData() {
   boardStore.set(board2.id, board2);
 
   const b2cards = new Map<string, BoardCard>();
-  b2cards.set('b2-c1', {
-    id: 'b2-c1', boardId: 'board-2', columnId: 'b2-col-1',
-    title: 'Login page broken on mobile',
-    description: 'Submit button not visible on iPhone SE',
-    priority: 'high', order: 0,
-    createdAt: Date.now() - 86400000, updatedAt: Date.now(),
-    assignees: [{ userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' }],
-    checklists: [], comments: [], attachments: [], tags: ['bug', 'mobile'],
-    metadata: {},
-  });
-  b2cards.set('b2-c2', {
-    id: 'b2-c2', boardId: 'board-2', columnId: 'b2-col-2',
-    title: 'API timeout on large uploads',
-    description: 'Files >10MB cause 30s timeout',
-    priority: 'urgent', dueDate: new Date(Date.now() + 86400000).toISOString(), order: 0,
-    createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 3600000,
-    assignees: [{ userId: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams' }],
-    checklists: [], comments: [], attachments: [], tags: ['bug', 'backend'],
-    metadata: {},
-  });
+  // ... (b2 cards) ...
   cardStore.set(board2.id, b2cards);
+
+  // Board 3: Complex Residential Project (Oak Ridge Estate)
+  const b3Columns: BoardColumn[] = [
+    { id: 'b3-col-1', boardId: 'board-3', name: 'Excavation & Foundation', order: 0 },
+    { id: 'b3-col-2', boardId: 'board-3', name: 'Framing & Structural', order: 1 },
+    { id: 'b3-col-3', boardId: 'board-3', name: 'MEP Rough-in', order: 2 },
+    { id: 'b3-col-4', boardId: 'board-3', name: 'Interior Finishes', order: 3 },
+    { id: 'b3-col-5', boardId: 'board-3', name: 'Completed / Handover', order: 4 },
+  ];
+  const board3: Board = {
+    id: 'board-3',
+    name: 'Oak Ridge Estate - Phase 1',
+    description: 'Luxury residential development project management',
+    columns: b3Columns,
+    members: ['demo-admin', 'demo-worker', 'demo-client'],
+    icon: '🏠',
+    starred: true,
+    createdAt: Date.now() - 86400000 * 20,
+    updatedAt: Date.now(),
+    stats: { totalCards: 8, completedCards: 1, overdueCards: 1 },
+  };
+  boardStore.set(board3.id, board3);
+
+  const b3cards = new Map<string, BoardCard>();
+  
+  b3cards.set('b3-c1', {
+    id: 'b3-c1', boardId: 'board-3', columnId: 'b3-col-1',
+    title: 'Site Clearing & Grading',
+    description: 'Removal of debris and leveling the construction site.',
+    priority: 'medium', 
+    startDate: new Date(Date.now() - 86400000 * 15).toISOString(),
+    dueDate: new Date(Date.now() - 86400000 * 12).toISOString(),
+    completed: true, order: 0, createdAt: Date.now() - 86400000 * 15, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [{ id: 'cl-r1', title: 'Site Prep', items: [{ id: 'ri-1', title: 'Utility marking', completed: true }, { id: 'ri-2', title: 'Topsoil removal', completed: true }] }],
+    comments: [], attachments: [], tags: ['site'],
+    timeLogs: [{ id: 'log-r1', userId: 'demo-worker', userName: 'Demo Worker', hours: 8, description: 'Completed grading', date: '2026-05-01', createdAt: Date.now() }],
+    estimatedTime: 3, estimatedTimeUnit: 'days',
+    cover: { type: 'image', value: 'https://images.unsplash.com/photo-1541888946425-d81bb19480c5?w=800&q=80', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c2', {
+    id: 'b3-c2', boardId: 'board-3', columnId: 'b3-col-1',
+    title: 'Footing Reinforcement',
+    description: 'Installation of rebar for the foundation footings.',
+    priority: 'high', 
+    startDate: new Date(Date.now() - 86400000 * 5).toISOString(),
+    dueDate: new Date(Date.now() + 86400000).toISOString(),
+    order: 1, createdAt: Date.now() - 86400000 * 5, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [{ id: 'cl-r2', title: 'Inspection', items: [{ id: 'ri-3', title: 'Check rebar spacing', completed: false }] }],
+    comments: [], attachments: [], tags: ['foundation'],
+    estimatedTime: 5, estimatedTimeUnit: 'days',
+    cover: { type: 'color', value: '#1e40af', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c3', {
+    id: 'b3-c3', boardId: 'board-3', columnId: 'b3-col-2',
+    title: 'OVERDUE: First Floor Framing',
+    description: 'Assembling the structural walls for the ground floor.',
+    priority: 'urgent', 
+    startDate: new Date(Date.now() - 86400000 * 7).toISOString(),
+    dueDate: new Date(Date.now() - 86400000 * 2).toISOString(),
+    order: 0, createdAt: Date.now() - 86400000 * 7, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [{ id: 'cl-r3', title: 'Wall Sets', items: [{ id: 'ri-4', title: 'Exterior load-bearing', completed: true }, { id: 'ri-5', title: 'Interior partitions', completed: false }] }],
+    comments: [], attachments: [], tags: ['framing'],
+    estimatedTime: 7, estimatedTimeUnit: 'days',
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #f97316, #ea580c)', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c4', {
+    id: 'b3-c4', boardId: 'board-3', columnId: 'b3-col-3',
+    title: 'Electrical Rough-in',
+    description: 'Running wiring through the studs before drywall.',
+    priority: 'high', 
+    startDate: new Date(Date.now()).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 10).toISOString(),
+    order: 0, createdAt: Date.now(), updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [], comments: [], attachments: [], tags: ['mep'],
+    estimatedTime: 6, estimatedTimeUnit: 'days',
+    cover: { type: 'emoji', value: '🔌', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c5', {
+    id: 'b3-c5', boardId: 'board-3', columnId: 'b3-col-3',
+    title: 'Plumbing Main Lines',
+    description: 'Installing sewage and supply lines before the pour.',
+    priority: 'high', 
+    startDate: new Date(Date.now() - 86400000).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 5).toISOString(),
+    order: 1, createdAt: Date.now() - 86400000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [], comments: [], attachments: [], tags: ['mep'],
+    estimatedTime: 5, estimatedTimeUnit: 'days',
+    cover: { type: 'color', value: '#065f46', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c6', {
+    id: 'b3-c6', boardId: 'board-3', columnId: 'b3-col-4',
+    title: 'Drywall Hanging & Finishing',
+    description: 'Hanging sheetrock and multi-stage mudding/sanding.',
+    priority: 'medium', 
+    startDate: new Date(Date.now() + 86400000 * 10).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 20).toISOString(),
+    order: 0, createdAt: Date.now(), updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [{ id: 'cl-r4', title: 'Wall Check', items: [{ id: 'ri-6', title: 'Sand for primer', completed: false }] }],
+    comments: [], attachments: [], tags: ['interior'],
+    estimatedTime: 10, estimatedTimeUnit: 'days',
+    cover: { type: 'image', value: 'https://images.unsplash.com/photo-1621905235277-3e1150247659?w=800&q=80', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c7', {
+    id: 'b3-c7', boardId: 'board-3', columnId: 'b3-col-4',
+    title: 'Interior Painting',
+    description: 'Final coat of eggshell on all wall surfaces.',
+    priority: 'low', 
+    startDate: new Date(Date.now() + 86400000 * 21).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 25).toISOString(),
+    order: 1, createdAt: Date.now(), updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-client', email: 'client@example.com', displayName: 'Demo Client' }],
+    checklists: [{ id: 'cl-r5', title: 'Color Match', items: [{ id: 'ri-7', title: 'Confirm Slate Grey', completed: true }] }],
+    comments: [], attachments: [], tags: ['interior', 'client'],
+    estimatedTime: 4, estimatedTimeUnit: 'days',
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #cbd5e1, #94a3b8)', size: 'medium' },
+    metadata: {},
+  });
+
+  b3cards.set('b3-c8', {
+    id: 'b3-c8', boardId: 'board-3', columnId: 'b3-col-4',
+    title: 'Cabinetry Installation',
+    description: 'Kitchen and master bath custom cabinet mounting.',
+    priority: 'medium', 
+    startDate: new Date(Date.now() + 86400000 * 26).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 34).toISOString(),
+    order: 2, createdAt: Date.now(), updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' }],
+    checklists: [], comments: [], attachments: [], tags: ['interior', 'admin'],
+    estimatedTime: 8, estimatedTimeUnit: 'days',
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #a855f7, #ec4899)', size: 'medium' },
+    metadata: {},
+  });
+
+  cardStore.set(board3.id, b3cards);
 
   // Members
   memberStore.set('board-1', [
@@ -645,6 +780,69 @@ export const kanbanService = {
     card.columnId = targetColumnId;
     card.order = index;
     card.updatedAt = Date.now();
+
+    // Trigger auto notification if enabled
+    if (card.enableWhatsApp) {
+      await kanbanService.triggerTaskAutoNotification(boardId, cardId, 'status_change', `Task status changed to ${targetColumnId}`);
+    }
+  },
+
+  // ── WhatsApp Integration ──
+  sendWhatsAppMessage: async (boardId: string, cardId: string, userId: string, message: string): Promise<void> => {
+    const cards = cardStore.get(boardId);
+    if (!cards) return;
+    const card = cards.get(cardId);
+    if (!card) return;
+
+    const user = userStore.get(userId);
+    if (!user || !user.phone) throw new Error('User or WhatsApp number not found');
+
+    const notification: any = {
+      id: `wa-${Date.now()}`,
+      type: 'admin_manual',
+      message,
+      sentAt: Date.now(),
+      recipientPhone: user.phone,
+    };
+
+    if (!card.notifications) card.notifications = [];
+    card.notifications.push(notification);
+    card.updatedAt = Date.now();
+    
+    console.log(`[WhatsApp Bot] Sent to ${user.phone}: ${message}`);
+  },
+
+  toggleCardWhatsApp: async (boardId: string, cardId: string, enabled: boolean): Promise<void> => {
+    const cards = cardStore.get(boardId);
+    if (!cards) return;
+    const card = cards.get(cardId);
+    if (!card) return;
+    card.enableWhatsApp = enabled;
+    card.updatedAt = Date.now();
+  },
+
+  triggerTaskAutoNotification: async (boardId: string, cardId: string, type: string, message: string): Promise<void> => {
+    const cards = cardStore.get(boardId);
+    if (!cards) return;
+    const card = cards.get(cardId);
+    if (!card || !card.enableWhatsApp) return;
+
+    // Send to all assignees
+    card.assignees.forEach(assignee => {
+      const user = userStore.get(assignee.userId);
+      if (user && user.phone) {
+        const notification: any = {
+          id: `auto-${Date.now()}-${assignee.userId}`,
+          type,
+          message,
+          sentAt: Date.now(),
+          recipientPhone: user.phone,
+        };
+        if (!card.notifications) card.notifications = [];
+        card.notifications.push(notification);
+        console.log(`[Auto WhatsApp] Sent to ${user.phone}: ${message}`);
+      }
+    });
   },
 
   // ── Members ──

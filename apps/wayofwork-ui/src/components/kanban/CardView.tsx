@@ -47,6 +47,7 @@ import {
   Trash2,
   Palette,
 } from 'lucide-react';
+import { WorkLogActivityModal } from '../work/WorkLogActivityModal';
 
 interface CardViewProps {
   boardId: string;
@@ -100,6 +101,14 @@ export const CardView: React.FC<CardViewProps> = ({
   const [selectedDevelopmentWorkflowId, setSelectedDevelopmentWorkflowId] = useState<string | undefined>(undefined);
   const [selectedDevelopmentStepId, setSelectedDevelopmentStepId] = useState<string | undefined>(undefined);
   const [selectedDevelopmentPhase, setSelectedDevelopmentPhase] = useState<DevelopmentPhase | undefined>(undefined);
+  const [logTimeModalOpen, setLogTimeModalOpen] = useState(false);
+  const [allCards, setAllCards] = useState<BoardCard[]>([]);
+
+  useEffect(() => {
+    if (logTimeModalOpen) {
+      kanbanService.getAllCardsForBoard(boardId).then(setAllCards);
+    }
+  }, [logTimeModalOpen, boardId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1723,19 +1732,7 @@ export const CardView: React.FC<CardViewProps> = ({
                     Time Logs ({(card?.timeLogs || []).length})
                   </label>
                   <button 
-                    onClick={() => {
-                      const hours = prompt("Hours to log:");
-                      const desc = prompt("Activity description:");
-                      if (hours && desc && card) {
-                        kanbanService.addCardTimeLog(boardId, card.id, {
-                          userId: user?.id || 'demo-user',
-                          userName: user?.name || 'User',
-                          hours: parseFloat(hours),
-                          description: desc,
-                          date: new Date().toISOString().split('T')[0]
-                        }).then(() => loadCard());
-                      }
-                    }}
+                    onClick={() => setLogTimeModalOpen(true)}
                     className="text-[10px] font-bold text-[#ea580c] hover:underline"
                   >
                     + Log Time
@@ -1759,6 +1756,90 @@ export const CardView: React.FC<CardViewProps> = ({
                   ))}
                   {(card?.timeLogs || []).length === 0 && (
                     <p className="text-xs text-[#585858] italic text-center py-2">No time logged for this task.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* WhatsApp Integration Section */}
+            {!isCreateMode && (
+              <div className="pt-4 border-t border-[#3c3c3c] mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-semibold text-white flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-green-500" />
+                    WhatsApp Workbot
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-[#858585]">
+                      {card?.enableWhatsApp ? "Connected" : "Disconnected"}
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (card) {
+                          kanbanService.toggleCardWhatsApp(boardId, card.id, !card.enableWhatsApp).then(() => loadCard());
+                        }
+                      }}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        card?.enableWhatsApp ? "bg-green-600" : "bg-[#3c3c3c]"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          card?.enableWhatsApp ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-green-900/10 border border-green-500/20 p-2.5 mb-3">
+                  <p className="text-[10px] text-green-400 font-medium leading-snug">
+                    When enabled, the system automatically sends status updates and due-date reminders to assignees via WhatsApp.
+                  </p>
+                </div>
+
+                {/* Admin Message Action */}
+                {user?.role === "ADMIN" && (
+                  <button
+                    onClick={() => {
+                      const msg = prompt("Message to send via WhatsApp:");
+                      if (msg && card) {
+                        // Send to the first assignee for this demo
+                        const targetId = card.assignees[0]?.userId;
+                        if (targetId) {
+                          kanbanService.sendWhatsAppMessage(boardId, card.id, targetId, msg).then(() => loadCard());
+                        } else {
+                          alert("No assignee found to receive the message.");
+                        }
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-green-600/20 py-2 text-xs font-bold text-green-400 border border-green-500/30 hover:bg-green-600/30 transition-all mb-4"
+                  >
+                    <MessageSquare size={14} />
+                    Send Admin Alert via WhatsApp
+                  </button>
+                )}
+
+                {/* Notification Feed */}
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {(card?.notifications || []).slice().reverse().map((note: any) => (
+                    <div key={note.id} className="p-2.5 bg-[#161616]/40 border border-[#3c3c3c] rounded-lg">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className={`text-[9px] font-bold uppercase ${
+                          note.type === 'admin_manual' ? 'text-blue-400' : 'text-green-500'
+                        }`}>
+                          {note.type.replace('_', ' ')}
+                        </span>
+                        <span className="text-[8px] font-mono text-[#585858]">
+                          {new Date(note.sentAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#cccccc] leading-relaxed">"{note.message}"</p>
+                      <p className="text-[8px] text-[#585858] mt-1">To: {note.recipientPhone}</p>
+                    </div>
+                  ))}
+                  {(card?.notifications || []).length === 0 && (
+                    <p className="text-xs text-[#585858] italic text-center py-2">No WhatsApp logs yet.</p>
                   )}
                 </div>
               </div>
@@ -2281,7 +2362,27 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
           </div>
         </div>
-      </div>
+        </div>
+        {/* Log Activity Modal */}
+      <WorkLogActivityModal
+        isOpen={logTimeModalOpen}
+        onClose={() => setLogTimeModalOpen(false)}
+        cards={allCards}
+        initialCardId={cardId}
+        appearanceDark={true}
+        onLog={async (targetCardId, hours, description, date) => {
+          if (!boardId) return;
+          await kanbanService.addCardTimeLog(boardId, targetCardId, {
+            userId: user?.id || 'demo-user',
+            userName: user?.name || 'User',
+            hours,
+            description,
+            date,
+          });
+          loadCard();
+          if (onUpdated) onUpdated();
+        }}
+      />
     </>
   );
 };

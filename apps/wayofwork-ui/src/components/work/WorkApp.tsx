@@ -323,9 +323,12 @@ export function WorkApp({ uiMode, setUiMode }: { uiMode: string; setUiMode: (m: 
 
             {/* Tasks Tab */}
             {activeTab === "tasks" && (
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-[#cccccc]">Active Planning Tasks</h2>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-sm font-semibold text-[#cccccc]">Active Planning Tasks</h2>
+                    <p className="text-xs text-[#858585]">Tasks assigned to you on the planning boards.</p>
+                  </div>
                   <button 
                     onClick={() => setUiMode("kanban")}
                     className="flex items-center gap-1.5 text-xs text-[#ea580c] hover:underline"
@@ -535,7 +538,7 @@ export function WorkApp({ uiMode, setUiMode }: { uiMode: string; setUiMode: (m: 
       <WorkLogActivityModal
         isOpen={logActivityOpen}
         onClose={() => setCardLogActivityOpen(false)}
-        cards={filteredCards}
+        cards={allCards}
         onLog={handleLogActivity}
         appearanceDark={appearanceDark}
         initialCardId={preselectedCardId}

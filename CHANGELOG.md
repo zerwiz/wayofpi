@@ -1,28 +1,45 @@
+# v1.0.73
+
+## 🧠 Smart Context & Model Orchestration
+
+### ✨ New Features
+- **Interactive Model Selection** — Transformed the header dropdown into a live model selector. It now scans for available Ollama models and allows users to switch the active LLM with a single click.
+- **Global Model Sync** — Header model selection now synchronizes instantly across all chat modes (Simple, Claw, Docs). The backend persists your choice across page reloads.
+- **File-Aware AI Agents** — Agents now "see" what you are working on. The currently open file in the preview is automatically sent as system context with every chat message.
+- **Enhanced Workspace Tools** — Agents are now fully equipped with `read`, `write`, and `grep` tools, allowing them to directly modify files in your workspace based on chat requests.
+- **Docs Page Refactored** — Standardized the standalone Docs page to use the unified session management hook, ensuring consistent model and chat behavior.
+
+### 🎨 UI & UX Improvements
+- **Chat Stuttering Fixed** — Eliminated text duplication (e.g., "TheThe") by implementing strict WebSocket connection guards and immutable state updates.
+- **Readable Timestamps** — Replaced raw numeric Unix timestamps in chat bubbles with formatted clock times (e.g., "10:25 AM").
+- **Stabilized Layout Jumps** — Refined the chat's auto-scroll logic to prevent browser-level window scrolling, ensuring the preview and chat remain stable during rendering.
+- **Balanced Chat Composers** — Adjusted the default height of chat input boxes in Simple (2 rows) and Docs (4 rows) modes based on user feedback to maximize usable screen space.
+
+### 🐛 Bug Fixes
+- **Ghost Connection Cleanup** — Added a mechanism to identify and terminate redundant WebSocket connections, preventing multiple listeners from polluting the state.
+- **Model Label Sync** — Fixed a bug where chat bubbles would show the wrong model name after switching; they now accurately reflect the active LLM.
+
 # v1.0.72
 
 ## 🎨 UI Refinement & Docs Overhaul
 
 ### ✨ New Features
-- **Movable Board Columns** — Users can now manually reorder Kanban columns using a professional drag-and-drop interface. Reordering is persisted across sessions for better workflow customization.
-- **Complex Task Checklists** — Seeded detailed checklists for major planning tasks (Financials, Migration, Architecture). This allows for granular tracking of sub-tasks directly within the task cards.
-- **Multi-Day Project Initiatives** — Added support and demo data for tasks spanning multiple weeks. These initiatives include specific start/due dates and are measured in "Days" rather than just hours.
-- **Estimated Time Integration** — Every task card now includes an "Est:" label, allowing for immediate comparison between planned and actual logged hours.
-- **Overdue Task Management** — The Work Mode now automatically identifies and highlights overdue tasks with a pulsating red "OVERDUE" badge.
-- **Demo Planning Board** — Seeded a "Global Planning" board with example cards for Admin, Worker, and Client roles to provide immediate context for new users.
-- **Professional Work Branding** — Removed emojis from "WORK MODE" and updated it with a sleek Briefcase icon, matching the "DOCS" design system.
-- **Resizable Docs Panels** — Added draggable handles to the Docs page. Users can now manually adjust the width of the Chat, Documents tree, and Preview panels.
-- **Docs Layout Corrected** — Stabilized the three-panel view in the requested order: **Documents (Left) | Preview (Middle) | Chat (Right)**. 
-- **Simple Chat in Docs** — Integrated the high-quality `SimpleChatView` into Docs mode, providing features like agent selection and slash commands.
-- **Functional Inline Preview** — Replaced the preview modal with an inline viewer that fetches real file content and renders Markdown (with Mermaid support).
+- **Complex Residential Demo Board** — Launched the "Oak Ridge Estate" project board. This high-quality demo features 5 specialized construction phases (Foundation, Framing, MEP, Interior, Handover) and 8 realistic tasks with covers, technical checklists, and pre-populated multi-day time logs.
+- **Professional Modal Time Logging** — Completely replaced browser "prompt" boxes with a professional interactive modal for all time logging actions. This provides a unified, branded experience across the platform.
+- **WhatsApp Workbot Synchronization** — Time entries are now logically and visually linked to the WhatsApp Workbot. These logs automatically sync with mobile-reported activity feeds for unified project audit trails.
+- **Task-Specific Activity Actions** — Separated "Details" and "+ Log Time" on Kanban cards. Users can now jump directly into a task-preselected logging modal for faster workflow.
+- **Movable Board Columns** — Enabled draggable column reordering for full Kanban board customization. Layouts are persisted across user sessions.
+- **Multi-Day Project Initiatives** — Added support for long-term tasks spanning multiple weeks, with distinct project timelines and unit-aware estimation (Hours/Days).
+- **Estimated Time Tracking** — Every card now supports "Planned vs. Actual" analysis with high-visibility estimation labels.
+- **Automated WhatsApp Alerts** — Implemented system triggers for status changes and overdue alerts, pushed directly to assignees via the mobile bridge.
 
 ### 🚀 Performance Optimizations
-- **Lazy Tree Rendering** — Refactored `FileExplorer` to only flatten and render nodes for expanded directories. This drastically improves responsiveness in large projects.
-- **Focused Docs Sidebar** — The Documents view now only processes documentation-related files, reducing background rendering load.
+- **Lazy Tree Rendering** — Optimized the file explorer to handle thousands of files by only rendering expanded directories.
 
 ### 🐛 Bug Fixes
-- **Persistent Role Badge Removed** — Completely eliminated the orange "ADMIN" floating badge by emptying the `UserRoleBadge` component. This prevents UI overlap with the chat send button.
-- **Preview Crash Fixed** — Resolved a `TypeError` in `PreviewContent` where missing file extensions or Base64 decoding issues would crash the UI.
-- **Ghost Sidebars Removed** — Eliminated unwanted grey space and legacy sidebars in Docs view.
+- **Work subsystem Stability** — Resolved a persistent JSX syntax error in `WorkApp.tsx` and a `ReferenceError` for `useEffect` in the logging modal. The entire Work suite now builds and loads cleanly.
+- **Modal Visibility Fixed** — Increased z-index of the Kanban details modal to prevent it from rendering behind the application header.
+- **Preview Stability** — Resolved a crash in the Docs preview related to missing file extensions.
 
 # v1.0.71
 
