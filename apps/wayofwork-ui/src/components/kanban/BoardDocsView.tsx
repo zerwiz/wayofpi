@@ -47,7 +47,7 @@ export const BoardDocsView: React.FC<BoardDocsViewProps> = ({
     const linkedDocIds = new Set<string>();
     cards.forEach((card) => {
       const docIds = card.metadata?.documentIds || [];
-      docIds.forEach((id) => linkedDocIds.add(id));
+      docIds.forEach((id: string) => linkedDocIds.add(id));
     });
     return allDocuments.filter((doc) => linkedDocIds.has(doc.id));
   };
@@ -57,7 +57,7 @@ export const BoardDocsView: React.FC<BoardDocsViewProps> = ({
     const linkedDocIds = new Set<string>();
     cards.forEach((card) => {
       const docIds = card.metadata?.documentIds || [];
-      docIds.forEach((id) => linkedDocIds.add(id));
+      docIds.forEach((id: string) => linkedDocIds.add(id));
     });
     return allDocuments.filter(
       (doc) =>

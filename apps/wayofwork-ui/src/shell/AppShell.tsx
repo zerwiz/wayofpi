@@ -14,7 +14,7 @@ export function AppShell() {
     tree,
     session,
     selectedPath,
-    line, col, onCursor, language,
+    line, col, onCursor, language, copyWorkspacePath,
     modals,
     server,
     agents,
@@ -26,7 +26,10 @@ export function AppShell() {
     leftSidebarVisible,
     debug,
     recentFolders,
-    autoSave, setAutoSave
+    autoSave, setAutoSave,
+    staticAnalysis,
+    reopenLlmFixModal,
+    llmFixModalAppearanceDark
   } = useRefactor();
 
   const {
@@ -61,9 +64,7 @@ export function AppShell() {
         onRevertFile={reloadFocusedOrMain}
         canRevert={!!selectedPath && editor.dirty}
         onRefreshWorkspace={() => void tree.refresh()}
-        onCopyWorkspacePath={() => {
-           if (tree.root) void navigator.clipboard.writeText(tree.root);
-        }}
+        onCopyWorkspacePath={copyWorkspacePath}
         onSelectActivity={(a) => {
           setUiMode("technical");
           setLeftSidebarVisible(true);
@@ -100,7 +101,7 @@ export function AppShell() {
             onSaveAll: () => {},
             onRevertFile: reloadFocusedOrMain,
             onRefreshWorkspace: tree.refresh,
-            onCopyWorkspacePath: editor.copyWorkspacePath as any,
+            onCopyWorkspacePath: copyWorkspacePath as any,
             onNewPlanMarkdown: handleNewPlanFile,
             onExit: () => {},
         } as any}
@@ -211,9 +212,9 @@ export function AppShell() {
           contextPct={String(session.tokenMeter.contextPct ?? 0)}
           tokensDown={session.tokenMeter.tokensDown}
           tokensUp={session.tokenMeter.tokensUp}
-          onCopyWorkspacePath={() => {
-             if (tree.root) void navigator.clipboard.writeText(tree.root);
-          }}
+          onCopyWorkspacePath={copyWorkspacePath}
+          chatMode={session.chatMode}
+          chatAgentName={session.chatAgentName ?? undefined}
         />
       )}
     </div>

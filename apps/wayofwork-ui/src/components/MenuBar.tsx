@@ -820,20 +820,15 @@ export function MenuBar({
 									<li>
 										<button
 											type="button"
-											disabled={uiMode === "technical"}
-											className={menuBtnClass(uiMode === "technical")}
-											title={
-												uiMode === "technical" ? "Already using Technical layout." : "Switch to IDE-style layout."
-											}
+											className={menuBtnClass(false)}
+											title="Open Way of Pi (Standalone Technical IDE)"
 											onClick={() => {
-												onUiModeChange("technical");
+												window.open("http://localhost:5174", "_blank");
 												closeMenus();
 											}}
 										>
-											Use Technical layout
-											{uiMode === "technical" ? (
-												<span className="float-right text-[#89d185]">✓</span>
-											) : null}
+											Open Way of Pi (IDE)
+											<span className="float-right text-[#858585]">↗</span>
 										</button>
 									</li>
 									<li>
@@ -1094,7 +1089,7 @@ export function MenuBar({
 																type="button"
 																className={menuBtnClass()}
 																onClick={() => {
-																	viewTechnical.onToggleCenteredLayout();
+																	viewTechnical.onToggleCenteredLayout?.();
 																	closeMenus();
 																}}
 															>
@@ -3253,7 +3248,7 @@ export function MenuBar({
 																className={menuBtnClass()}
 																role="menuitem"
 																onClick={() => {
-																	viewTechnical.onToggleCenteredLayout();
+																	viewTechnical.onToggleCenteredLayout?.();
 																	closeMenus();
 																}}
 															>

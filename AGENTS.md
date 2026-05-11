@@ -51,9 +51,14 @@ apps/
 ## Status
 - **WOP-016**: Technical IDE extraction — **DONE ✅**. Build passes standalone.
 - **WOP-017/018**: Renaming to wayofwork — **DONE ✅**.
-- **Phase 2**: Routing (react-router-dom) — for Gemini.
-- **Phase 3b Track A/B**: Hooks extraction, page shells — for Gemini.
+- **WOP-010**: Phase 6 Full Kanban Integration — **DONE ✅**. 550 TS errors fixed, 19 files un-excluded, build passes.
+- **WOP-004**: Phase 4 SDK Migration — **DONE ✅**.
+- **WOP-006**: Phase 5 Version Pinning — **DONE ✅**.
+- **WOP-012**: Phase 7 ÄTA Tickets — **DONE ✅**.
+- **WOP-015**: Phase 8 Claw Leadership — **DONE ✅**.
+- **Phase 2**: Routing (react-router-dom) — DONE.
+- **Phase 3b Track A/B**: Hooks extraction, page shells — DONE.
 
 ## Division of Labor
-- **OpenCode**: Track C (Technical IDE). **DONE** — standalone, build passing.
+- **OpenCode**: WOP-016 (Tech IDE), WOP-004 (SDK), WOP-006 (Version Pinning), WOP-010 (Kanban), WOP-012 (ÄTA Tickets), WOP-015 (Claw Leadership). Build passing.
 - **Gemini**: Fix SimplePage.tsx build error, Phase 2 routing, Track A/B hooks/page shells.

@@ -11,16 +11,29 @@ const stableSearchParams = new URLSearchParams();
 const stableSetSearchParams = (params: any) => {};
 const useSearchParams = () => [stableSearchParams, stableSetSearchParams] as const;
 import { kanbanService } from '../../../services/mockKanbanService';
-import { notesService } from '../../../services/notesService';
-import { tasksService } from '../../../services/tasksService';
-import { driveService } from '../../../services/driveService';
-import { calendarService } from '../../../services/calendarService';
+import { notesService } from '../../../services/mockNotesService';
+import { tasksService } from '../../../services/mockTasksService';
+import { driveService } from '../../../services/mockDriveService';
+import { calendarService } from '../../../services/mockCalendarService';
 import { useToast } from '../../../context/ToastContext';
 import { developmentWorkflowService } from '../../../services/developmentWorkflowService';
 import { workflowsService } from '../../../services/workflowsService';
 import { boardMembersService } from '../../../services/boardMembersService';
 import type { Board, BoardCard } from '../../../types/kanban';
 import type { DriveFile } from '../../../types/drive';
+import type { DevelopmentPhase, DevelopmentWorkflow } from '../../../types/developmentWorkflow';
+import type { NSRFolder } from '../../../types/nsrCompliance';
+import type { Workflow, WorkflowTrack } from '../../../types/workflows';
+import { BOARD_TEMPLATES, getTemplatesByCategory, type TemplateCategory } from '../../../services/boardTemplates';
+import { projectsService } from '../../../services/mockProjectsService';
+import { NSR_MANDATORY_FOLDERS, NSR_FOLDER_DISPLAY_NAMES } from '../../../types/nsrCompliance';
+import NSRFolderBadge from '../../../components/development/NSRFolderBadge';
+import NSRComplianceBadge from '../../../components/development/NSRComplianceBadge';
+import { WorkDocsView } from './WorkDocsView';
+import { WorkFilesView } from './WorkFilesView';
+import { BoardSettingsModal } from './BoardSettingsModal';
+import { WorkTeamView } from './WorkTeamView';
+import { ConfirmationModal } from '../../../components/modals/ConfirmationModal';
 import {
   Plus,
   MoreHorizontal,
@@ -154,7 +167,7 @@ export function WorkBoard() {
   const loadAllBoards = async () => {
     try {
       const boards = await kanbanService.getAllBoards();
-      setAllBoards(boards);
+      setAllBoards(boards as Board[]);
     } catch (error) {
       console.error('Failed to load boards:', error);
     }
@@ -342,7 +355,7 @@ export function WorkBoard() {
       await kanbanService.updateCard(currentBoardId, cardId, {
         metadata: {
           ...card.metadata,
-          documentIds: currentDocIds.filter((id) => id !== documentId),
+          documentIds: currentDocIds.filter((id: string) => id !== documentId),
         },
       });
       loadBoard();
@@ -412,7 +425,7 @@ export function WorkBoard() {
       await kanbanService.updateCard(currentBoardId, cardId, {
         metadata: {
           ...card.metadata,
-          fileIds: currentFileIds.filter((id) => id !== fileId),
+          fileIds: currentFileIds.filter((id: string) => id !== fileId),
           // Clear legacy fileId if it matches
           fileId: card.metadata?.fileId === fileId ? undefined : card.metadata?.fileId,
         },
@@ -639,7 +652,7 @@ export function WorkBoard() {
         
         // Handle bidirectional development workflow linking
         if (cardData.metadata?.developmentStepId && cardData.metadata?.developmentWorkflowId) {
-          const workflow = developmentWorkflowService.getWorkflow(cardData.metadata.developmentWorkflowId);
+          const workflow = await developmentWorkflowService.getWorkflow(cardData.metadata.developmentWorkflowId);
           if (workflow) {
             const step = workflow.steps.find((s) => s.id === cardData.metadata?.developmentStepId);
             if (step && !step.kanbanCardIds?.includes(createdCard.id)) {
@@ -818,7 +831,7 @@ export function WorkBoard() {
       const updatedColumns = board.columns.map((c) =>
         c.id === columnId ? { ...c, name: editingColumnName.trim() } : c
       );
-      await kanbanService.updateBoard(currentBoardId, { columns: updatedColumns });
+      await kanbanService.updateBoard(currentBoardId, { columns: updatedColumns as any });
       loadBoard();
       setEditingColumnId(null);
       setEditingColumnName('');
@@ -1159,7 +1172,7 @@ export function WorkBoard() {
                               await kanbanService.updateBoard(b.id, { starred: !b.starred });
                               // Reload boards list
                               const updatedBoards = await kanbanService.getAllBoards();
-                              setAllBoards(updatedBoards);
+                              setAllBoards(updatedBoards as Board[]);
                               showToast({
                                 type: 'success',
                                 message: b.starred ? 'Board unstarred' : 'Board starred',
@@ -1174,7 +1187,7 @@ export function WorkBoard() {
                               });
                             }
                           }}
-                          className="p-1 hover:bg-[#252526] rounded transition-colors"
+                          className="p-2 hover:bg-[#252526] rounded-lg transition-colors"
                           title={b.starred ? 'Unstar board' : 'Star board'}
                         >
                           <Star
@@ -1312,24 +1325,24 @@ export function WorkBoard() {
                           try {
                             await kanbanService.updateBoard(b.id, { starred: !b.starred });
                             // Reload boards list
-                            const updatedBoards = kanbanService.getAllBoards();
-                            setAllBoards(updatedBoards);
-                            showToast({
-                              type: 'success',
-                              message: b.starred ? 'Board unstarred' : 'Board starred',
-                              duration: 2000,
-                            });
-                          } catch (error) {
-                            console.error('Failed to toggle star:', error);
-                            showToast({
-                              type: 'error',
-                              message: 'Failed to toggle star',
-                              duration: 3000,
-                            });
-                          }
-                        }}
-                        className="p-2 hover:bg-[#252526] rounded-lg transition-colors"
-                        title={b.starred ? 'Unstar board' : 'Star board'}
+                            const updatedBoards = await kanbanService.getAllBoards();
+                              setAllBoards(updatedBoards as Board[]);
+                              showToast({
+                                type: 'success',
+                                message: b.starred ? 'Board unstarred' : 'Board starred',
+                                duration: 2000,
+                              });
+                            } catch (error) {
+                              console.error('Failed to toggle star:', error);
+                              showToast({
+                                type: 'error',
+                                message: 'Failed to toggle star',
+                                duration: 3000,
+                              });
+                            }
+                          }}
+                          className="p-2 hover:bg-[#252526] rounded-lg transition-colors"
+                          title={b.starred ? 'Unstar board' : 'Star board'}
                       >
                         <Star
                           className={`w-5 h-5 ${
@@ -2231,7 +2244,6 @@ export function WorkBoard() {
                             {card.metadata?.nsrFolder && (
                               <NSRFolderBadge
                                 folder={card.metadata.nsrFolder}
-                                size="sm"
                                 onClick={() => {
                                   setSelectedNSRFolder(card.metadata!.nsrFolder!);
                                 }}
@@ -2432,7 +2444,7 @@ export function WorkBoard() {
                         <input
                           type="checkbox"
                           className="w-4 h-4 rounded border-[#3c3c3c] bg-[#252526] text-orange-600 focus:ring-orange-500"
-                          onChange={async () => {
+                          onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
                             const allCards = Array.from(cards.values());
                             const filteredCards = allCards.filter((c) => {
                               if (searchQuery && !c.title.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -2458,9 +2470,9 @@ export function WorkBoard() {
                               }
                               return true;
                             });
+                            const now = new Date();
                             if (e.target.checked) {
                               setSelectedCardIds(["all"]);
-                              const now = new Date();
                               filteredCards.forEach((card) => {
                                 kanbanService.updateCard(currentBoardId, card.id, {
                                   metadata: {
@@ -2550,7 +2562,9 @@ export function WorkBoard() {
                             const now = new Date();
                             const updatedCard: Partial<BoardCard> = { metadata: { completed: !card.completed, updatedAt: now } };
                             await kanbanService.updateCard(currentBoardId, card.id, updatedCard);
-                            setCards(new Map(Object.entries(Array.from(cards.values()).filter((c) => c.id !== card.id).concat([updatedCard]))));
+                            const newCards = new Map(cards);
+                            newCards.set(card.id, { ...card, ...updatedCard } as BoardCard);
+                            setCards(newCards);
                           }}
                           className="w-4 h-4 rounded border-[#3c3c3c] bg-[#252526] text-orange-600 focus:ring-orange-500"
                           onClick={(e) => e.stopPropagation()}

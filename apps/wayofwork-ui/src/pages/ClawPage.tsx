@@ -1,4 +1,4 @@
-import { type ChangeEvent, type RefObject } from "react";
+import { type ChangeEvent, type RefObject, useMemo } from "react";
 import type { SimpleTabId } from "../components/simple/SimpleNavRail";
 import { useRefactor } from "../context/RefactorContext";
 import { IdeLayout } from "../components/IdeLayout";
@@ -10,6 +10,7 @@ import { useNavigationHandlers } from "../hooks/useNavigationHandlers";
 import { useCommandItems } from "../hooks/useCommandItems";
 import type { ViewMenuTechnicalOptions } from "../types/technicalShell";
 import { WorkspaceStaticAnalysisProvider } from "../context/WorkspaceStaticAnalysisContext";
+import type { WorkspaceStaticAnalysisContextValue } from "../context/WorkspaceStaticAnalysisContext";
 
 const WOP_PUBLIC_REPO_URL = "https://github.com/zerwiz/wayofpi";
 
@@ -30,8 +31,9 @@ export function ClawPage() {
     tree, server, session, preferences, agents, modals,
     rootLabel, workspaceOperational, recentFolders,
     reopenLlmFixModal,
-    line, col, onCursor, language,
-    llmFixModalAppearanceDark
+    line, col, onCursor, language, copyWorkspacePath,
+    llmFixModalAppearanceDark,
+    staticAnalysis
   } = useRefactor();
 
   const { 
@@ -58,10 +60,12 @@ export function ClawPage() {
     onToggleFullScreen: async () => {},
     leftSidebarVisible,
     onToggleLeftSidebar: () => setLeftSidebarVisible(!leftSidebarVisible),
-    onSetEditorLayout: () => {}, // TODO
-    editorLayout: "1x1", // TODO
+    editorLayout: "1x1", 
+    onSetEditorLayout: () => {}, 
     zenMode: false,
     onToggleZenMode: () => {},
+    onEnterZen: () => {},
+    onExitZen: () => {},
     statusBarVisible: true,
     onToggleStatusBar: () => {},
     menuBarVisible: true,
@@ -75,7 +79,12 @@ export function ClawPage() {
     zoomLevel: 100,
     onZoomIn: () => {},
     onZoomOut: () => {},
+    onZoomReset: () => {},
     onResetZoom: () => {},
+    onApplyLayoutPreset: () => {},
+    onNormalView: () => {},
+    onFlipLayout: () => {},
+    uiZoomPercent: 100
   };
 
   const fileMenu = {
@@ -93,7 +102,7 @@ export function ClawPage() {
     onSaveAll: () => {},
     onRevertFile: reloadFocusedOrMain,
     onRefreshWorkspace: tree.refresh,
-    onCopyWorkspacePath: () => { if(tree.root) void navigator.clipboard.writeText(tree.root); },
+    onCopyWorkspacePath: copyWorkspacePath as any,
     onNewPlanMarkdown: handleNewPlanFile,
     onExit: () => {},
   } as any;
@@ -179,8 +188,27 @@ export function ClawPage() {
      onOpenIndexingDocs: () => modals.setIndexingDocsOpen(true),
   } as any;
 
+  const staticAnalysisValue: WorkspaceStaticAnalysisContextValue = useMemo(() => ({
+      problems: staticAnalysis.snapshot.problems.map(p => ({
+          ...p,
+          path: p.filePath,
+          source: "eslint" as const,
+          column: p.column ?? 0
+      })),
+      loading: staticAnalysis.loading,
+      runAnalysis: staticAnalysis.runAnalysis,
+      scheduleDebouncedRefresh: staticAnalysis.scheduleDebouncedRefresh,
+      engine: staticAnalysis.snapshot.engine,
+      log: staticAnalysis.snapshot.log.join("\n"),
+      ranAt: staticAnalysis.snapshot.ranAt.toISOString(),
+      ok: staticAnalysis.snapshot.ok,
+      error: staticAnalysis.snapshot.error ?? undefined,
+      openProblem: () => {},
+      refreshProblemsCache: async () => {},
+  }), [staticAnalysis]);
+
   return (
-    <WorkspaceStaticAnalysisProvider enabled={technical}>
+    <WorkspaceStaticAnalysisProvider value={staticAnalysisValue}>
     <IdeLayout
       workspaceFileInputRef={{ current: null }} 
       onWorkspaceFileChange={() => {}} 
@@ -194,9 +222,7 @@ export function ClawPage() {
       onRevertFile={() => void reloadFocusedOrMain()}
       canRevert={!!selectedPath && editor.dirty}
       onRefreshWorkspace={tree.refresh}
-      onCopyWorkspacePath={() => {
-         if (tree.root) void navigator.clipboard.writeText(tree.root);
-      }}
+      onCopyWorkspacePath={copyWorkspacePath}
       onSelectActivity={(a) => {
         setUiMode("technical");
         setLeftSidebarVisible(true);
@@ -211,7 +237,7 @@ export function ClawPage() {
       terminalMenu={terminalMenu}
       helpMenu={helpMenu}
       onOpenAgentSetup={() => {}} 
-      onOpenAgentPermissions={() => setAgentPermissionsOpen(true)}
+      onOpenAgentPermissions={() => setCommandPaletteOpen(true)} 
       settingsMenu={settingsMenuHandlers}
       onOpenTeamsYaml={openTeamsYamlFromMenu}
       onCreateAgentMarkdown={() => {}} 
@@ -227,14 +253,19 @@ export function ClawPage() {
       viewTechnical={viewTechnicalMenu}
     >
       <ClawApp
+        uiMode={uiMode}
+        setUiMode={setUiMode}
         root={tree.root || ""}
         rootLabel={rootLabel}
         nodes={tree.nodes}
         treeLoading={tree.loading}
         treeError={tree.error}
         refreshTree={tree.refresh}
+        refreshTreeQuiet={tree.refreshQuiet}
         modelLabel={modelLabel}
         config={server.config}
+        effectiveModel={session.effectiveModel}
+        onSelectLlmModel={session.setLlmModel}
         selectedPath={selectedPath}
         setSelectedPath={setSelectedPath}
         content={editor.content}
@@ -245,12 +276,21 @@ export function ClawPage() {
         fileError={editor.error}
         dirty={editor.dirty}
         save={editor.save}
-        line={editor.line}
-        col={editor.col}
-        onCursor={editor.onCursor}
+        discardUnsavedChanges={editor.discardUnsavedChanges}
+        line={line}
+        col={col}
+        onCursor={onCursor}
         rows={session.rows}
         logs={session.logs}
+        chatTabs={session.chatTabs}
+        activeChatTabId={session.activeChatTabId || ""}
+        onSelectChatTab={session.selectChatTab}
+        onCloseChatTab={session.closeChatTab}
+        onRenameChatTab={session.renameChatTab}
+        onNewSession={session.startNewSession}
         streaming={session.streaming}
+        chatStreamUiEnabled={true} 
+        onChatStreamUiEnabledChange={() => {}} 
         chatQueuePending={Number(session.chatQueuePending)}
         chatQueueItems={session.chatQueueItems}
         editChatQueueItem={session.editChatQueueItem}
@@ -274,14 +314,15 @@ export function ClawPage() {
         onSelectionPrefsChange={() => {}} 
         onFindInFiles={() => {}} 
         onReplaceInFiles={() => {}} 
+        teamsYamlWritePath={agents.data?.teamsPath ?? ""}
         workspaceReady={workspaceOperational}
         onOpenTeamsYaml={openTeamsYamlFromMenu}
         onCreateAgentDefinition={() => {}} 
-        onHelp={() => modals.setClawHelpOpen(true)}
-        onConfigRefresh={server.refresh}
         onNewPlanFile={() => void handleNewPlanFile()}
         newPlanFileDisabled={!workspaceOperational}
         onOpenIndexingDocs={() => modals.setIndexingDocsOpen(true)}
+        onOpenHostDoctor={() => modals.setHostDoctorOpen(true)}
+        onHelp={() => modals.setClawHelpOpen(true)}
         contextPct={String(session.tokenMeter.contextPct ?? 0)}
         contextFillPct={session.chatPulseMeters?.contextFillPct ?? null}
         tokensDown={session.tokenMeter.tokensDown}

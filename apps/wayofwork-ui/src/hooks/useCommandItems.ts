@@ -17,7 +17,8 @@ export function useCommandItems() {
     selectedPath, setSelectedPath,
     modals,
     session,
-    editor
+    editor,
+    copyWorkspacePath
   } = useRefactor();
 
   const { handleNewPlanFile } = useWorkspaceActions();
@@ -25,21 +26,20 @@ export function useCommandItems() {
   const { focusWorkspaceFileFromMenu } = useNavigationHandlers();
 
   // This is a stub for the complex logic in App.tsx
-  // We will need to implement the actual logic for things like injectIntoChatComposer
   const injectIntoChatComposer = useCallback((text: string) => {
-    // TODO: implement
+    // TODO: implement actual injection if possible via context
     console.log("Injecting into chat:", text);
   }, []);
 
   const openPlanFileForReview = useCallback((p: string) => {
-     // TODO: implement
-     console.log("Opening plan for review:", p);
-  }, []);
+     setSelectedPath(p);
+     if (uiMode === "simple") setSimpleTab("chat");
+  }, [setSelectedPath, uiMode, setSimpleTab]);
 
   const openPiModelConfigInSimpleBrains = useCallback((p: string) => {
-      // TODO: implement
-      console.log("Opening Pi config in simple brains:", p);
-  }, []);
+      setSelectedPath(p);
+      if (uiMode === "simple") setSimpleTab("models");
+  }, [setSelectedPath, uiMode, setSimpleTab]);
 
   const openHostDoctor = useCallback(() => {
       modals.setHostDoctorOpen(true);
@@ -63,7 +63,7 @@ export function useCommandItems() {
       },
       {
         id: "s-how-to-use",
-        label: uiMode === "claw" ? "Help: Claw guide & roadmap" : "Help: How to use Way of Pi",
+        label: uiMode === "claw" ? "Help: Claw guide & roadmap" : "Help: How to use Way of Work",
         detail:
           uiMode === "claw"
             ? "Claw Help — operator shell, phases, schedules, channels"
@@ -83,7 +83,9 @@ export function useCommandItems() {
       { id: "s-models", label: "Simple: AI Brains", run: () => setSimpleTab("models") },
       { id: "s-projects", label: "Simple: Projects", run: () => setSimpleTab("projects") },
       { id: "s-settings", label: "Simple: Settings", run: () => setSimpleTab("settings") },
-      { id: "s-tech", label: "Layout: Technical UI", run: () => setUiMode("technical") },
+      { id: "s-tech", label: "Layout: Technical UI", run: () => {
+         window.open("http://localhost:5174", "_blank");
+      }},
       {
         id: "s-claw",
         label: "Layout: Claw UI",
@@ -98,7 +100,7 @@ export function useCommandItems() {
       },
       { id: "s-revert", label: "File: Revert from disk", run: () => void reloadFocusedOrMain() },
       { id: "s-refresh", label: "Workspace: Refresh tree", run: () => void refresh() },
-      { id: "s-copy", label: "Workspace: Copy path", run: editor.copyWorkspacePath as any },
+      { id: "s-copy", label: "Workspace: Copy path", run: copyWorkspacePath as any },
       {
         id: "s-chat-plan",
         label: "Agent: Plan mode (Pi planner prompt)",
@@ -174,7 +176,7 @@ export function useCommandItems() {
       })),
     ];
   }, [
-    nodes, modals, openHostDoctor, uiMode, setSimpleTab, setUiMode, saveAndRefresh, reloadFocusedOrMain, refresh, editor.copyWorkspacePath, session, handleNewPlanFile, injectIntoChatComposer, openPlanFileForReview, openPiModelConfigInSimpleBrains, setSelectedPath
+    nodes, modals, openHostDoctor, uiMode, setSimpleTab, setUiMode, saveAndRefresh, reloadFocusedOrMain, refresh, copyWorkspacePath, session, handleNewPlanFile, injectIntoChatComposer, openPlanFileForReview, openPiModelConfigInSimpleBrains, setSelectedPath
   ]);
 
   return { simpleCommandItems };

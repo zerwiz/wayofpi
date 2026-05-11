@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Link2, Search, Plus, X } from 'lucide-react';
 import type { Board, BoardCard } from '../../../types/kanban';
-import { notesService } from '../../../services/notesService';
+import { notesService } from '../../../services/mockNotesService';
 import type { Note } from '../../../types/notes';
 
 interface BoardDocsViewProps {
@@ -17,7 +17,7 @@ interface BoardDocsViewProps {
   onUnlinkDocument?: (cardId: string, documentId: string) => void;
 }
 
-export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
+export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
   board: _board,
   cards,
   onLinkDocument,
@@ -47,7 +47,7 @@ export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
     const linkedDocIds = new Set<string>();
     cards.forEach((card) => {
       const docIds = card.metadata?.documentIds || [];
-      docIds.forEach((id) => linkedDocIds.add(id));
+      docIds.forEach((id: string) => linkedDocIds.add(id));
     });
     return allDocuments.filter((doc) => linkedDocIds.has(doc.id));
   };
@@ -57,7 +57,7 @@ export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
     const linkedDocIds = new Set<string>();
     cards.forEach((card) => {
       const docIds = card.metadata?.documentIds || [];
-      docIds.forEach((id) => linkedDocIds.add(id));
+      docIds.forEach((id: string) => linkedDocIds.add(id));
     });
     return allDocuments.filter(
       (doc) =>
@@ -134,7 +134,7 @@ export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
                 )
                 .map((doc) => {
                   const linkedToCards = Array.from(cards.values()).filter(
-                    (card) => card.metadata?.documentIds?.includes(doc.id)
+                    (card: BoardCard) => card.metadata?.documentIds?.includes(doc.id)
                   );
 
                   return (
@@ -157,7 +157,7 @@ export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
 
                       <div className="flex items-center justify-between">
                         <div className="flex flex-wrap gap-1">
-                          {linkedToCards.map((card) => (
+                          {linkedToCards.map((card: BoardCard) => (
                             <span
                               key={card.id}
                               className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30"
@@ -227,7 +227,7 @@ export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
                       <div className="mt-3">
                         <p className="text-xs text-[#585858] mb-2">Select a card to link:</p>
                         <div className="flex flex-wrap gap-1">
-                          {Array.from(cards.values()).slice(0, 3).map((card) => (
+                          {Array.from(cards.values()).slice(0, 3).map((card: BoardCard) => (
                             <button
                               key={card.id}
                               onClick={(e) => {
@@ -270,4 +270,4 @@ export const WorkDocsView: React.FC<WorkDocsViewProps> = ({
   );
 };
 
-export default BoardDocsView;
+export default WorkDocsView;

@@ -90,8 +90,8 @@ export const WorkFilesView: React.FC<BoardDriveViewProps> = ({
       const fileIds = card.metadata?.fileIds || [];
       if (fileIds.length > 0) {
         const files = fileIds
-          .map((id) => driveService.getFile(id))
-          .filter((f): f is DriveFile => f !== null);
+          .map((id: string) => driveService.getFile(id))
+          .filter((f: DriveFile | null): f is DriveFile => f !== null);
         if (files.length > 0) {
           linked.set(card.id, files);
         }
@@ -105,7 +105,7 @@ export const WorkFilesView: React.FC<BoardDriveViewProps> = ({
     const linkedFileIds = new Set<string>();
     cards.forEach((card) => {
       const fileIds = card.metadata?.fileIds || [];
-      fileIds.forEach((id) => linkedFileIds.add(id));
+      fileIds.forEach((id: string) => linkedFileIds.add(id));
     });
     return allFiles.filter((file) => linkedFileIds.has(file.id));
   };
@@ -115,7 +115,7 @@ export const WorkFilesView: React.FC<BoardDriveViewProps> = ({
     const linkedFileIds = new Set<string>();
     cards.forEach((card) => {
       const fileIds = card.metadata?.fileIds || [];
-      fileIds.forEach((id) => linkedFileIds.add(id));
+      fileIds.forEach((id: string) => linkedFileIds.add(id));
     });
     return allFiles.filter(
       (file) =>
@@ -391,4 +391,4 @@ export const WorkFilesView: React.FC<BoardDriveViewProps> = ({
   );
 };
 
-export default BoardDriveView;
+export default WorkFilesView;

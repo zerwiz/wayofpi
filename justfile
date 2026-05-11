@@ -58,6 +58,10 @@ pi *args:
 pi-verify:
     @./scripts/pi-version-check.sh
 
+# Run startup diagnostics log for all pi.dev integration points
+pi-log:
+    @./scripts/pi-startup-log.sh
+
 # Reinstall pinned pi version to resolve conflicts/broken updates
 pi-fix-version:
     #!/usr/bin/env bash

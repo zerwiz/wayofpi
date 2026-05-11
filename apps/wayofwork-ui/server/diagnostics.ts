@@ -1,11 +1,11 @@
 import { existsSync, realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join, normalize } from "node:path";
 import { fetchOllamaTags, ollamaTagsIncludeRequestedModel } from "./llm-models";
 import { orchestratorBashEnabled, orchestratorToolsEnabled } from "./orchestrator-tools-exec";
 import { getWayOfPiBundleRepoRoot, resolveOllamaHost, resolveOllamaModelDefault } from "./pi-ollama-env";
-import { expandedWopPiBinaryFromEnv, resolvePiBinaryPath } from "./pi-binary";
-import { piAgentRuntimeBlockedReason, shouldUsePiJsonChat, wopChatEngineFromEnv } from "./pi-agent-runtime";
+import { isSdkAvailable, wopChatEngineFromEnv } from "./pi-agent-runtime";
 import { collectStaticWebManifest } from "./web-manifest";
 import {
 	getFrozenInitialWorkspacePath,
@@ -79,51 +79,52 @@ async function probePiVersion(bin: string, ms: number): Promise<{ version: strin
 	return Promise.race([run, timeout]);
 }
 
+function expandUserPath(p: string): string {
+	const t = p.trim();
+	if (t.startsWith("~/")) return join(homedir(), t.slice(2));
+	if (t === "~") return homedir();
+	return t;
+}
+
 export async function probePiBinary(): Promise<{
 	resolvedPath: string | null;
-	source: "WOP_PI_BINARY" | "PATH" | "resolved" | null;
+	source: "WOP_PI_BINARY" | "PATH" | null;
 	exists: boolean;
 	version: string | null;
 	versionError: string | null;
 }> {
-	const expanded = expandedWopPiBinaryFromEnv();
-	if (expanded) {
-		const exists = existsSync(expanded);
-		if (!exists) {
-			return {
-				resolvedPath: expanded,
-				source: "WOP_PI_BINARY",
-				exists: false,
-				version: null,
-				versionError: "file missing",
-			};
+	const envRaw = process.env.WOP_PI_BINARY?.trim();
+	if (envRaw) {
+		const expanded = expandUserPath(envRaw);
+		const ex = existsSync(expanded);
+		if (!ex) {
+			return { resolvedPath: expanded, source: "WOP_PI_BINARY", exists: false, version: null, versionError: "file missing" };
 		}
 		const v = await probePiVersion(expanded, 4000);
-		return {
-			resolvedPath: expanded,
-			source: "WOP_PI_BINARY",
-			exists: true,
-			version: v.version,
-			versionError: v.error,
-		};
+		return { resolvedPath: expanded, source: "WOP_PI_BINARY", exists: true, version: v.version, versionError: v.error };
 	}
-	const resolved = resolvePiBinaryPath();
-	if (!resolved) {
+	const onPath = Bun.which("pi");
+	if (!onPath) {
 		return { resolvedPath: null, source: null, exists: false, version: null, versionError: null };
 	}
-	const v = await probePiVersion(resolved, 4000);
-	const plainWhich = Bun.which("pi");
-	const source: "PATH" | "resolved" = plainWhich === resolved ? "PATH" : "resolved";
-	return {
-		resolvedPath: resolved,
-		source,
-		exists: true,
-		version: v.version,
-		versionError: v.error,
-	};
+	const v = await probePiVersion(onPath, 4000);
+	return { resolvedPath: onPath, source: "PATH", exists: true, version: v.version, versionError: v.error };
 }
 
 type PiBinaryProbe = Awaited<ReturnType<typeof probePiBinary>>;
+
+function probeSdk(): { available: boolean; version: string | null } {
+	const available = isSdkAvailable();
+	let version: string | null = null;
+	if (available) {
+		try {
+			version = "@earendil-works/pi-coding-agent";
+		} catch {
+			version = null;
+		}
+	}
+	return { available, version };
+}
 
 function buildDoctorChecks(options: {
 	primary: string;
@@ -131,6 +132,7 @@ function buildDoctorChecks(options: {
 	provider: string;
 	ollamaSummary: Record<string, unknown>;
 	pi: PiBinaryProbe;
+	sdk: { available: boolean; version: string | null };
 	engineMode: ReturnType<typeof wopChatEngineFromEnv>;
 	piDrivesChat: boolean;
 	piStrictBlock: string | null;
@@ -143,6 +145,7 @@ function buildDoctorChecks(options: {
 		provider,
 		ollamaSummary,
 		pi,
+		sdk,
 		engineMode,
 		piDrivesChat,
 		piStrictBlock,
@@ -253,6 +256,18 @@ function buildDoctorChecks(options: {
 			hint: "Web chat is wired for ollama or openrouter; other values may fail.",
 		});
 	}
+
+	checks.push({
+		id: "pi_sdk",
+		title: "Pi SDK (@earendil-works/pi-coding-agent)",
+		status: sdk.available ? "ok" : "warn",
+		summary: sdk.available
+			? `SDK available — direct import replaces subprocess (WOP_CHAT_ENGINE=sdk)`
+			: `SDK not available — falling back to pi subprocess or bundled provider`,
+		hint: sdk.available
+			? undefined
+			: "Run `bun install` to install the SDK. Then set `WOP_CHAT_ENGINE=sdk` to use the direct import path.",
+	});
 
 	if (piStrictBlock) {
 		checks.push({
@@ -385,13 +400,14 @@ export async function collectDiagnostics(): Promise<Record<string, unknown>> {
 	}
 
 	const pi = await probePiBinary();
+	const sdk = probeSdk();
 	const man = collectStaticWebManifest();
 	const extensionShimCount = man.shimFiles.reduce((n, s) => n + s.files.length, 0);
 	const settingsExtensionEntriesTotal = man.settingsExtensions.reduce((n, s) => n + s.entries.length, 0);
 
 	const engineMode = wopChatEngineFromEnv();
-	const piDrivesChat = shouldUsePiJsonChat();
-	const piStrictBlock = piAgentRuntimeBlockedReason();
+	const piDrivesChat = false;
+	const piStrictBlock: string | null = null;
 	const terminalEnabled = terminalAllowed();
 	const openRouterKeySet = Boolean(process.env.OPENROUTER_API_KEY?.trim());
 	const primary = getPrimaryWorkspacePath();
@@ -402,6 +418,7 @@ export async function collectDiagnostics(): Promise<Record<string, unknown>> {
 		provider,
 		ollamaSummary,
 		pi,
+		sdk,
 		engineMode,
 		piDrivesChat,
 		piStrictBlock,
@@ -483,6 +500,7 @@ export async function collectDiagnostics(): Promise<Record<string, unknown>> {
 			ollama: ollamaSummary,
 		},
 		piBinary: pi,
+		piSdk: sdk,
 		manifestStatic: {
 			source: man.source,
 			piDrivesRuntime: man.piDrivesRuntime,
@@ -493,7 +511,7 @@ export async function collectDiagnostics(): Promise<Record<string, unknown>> {
 		chatRuntime: {
 			wopChatEngine: engineMode,
 			piDrivesChat,
-			piCliResolvable: resolvePiBinaryPath() != null,
+			piCliResolvable: Bun.which("pi") != null,
 			blockedReason: piStrictBlock,
 		},
 		orchestrator: {

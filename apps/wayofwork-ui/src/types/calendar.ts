@@ -3,4 +3,7 @@ export interface CalendarEvent {
   title: string;
   description?: string;
   kanbanCardId?: string;
+  boardId?: string;
+  startTime?: string;
+  endTime?: string;
 }

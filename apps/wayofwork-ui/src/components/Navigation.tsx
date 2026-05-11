@@ -46,6 +46,10 @@ export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin
   const isContextActive = isPortal || isClient || isAdmin || isProfile;
 
   const handlePrimaryClick = (mode: string) => {
+    if (mode === "technical") {
+      window.open("http://localhost:5174", "_blank");
+      return;
+    }
     if (window.location.pathname !== "/") window.location.pathname = "/";
     onUiModeChange(mode);
   };

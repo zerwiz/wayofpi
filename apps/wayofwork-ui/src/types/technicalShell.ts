@@ -52,6 +52,8 @@ export interface ViewMenuTechnicalOptions {
 	onSetEditorLayout: (l: string) => void;
 	zenMode: boolean;
 	onToggleZenMode: () => void;
+	onEnterZen: () => void;
+	onExitZen: () => void;
 	statusBarVisible: boolean;
 	onToggleStatusBar: () => void;
 	menuBarVisible: boolean;
@@ -62,12 +64,19 @@ export interface ViewMenuTechnicalOptions {
 	onToggleWordWrap: () => void;
 	centeredEditorLayout: boolean;
 	onToggleCenteredEditorLayout: () => void;
+	centeredLayout?: boolean; // Legacy compat
+	onToggleCenteredLayout?: () => void;
 	zoomLevel: number;
 	onZoomIn: () => void;
 	onZoomOut: () => void;
+	onZoomReset: () => void;
 	onResetZoom: () => void;
 	onOpenAppearanceSettings: () => void;
 	onToggleFullScreen: () => Promise<void>;
+	onApplyLayoutPreset: (preset: string) => void;
+	onNormalView: () => void;
+	onFlipLayout: () => void;
+	uiZoomPercent: number;
 }
 
 export type { PanelTab };

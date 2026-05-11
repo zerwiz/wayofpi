@@ -26,12 +26,12 @@ export interface UseUiModeReturn {
 }
 
 export function useUiMode(): UseUiModeReturn {
-	const [mode, setModeState] = useState<"simple" | "claw">(() => {
+	const [mode, setModeState] = useState<"simple" | "claw" | "work" | "docs">(() => {
 		try {
 			const stored = localStorage.getItem(STORAGE_KEY);
 			if (stored) {
 				const parsed = stored as any;
-				if (["simple", "claw"].includes(parsed)) {
+				if (["simple", "claw", "work", "docs"].includes(parsed)) {
 					return parsed;
 				}
 			}

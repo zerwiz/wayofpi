@@ -85,6 +85,11 @@ pkill -9 -f "node.*server" 2>/dev/null || true
 pkill -9 -f "electron" 2>/dev/null || true
 sleep 1
 
+# Pi.dev startup diagnostics (non-blocking — warnings only)
+echo "Running pi.dev startup diagnostics..."
+./scripts/pi-version-check.sh 2>/dev/null || echo "[WARN] Pi version mismatch — run 'just pi-fix-version'"
+./scripts/pi-startup-log.sh 2>/dev/null || echo "[WARN] Pi startup log failed"
+
 echo "Starting Way of Pi Electron..."
 
 # Check bun

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface LoginResponse {
   token: string;
@@ -11,10 +12,27 @@ interface LoginResponse {
 }
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const redirectAfterLogin = (role: string) => {
+    if (from) {
+      navigate(from, { replace: true });
+      return;
+    }
+    const r = role.toUpperCase();
+    if (r === "CLIENT") navigate("/client", { replace: true });
+    else if (r === "WORKER" || r === "LEADER") navigate("/portal", { replace: true });
+    else if (r === "ADMIN") navigate("/admin", { replace: true });
+    else if (r === "SUPER_ADMIN") navigate("/super-admin", { replace: true });
+    else navigate("/", { replace: true });
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +44,6 @@ export function LoginPage() {
     setLoading(true);
     setError("");
 
-    // Demo credentials
     if (pin === "1234") {
       let role = "";
       let id = "";
@@ -38,8 +55,7 @@ export function LoginPage() {
       if (role) {
         const demoToken = btoa(JSON.stringify({ role, id, tenantId: "dev-tenant" }));
         localStorage.setItem("wop_token", demoToken);
-        // Redirect based on role
-        redirectByRole(role);
+        redirectAfterLogin(role);
         return;
       }
     }
@@ -59,26 +75,11 @@ export function LoginPage() {
 
       const data: LoginResponse = await res.json();
       localStorage.setItem("wop_token", data.token);
-      redirectByRole(data.user.role);
+      redirectAfterLogin(data.user.role);
     } catch (err) {
       setError("Failed to connect to server. Is the backend running?");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const redirectByRole = (role: string) => {
-    const r = role.toUpperCase();
-    if (r === "CLIENT") {
-      window.location.pathname = "/client";
-    } else if (r === "WORKER" || r === "LEADER") {
-      window.location.pathname = "/portal";
-    } else if (r === "ADMIN") {
-      window.location.pathname = "/admin";
-    } else if (r === "SUPER_ADMIN") {
-      window.location.pathname = "/super-admin";
-    } else {
-      window.location.pathname = "/";
     }
   };
 
@@ -87,7 +88,6 @@ export function LoginPage() {
       <div className="w-full max-w-md rounded-lg border border-[#3c3c3c] bg-[#252526] p-10 shadow-2xl">
         <div className="mb-8 text-center">
           <div className="flex justify-center mb-4">
-             {/* Logo placeholder - using the same TerminalSquare icon pattern or similar */}
              <div className="bg-[#ea580c] p-3 rounded-xl shadow-lg shadow-[#ea580c]/20">
                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                  <polyline points="4 17 10 11 4 5"></polyline>
@@ -150,7 +150,7 @@ export function LoginPage() {
       
       <div className="mt-4 flex items-center gap-4">
         <button
-          onClick={() => window.location.pathname = "/"}
+          onClick={() => navigate("/")}
           className="text-xs text-[#585858] hover:text-[#858585] transition-colors"
         >
           &larr; Choose a different login

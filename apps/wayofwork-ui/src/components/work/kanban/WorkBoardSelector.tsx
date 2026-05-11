@@ -41,9 +41,9 @@ export default function WorkBoardSelector({
     }
   }, [isOpen]);
 
-  const loadBoards = () => {
+  const loadBoards = async () => {
     try {
-      const allBoards = kanbanService.getAllBoards();
+      const allBoards = await kanbanService.getAllBoards();
       setBoards(allBoards);
     } catch (error) {
       console.error('Failed to load boards:', error);

@@ -1,4 +1,4 @@
-export type BoardViewType = 'kanban' | 'timeline' | 'calendar' | 'drive' | 'docs' | 'members' | 'settings';
+export type BoardViewType = 'kanban' | 'list' | 'timeline' | 'calendar' | 'drive' | 'docs' | 'members' | 'settings';
 
 export interface CardAssignee {
   userId: string;
@@ -39,7 +39,7 @@ export interface CardAttachment {
 }
 
 export interface CardCover {
-  type: 'color' | 'image';
+  type: 'color' | 'image' | 'gradient' | 'emoji';
   value: string;
   size: 'small' | 'medium' | 'large';
 }
@@ -50,13 +50,15 @@ export interface BoardCard {
   columnId: string;
   title: string;
   description?: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'low' | 'medium' | 'high' | 'critical' | 'urgent';
   startDate?: string;
   dueDate?: string;
   estimatedTime?: number;
   estimatedTimeUnit?: 'hours' | 'days';
   assignees: CardAssignee[];
   labels: string[];
+  tags?: string[];
+  completed?: boolean;
   checklists: CardChecklist[];
   comments: CardComment[];
   attachments: CardAttachment[];
@@ -72,6 +74,7 @@ export interface BoardColumn {
   boardId: string;
   name: string;
   order: number;
+  wip?: number;
 }
 
 export interface BoardMember {
@@ -92,6 +95,17 @@ export interface Board {
   members: string[]; // user IDs
   isStarred?: boolean;
   isArchived?: boolean;
+  starred?: boolean;
+  archived?: boolean;
+  icon?: string;
+  color?: string;
+  defaultView?: BoardViewType;
+  visibility?: 'private' | 'company' | 'public';
+  columnWidth?: number;
+  projectIds?: string[];
+  stats?: { totalCards: number; completedCards?: number; overdueCards?: number; totalMembers?: number };
+  createdBy?: string;
+  updatedAt?: number;
   settings?: Record<string, any>;
   createdAt: number;
 }

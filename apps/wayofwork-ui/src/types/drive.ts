@@ -4,4 +4,8 @@ export interface DriveFile {
   path: string;
   type: string;
   size: number;
+  parentId?: string;
+  mimeType?: string;
+  kanbanBoardId?: string;
+  kanbanCardId?: string;
 }

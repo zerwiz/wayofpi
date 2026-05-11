@@ -6,9 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Mail, Search, Shield, Eye, User, Trash2 } from 'lucide-react';
 import type { Board, BoardMember } from '../../../types/kanban';
-import { kanbanService } from '../../../services/boardMembersService';
+import { kanbanService } from '../../../services/mockKanbanService';
 import { useToast } from '../../../context/ToastContext';
-import ConfirmationModal from '../modals/ConfirmationModal';
+import { ConfirmationModal } from '../../modals/ConfirmationModal';
 
 interface BoardMembersProps {
   board: Board;
@@ -34,9 +34,9 @@ export const WorkTeamView: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
     }
   }, [isOpen, board]);
 
-  const loadMembers = () => {
+  const loadMembers = async () => {
     try {
-      const boardMembers = kanbanService.getBoardMembers(board.id);
+      const boardMembers = await kanbanService.getBoardMembers(board.id);
       // If no members, add the creator as owner
       if (boardMembers.length === 0 && board.createdBy) {
         const ownerMember: BoardMember = {

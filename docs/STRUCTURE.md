@@ -642,6 +642,39 @@ The `docs/wayofpi/` content has been moved to `docs/old/wayofpi/` for archival. 
 
 ---
 
+---
+
+## Routing Architecture
+
+`apps/wayofwork-ui` uses **react-router-dom v7** with a hybrid URL + context-state approach:
+
+```
+main.tsx (BrowserRouter)
+├── /welcome       → WelcomePage        (public)
+├── /login         → LoginPage           (public, supports deep-link redirect)
+├── /              → RootRedirect        (→ /welcome if no token, → /ide if token)
+└── /*             → RequireAuth gate
+                     └── App.tsx (RefactorProvider)
+                          ├── RouteSync          → URL → uiMode
+                          ├── UiModeWatcher      → uiMode → URL
+                          └── Routes
+                               ├── /ide          → SimplePage
+                               ├── /kanban       → WorkPage
+                               ├── /ata          → ClawPage
+                               ├── /docs         → DocsPage
+                               ├── /portal       → WorkerPortal
+                               ├── /admin        → AdminDashboard
+                               ├── /super-admin  → SuperAdminDashboard
+                               ├── /client       → ClientDashboard
+                               └── /profile      → UserProfile
+```
+
+**Bidirectional sync**: `RouteSync` maps URL path → `uiMode` context; `UiModeWatcher` maps `uiMode` changes → URL navigation. This lets legacy menu-bar code (`setUiMode`) drive URL changes automatically.
+
+**Deep linking**: `RequireAuth` captures the attempted URL in `location.state.from`. `LoginPage` reads it on successful auth and redirects back, preserving the intended destination.
+
+---
+
 ## File Type Summary
 
 - **TypeScript/JavaScript**: Extensions, UI code, server code, hooks, scripts
@@ -655,4 +688,4 @@ The `docs/wayofpi/` content has been moved to `docs/old/wayofpi/` for archival. 
 
 ---
 
-*Generated: 2026-05-05 - Way of Pi Project Structure (updated to match current file system)*
+*Generated: 2026-05-11 - Way of Pi Project Structure (updated to match current file system)*

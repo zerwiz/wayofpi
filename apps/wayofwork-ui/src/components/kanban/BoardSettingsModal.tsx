@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Modal from '../modals/Modal';
-import ConfirmationModal from '../modals/ConfirmationModal';
+import { ConfirmationModal } from '../modals/ConfirmationModal';
 import { Save, Palette, Eye, EyeOff, LayoutGrid, Trash2, Archive, FolderKanban, Check, Columns } from 'lucide-react';
 import type { Board, BoardViewType } from '../../types/kanban';
 import type { Project } from '../../types/projects';
@@ -74,7 +74,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
         visibility,
         columnWidth,
         projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
-      });
+      } as any);
 
       // Update bidirectional linking - ensure projects also reference this board
       const currentProjectIds = board.projectIds || [];
@@ -227,15 +227,15 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
             <div className="flex flex-wrap gap-1.5">
               {iconOptions.map((icon) => (
                 <button
-                  key={icon}
-                  onClick={() => setBoardIcon(icon)}
+                  key={icon.value}
+                  onClick={() => setBoardIcon(icon.value)}
                   className={`w-10 h-10 text-xl rounded-lg border-2 transition-colors flex-shrink-0 ${
-                    boardIcon === icon
+                    boardIcon === icon.value
                       ? 'border-orange-500 bg-orange-500/20'
                       : 'border-gray-600 hover:border-gray-500 bg-gray-700'
                   }`}
                 >
-                  {icon}
+                  {icon.label}
                 </button>
               ))}
             </div>

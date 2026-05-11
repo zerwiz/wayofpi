@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 export function WelcomePage() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e] p-4">
       <div className="mb-8 text-center">
@@ -16,27 +20,11 @@ export function WelcomePage() {
 
       <div className="flex flex-col gap-3 w-full max-w-xs">
         <button
-          onClick={() => window.location.pathname = "/login"}
+          onClick={() => navigate("/login")}
           className="w-full rounded-lg border border-[#3c3c3c] bg-[#252526] px-6 py-4 text-left hover:bg-[#2d2d2d] hover:border-[#ea580c] transition-all group"
         >
-          <span className="block text-sm font-semibold text-[#cccccc] group-hover:text-[#ea580c]">IDE Login</span>
-          <span className="block text-xs text-[#585858]">Admin · Super · Developer</span>
-        </button>
-
-        <button
-          onClick={() => window.location.pathname = "/portal"}
-          className="w-full rounded-lg border border-[#3c3c3c] bg-[#252526] px-6 py-4 text-left hover:bg-[#2d2d2d] hover:border-[#ea580c] transition-all group"
-        >
-          <span className="block text-sm font-semibold text-[#cccccc] group-hover:text-[#ea580c]">Worker Portal</span>
-          <span className="block text-xs text-[#585858]">Tasks · Files · Time Tracking</span>
-        </button>
-
-        <button
-          onClick={() => window.location.pathname = "/client"}
-          className="w-full rounded-lg border border-[#3c3c3c] bg-[#252526] px-6 py-4 text-left hover:bg-[#2d2d2d] hover:border-[#ea580c] transition-all group"
-        >
-          <span className="block text-sm font-semibold text-[#cccccc] group-hover:text-[#ea580c]">Client Portal</span>
-          <span className="block text-xs text-[#585858]">Projects · Documents · Reports</span>
+          <span className="block text-sm font-semibold text-[#cccccc] group-hover:text-[#ea580c]">Sign In</span>
+          <span className="block text-xs text-[#585858]">Admin · Worker · Client · Super</span>
         </button>
       </div>
 

@@ -9,7 +9,7 @@ import { useUiViewsCatalog } from '../hooks/useUiViewsCatalog';
 import { useRunMenuDebugState } from '../hooks/useRunMenuDebugState';
 import { useModalState } from '../hooks/useModalState';
 import { useFileEditor } from '../hooks/useFileEditor';
-import { readWorkspaceGridState, type WorkspaceGridState } from '../utils/workspaceGridStorage';
+import { readWorkspaceGridState, writeWorkspaceGridState, type WorkspaceGridState } from '../utils/workspaceGridStorage';
 import { readChromePreferences, type ChromePreferences } from '../utils/chromePreferences';
 import { readLeftSidebarVisibleInitial, readDockLayout, type TechnicalDockLayout } from '../utils/technicalLayoutStorage';
 import { readAutoSaveInitial } from '../utils/editorPreferences';
@@ -21,6 +21,7 @@ import type { ClawTabId } from '../components/claw/ClawNavRail';
 import type { TechnicalWorkspaceCellSnapshot } from '../components/TechnicalWorkspaceGrid';
 import type { PiModelConfigPath } from '../constants/piModelConfigPaths';
 import { languageFromPath } from '../utils/appHelpers';
+import { useWorkspaceStaticAnalysis } from '../hooks/useWorkspaceStaticAnalysis';
 
 interface RefactorContextValue {
   // UI State
@@ -77,6 +78,7 @@ interface RefactorContextValue {
   setCol: (c: number) => void;
   onCursor: (l: number, c: number) => void;
   language: string;
+  copyWorkspacePath: () => void;
 
   // Technical Grid State
   workspaceGrid: WorkspaceGridState;
@@ -117,6 +119,7 @@ interface RefactorContextValue {
   agents: ReturnType<typeof useAgents>;
   viewsCatalog: ReturnType<typeof useUiViewsCatalog>;
   debug: ReturnType<typeof useRunMenuDebugState>;
+  staticAnalysis: ReturnType<typeof useWorkspaceStaticAnalysis>;
   
   // Missing pieces found in simple shell
   rootLabel: string;
@@ -128,6 +131,8 @@ interface RefactorContextValue {
   setSimpleProviderNonce: (n: number) => void;
   reopenLlmFixModal: () => void;
   llmFixModalAppearanceDark: boolean;
+  simpleMobileMenuFileFocusRev: number;
+  setSimpleMobileMenuFileFocusRev: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const RefactorContext = createContext<RefactorContextValue | undefined>(undefined);
@@ -194,6 +199,9 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [simpleProviderPath, setSimpleProviderPath] = useState<PiModelConfigPath | null>(null);
   const [simpleProviderNonce, setSimpleProviderNonce] = useState(0);
 
+  // Mobile focus
+  const [simpleMobileMenuFileFocusRev, setSimpleMobileMenuFileFocusRev] = useState(0);
+
   // External Hooks
   const tree = useWorkspaceTree();
   const server = useServerConfig();
@@ -203,6 +211,7 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const viewsCatalog = useUiViewsCatalog();
   const debug = useRunMenuDebugState();
   const modals = useModalState(session.error);
+  const staticAnalysis = useWorkspaceStaticAnalysis(technical);
 
   const rootLabel = useMemo(() => {
     if (!tree.root) return "";
@@ -223,6 +232,10 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const llmFixModalAppearanceDark = technical || preferences.isDark;
 
   const language = useMemo(() => languageFromPath(selectedPath), [selectedPath]);
+
+  const copyWorkspacePath = useCallback(() => {
+    if (tree.root) void navigator.clipboard.writeText(tree.root);
+  }, [tree.root]);
 
   useEffect(() => {
     if (isWsMulti) return;
@@ -253,7 +266,7 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     effDirty: isWsMulti ? multiCellAnyDirty : editor.dirty,
     effFileLoading: isWsMulti ? !!techWsSnapshot?.loading : editor.loading,
     effFileError: isWsMulti ? (techWsSnapshot?.error ?? null) : editor.error,
-    line, setLine, col, setCol, onCursor, language,
+    line, setLine, col, setCol, onCursor, language, copyWorkspacePath,
     workspaceGrid, setWorkspaceGrid,
     wsFocusedCell, setWsFocusedCell,
     wsMaximizedCell, setWsMaximizedCell,
@@ -269,17 +282,20 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     tree, server, session, preferences, agents, viewsCatalog, debug, modals,
     rootLabel, workspaceOperational, recentFolders,
     simpleProviderPath, simpleProviderNonce, setSimpleProviderPath, setSimpleProviderNonce,
-    reopenLlmFixModal, llmFixModalAppearanceDark
+    reopenLlmFixModal, llmFixModalAppearanceDark,
+    simpleMobileMenuFileFocusRev, setSimpleMobileMenuFileFocusRev,
+    staticAnalysis
   }), [
     uiMode, technical, isWsMulti, simpleTab, clawTab, technicalActivity, selectedPath,
     explorerContextDir, treeExpand, workspaceOpenSignal, historyStack, historyIdx,
-    autoSave, multiCellAnyDirty, line, col, onCursor, language,
+    autoSave, multiCellAnyDirty, line, col, onCursor, language, copyWorkspacePath,
     workspaceGrid, wsFocusedCell, wsMaximizedCell, techWsSnapshot,
     leftSidebarVisible, dockLayout, chrome, zenMode,
     editorMenuTick, commandPaletteOpen, editor,
     tree, server, session, preferences, agents, viewsCatalog, debug, modals,
     rootLabel, workspaceOperational, recentFolders,
-    simpleProviderPath, simpleProviderNonce, reopenLlmFixModal, llmFixModalAppearanceDark
+    simpleProviderPath, simpleProviderNonce, reopenLlmFixModal, llmFixModalAppearanceDark,
+    simpleMobileMenuFileFocusRev, staticAnalysis
   ]);
 
   return (

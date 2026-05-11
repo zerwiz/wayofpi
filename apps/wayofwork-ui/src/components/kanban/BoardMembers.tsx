@@ -34,9 +34,9 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
     }
   }, [isOpen, board]);
 
-  const loadMembers = () => {
+  const loadMembers = async () => {
     try {
-      const boardMembers = kanbanService.getBoardMembers(board.id);
+      const boardMembers = await kanbanService.getBoardMembers(board.id);
       // If no members, add the creator as owner
       if (boardMembers.length === 0 && board.createdBy) {
         const ownerMember: BoardMember = {

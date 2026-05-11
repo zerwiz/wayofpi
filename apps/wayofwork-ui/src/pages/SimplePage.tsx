@@ -29,7 +29,7 @@ export function SimplePage() {
     rootLabel, workspaceOperational, recentFolders,
     simpleProviderPath, simpleProviderNonce, setSimpleProviderPath,
     reopenLlmFixModal,
-    line, col, onCursor, language,
+    line, col, onCursor, language, copyWorkspacePath,
     simpleMobileMenuFileFocusRev,
     llmFixModalAppearanceDark
   } = useRefactor();
@@ -83,7 +83,7 @@ export function SimplePage() {
     onSaveAll: () => {},
     onRevertFile: reloadFocusedOrMain,
     onRefreshWorkspace: tree.refresh,
-    onCopyWorkspacePath: () => { if(tree.root) void navigator.clipboard.writeText(tree.root); },
+    onCopyWorkspacePath: copyWorkspacePath as any,
     onNewPlanMarkdown: handleNewPlanFile,
     onExit: () => {},
   } as any;
@@ -184,9 +184,7 @@ export function SimplePage() {
       onRevertFile={() => void reloadFocusedOrMain()}
       canRevert={!!selectedPath && editor.dirty}
       onRefreshWorkspace={tree.refresh}
-      onCopyWorkspacePath={() => {
-         if (tree.root) void navigator.clipboard.writeText(tree.root);
-      }}
+      onCopyWorkspacePath={copyWorkspacePath}
       onSelectActivity={(a) => {
         setUiMode("technical");
         setLeftSidebarVisible(true);

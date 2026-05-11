@@ -188,36 +188,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/eslint.config.mjs",
-      "file": ".hermes/hermes-agent/ui-tui/eslint.config.mjs"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/vitest.config.ts",
-      "file": ".hermes/hermes-agent/ui-tui/vitest.config.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/web/eslint.config.js",
-      "file": ".hermes/hermes-agent/web/eslint.config.js"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/web/vite.config.ts",
-      "file": ".hermes/hermes-agent/web/vite.config.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/website/docusaurus.config.ts",
-      "file": ".hermes/hermes-agent/website/docusaurus.config.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/website/sidebars.ts",
-      "file": ".hermes/hermes-agent/website/sidebars.ts"
-    },
-    {
-      "type": "file",
       "name": ".honcho/honcho-server/mcp/worker.ts",
       "file": ".honcho/honcho-server/mcp/worker.ts"
     },
@@ -278,28 +248,58 @@
     },
     {
       "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/eslint.config.mjs",
+      "file": ".hermes/hermes-agent/ui-tui/eslint.config.mjs"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/vitest.config.ts",
+      "file": ".hermes/hermes-agent/ui-tui/vitest.config.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/web/eslint.config.js",
+      "file": ".hermes/hermes-agent/web/eslint.config.js"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/web/vite.config.ts",
+      "file": ".hermes/hermes-agent/web/vite.config.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/website/docusaurus.config.ts",
+      "file": ".hermes/hermes-agent/website/docusaurus.config.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/website/sidebars.ts",
+      "file": ".hermes/hermes-agent/website/sidebars.ts"
+    },
+    {
+      "type": "file",
       "name": ".pi/skills/context-loader/context-loader.ts",
       "file": ".pi/skills/context-loader/context-loader.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofpi/electron/main.ts",
-      "file": "apps/wayofpi/electron/main.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/electron/preload.ts",
-      "file": "apps/wayofpi/electron/preload.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/electron/server.ts",
-      "file": "apps/wayofpi/electron/server.ts"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofpi/server/index.ts",
       "file": "apps/wayofpi/server/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js",
+      "file": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js"
     },
     {
       "type": "file",
@@ -320,21 +320,6 @@
       "type": "file",
       "name": "apps/wayofpi/technicalIDE/vite.config.ts",
       "file": "apps/wayofpi/technicalIDE/vite.config.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js",
-      "file": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js"
     },
     {
       "type": "file",
@@ -728,6 +713,36 @@
     },
     {
       "type": "file",
+      "name": ".pi/agent/extensions/subagents/coder.ts",
+      "file": ".pi/agent/extensions/subagents/coder.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/dynamic-loader.ts",
+      "file": ".pi/agent/extensions/subagents/dynamic-loader.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/index.ts",
+      "file": ".pi/agent/extensions/subagents/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/researcher.ts",
+      "file": ".pi/agent/extensions/subagents/researcher.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/team-manager.ts",
+      "file": ".pi/agent/extensions/subagents/team-manager.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/teams/index.ts",
+      "file": ".pi/agent/extensions/teams/index.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/scripts/whatsapp-bridge/allowlist.js",
       "file": ".hermes/hermes-agent/scripts/whatsapp-bridge/allowlist.js"
     },
@@ -793,33 +808,13 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/extensions/subagents/coder.ts",
-      "file": ".pi/agent/extensions/subagents/coder.ts"
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts"
     },
     {
       "type": "file",
-      "name": ".pi/agent/extensions/subagents/dynamic-loader.ts",
-      "file": ".pi/agent/extensions/subagents/dynamic-loader.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/subagents/index.ts",
-      "file": ".pi/agent/extensions/subagents/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/subagents/researcher.ts",
-      "file": ".pi/agent/extensions/subagents/researcher.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/subagents/team-manager.ts",
-      "file": ".pi/agent/extensions/subagents/team-manager.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/teams/index.ts",
-      "file": ".pi/agent/extensions/teams/index.ts"
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts"
     },
     {
       "type": "file",
@@ -840,16 +835,6 @@
       "type": "file",
       "name": "apps/wayofpi/technicalIDE/src/vite-env.d.ts",
       "file": "apps/wayofpi/technicalIDE/src/vite-env.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts"
     },
     {
       "type": "file",
@@ -1153,6 +1138,21 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofwork-ui/src/api/client.ts",
+      "file": "apps/wayofwork-ui/src/api/client.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/api/nativeDialog.ts",
+      "file": "apps/wayofwork-ui/src/api/nativeDialog.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/api/workspace.ts",
+      "file": "apps/wayofwork-ui/src/api/workspace.ts"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/src/claw/clawUiModules.ts",
       "file": "apps/wayofwork-ui/src/claw/clawUiModules.ts"
     },
@@ -1175,21 +1175,6 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts",
       "file": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/api/client.ts",
-      "file": "apps/wayofwork-ui/src/api/client.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/api/nativeDialog.ts",
-      "file": "apps/wayofwork-ui/src/api/nativeDialog.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/api/workspace.ts",
-      "file": "apps/wayofwork-ui/src/api/workspace.ts"
     },
     {
       "type": "file",
@@ -1513,73 +1498,8 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
-      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
-      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
-      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
-      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/utils.ts",
-      "file": "apps/wayofwork-ui/src/lib/utils.ts"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/interfaces/agent.ts",
       "file": "apps/wayofwork-ui/src/interfaces/agent.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
-      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/index.tsx",
-      "file": "apps/wayofwork-ui/src/logs/index.tsx"
     },
     {
       "type": "file",
@@ -1785,6 +1705,71 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/hooks/useWorkspaceTree.ts",
       "file": "apps/wayofwork-ui/src/hooks/useWorkspaceTree.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
+      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
+      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
+      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
+      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/utils.ts",
+      "file": "apps/wayofwork-ui/src/lib/utils.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
+      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/index.tsx",
+      "file": "apps/wayofwork-ui/src/logs/index.tsx"
     },
     {
       "type": "file",
@@ -2458,6 +2443,146 @@
     },
     {
       "type": "file",
+      "name": ".honcho/honcho-server/examples/langgraph/typescript/main.ts",
+      "file": ".honcho/honcho-server/examples/langgraph/typescript/main.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/search.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/api-version.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/api-version.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/client.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/client.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/index.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/message.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/message.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/pagination.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/pagination.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/peer.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/peer.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/session.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/session.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/session_context.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/session_context.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/utils.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/utils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/validation.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/validation.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/ambient.d.ts",
       "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/ambient.d.ts"
     },
@@ -2698,6 +2823,21 @@
     },
     {
       "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/config/env.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/config/env.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/config/limits.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/config/limits.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/config/timing.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/config/timing.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/components/agentsOverlay.tsx",
       "file": ".hermes/hermes-agent/ui-tui/src/components/agentsOverlay.tsx"
     },
@@ -2775,21 +2915,6 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/components/thinking.tsx",
       "file": ".hermes/hermes-agent/ui-tui/src/components/thinking.tsx"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/config/env.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/config/env.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/config/limits.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/config/limits.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/config/timing.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/config/timing.ts"
     },
     {
       "type": "file",
@@ -2893,16 +3018,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
-    },
-    {
-      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts"
     },
@@ -2995,6 +3110,16 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/text.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/text.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
     },
     {
       "type": "file",
@@ -3178,158 +3303,8 @@
     },
     {
       "type": "file",
-      "name": ".honcho/honcho-server/examples/langgraph/typescript/main.ts",
-      "file": ".honcho/honcho-server/examples/langgraph/typescript/main.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/search.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/search.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/api-version.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/api-version.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/client.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/client.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/index.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/message.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/message.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/pagination.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/pagination.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/peer.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/peer.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/session.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/session.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/session_context.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/session_context.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/utils.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/utils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/validation.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/validation.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts"
     },
     {
       "type": "file",
@@ -3608,8 +3583,18 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts"
+      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
     },
     {
       "type": "file",
@@ -3978,11 +3963,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/components/technical/CommandPalette.tsx",
       "file": "apps/wayofwork-ui/src/components/technical/CommandPalette.tsx"
     },
@@ -4025,6 +4005,11 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/components/technical/TerminalSettingsSection.tsx",
       "file": "apps/wayofwork-ui/src/components/technical/TerminalSettingsSection.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx"
     },
     {
       "type": "file",
@@ -4233,6 +4218,31 @@
     },
     {
       "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/client.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/client.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/index.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/types/api.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/types/api.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/optional-skills/research/gitnexus-explorer/scripts/proxy.mjs",
       "file": ".hermes/hermes-agent/optional-skills/research/gitnexus-explorer/scripts/proxy.mjs"
     },
@@ -4310,31 +4320,6 @@
       "type": "file",
       "name": ".hermes/hermes-agent/website/src/pages/skills/index.tsx",
       "file": ".hermes/hermes-agent/website/src/pages/skills/index.tsx"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/client.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/client.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/index.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/types/api.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/types/api.ts"
     },
     {
       "type": "file",
@@ -4433,18 +4418,23 @@
     },
     {
       "type": "file",
-      "name": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts",
-      "file": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts"
-    },
-    {
-      "type": "file",
       "name": "pip/.pi/templates/skills/image-edit/scripts/image-edit.ts",
       "file": "pip/.pi/templates/skills/image-edit/scripts/image-edit.ts"
     },
     {
       "type": "file",
+      "name": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts",
+      "file": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts"
+    },
+    {
+      "type": "file",
       "name": "pip/.pi/templates/skills/llm/scripts/chat.ts",
       "file": "pip/.pi/templates/skills/llm/scripts/chat.ts"
+    },
+    {
+      "type": "file",
+      "name": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js",
+      "file": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js"
     },
     {
       "type": "file",
@@ -4460,11 +4450,6 @@
       "type": "file",
       "name": "pip/.pi/templates/skills/pdf/scripts/html2poster.js",
       "file": "pip/.pi/templates/skills/pdf/scripts/html2poster.js"
-    },
-    {
-      "type": "file",
-      "name": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js",
-      "file": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js"
     },
     {
       "type": "file",
@@ -4513,13 +4498,13 @@
     },
     {
       "type": "file",
-      "name": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts",
-      "file": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts"
+      "name": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts",
+      "file": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts"
     },
     {
       "type": "file",
-      "name": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts",
-      "file": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts"
+      "name": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts",
+      "file": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts"
     },
     {
       "type": "file",
@@ -4530,6 +4515,116 @@
       "type": "file",
       "name": "pip/.pi/templates/skills/web-search/scripts/web_search.ts",
       "file": "pip/.pi/templates/skills/web-search/scripts/web_search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts"
     },
     {
       "type": "file",
@@ -4545,6 +4640,56 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/hooks/use-stdout.ts",
       "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/hooks/use-stdout.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts"
     },
     {
       "type": "file",
@@ -4778,56 +4923,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts"
-    },
-    {
-      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/app/slash/commands/core.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/app/slash/commands/core.ts"
     },
@@ -4853,128 +4948,133 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts"
-    },
-    {
-      "type": "file",
       "name": ".hermes/.venv/lib/python3.12/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
       "file": ".hermes/.venv/lib/python3.12/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts"
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js"
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts"
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
     },
     {
       "type": "file",
@@ -5268,128 +5368,13 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js"
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts"
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts"
     },
     {
       "type": "file",
@@ -5418,11 +5403,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
-      "file": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/e2e.test.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/e2e.test.js"
     },
@@ -5440,6 +5420,11 @@
       "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/index.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/index.js"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
+      "file": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
     },
     {
       "type": "file",
@@ -5957,36 +5942,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/eslint.config.mjs",
-      "file": ".hermes/hermes-agent/ui-tui/eslint.config.mjs"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/vitest.config.ts",
-      "file": ".hermes/hermes-agent/ui-tui/vitest.config.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/web/eslint.config.js",
-      "file": ".hermes/hermes-agent/web/eslint.config.js"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/web/vite.config.ts",
-      "file": ".hermes/hermes-agent/web/vite.config.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/website/docusaurus.config.ts",
-      "file": ".hermes/hermes-agent/website/docusaurus.config.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/website/sidebars.ts",
-      "file": ".hermes/hermes-agent/website/sidebars.ts"
-    },
-    {
-      "type": "file",
       "name": ".honcho/honcho-server/mcp/worker.ts",
       "file": ".honcho/honcho-server/mcp/worker.ts"
     },
@@ -6047,28 +6002,58 @@
     },
     {
       "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/eslint.config.mjs",
+      "file": ".hermes/hermes-agent/ui-tui/eslint.config.mjs"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/vitest.config.ts",
+      "file": ".hermes/hermes-agent/ui-tui/vitest.config.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/web/eslint.config.js",
+      "file": ".hermes/hermes-agent/web/eslint.config.js"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/web/vite.config.ts",
+      "file": ".hermes/hermes-agent/web/vite.config.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/website/docusaurus.config.ts",
+      "file": ".hermes/hermes-agent/website/docusaurus.config.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/website/sidebars.ts",
+      "file": ".hermes/hermes-agent/website/sidebars.ts"
+    },
+    {
+      "type": "file",
       "name": ".pi/skills/context-loader/context-loader.ts",
       "file": ".pi/skills/context-loader/context-loader.ts"
     },
     {
       "type": "file",
-      "name": "apps/wayofpi/electron/main.ts",
-      "file": "apps/wayofpi/electron/main.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/electron/preload.ts",
-      "file": "apps/wayofpi/electron/preload.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/electron/server.ts",
-      "file": "apps/wayofpi/electron/server.ts"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofpi/server/index.ts",
       "file": "apps/wayofpi/server/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js",
+      "file": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js"
     },
     {
       "type": "file",
@@ -6089,21 +6074,6 @@
       "type": "file",
       "name": "apps/wayofpi/technicalIDE/vite.config.ts",
       "file": "apps/wayofpi/technicalIDE/vite.config.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js",
-      "file": "apps/wayofwork-server/.bundled-bJVpk67M/pty-server.js"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/ScreenBuffer.js"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/SessionManager.js"
     },
     {
       "type": "file",
@@ -6497,6 +6467,36 @@
     },
     {
       "type": "file",
+      "name": ".pi/agent/extensions/subagents/coder.ts",
+      "file": ".pi/agent/extensions/subagents/coder.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/dynamic-loader.ts",
+      "file": ".pi/agent/extensions/subagents/dynamic-loader.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/index.ts",
+      "file": ".pi/agent/extensions/subagents/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/researcher.ts",
+      "file": ".pi/agent/extensions/subagents/researcher.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/subagents/team-manager.ts",
+      "file": ".pi/agent/extensions/subagents/team-manager.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/extensions/teams/index.ts",
+      "file": ".pi/agent/extensions/teams/index.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/scripts/whatsapp-bridge/allowlist.js",
       "file": ".hermes/hermes-agent/scripts/whatsapp-bridge/allowlist.js"
     },
@@ -6562,33 +6562,13 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/extensions/subagents/coder.ts",
-      "file": ".pi/agent/extensions/subagents/coder.ts"
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts"
     },
     {
       "type": "file",
-      "name": ".pi/agent/extensions/subagents/dynamic-loader.ts",
-      "file": ".pi/agent/extensions/subagents/dynamic-loader.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/subagents/index.ts",
-      "file": ".pi/agent/extensions/subagents/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/subagents/researcher.ts",
-      "file": ".pi/agent/extensions/subagents/researcher.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/subagents/team-manager.ts",
-      "file": ".pi/agent/extensions/subagents/team-manager.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/extensions/teams/index.ts",
-      "file": ".pi/agent/extensions/teams/index.ts"
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts"
     },
     {
       "type": "file",
@@ -6609,16 +6589,6 @@
       "type": "file",
       "name": "apps/wayofpi/technicalIDE/src/vite-env.d.ts",
       "file": "apps/wayofpi/technicalIDE/src/vite-env.d.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/PTYManager.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/server/SessionManager.ts"
     },
     {
       "type": "file",
@@ -6922,6 +6892,21 @@
     },
     {
       "type": "file",
+      "name": "apps/wayofwork-ui/src/api/client.ts",
+      "file": "apps/wayofwork-ui/src/api/client.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/api/nativeDialog.ts",
+      "file": "apps/wayofwork-ui/src/api/nativeDialog.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/api/workspace.ts",
+      "file": "apps/wayofwork-ui/src/api/workspace.ts"
+    },
+    {
+      "type": "file",
       "name": "apps/wayofwork-ui/src/claw/clawUiModules.ts",
       "file": "apps/wayofwork-ui/src/claw/clawUiModules.ts"
     },
@@ -6944,21 +6929,6 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts",
       "file": "apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/api/client.ts",
-      "file": "apps/wayofwork-ui/src/api/client.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/api/nativeDialog.ts",
-      "file": "apps/wayofwork-ui/src/api/nativeDialog.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/api/workspace.ts",
-      "file": "apps/wayofwork-ui/src/api/workspace.ts"
     },
     {
       "type": "file",
@@ -7282,73 +7252,8 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
-      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
-      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
-      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
-      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/lib/utils.ts",
-      "file": "apps/wayofwork-ui/src/lib/utils.ts"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/interfaces/agent.ts",
       "file": "apps/wayofwork-ui/src/interfaces/agent.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
-      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
-      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofwork-ui/src/logs/index.tsx",
-      "file": "apps/wayofwork-ui/src/logs/index.tsx"
     },
     {
       "type": "file",
@@ -7554,6 +7459,71 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/hooks/useWorkspaceTree.ts",
       "file": "apps/wayofwork-ui/src/hooks/useWorkspaceTree.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts",
+      "file": "apps/wayofwork-ui/src/lib/SessionManagerClient.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/chatAttachment.ts",
+      "file": "apps/wayofwork-ui/src/lib/chatAttachment.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts",
+      "file": "apps/wayofwork-ui/src/lib/flattenFilePaths.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts",
+      "file": "apps/wayofwork-ui/src/lib/parseMessageSegments.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/lib/utils.ts",
+      "file": "apps/wayofwork-ui/src/lib/utils.ts"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/LogsPanel.tsx",
+      "file": "apps/wayofwork-ui/src/logs/LogsPanel.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalBuffer.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalInput.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalInput.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.jsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.jsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/TerminalRow.tsx",
+      "file": "apps/wayofwork-ui/src/logs/TerminalRow.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/logs/index.tsx",
+      "file": "apps/wayofwork-ui/src/logs/index.tsx"
     },
     {
       "type": "file",
@@ -8227,6 +8197,146 @@
     },
     {
       "type": "file",
+      "name": ".honcho/honcho-server/examples/langgraph/typescript/main.ts",
+      "file": ".honcho/honcho-server/examples/langgraph/typescript/main.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/examples/search.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/examples/search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/api-version.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/api-version.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/client.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/client.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/index.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/message.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/message.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/pagination.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/pagination.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/peer.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/peer.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/session.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/session.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/session_context.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/session_context.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/utils.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/utils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/validation.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/validation.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/ambient.d.ts",
       "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/ambient.d.ts"
     },
@@ -8467,6 +8577,21 @@
     },
     {
       "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/config/env.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/config/env.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/config/limits.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/config/limits.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/config/timing.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/config/timing.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/components/agentsOverlay.tsx",
       "file": ".hermes/hermes-agent/ui-tui/src/components/agentsOverlay.tsx"
     },
@@ -8544,21 +8669,6 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/components/thinking.tsx",
       "file": ".hermes/hermes-agent/ui-tui/src/components/thinking.tsx"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/config/env.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/config/env.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/config/limits.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/config/limits.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/config/timing.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/config/timing.ts"
     },
     {
       "type": "file",
@@ -8662,16 +8772,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
-      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
-    },
-    {
-      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/circularBuffer.ts"
     },
@@ -8764,6 +8864,16 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/lib/text.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/lib/text.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/interpolation.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts",
+      "file": ".hermes/hermes-agent/ui-tui/src/protocol/paste.ts"
     },
     {
       "type": "file",
@@ -8947,158 +9057,8 @@
     },
     {
       "type": "file",
-      "name": ".honcho/honcho-server/examples/langgraph/typescript/main.ts",
-      "file": ".honcho/honcho-server/examples/langgraph/typescript/main.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/client.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/conclusions.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/errors.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/helpers.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-client.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/http-streaming.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/messages.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/peer.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/preload.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/session.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/setup.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/__tests__/streaming.test.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/get_context.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/get_representation.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/get_summaries.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/examples/search.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/examples/search.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/api-version.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/api-version.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/client.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/client.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/conclusions.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/index.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/message.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/message.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/pagination.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/pagination.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/peer.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/peer.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/session.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/session.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/session_context.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/session_context.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/utils.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/utils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/validation.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/validation.ts"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
-    },
-    {
-      "type": "file",
-      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
-      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
+      "name": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts",
+      "file": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts"
     },
     {
       "type": "file",
@@ -9377,8 +9337,18 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts",
-      "file": "apps/wayofwork-server/.src-7EsjXH9C/terminal/pty/index.ts"
+      "name": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/boot/BootScreen.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/SidebarContent.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx",
+      "file": "apps/wayofpi/technicalIDE/src/layout/WorkspaceEditor.tsx"
     },
     {
       "type": "file",
@@ -9747,11 +9717,6 @@
     },
     {
       "type": "file",
-      "name": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx",
-      "file": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx"
-    },
-    {
-      "type": "file",
       "name": "apps/wayofwork-ui/src/components/technical/CommandPalette.tsx",
       "file": "apps/wayofwork-ui/src/components/technical/CommandPalette.tsx"
     },
@@ -9794,6 +9759,11 @@
       "type": "file",
       "name": "apps/wayofwork-ui/src/components/technical/TerminalSettingsSection.tsx",
       "file": "apps/wayofwork-ui/src/components/technical/TerminalSettingsSection.tsx"
+    },
+    {
+      "type": "file",
+      "name": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx",
+      "file": "apps/wayofwork-ui/src/components/terminal/TerminalMenu.tsx"
     },
     {
       "type": "file",
@@ -10002,6 +9972,31 @@
     },
     {
       "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/client.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/client.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/index.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts"
+    },
+    {
+      "type": "file",
+      "name": ".honcho/honcho-server/sdks/typescript/src/types/api.ts",
+      "file": ".honcho/honcho-server/sdks/typescript/src/types/api.ts"
+    },
+    {
+      "type": "file",
       "name": ".hermes/hermes-agent/optional-skills/research/gitnexus-explorer/scripts/proxy.mjs",
       "file": ".hermes/hermes-agent/optional-skills/research/gitnexus-explorer/scripts/proxy.mjs"
     },
@@ -10079,31 +10074,6 @@
       "type": "file",
       "name": ".hermes/hermes-agent/website/src/pages/skills/index.tsx",
       "file": ".hermes/hermes-agent/website/src/pages/skills/index.tsx"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/client.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/client.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/errors.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/index.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/http/streaming.ts"
-    },
-    {
-      "type": "file",
-      "name": ".honcho/honcho-server/sdks/typescript/src/types/api.ts",
-      "file": ".honcho/honcho-server/sdks/typescript/src/types/api.ts"
     },
     {
       "type": "file",
@@ -10202,18 +10172,23 @@
     },
     {
       "type": "file",
-      "name": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts",
-      "file": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts"
-    },
-    {
-      "type": "file",
       "name": "pip/.pi/templates/skills/image-edit/scripts/image-edit.ts",
       "file": "pip/.pi/templates/skills/image-edit/scripts/image-edit.ts"
     },
     {
       "type": "file",
+      "name": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts",
+      "file": "pip/.pi/templates/skills/image-analysis/scripts/image-understand.ts"
+    },
+    {
+      "type": "file",
       "name": "pip/.pi/templates/skills/llm/scripts/chat.ts",
       "file": "pip/.pi/templates/skills/llm/scripts/chat.ts"
+    },
+    {
+      "type": "file",
+      "name": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js",
+      "file": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js"
     },
     {
       "type": "file",
@@ -10229,11 +10204,6 @@
       "type": "file",
       "name": "pip/.pi/templates/skills/pdf/scripts/html2poster.js",
       "file": "pip/.pi/templates/skills/pdf/scripts/html2poster.js"
-    },
-    {
-      "type": "file",
-      "name": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js",
-      "file": "pip/.pi/templates/skills/presentation-design/scripts/html2pptx.js"
     },
     {
       "type": "file",
@@ -10282,13 +10252,13 @@
     },
     {
       "type": "file",
-      "name": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts",
-      "file": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts"
+      "name": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts",
+      "file": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts"
     },
     {
       "type": "file",
-      "name": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts",
-      "file": "pip/.pi/templates/skills/vision-language/scripts/vlm.ts"
+      "name": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts",
+      "file": "pip/.pi/templates/skills/video-analysis/scripts/video-understand.ts"
     },
     {
       "type": "file",
@@ -10299,6 +10269,116 @@
       "type": "file",
       "name": "pip/.pi/templates/skills/web-search/scripts/web_search.ts",
       "file": "pip/.pi/templates/skills/web-search/scripts/web_search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts"
     },
     {
       "type": "file",
@@ -10314,6 +10394,56 @@
       "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/hooks/use-stdout.ts",
       "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/hooks/use-stdout.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts"
     },
     {
       "type": "file",
@@ -10547,56 +10677,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/debug.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/earlyInput.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/env.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/envUtils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/execFileNoThrow.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/fullscreen.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/intl.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/log.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/semver.ts"
-    },
-    {
-      "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/utils/sliceAnsi.ts"
-    },
-    {
-      "type": "file",
       "name": ".hermes/hermes-agent/ui-tui/src/app/slash/commands/core.ts",
       "file": ".hermes/hermes-agent/ui-tui/src/app/slash/commands/core.ts"
     },
@@ -10622,128 +10702,133 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/agent-guidance/agent-guidance.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/picman.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/ping.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/spice-invaders.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/tetris.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/browser.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/comment.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/constants.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-tree.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/file-viewer.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/git.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/input-utils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/types.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/utils.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/files-widget/viewer.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/ralph-wiggum/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/raw-paste/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/tab-status/tab-status.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/usage-extension/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/index.ts"
-    },
-    {
-      "type": "file",
       "name": ".hermes/.venv/lib/python3.12/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
       "file": ".hermes/.venv/lib/python3.12/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts"
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js"
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts",
-      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts"
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
+    },
+    {
+      "type": "file",
+      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
+      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
     },
     {
       "type": "file",
@@ -11037,128 +11122,13 @@
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/boss.js"
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/enums.ts"
     },
     {
       "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/camera.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/collision.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/colors.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/constants.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/core.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/death.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/effects.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/enemies.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/engine.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/fireballs.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/items.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/levels.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/logic.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/mario-not.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/player.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/render.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/state.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tiles.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/types.js"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/actions.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/index.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/search.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/snippets.ts"
-    },
-    {
-      "type": "file",
-      "name": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts",
-      "file": ".pi/agent/git/github.com/tmustier/pi-extensions/code-actions/src/ui.ts"
+      "name": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts",
+      "file": ".hermes/hermes-agent/ui-tui/packages/hermes-ink/src/native-ts/yoga-layout/index.ts"
     },
     {
       "type": "file",
@@ -11187,11 +11157,6 @@
     },
     {
       "type": "file",
-      "name": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
-      "file": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
-    },
-    {
-      "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/e2e.test.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/arcade/mario-not/tests/e2e.test.js"
     },
@@ -11209,6 +11174,11 @@
       "type": "file",
       "name": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/index.js",
       "file": ".pi/agent/git/github.com/tmustier/pi-extensions/weather/native/weathr-bridge/index.js"
+    },
+    {
+      "type": "file",
+      "name": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
+      "file": ".hermes/hermes-agent/venv/lib/python3.11/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js"
     },
     {
       "type": "file",
@@ -11540,5 +11510,5 @@
     }
   ],
   "unlistedDeps": [],
-  "summary": "Found 1153 issues"
+  "summary": "Found 1150 issues"
 }

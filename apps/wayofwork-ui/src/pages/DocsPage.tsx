@@ -9,7 +9,7 @@ export function DocsPage() {
     tree: { nodes, loading, error, refresh },
     selectedPath,
     setSelectedPath,
-    session: { rows, streaming, connected, sendChat, stop }
+    session
   } = useRefactor();
 
   return (
@@ -23,11 +23,11 @@ export function DocsPage() {
         refreshTree={refresh}
         selectedPath={selectedPath}
         setSelectedPath={setSelectedPath}
-        rows={rows}
-        streaming={streaming}
-        connected={connected}
-        sendChat={(text) => void sendChat(text)}
-        stop={stop}
+        rows={session.rows}
+        streaming={session.streaming}
+        connected={session.connected}
+        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
+        stop={session.stop}
       />
     </DocumentHandlerProvider>
   );

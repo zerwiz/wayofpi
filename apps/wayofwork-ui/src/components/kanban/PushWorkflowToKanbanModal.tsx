@@ -42,31 +42,33 @@ export function PushWorkflowToKanbanModal({
   // Load workflow when modal opens
   useEffect(() => {
     if (isOpen && workflowId) {
-      const loaded = developmentWorkflowService.getWorkflow(workflowId);
-      if (loaded) {
-        setWorkflow(loaded);
-        setNewBoardName(`${loaded.name} - Development Board`);
-        // Auto-select appropriate template based on workflow track
-        if (loaded.track === 'bmad-method') {
-          const template = BOARD_TEMPLATES.find(t => t.name.includes('BMad Method'));
-          if (template) setNewBoardTemplateId(template.id);
-        } else if (loaded.track === 'quick-flow') {
-          const template = BOARD_TEMPLATES.find(t => t.name.includes('Quick Flow'));
-          if (template) setNewBoardTemplateId(template.id);
-        } else {
-          // Default to Development Workflow template
-          const template = BOARD_TEMPLATES.find(t => t.name.includes('Development'));
-          if (template) setNewBoardTemplateId(template.id);
+      (async () => {
+        const loaded = developmentWorkflowService.getWorkflow(workflowId);
+        if (loaded) {
+          setWorkflow(loaded);
+          setNewBoardName(`${loaded.name} - Development Board`);
+          // Auto-select appropriate template based on workflow track
+          if (loaded.track === 'bmad-method') {
+            const template = BOARD_TEMPLATES.find(t => t.name.includes('BMad Method'));
+            if (template) setNewBoardTemplateId(template.id);
+          } else if (loaded.track === 'quick-flow') {
+            const template = BOARD_TEMPLATES.find(t => t.name.includes('Quick Flow'));
+            if (template) setNewBoardTemplateId(template.id);
+          } else {
+            // Default to Development Workflow template
+            const template = BOARD_TEMPLATES.find(t => t.name.includes('Development'));
+            if (template) setNewBoardTemplateId(template.id);
+          }
         }
-      }
 
-      const allBoards = kanbanService.getAllBoards();
-      setBoards(allBoards);
-      
-      // Auto-select first board if available
-      if (allBoards.length > 0 && pushMode === 'existing') {
-        setSelectedBoardId(allBoards[0].id);
-      }
+        const allBoards = await kanbanService.getAllBoards();
+        setBoards(allBoards);
+        
+        // Auto-select first board if available
+        if (allBoards.length > 0 && pushMode === 'existing') {
+          setSelectedBoardId(allBoards[0].id);
+        }
+      })();
     } else {
       // Reset state when modal closes
       setSelectedBoardId('');
@@ -82,14 +84,16 @@ export function PushWorkflowToKanbanModal({
   // Load columns when board is selected
   useEffect(() => {
     if (selectedBoardId && pushMode === 'existing') {
-      const board = kanbanService.getBoard(selectedBoardId);
-      if (board) {
-        setColumns(board.columns);
-        // Auto-select first column
-        if (board.columns.length > 0) {
-          setSelectedColumnId(board.columns[0].id);
+      (async () => {
+        const board = await kanbanService.getBoard(selectedBoardId);
+        if (board) {
+          setColumns(board.columns);
+          // Auto-select first column
+          if (board.columns.length > 0) {
+            setSelectedColumnId(board.columns[0].id);
+          }
         }
-      }
+      })();
     } else {
       setColumns([]);
       setSelectedColumnId('');
@@ -152,7 +156,7 @@ export function PushWorkflowToKanbanModal({
       }
 
       // Get target board and column
-      const targetBoard = kanbanService.getBoard(targetBoardId);
+      const targetBoard = await kanbanService.getBoard(targetBoardId);
       if (!targetBoard) {
         throw new Error('Target board not found');
       }

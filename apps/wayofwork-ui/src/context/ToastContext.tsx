@@ -3,6 +3,7 @@ import React, { createContext, useContext } from 'react';
 interface ToastOptions {
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
+  description?: string;
   duration?: number;
 }
 

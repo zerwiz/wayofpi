@@ -160,9 +160,9 @@ export default function Kanban() {
     }
   }, [viewType, currentBoardId, driveCurrentFolder]);
 
-  const loadAllBoards = () => {
+  const loadAllBoards = async () => {
     try {
-      const boards = kanbanService.getAllBoards();
+      const boards = await kanbanService.getAllBoards();
       setAllBoards(boards);
     } catch (error) {
       console.error('Failed to load boards:', error);
@@ -205,11 +205,13 @@ export default function Kanban() {
     setAvailableWorkflows(workflows);
     
     // Load available workflow tracks (Quick Flow, Project Management, Enterprise Method)
-    const workflowTracks = workflowsService.getAllWorkflows();
-    setAvailableWorkflowTracks(workflowTracks);
+    (async () => {
+      const workflowTracks = await workflowsService.getAllWorkflows();
+      setAvailableWorkflowTracks(workflowTracks);
+    })();
   }, []);
 
-  const loadBoard = () => {
+  const loadBoard = async () => {
     if (!currentBoardId) {
       setBoard(null);
       setCards(new Map());
@@ -217,10 +219,10 @@ export default function Kanban() {
     }
 
     try {
-      const loadedBoard = kanbanService.getBoard(currentBoardId);
+      const loadedBoard = await kanbanService.getBoard(currentBoardId);
       if (loadedBoard) {
         setBoard(loadedBoard);
-        const allCards = kanbanService.getAllCardsForBoard(currentBoardId);
+        const allCards = await kanbanService.getAllCardsForBoard(currentBoardId);
         const cardMap = new Map<string, BoardCard>();
         allCards.forEach((card) => {
           cardMap.set(card.id, card);
@@ -352,7 +354,7 @@ export default function Kanban() {
       await kanbanService.updateCard(currentBoardId, cardId, {
         metadata: {
           ...card.metadata,
-          documentIds: currentDocIds.filter((id) => id !== documentId),
+          documentIds: currentDocIds.filter((id: string) => id !== documentId),
         },
       });
       loadBoard();
@@ -422,7 +424,7 @@ export default function Kanban() {
       await kanbanService.updateCard(currentBoardId, cardId, {
         metadata: {
           ...card.metadata,
-          fileIds: currentFileIds.filter((id) => id !== fileId),
+          fileIds: currentFileIds.filter((id: string) => id !== fileId),
           // Clear legacy fileId if it matches
           fileId: card.metadata?.fileId === fileId ? undefined : card.metadata?.fileId,
         },
@@ -1168,7 +1170,7 @@ export default function Kanban() {
                             try {
                               await kanbanService.updateBoard(b.id, { starred: !b.starred });
                               // Reload boards list
-                              const updatedBoards = kanbanService.getAllBoards();
+                              const updatedBoards = await kanbanService.getAllBoards();
                               setAllBoards(updatedBoards);
                               showToast({
                                 type: 'success',
@@ -1322,7 +1324,7 @@ export default function Kanban() {
                           try {
                             await kanbanService.updateBoard(b.id, { starred: !b.starred });
                             // Reload boards list
-                            const updatedBoards = kanbanService.getAllBoards();
+                            const updatedBoards = await kanbanService.getAllBoards();
                             setAllBoards(updatedBoards);
                             showToast({
                               type: 'success',

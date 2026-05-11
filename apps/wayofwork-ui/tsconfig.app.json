@@ -27,10 +27,7 @@
   },
   "include": ["src", "shared"],
   "exclude": [
-    "src/pages/Kanban.tsx",
-    "src/components/kanban",
     "src/modals",
-    "src/components/work/kanban",
     "src/pages/Dashboard.tsx",
     "src/components/ui/Overview.tsx",
     "src/ReferenceApp.tsx",

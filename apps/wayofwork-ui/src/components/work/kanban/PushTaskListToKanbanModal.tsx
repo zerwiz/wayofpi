@@ -39,21 +39,23 @@ export function PushTaskListToKanbanModal({
   // Load boards and tasks when modal opens
   useEffect(() => {
     if (isOpen) {
-      const allBoards = kanbanService.getAllBoards();
-      setBoards(allBoards);
+      (async () => {
+        const allBoards = await kanbanService.getAllBoards();
+        setBoards(allBoards);
 
-      // Auto-select first board if available
-      if (allBoards.length > 0) {
-        setSelectedBoardId(allBoards[0].id);
-      }
+        // Auto-select first board if available
+        if (allBoards.length > 0) {
+          setSelectedBoardId(allBoards[0].id);
+        }
 
-      // Load tasks in the list
-      const tasks = tasksService.getTasksByTaskList(taskList.id);
-      setTasksInList(tasks);
-      setSelectedTasks(tasks.map((t) => t.id));
+        // Load tasks in the list
+        const tasks = tasksService.getTasksByTaskList(taskList.id);
+        setTasksInList(tasks);
+        setSelectedTasks(tasks.map((t) => t.id));
 
-      // Reset push mode
-      setPushMode('all');
+        // Reset push mode
+        setPushMode('all');
+      })();
     } else {
       // Reset all state when modal closes
       setSelectedBoardId('');
@@ -67,14 +69,16 @@ export function PushTaskListToKanbanModal({
   // Load columns when board is selected
   useEffect(() => {
     if (selectedBoardId) {
-      const board = kanbanService.getBoard(selectedBoardId);
-      if (board) {
-        setColumns(board.columns);
-        // Auto-select first column
-        if (board.columns.length > 0) {
-          setSelectedColumnId(board.columns[0].id);
+      (async () => {
+        const board = await kanbanService.getBoard(selectedBoardId);
+        if (board) {
+          setColumns(board.columns);
+          // Auto-select first column
+          if (board.columns.length > 0) {
+            setSelectedColumnId(board.columns[0].id);
+          }
         }
-      }
+      })();
     } else {
       setColumns([]);
       setSelectedColumnId('');

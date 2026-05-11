@@ -53,21 +53,23 @@ export function PushToKanbanModal({
   // Load boards when modal opens
   useEffect(() => {
     if (isOpen) {
-      const allBoards = kanbanService.getAllBoards();
-      setBoards(allBoards);
+      (async () => {
+        const allBoards = await kanbanService.getAllBoards();
+        setBoards(allBoards);
 
-      // Pre-fill title and description
-      setCardTitle(sourceTitle);
-      setCardDescription(sourceDescription || '');
+        // Pre-fill title and description
+        setCardTitle(sourceTitle);
+        setCardDescription(sourceDescription || '');
 
-      // Auto-select first board if available
-      if (allBoards.length > 0) {
-        setSelectedBoardId(allBoards[0].id);
-      }
+        // Auto-select first board if available
+        if (allBoards.length > 0) {
+          setSelectedBoardId(allBoards[0].id);
+        }
 
-      // Reset push mode
-      setPushMode('new');
-      setSelectedCardId('');
+        // Reset push mode
+        setPushMode('new');
+        setSelectedCardId('');
+      })();
     } else {
       // Reset all state when modal closes
       setSelectedBoardId('');
@@ -83,14 +85,16 @@ export function PushToKanbanModal({
   // Load columns when board is selected
   useEffect(() => {
     if (selectedBoardId) {
-      const board = kanbanService.getBoard(selectedBoardId);
-      if (board) {
-        setColumns(board.columns);
-        // Auto-select first column
-        if (board.columns.length > 0) {
-          setSelectedColumnId(board.columns[0].id);
+      (async () => {
+        const board = await kanbanService.getBoard(selectedBoardId);
+        if (board) {
+          setColumns(board.columns);
+          // Auto-select first column
+          if (board.columns.length > 0) {
+            setSelectedColumnId(board.columns[0].id);
+          }
         }
-      }
+      })();
     } else {
       setColumns([]);
       setSelectedColumnId('');
@@ -102,10 +106,12 @@ export function PushToKanbanModal({
   // Load cards when column is selected and push mode is 'existing'
   useEffect(() => {
     if (selectedBoardId && selectedColumnId && pushMode === 'existing') {
-      const allCards = kanbanService.getAllCardsForBoard(selectedBoardId);
-      const columnCards = allCards.filter((card) => card.columnId === selectedColumnId);
-      setAvailableCards(columnCards);
-      setSelectedCardId('');
+      (async () => {
+        const allCards = await kanbanService.getAllCardsForBoard(selectedBoardId);
+        const columnCards = allCards.filter((card) => card.columnId === selectedColumnId);
+        setAvailableCards(columnCards);
+        setSelectedCardId('');
+      })();
     } else {
       setAvailableCards([]);
       setSelectedCardId('');
@@ -213,7 +219,7 @@ export function PushToKanbanModal({
         });
       } else {
         // Update existing card
-        const existingCard = kanbanService.getCard(selectedBoardId, selectedCardId);
+        const existingCard = await kanbanService.getCard(selectedBoardId, selectedCardId);
         if (!existingCard) {
           throw new Error('Selected card not found');
         }

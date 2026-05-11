@@ -1,7 +1,13 @@
 import { existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
-import { expandUserPathInPiBinary } from "./pi-binary";
+function expandUserPath(p: string): string {
+	const t = p.trim();
+	if (t.startsWith("~/")) return join(homedir(), t.slice(2));
+	if (t === "~") return homedir();
+	return t;
+}
 
 export type NgrokBinarySource = "WOP_NGROK_BINARY" | "PATH" | "bundled" | null;
 
@@ -14,7 +20,7 @@ export type NgrokBinarySource = "WOP_NGROK_BINARY" | "PATH" | "bundled" | null;
 export function resolveNgrokExecutable(): { path: string | null; source: NgrokBinarySource } {
 	const fromEnv = process.env.WOP_NGROK_BINARY?.trim();
 	if (fromEnv) {
-		const p = expandUserPathInPiBinary(fromEnv);
+		const p = expandUserPath(fromEnv);
 		if (existsSync(p)) return { path: p, source: "WOP_NGROK_BINARY" };
 	}
 

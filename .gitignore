@@ -51,3 +51,6 @@ chronicle/
 
 # Release artifacts (large build files)
 release/
+
+# Startup diagnostics logs (machine-specific runtime state)
+logs/

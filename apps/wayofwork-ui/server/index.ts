@@ -121,6 +121,7 @@ import {
 } from "./github-connection";
 import { db } from "./db";
 import { createToken, verifyToken } from "./auth";
+import { handleTicketApi } from "./tickets-api";
 
 // Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
 // In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
@@ -977,6 +978,10 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		});
 	}
 
+	// Ticket system (ÄTA) API
+	const ticketRes = await handleTicketApi(p, req.method, auth, req);
+	if (ticketRes) return ticketRes;
+
 	if (p === "/api/claw/tree" && req.method === "GET") {
 		try {
 			const { rootDisplay, nodes } = await buildClawHostTree();
@@ -1047,14 +1052,29 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 	if (p === "/api/portal/tasks" && req.method === "GET") {
 		if (!auth) return json({ error: "Unauthorized" }, 401);
 		try {
-			const tasks = db.query(`
-				SELECT t.*, p.name as project_name
-				FROM tasks t
-				LEFT JOIN projects p ON t.project_id = p.id
-				WHERE t.tenant_id = ? AND t.assigned_to = ?
-				ORDER BY t.due_date ASC, t.created_at DESC
-			`).all(auth.tenantId, auth.userId) as any[];
-			return json(tasks || []);
+			// Workers see only their tasks, Leaders/Admins see all tasks for the tenant
+			const isLeader = auth.role === "leader" || auth.role === "admin" || auth.role === "super_admin";
+			
+			if (isLeader) {
+				const tasks = db.query(`
+					SELECT t.*, u.username as assigned_name, p.name as project_name
+					FROM tasks t
+					LEFT JOIN users u ON t.assigned_to = u.id
+					LEFT JOIN projects p ON t.project_id = p.id
+					WHERE t.tenant_id = ?
+					ORDER BY t.deadline ASC, t.created_at DESC
+				`).all(auth.tenantId) as any[];
+				return json(tasks || []);
+			} else {
+				const tasks = db.query(`
+					SELECT t.*, p.name as project_name
+					FROM tasks t
+					LEFT JOIN projects p ON t.project_id = p.id
+					WHERE t.tenant_id = ? AND t.assigned_to = ?
+					ORDER BY t.deadline ASC, t.created_at DESC
+				`).all(auth.tenantId, auth.userId) as any[];
+				return json(tasks || []);
+			}
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ error: "Failed to fetch tasks", details: message }, 500);
@@ -1160,24 +1180,6 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			return json({ error: "Failed to reject time entry", details: message }, 500);
-		}
-	}
-
-	// Task Management - List tasks
-	if (p === "/api/portal/tasks" && req.method === "GET") {
-		if (!auth) return json({ error: "Unauthorized" }, 401);
-		try {
-			const tasks = db.query(`
-				SELECT t.*, u.username as assigned_name
-				FROM tasks t
-				LEFT JOIN users u ON t.assigned_to = u.id
-				WHERE t.tenant_id = ?
-				ORDER BY t.created_at DESC
-			`).all(auth.tenantId) as any[];
-			return json(tasks || []);
-		} catch (e) {
-			const message = e instanceof Error ? e.message : String(e);
-			return json({ error: "Failed to fetch tasks", details: message }, 500);
 		}
 	}
 

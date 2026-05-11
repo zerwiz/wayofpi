@@ -161,11 +161,11 @@ export const CardView: React.FC<CardViewProps> = ({
     }
   }, [showLinkNote, showLinkTask, showLinkFile, showLinkCalendar]);
 
-  const loadCard = () => {
+  const loadCard = async () => {
     if (!cardId || !boardId) return;
 
     try {
-      const loadedCard = kanbanService.getCard(boardId, cardId);
+      const loadedCard = await kanbanService.getCard(boardId, cardId);
       if (loadedCard) {
         setCard(loadedCard);
         setEditedCard({
@@ -307,7 +307,7 @@ export const CardView: React.FC<CardViewProps> = ({
     
     if (!taskToRemove) return;
 
-    const updatedTaskIds = currentTaskIds.filter(id => id !== taskToRemove);
+    const updatedTaskIds = (currentTaskIds as string[]).filter(id => id !== taskToRemove);
     
     const updatedMetadata = {
       ...(editedCard.metadata || {}),
@@ -690,14 +690,14 @@ export const CardView: React.FC<CardViewProps> = ({
         if (!card || !cardId) return;
 
         // Update metadata with development workflow fields
-        const updatedCard = {
+        const updatedCard: Partial<BoardCard> & { metadata: Record<string, any> } = {
           ...editedCard,
           metadata: {
             ...editedCard.metadata,
             developmentWorkflowId: selectedDevelopmentWorkflowId,
             developmentStepId: selectedDevelopmentStepId,
             developmentPhase: selectedDevelopmentPhase,
-          },
+          } as Record<string, any>,
         };
 
         await kanbanService.updateCard(boardId, cardId, updatedCard);
@@ -1126,7 +1126,7 @@ export const CardView: React.FC<CardViewProps> = ({
                           : ''
                       }
                       onChange={(e) => {
-                        const date = e.target.value ? new Date(e.target.value) : undefined;
+                        const date = e.target.value ? new Date(e.target.value).toISOString() : undefined;
                         setEditedCard({
                           ...editedCard,
                           startDate: date,
@@ -1173,7 +1173,7 @@ export const CardView: React.FC<CardViewProps> = ({
                           : ''
                       }
                       onChange={(e) => {
-                        const date = e.target.value ? new Date(e.target.value) : undefined;
+                        const date = e.target.value ? new Date(e.target.value).toISOString() : undefined;
                         setEditedCard({
                           ...editedCard,
                           dueDate: date,
@@ -1383,21 +1383,21 @@ export const CardView: React.FC<CardViewProps> = ({
                     <div>
                       <p className="text-xs text-gray-400 mb-2">Emoji Covers</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {boardIconOptions.map(emoji => (
+                        {boardIconOptions.map(option => (
                           <button
-                            key={emoji}
+                            key={option.value}
                             onClick={() => {
-                              const coverData: CardCover = { type: 'emoji', value: emoji, size: 'large' };
+                              const coverData: CardCover = { type: 'emoji', value: option.value, size: 'large' };
                               setEditedCard({ ...editedCard, cover: coverData });
                               setShowCoverPicker(false);
                             }}
                             className={`w-10 h-10 rounded-lg border-2 transition-all text-xl flex items-center justify-center flex-shrink-0 ${
-                              editedCard.cover?.value === emoji
+                              editedCard.cover?.value === option.value
                                 ? 'border-purple-500 bg-purple-500/20'
                                 : 'border-gray-600 hover:border-gray-500 bg-gray-700'
                             }`}
                           >
-                            {emoji}
+                            {option.label}
                           </button>
                         ))}
                       </div>
@@ -1863,7 +1863,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       ? [card?.metadata?.taskId || editedCard.metadata?.taskId].filter(Boolean) as string[]
                       : [];
                     
-                    return taskIds.length > 0 && taskIds.map((taskId) => {
+                    return (taskIds as string[]).length > 0 && (taskIds as string[]).map((taskId) => {
                       const task = tasksService.getTask(taskId);
                       if (!task) return null;
                       
@@ -1904,13 +1904,8 @@ export const CardView: React.FC<CardViewProps> = ({
               {(isCreateMode || isEditing) && (
                 <div>
                   <DevelopmentWorkflowSelector
-                    selectedWorkflowId={selectedDevelopmentWorkflowId}
-                    selectedStepId={selectedDevelopmentStepId}
                     selectedPhase={selectedDevelopmentPhase}
-                    onWorkflowChange={setSelectedDevelopmentWorkflowId}
-                    onStepChange={setSelectedDevelopmentStepId}
                     onPhaseChange={setSelectedDevelopmentPhase}
-                    label="Link to Development Workflow"
                   />
                 </div>
               )}
@@ -2176,7 +2171,7 @@ export const CardView: React.FC<CardViewProps> = ({
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{event.title}</p>
                             <p className="text-xs text-gray-400 truncate">
-                              {new Date(event.startTime).toLocaleString()} - {new Date(event.endTime).toLocaleString()}
+                              {event.startTime ? new Date(event.startTime).toLocaleString() : ''} - {event.endTime ? new Date(event.endTime).toLocaleString() : ''}
                             </p>
                           </div>
                           <LinkIcon className="w-4 h-4 text-orange-400 flex-shrink-0" />

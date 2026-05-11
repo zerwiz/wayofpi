@@ -1,0 +1,18 @@
+We should NOT use Electron with Bun. Instead, let's use a simple web-based launcher that starts the servers.
+
+# Solution: Use the existing web-based approach
+
+The Technical IDE (Terminal + VSCode in web) works fine with just:
+- Terminal server (Bun proxy) at port 3334-3335
+- Way of Work UI at port 5173
+- Main server at port 3333
+
+We already have this working with the current setup.
+To access Technical IDE, just go to:
+  http://localhost:5173/
+
+Or use:
+  - Terminal mode: `bun run technicalIDE:terminal`
+  - VSCode mode: `bun run technicalIDE:vscode`
+
+The servers are already managed by start-wayofpi.sh

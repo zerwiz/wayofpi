@@ -1,176 +1,117 @@
 /**
- * **Pi agent runtime** — when **`WOP_CHAT_ENGINE=pi`** or **`auto`**, chat turns can run through **`pi --mode json`**
- * with cwd = primary workspace so **`.pi/settings.json`**, built-ins (**read**, **write**, **edit**, **bash**, …),
- * and **extension-registered** tools match the Pi TUI.
- * See **`docs/WOP_PI_BACKEND_WIRING_PLAN.md`** and **`.cursor/rules/wop-ui-pi-backend-parity.mdc`**.
+ * **Pi agent runtime** — routes chat turns through the pi.dev SDK.
+ *
+ * Engine modes (`WOP_CHAT_ENGINE`):
+ * - **`sdk`** — use `@earendil-works/pi-coding-agent` SDK directly (typed events, in-process tools).
+ * - **`auto`** — try SDK first; if unavailable, fall back to Bundled Bun chat.
+ * - **`bundled`** / **`bun`** — force Bundled Bun path (no pi SDK).
+ *
+ * The **SDK path** replaces the fragile subprocess approach:
+ * - No binary discovery / PATH hacks
+ * - No JSONL stream parsing
+ * - Typed `AgentSessionEvent` subscriptions
+ * - In-process tool execution
+ * - No ENOENT errors from missing pi binary
  */
 
 import type { ChatMessage, StreamChatResult } from "./chat";
 import type { StreamTokenUsage } from "./chat-usage";
-import { resolvePiBinaryPath, resolvePiLoaderPath } from "./pi-binary";
-import { streamPiJsonChatTurn } from "./pi-json-mode-chat";
+import { isSdkAvailable, runSdkChatTurn } from "./pi-sdk-runtime";
 
-export { resolvePiBinaryPath, resolvePiLoaderPath } from "./pi-binary";
+export { isSdkAvailable } from "./pi-sdk-runtime";
+
+/**
+ * Stub — piDrivesChat is always managed via SDK in the current architecture.
+ * Kept for backward compat with /api/config POST handler in index.ts.
+ */
+export function patchPiJsonChatRuntimeOverride(_v: boolean | null): void {}
+
+/** Stub — pi is never "blocked" in SDK mode. */
+export function piAgentRuntimeBlockedReason(): string | null { return null; }
 
 /**
  * Normalized `WOP_CHAT_ENGINE`:
- * - **`pi`** — require Pi (error if CLI missing).
- * - **`auto`** — Pi JSON when `pi` resolves, else Bun → provider.
- * - **`bundled`** / **`bun`** — force interim Bun path (no headless Pi), even if `pi` is on PATH.
- * - **Unset** or **any other value** (e.g. legacy **`ollama`** / **`openrouter`** mistaken for the LLM provider) — treated as **`auto`**, so headless Pi is used when the **`pi`** CLI resolves.
+ * - **`sdk`** — use `@earendil-works/pi-coding-agent` SDK directly.
+ * - **`auto`** — SDK → Bun, whichever resolves first.
+ * - **`bundled`** / **`bun`** — force Bundled Bun path.
+ * - **Unset** or any other value — treated as **`auto`**, preferring SDK.
  */
-export type WopChatEngineMode = "pi" | "auto" | "bundled";
+export type WopChatEngineMode = "sdk" | "auto" | "bundled";
 
 export function wopChatEngineFromEnv(): WopChatEngineMode {
 	const v = (process.env.WOP_CHAT_ENGINE || "").trim().toLowerCase();
-	if (v === "pi") return "pi";
+	if (v === "sdk") return "sdk";
 	if (v === "auto") return "auto";
 	if (v === "bundled" || v === "bun") return "bundled";
-	return "auto";
-}
-
-let piJsonChatRuntimeOverride: boolean | undefined;
-
-/**
- * In-memory **`pi --mode json`** toggle from **`POST /api/config`** (`piDrivesChat`) until process restart;
- * **`null`** clears the override ( **`WOP_CHAT_ENGINE`** applies again).
- */
-export function patchPiJsonChatRuntimeOverride(value: boolean | null): void {
-	piJsonChatRuntimeOverride = value === null ? undefined : value;
-}
-
-/** Strict **`WOP_CHAT_ENGINE=pi`** — server must error if the Pi CLI is missing (no silent fallback to Bun). */
-export function isPiChatEngineForced(): boolean {
-	return wopChatEngineFromEnv() === "pi";
+	return "sdk";
 }
 
 /**
- * Use **`pi --mode json`** for this turn when the operator chose **`pi`** or **`auto`** and **`pi`** resolves.
- * All workspace personas (orchestrator + **`.md`** agents) share this path — **full Pi tools** inside the subprocess.
+ * Use the SDK (`@earendil-works/pi-coding-agent`) for chat turns.
+ * In SDK mode the runtime always requires the SDK package.
  */
-export function shouldUsePiJsonChat(): boolean {
-	if (piJsonChatRuntimeOverride === false) return false;
-	if (piJsonChatRuntimeOverride === true) {
-		return resolvePiBinaryPath() != null;
-	}
+export function shouldUseSdkChat(): boolean {
 	const mode = wopChatEngineFromEnv();
+	if (mode === "sdk") return true;
 	if (mode === "bundled") return false;
-	return resolvePiBinaryPath() != null;
+	return isSdkAvailable();
 }
 
-/**
- * When **`WOP_CHAT_ENGINE=pi`** (strict) but the **`pi`** binary cannot be resolved (`WOP_PI_BINARY` or PATH).
- * **`auto`** without a CLI falls back to Bun and does **not** use this error.
- */
-export function piAgentRuntimeBlockedReason(): string | null {
-	if (piJsonChatRuntimeOverride === false) return null;
-	if (!isPiChatEngineForced()) return null;
-	if (!resolvePiBinaryPath()) {
-		return (
-			"Chat engine is Pi (`WOP_CHAT_ENGINE=pi`), but the Pi CLI was not found. " +
-			"Install Pi on your PATH or set **`WOP_PI_BINARY`** to the absolute path of the `pi` executable, " +
-			"or use **`WOP_CHAT_ENGINE=auto`** to fall back to the interim provider when Pi is missing."
-		);
-	}
+/** Deprecated — SDK-only mode, no subprocess fallback. */
+export function shouldUsePiJsonChat(): boolean {
+	return false;
+}
+
+/** Deprecated — not needed in SDK mode. */
+export function getPiStackForSurface(_surface: string | null): string {
+	return "";
+}
+
+/** Deprecated — no binary resolution needed in SDK mode. */
+export function resolvePiBinaryPath(): string | null {
 	return null;
 }
 
-/** @deprecated Prefer `RunPiChatTurnOpts` — kept for wiring-plan references. */
-export type PiChatTurnContext = {
-	workspaceRoot: string;
-	sessionKey: string | null;
-};
+/** Deprecated — no loader path needed in SDK mode. */
+export function resolvePiLoaderPath(): string | null {
+	return null;
+}
 
 export type RunPiChatTurnOpts = {
+	piStack?: string;
 	cwd: string;
 	messages: ChatMessage[];
-	piStack?: string;
 	onDelta: (s: string) => void;
-	/** Forward Pi `thinking_delta` to the client as `assistant_reasoning_delta`. */
 	onReasoningDelta?: (s: string) => void;
-	/** Pi JSON lines that carry `usage` — live Team pulse / status meters (same as Bun SSE `streamPeek`). */
 	onStreamUsage?: (u: StreamTokenUsage) => void;
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
 	signal?: AbortSignal;
 };
 
-/** Serialize prior turns + latest user line for a single `pi --mode json` prompt. */
-export function messagesToPiPrompt(messages: ReadonlyArray<ChatMessage>): string {
-	const parts: string[] = [];
-	for (const m of messages) {
-		if (m.role === "system") {
-			parts.push(`[system]\n${m.content ?? ""}`);
-		} else if (m.role === "user") {
-			parts.push(`[user]\n${m.content ?? ""}`);
-		} else if (m.role === "assistant") {
-			const body = m.content ?? "";
-			const tc = m.tool_calls?.length
-				? `\n[tool_calls]\n${JSON.stringify(m.tool_calls, null, 2)}`
-				: "";
-			parts.push(`[assistant]\n${body}${tc}`);
-		} else if (m.role === "tool") {
-			parts.push(`[tool name=${m.name ?? "?"} id=${m.tool_call_id ?? ""}]\n${m.content ?? ""}`);
-		}
-	}
-	return parts.join("\n\n---\n\n");
-}
-
 export async function runPiChatTurn(
 	opts: RunPiChatTurnOpts,
 ): Promise<{ result: StreamChatResult; lastStreamUsage: StreamTokenUsage | null }> {
-	const piBinary = resolvePiBinaryPath();
-	if (!piBinary) {
+	if (!shouldUseSdkChat()) {
 		return {
-			result: { ok: false, error: "Pi CLI not found (set WOP_PI_BINARY or install `pi` on PATH)." },
+			result: { ok: false, error: "Chat engine is not SDK mode (set WOP_CHAT_ENGINE=sdk or auto)." },
 			lastStreamUsage: null,
 		};
 	}
-	const prompt = messagesToPiPrompt(opts.messages);
-	const r = await streamPiJsonChatTurn({
-		piBinary,
+
+	if (!isSdkAvailable()) {
+		return {
+			result: { ok: false, error: "@earendil-works/pi-coding-agent not installed. Run bun install." },
+			lastStreamUsage: null,
+		};
+	}
+
+	return runSdkChatTurn({
 		cwd: opts.cwd,
-		prompt,
-		piStack: opts.piStack,
-		signal: opts.signal,
+		messages: opts.messages,
 		onDelta: opts.onDelta,
 		onReasoningDelta: opts.onReasoningDelta,
 		onStreamUsage: opts.onStreamUsage,
 		onLog: opts.onLog,
+		signal: opts.signal,
 	});
-	if (r.ok) {
-		return { result: { ok: true }, lastStreamUsage: r.lastStreamUsage };
-	}
-	if ("aborted" in r && r.aborted) {
-		return { result: { ok: false, aborted: true }, lastStreamUsage: null };
-	}
-	return { result: { ok: false, error: (r as { ok: false; error: string }).error }, lastStreamUsage: null };
-}
-
-/** Determine the comma-separated PI_STACK for a given UI surface (simple, technical, claw, etc.). */
-export function getPiStackForSurface(surface: string | null): string {
-	// Standard background logic
-	const base = "damage-control,memory";
-
-	if (surface === "claw") {
-		// Claw: Mission control with team grid and metrics
-		return `${base},agent-team,tool-counter-widget`;
-	}
-	if (surface === "technical") {
-		// Technical: Full IDE-style with agent team
-		return `${base},agent-team`;
-	}
-	if (surface === "simple") {
-		// Simple: Clean chat with minimal footer
-		return `${base},minimal`;
-	}
-	if (surface === "docs") {
-		// Docs: Document-focused, minimal chrome
-		return `${base},minimal`;
-	}
-	if (surface === "work") {
-		// Work: Task-focused
-		return `${base},tilldone,minimal`;
-	}
-
-	return base;
 }
