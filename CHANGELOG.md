@@ -1,3 +1,23 @@
+# v1.0.72
+
+## 🎨 UI Refinement & Docs Overhaul
+
+### ✨ New Features
+- **Docs Layout Refactored** — Completely rebuilt the Docs page layout to a stable three-panel view: **Chat | Documents | Preview**. 
+- **Simple Chat in Docs** — Integrated the high-quality `SimpleChatView` into Docs mode, providing features like agent selection, slash commands, and better message bubbles.
+- **Functional Inline Preview** — Replaced the preview modal with an inline viewer that fetches real file content and renders Markdown (with Mermaid support) matching the Simple mode experience.
+- **Claw UI Alignment** — Standardized the Claw mode sidebar toggle with a new `ClawSecondaryToolbar`, matching the "Simple" mode aesthetic and removing floating, overlapping buttons.
+
+### 🚀 Performance Optimizations
+- **Lazy Tree Rendering** — Refactored `FileExplorer` to only flatten and render nodes for expanded directories. This drastically improves responsiveness in large projects with thousands of files.
+- **Focused Docs Sidebar** — The Documents view now only processes documentation-related files, reducing background rendering load.
+- **UI Memoization** — Added memoization to core navigation and toolbar components to prevent redundant re-renders and eliminate view-switching lag.
+
+### 🐛 Bug Fixes
+- **Preview Crash Fixed** — Resolved a `TypeError` in `PreviewContent` where missing file extensions would crash the UI.
+- **Ghost Sidebars Removed** — Eliminated unwanted grey space and legacy "ADMIN" sidebars by replacing the document handler's internal chat component.
+- **Logo Stability** — Fixed an issue where the Claw logo would jump out of the sidebar or overlap UI elements when toggled.
+
 # v1.0.71
 
 ## 🛠️ Stability & Layout Fixes

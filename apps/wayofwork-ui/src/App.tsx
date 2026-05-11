@@ -150,7 +150,6 @@ export default function App() {
     <RefactorProvider>
       <RouteSync />
       <UiModeWatcher />
-      <RoleBadgeBar />
       <PageHeaderProvider value={defaultMenuStubs}>
         <ToastProvider>
           <div className="flex flex-col h-screen overflow-hidden">

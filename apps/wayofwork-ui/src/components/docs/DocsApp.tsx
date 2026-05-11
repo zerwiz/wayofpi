@@ -1,15 +1,16 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { FolderOpen, MessageSquare, Eye, FileText, FileCheck, FileWarning, FileClock, CheckCircle, AlertCircle, Clock, Send } from "lucide-react";
 import type { TreeNode } from "../../types/tree";
-import type { ChatRow, LogRow } from "../../hooks/useWayOfPiSession";
-// UiMode imported as string type
+import type { ChatRow, ChatSessionMode, LogRow } from "../../hooks/useWayOfPiSession";
 import { FileExplorer } from "../documenthandler/FileExplorer";
-import { ChatPanel } from "../documenthandler/ChatPanel";
-import { PreviewModal } from "../documenthandler/PreviewModal";
 import { DocumentBrowser } from "./DocumentBrowser";
 import { apiGet } from "../../api/client";
 import { useDocumentHandler } from "../documenthandler/context/DocumentHandlerContext";
 import type { FileEntry } from "../documenthandler/types/documenthandler.types";
+import { SimpleChatView } from "../simple/SimpleChatView";
+import { useAgents } from "../../hooks/useAgents";
+import { PreviewContent } from "../documenthandler/PreviewContent";
+import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
 
 interface DocsAppProps {
 	uiMode: string;
@@ -25,6 +26,24 @@ interface DocsAppProps {
 	connected: boolean;
 	sendChat: (t: string) => void;
 	stop: () => void;
+	error: string | null;
+	modelLabel: string;
+	clearError: () => void;
+	onReopenLlmFixModal?: () => void;
+	chatAgentName: string | null;
+	dispatchTurnAgent?: string | null;
+	onChatAgentChange: (name: string | null) => void;
+	chatMode: ChatSessionMode;
+	onChatModeChange: (m: ChatSessionMode) => void;
+	chatStreamUiEnabled: boolean;
+	onChatStreamUiEnabledChange: (on: boolean) => void;
+	chatQueuePending?: number;
+	chatQueueItems?: ChatQueueItem[];
+	editChatQueueItem?: (id: string, text: string) => void;
+	deleteChatQueueItem?: (id: string) => void;
+	forceChatQueueItem?: (id: string) => void;
+	contextFillPct?: number | null;
+	contextTitle?: string;
 }
 
 export function DocsApp({
@@ -41,14 +60,33 @@ export function DocsApp({
 	connected,
 	sendChat,
 	stop,
+	error,
+	modelLabel,
+	clearError,
+	onReopenLlmFixModal,
+	chatAgentName,
+	dispatchTurnAgent,
+	onChatAgentChange,
+	chatMode,
+	onChatModeChange,
+	chatStreamUiEnabled,
+	onChatStreamUiEnabledChange,
+	chatQueuePending = 0,
+	chatQueueItems = [],
+	editChatQueueItem,
+	deleteChatQueueItem,
+	forceChatQueueItem,
+	contextFillPct = null,
+	contextTitle = "",
 }: DocsAppProps) {
-	const [previewOpen, setPreviewOpen] = useState(false);
-	const [leftOpen, setLeftOpen] = useState(true);
-	const [rightOpen, setRightOpen] = useState(true);
+	const [leftOpen, setLeftOpen] = useState(true); // Now Chat toggle
+	const [treeOpen, setTreeOpen] = useState(true); // Now Tree toggle
 	const [docStatus, setDocStatus] = useState<"draft" | "review" | "approved" | null>(null);
 	const [showDocBrowser, setShowDocBrowser] = useState(false);
 	const [selectedContent, setSelectedContent] = useState<string | null>(null);
 	const [contentLoading, setContentLoading] = useState(false);
+
+	const agentsApi = useAgents();
 
 	/** Filter tree to only show document files (.md, .txt, .doc, .docx) */
 	const docsNodes = useMemo(() => {
@@ -169,8 +207,16 @@ export function DocsApp({
 					<button
 						type="button"
 						onClick={() => setLeftOpen((v) => !v)}
-						className={`rounded p-1.5 ${subC} hover:bg-[#3c3c3c]`}
-						title="Toggle file tree"
+						className={`rounded p-1.5 ${leftOpen ? "bg-[#ea580c] text-white" : `${subC} hover:bg-[#3c3c3c]`}`}
+						title="Toggle Chat"
+					>
+						<MessageSquare size={18} />
+					</button>
+					<button
+						type="button"
+						onClick={() => setTreeOpen((v) => !v)}
+						className={`rounded p-1.5 ${treeOpen ? "bg-[#ea580c] text-white" : `${subC} hover:bg-[#3c3c3c]`}`}
+						title="Toggle Documents"
 					>
 						<FolderOpen size={18} />
 					</button>
@@ -183,74 +229,67 @@ export function DocsApp({
 
 				<div className="flex items-center gap-3">
 					<span className={`text-xs ${subC}`}>{selectedPath ? selectedPath.split("/").pop() : "No file selected"}</span>
-					<button
-						type="button"
-						onClick={() => setRightOpen((v) => !v)}
-						className={`rounded p-1.5 ${subC} hover:bg-[#3c3c3c]`}
-						title="Toggle Chat"
-					>
-						<MessageSquare size={18} />
-					</button>
 				</div>
 			</div>
 
-			{/* Three-panel layout */}
+			{/* Three-panel layout: Tree | Preview | Chat */}
 			<div className="docs-content flex min-h-0 flex-1 overflow-hidden">
+				
 				{/* Left: File Tree */}
-				{leftOpen && (
+				{treeOpen && (
 					<div
 						className={`docs-file-tree flex w-[280px] shrink-0 flex-col overflow-hidden border-r ${border} ${panelBg}`}
 						style={{ minWidth: "200px", maxWidth: "400px" }}
 					>
-					<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
-						<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Documents</span>
-						<div className="flex items-center gap-1">
-							<button
-								type="button"
-								onClick={() => setShowDocBrowser(!showDocBrowser)}
-								className={`rounded p-1 text-xs ${showDocBrowser ? 'bg-[#ea580c] text-white' : `${subC} hover:bg-[#3c3c3c]`}`}
-								title={showDocBrowser ? "Switch to File Tree" : "Switch to Document Browser"}
-							>
-								{showDocBrowser ? '📄 Tree' : '📂 Docs'}
-							</button>
-							<button
-								type="button"
-								onClick={refreshTree}
-								className={`rounded p-1 text-xs ${subC} hover:bg-[#3c3c3c]`}
-								title="Refresh file tree"
-							>
-								↻
-							</button>
+						<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
+							<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Documents</span>
+							<div className="flex items-center gap-1">
+								<button
+									type="button"
+									onClick={() => setShowDocBrowser(!showDocBrowser)}
+									className={`rounded p-1 text-xs ${showDocBrowser ? 'bg-[#ea580c] text-white' : `${subC} hover:bg-[#3c3c3c]`}`}
+									title={showDocBrowser ? "Switch to File Tree" : "Switch to Document Browser"}
+								>
+									{showDocBrowser ? '📄 Tree' : '📂 Docs'}
+								</button>
+								<button
+									type="button"
+									onClick={refreshTree}
+									className={`rounded p-1 text-xs ${subC} hover:bg-[#3c3c3c]`}
+									title="Refresh file tree"
+								>
+									↻
+								</button>
+							</div>
 						</div>
-					</div>
-					<div className="min-h-0 flex-1 overflow-y-auto p-1">
-						{showDocBrowser ? (
-							<DocumentBrowser
-								nodes={docsNodes}
-								loading={treeLoading}
-								error={treeError}
-								selectedPath={selectedPath}
-								onSelectFile={handleSelectFile}
-							/>
-						) : (
-							<FileExplorer
-								nodes={docsNodes}
-								loading={treeLoading}
-								error={treeError}
-								onSelectFile={handleSelectFile}
-								selectedPath={selectedPath}
-								visible={leftOpen}
-								onToggle={() => setLeftOpen(v => !v)}
-								appearanceDark={appearanceDark}
-							/>
-						)}
-					</div>
+						<div className="min-h-0 flex-1 overflow-y-auto p-1">
+							{showDocBrowser ? (
+								<DocumentBrowser
+									nodes={docsNodes}
+									loading={treeLoading}
+									error={treeError}
+									selectedPath={selectedPath}
+									onSelectFile={handleSelectFile}
+								/>
+							) : (
+								<FileExplorer
+									nodes={docsNodes}
+									loading={treeLoading}
+									error={treeError}
+									onSelectFile={handleSelectFile}
+									selectedPath={selectedPath}
+									visible={treeOpen}
+									onToggle={() => setTreeOpen(v => !v)}
+									appearanceDark={appearanceDark}
+								/>
+							)}
+						</div>
 					</div>
 				)}
 
 				{/* Middle: Preview Panel */}
 				<div
-					className={`docs-preview flex min-w-0 flex-1 flex-col overflow-hidden border-r ${border}`}
+					className={`docs-preview flex min-w-0 flex-1 flex-col overflow-hidden border-r ${border} ${bg}`}
 				>
 					<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
 						<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Preview</span>
@@ -279,47 +318,39 @@ export function DocsApp({
 					</div>
 				</div>
 
-				{/* Right: Chat Panel */}
-				{rightOpen && (
+				{/* Right: Chat Panel (Simple styled) */}
+				{leftOpen && (
 					<div className={`docs-chat flex w-[400px] shrink-0 flex-col overflow-hidden ${panelBg}`}>
-						{/* Quick action buttons for document Q&A */}
-						{selectedPath && (
-							<div className={`flex shrink-0 flex-wrap gap-2 border-b px-3 py-2 ${border}`}>
-								<button
-									type="button"
-									onClick={() => sendChat(`Summarize this document: ${selectedPath}`)}
-									disabled={streaming}
-									className={`rounded px-3 py-1 text-[10px] transition-colors ${
-										streaming
-											? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
-											: "bg-[#ea580c] text-white hover:bg-[#c2410c]"
-									}`}
-								>
-									📝 Summarize
-								</button>
-								<button
-									type="button"
-									onClick={() => sendChat(`Extract action items from: ${selectedPath}`)}
-									disabled={streaming}
-									className={`rounded px-3 py-1 text-[10px] transition-colors ${
-										streaming
-											? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
-											: "bg-[#3b82f6] text-white hover:bg-[#2563eb]"
-									}`}
-								>
-									✅ Actions
-								</button>
-							</div>
-						)}
-						<ChatPanel
+						<SimpleChatView
+							compactChrome={true}
 							rows={rows}
 							streaming={streaming}
+							chatStreamUiEnabled={chatStreamUiEnabled}
+							onChatStreamUiEnabledChange={onChatStreamUiEnabledChange}
+							chatQueuePending={chatQueuePending}
+							chatQueueItems={chatQueueItems}
+							onChatQueueEdit={editChatQueueItem}
+							onChatQueueDelete={deleteChatQueueItem}
+							onChatQueueForce={forceChatQueueItem}
 							connected={connected}
+							error={error}
+							modelLabel={modelLabel}
 							onSend={sendChat}
 							onStop={stop}
+							onClearError={clearError}
+							onReopenLlmFixModal={onReopenLlmFixModal}
 							appearanceDark={appearanceDark}
-							visible={true}
-							onToggle={() => {}}
+							agents={agentsApi.data?.agents ?? []}
+							agentTeams={agentsApi.data?.teams ?? {}}
+							agentsLoading={agentsApi.loading}
+							chatAgentName={chatAgentName}
+							dispatchTurnAgent={dispatchTurnAgent}
+							onChatAgentChange={onChatAgentChange}
+							chatMode={chatMode}
+							onChatModeChange={onChatModeChange}
+							contextFillPct={contextFillPct}
+							contextTitle={contextTitle}
+							onOpenPlanFileForReview={() => {}}
 						/>
 					</div>
 				)}
@@ -327,3 +358,4 @@ export function DocsApp({
 		</div>
 	);
 }
+

@@ -165,7 +165,7 @@ export function SimpleChatView({
 				? "Loading model info…"
 				: "Ready when the server connects.";
 	const phraseDispatchNote =
-		!sessionPickRaw && dispatchTurnAgent?.trim()
+		!sessionPickRaw && typeof dispatchTurnAgent === "string" && dispatchTurnAgent.trim()
 			? `This reply uses phrase-dispatch (${workspaceAgentDisplayName(dispatchTurnAgent)}); the picker stays on ${sessionLeadFallback} unless you choose a workspace agent.`
 			: null;
 
