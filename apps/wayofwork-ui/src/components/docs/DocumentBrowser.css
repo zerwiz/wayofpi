@@ -121,3 +121,8 @@
   color: #858585;
   font-size: 13px;
 }
+
+/* Docs Mode specific tweaks */
+.docs-mode footer {
+  background-color: #0f172a;
+}

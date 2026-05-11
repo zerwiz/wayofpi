@@ -28777,6 +28777,7 @@ apps/wayofwork-ui/server/pi-agent-runtime.ts
 apps/wayofwork-ui/server/pi-ollama-env.ts
 apps/wayofwork-ui/server/pi-sdk-runtime.ts
 apps/wayofwork-ui/server/plans-catalog.ts
+apps/wayofwork-ui/server/README.md
 apps/wayofwork-ui/server/schema.sql
 apps/wayofwork-ui/server/session-prompts.ts
 apps/wayofwork-ui/server/share-url-hints.ts
@@ -28834,6 +28835,7 @@ apps/wayofwork-ui/src/components/claw/ClawMissionView.tsx
 apps/wayofwork-ui/src/components/claw/ClawNavRail.tsx
 apps/wayofwork-ui/src/components/claw/ClawScheduleMonthCalendar.tsx
 apps/wayofwork-ui/src/components/claw/ClawSchedulesView.tsx
+apps/wayofwork-ui/src/components/claw/ClawSecondaryToolbar.tsx
 apps/wayofwork-ui/src/components/claw/ClawSessionSidebar.tsx
 apps/wayofwork-ui/src/components/claw/ClawSessionStrip.tsx
 apps/wayofwork-ui/src/components/claw/ClawWorkspaceCard.tsx
@@ -29236,6 +29238,9 @@ Calculator
 Calculator.c
 CHANGELOG copy.md
 CHANGELOG.md
+Construction Docs/Contracts/Main_Contract.md
+Construction Docs/Plans/MEP_Layout.md
+Construction Docs/Specs/Structural_Specs.md
 debian/source/debian/build-system.mk
 debian/source/debian/Build.mk
 debian/source/debian/changelog
@@ -30214,6 +30219,7 @@ linux/install-wayofpi-menuitem.sh
 linux/README.md
 linux/wayofpi-launch.sh
 linux/wayofpi.desktop.in
+ngrok_test.log
 package-lock.json
 package.json
 pienv

@@ -306,9 +306,9 @@ export function SimpleChatView({
 				</div>
 			)}
 			<div
-				className={`flex min-h-0 flex-1 justify-center overflow-y-auto overflow-x-hidden ${transcriptPad} ${appearanceDark ? "" : "bg-[#f3f3f3]"}`}
+				className={`flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden ${appearanceDark ? "" : "bg-[#f3f3f3]"}`}
 			>
-				<div className={`flex w-full ${transcriptMax} flex-col ${transcriptGap}`}>
+				<div className={`mx-auto flex w-full flex-1 flex-col ${transcriptMax} ${transcriptPad} ${transcriptGap}`}>
 					{!connected ? (
 						<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
 							Connecting to server…

@@ -245,14 +245,27 @@ export function useWorkspaceTree(): UseWorkspaceTreeReturn {
     setErrorState(null);
 
     try {
-      // Simulate tree refresh - in real implementation, this would call server API
-      // For now, we'll just reset git status to avoid hanging
-      setGitState(DEFAULT_GIT_STATUS);
-      // In production, this would fetch fresh tree from server
-      // await fetchTreeFromServer();
+      const res = await fetch("/api/tree", {
+        headers: {
+          Accept: "application/json",
+          ...getAuthHeaders(),
+        },
+      });
 
-      // Simulate async operation
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to fetch tree: ${res.status} ${text}`);
+      }
+
+      const data = await res.json() as {
+        rootDisplay: string;
+        nodes: WorkspaceTreeNode[];
+        git?: GitStatus;
+      };
+
+      if (data.rootDisplay) setRoot(data.rootDisplay);
+      if (data.nodes) setNodes(data.nodes);
+      if (data.git) setGitState(data.git);
 
       // Refresh folders from nodes
       const currentFolders: WorkspaceFolderInfo[] = [];
@@ -264,7 +277,7 @@ export function useWorkspaceTree(): UseWorkspaceTreeReturn {
           node.children.forEach(collectFolders);
         }
       };
-      nodes.forEach(collectFolders);
+      (data.nodes || []).forEach(collectFolders);
       setFolders(currentFolders);
 
       // Clear switch lock
@@ -277,32 +290,42 @@ export function useWorkspaceTree(): UseWorkspaceTreeReturn {
     } finally {
       setLoadingState(false);
     }
-  }, [nodes, setLoadingState, setErrorState, setFolders, setSwitchAllowed]);
+  }, [setLoadingState, setErrorState, setNodes, setRoot, setFolders, setSwitchAllowed]);
 
   const refreshQuiet = useCallback(async () => {
-    // Same as refresh but doesn't clear errors or reset git status
     try {
-      // Simulate async operation
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const res = await fetch("/api/tree", {
+        headers: {
+          Accept: "application/json",
+          ...getAuthHeaders(),
+        },
+      });
 
-      // Refresh folders from nodes
-      const currentFolders: WorkspaceFolderInfo[] = [];
-      const collectFolders = (node: WorkspaceTreeNode) => {
-        if (node.type === "dir" && node.path) {
-          currentFolders.push({ path: node.path, label: node.name });
-        }
-        if (node.children) {
-          node.children.forEach(collectFolders);
-        }
-      };
-      nodes.forEach(collectFolders);
-      setFolders(currentFolders);
-
+      if (res.ok) {
+        const data = await res.json() as {
+          rootDisplay: string;
+          nodes: WorkspaceTreeNode[];
+          git?: GitStatus;
+        };
+        if (data.nodes) setNodes(data.nodes);
+        if (data.git) setGitState(data.git);
+      }
     } catch (error) {
-      // Silently handle errors for quiet refresh
       console.warn("Workspace tree quiet refresh failed:", error);
     }
-  }, [nodes, setFolders]);
+  }, [setNodes]);
+
+  function getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem("wop_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  // Initial refresh if empty
+  useEffect(() => {
+    if (nodes.length <= 1 && nodes[0]?.name === "root") {
+      void refresh();
+    }
+  }, [refresh]);
 
   // Listen for storage changes from other tabs/windows
   useEffect(() => {

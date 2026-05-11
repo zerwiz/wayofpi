@@ -5,7 +5,7 @@
  * Distinct from Technical: full-height **left nav rail** instead of IDE activity bar;
  * **Mission** tab as default instead of a file tree; no workspace grid.
  */
-import { FilePlus, PanelLeft } from "lucide-react";
+import { Cpu, FilePlus, PanelLeft } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -51,6 +51,7 @@ import { ClawSchedulesView } from "./ClawSchedulesView";
 import { ClawChannelsView } from "./ClawChannelsView";
 import { ClawWorkspaceOnboardingModal } from "./ClawWorkspaceOnboardingModal";
 import { DockSplitHandle } from "../DockSplitHandle";
+import { ClawSecondaryToolbar } from "./ClawSecondaryToolbar";
 
 const FILES_TREE_DEFAULT_PX = 224;
 const FILES_TREE_MIN_PX = 160;
@@ -255,20 +256,15 @@ export function ClawApp({
   const { isDark, colorMode, setColorMode, approvalQueue, setApprovalQueue } =
     useSimplePreferences();
   const agentsApi = useAgents();
-  const maxWidthNarrow = useMaxWidthMediaQuery(767);
+  const maxWidthNarrow = useMaxWidthMediaQuery(767).isAtMaxWidth;
   const narrowClawDesktop = layoutVariant === "desktop" && maxWidthNarrow;
   const [clawNavOpen, setClawNavOpen] = useState(() => {
     try {
       const stored = localStorage.getItem("wayofpi.claw.navOpen");
       if (stored !== null) return JSON.parse(stored) as boolean;
     } catch { /* ignore */ }
-    return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+    return true;
   });
-
-  useEffect(() => {
-    if (layoutVariant !== "desktop") return;
-    if (narrowClawDesktop) setClawNavOpen(false);
-  }, [layoutVariant, narrowClawDesktop]);
 
   /* Persist nav open/closed state */
   useEffect(() => {
@@ -528,14 +524,14 @@ export function ClawApp({
     if (narrowClawDesktop) setClawNavOpen(false);
   }, [onHelp, narrowClawDesktop]);
 
-  const clawNavEl = (
+  const clawNavEl = useMemo(() => (
     <ClawNavRail
       activeTab={activeTab}
       onTab={handleClawNavTab}
       onHelp={onHelp ? handleClawNavHelp : undefined}
       appearanceDark={isDark}
     />
-  );
+  ), [activeTab, handleClawNavTab, onHelp, handleClawNavHelp, isDark]);
 
   return (
     <div
@@ -550,28 +546,15 @@ export function ClawApp({
 
         {/* Main panel */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          {!clawNavOpen ? (
-            <div
-              className={`flex h-9 shrink-0 items-center justify-between border-b px-2 ${
-                isDark
-                  ? "border-[#252526] bg-[#1a1a1a]"
-                  : "border-[#e5e5e5] bg-[#f9fafb]"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setClawNavOpen(!clawNavOpen)}
-                className={`rounded p-1.5 transition-colors ${
-                  isDark
-                    ? "text-[#cccccc] hover:bg-[#3c3c3c] hover:text-white"
-                    : "text-[#616161] hover:bg-[#e5e5e5] hover:text-[#333333]"
-                }`}
-                title={clawNavOpen ? "Hide Claw navigation" : "Show Claw navigation"}
-              >
-                <PanelLeft size={18} />
-              </button>
-            </div>
-          ) : null}
+          {layoutVariant === "desktop" && (
+            <ClawSecondaryToolbar
+              sidebarOpen={clawNavOpen}
+              onToggleSidebar={() => setClawNavOpen(!clawNavOpen)}
+              connected={connected}
+              appearanceDark={isDark}
+              activeTab={activeTab}
+            />
+          )}
           {activeTab === "mission" ? (
             <ClawMissionView
               config={config}

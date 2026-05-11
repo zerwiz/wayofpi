@@ -5,7 +5,7 @@
  * @returns Object with session state and action functions
  */
 
-import { useState, useEffect, useCallback } from "react";
+import * as React from "react";
 import type { ChatQueueItem } from "../utils/chatQueueTranscript";
 
 /** @description Chat session error state */
@@ -145,74 +145,179 @@ export interface UseWayOfPiSessionReturn {
 }
 
 export function useWayOfPiSession(): UseWayOfPiSessionReturn {
-	const [ws, setWs] = useState<WebSocket | null>(null);
+	const [ws, setWs] = React.useState<WebSocket | null>(null);
+	const connectingRef = React.useRef<boolean>(false);
 
-	const [agentName, setAgentNameState] = useState<string | null>(null);
-	const [agentId, setAgentIdState] = useState<string | null>(null);
-	const [agentIds, setAgentIdsState] = useState<string[] | null>(null);
-	const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
-	const [activeChatTabId, setActiveChatTabId] = useState<string | null>(null);
-	const [model, setModel] = useState<string>("llama3.2");
+	const [agentName, setAgentNameState] = React.useState<string | null>(null);
+	const [agentId, setAgentIdState] = React.useState<string | null>(null);
+	const [agentIds, setAgentIdsState] = React.useState<string[] | null>(null);
+	const [chatTabs, setChatTabs] = React.useState<ChatTab[]>([]);
+	const [activeChatTabId, setActiveChatTabId] = React.useState<string | null>(null);
+	const [model, setModel] = React.useState<string>("llama3.2");
+	const [chatMode, setChatModeState] = React.useState<ChatSessionMode>("build");
 
-	const [rows, setRows] = useState<WorkspaceRow[] | null>(null);
-	const [error, setError] = useState<ChatSessionError | null>(null);
-	const [streaming, setStreaming] = useState<boolean | null>(null);
+	const [rows, setRows] = React.useState<ChatRow[] | null>(null);
+	const [error, setError] = React.useState<ChatSessionError | null>(null);
+	const [streaming, setStreaming] = React.useState<boolean | null>(null);
 
 	// @description Pulsing chat meters for agent activity visualization
-	const [chatPulseMeters, setChatPulseMetersState] = useState<ChatPulseMeters>(
+	const [chatPulseMeters, setChatPulseMetersState] = React.useState<ChatPulseMeters>(
 		{},
 	);
 
+	const [tokenMeter, setTokenMeter] = React.useState<UseWayOfPiSessionReturn["tokenMeter"]>({
+		tokensDown: "0",
+		tokensUp: "0",
+		tokensTitle: "",
+		contextPct: 0,
+		contextTitle: "",
+	});
+
+	const [logs, setLogs] = React.useState<LogRow[]>([]);
+	const [chatQueuePending, setChatQueuePending] = React.useState<boolean>(false);
+	const [chatQueueItems, setChatQueueItems] = React.useState<ChatQueueItem[]>([]);
+
 	// @description Session initialization - always run on mount
-	const initSession = useCallback(async () => {
+	const initSession = React.useCallback(async () => {
+		if (connectingRef.current) return;
+		connectingRef.current = true;
+
 		const wsUrl =
-			import.meta.env.VITE_WAYOFPI_WS_URL || `/ws`;
+			(import.meta as any).env?.VITE_WAYOFPI_WS_URL || `/ws`;
 		const newWs = new WebSocket(wsUrl);
 		newWs.onopen = () => {
 			console.log("WS Connected to:", wsUrl);
 			setWs(newWs);
+			connectingRef.current = false;
 		};
 		newWs.onclose = () => {
 			console.log("WS Disconnected");
-			// Don't auto-reconnect here - let the effect handle it
+			setWs(null);
+			connectingRef.current = false;
 			setError(ChatSessionError.Disconnected);
 		};
 		newWs.onerror = (err) => {
 			console.error("WS Error:", err);
+			connectingRef.current = false;
 			setError(ChatSessionError.Disconnected);
 		};
 		newWs.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			if (data.type === "turn") {
-				// Store incoming turns if needed
-			} else if (data.type === "pulse") {
-				// Update active agent meter
+			if (data.type === "ready") {
+				if (data.chatMode) setChatModeState(data.chatMode);
+				if (data.agentName) setAgentNameState(data.agentName);
+				if (data.effectiveModel) setModel(data.effectiveModel);
+			} else if (data.type === "chat_usage") {
+				setTokenMeter({
+					tokensDown: String(data.cumCompletion || 0),
+					tokensUp: String(data.cumPrompt || 0),
+					tokensTitle: `Last: ${data.lastPrompt || 0} in, ${data.lastCompletion || 0} out`,
+					contextPct: data.contextPercent || 0,
+					contextTitle: data.contextWindow ? `Context: ${Math.round(data.contextPercent || 0)}% of ${data.contextWindow} tokens` : "",
+				});
+			} else if (data.type === "user_message") {
+				setRows(prev => [...(prev || []), { 
+					id: window.crypto.randomUUID(), 
+					role: "user", 
+					content: data.content,
+					timestamp: Date.now()
+				}]);
+			} else if (data.type === "assistant_turn_start") {
+				setStreaming(true);
+				setRows(prev => [...(prev || []), { 
+					id: window.crypto.randomUUID(), 
+					role: "assistant", 
+					content: "",
+					timestamp: Date.now()
+				}]);
+			} else if (data.type === "assistant_delta") {
+				setRows(prev => {
+					const next = [...(prev || [])];
+					const last = next[next.length - 1];
+					if (last && (last as any).role === "assistant") {
+						(last as any).content += data.content;
+					}
+					return next;
+				});
+			} else if (data.type === "assistant_reasoning_delta") {
+				setRows(prev => {
+					const next = [...(prev || [])];
+					const last = next[next.length - 1];
+					if (last && (last as any).role === "assistant") {
+						(last as any).reasoning = ((last as any).reasoning || "") + data.content;
+					}
+					return next;
+				});
+			} else if (data.type === "done") {
+				setStreaming(false);
+			} else if (data.type === "error") {
+				setStreaming(false);
+				setError(ChatSessionError.StreamingError);
+				setLogs(prev => [...prev, {
+					id: window.crypto.randomUUID(),
+					level: "error",
+					message: data.message,
+					msg: data.message,
+					timestamp: Date.now(),
+					time: new Date().toLocaleTimeString(),
+					source: "chat"
+				}]);
+			} else if (data.type === "log") {
+				setLogs(prev => [...prev, {
+					id: window.crypto.randomUUID(),
+					level: (data.level?.toLowerCase() || "info") as any,
+					message: data.msg || data.message,
+					msg: data.msg || data.message,
+					timestamp: Date.now(),
+					time: data.time || new Date().toLocaleTimeString(),
+					source: data.source || "server"
+				}]);
+			} else if (data.type === "queue_state") {
+				setChatQueuePending(data.pending > 0);
+				setChatQueueItems(data.items || []);
+			} else if (data.type === "session_reset") {
+				setRows([]);
+				setLogs([]);
+			} else if (data.type === "session_transcript") {
+				setRows(data.turns.map((t: any) => ({
+					id: window.crypto.randomUUID(),
+					role: t.role,
+					content: t.content,
+					timestamp: Date.now()
+				})));
 			}
 		};
-		setWs(newWs);
 	}, []);
 
 	// @description Reconnect WebSocket on mount or error
-	useEffect(() => {
+	React.useEffect(() => {
+		let isMounted = true;
 		const reconnect = async () => {
+			if (!isMounted) return;
 			try {
 				setError(null);
 				await initSession();
 			} catch (e) {
-				console.error("Session init failed:", e);
+				if (isMounted) {
+					console.error("Session init failed:", e);
+				}
 			}
 		};
 
 		// Always try connect on mount
-		if (!ws) {
+		if (!ws && !connectingRef.current) {
 			reconnect();
 		}
 
 		// Reconnect on error
-		if (error) {
+		if (error && !connectingRef.current) {
 			reconnect();
 		}
-	}, [ws, error]);
+
+		return () => {
+			isMounted = false;
+		};
+	}, [ws, error, initSession]);
 
 	// @description Send chat message to server
 	const sendChat: UseWayOfPiSessionReturn["sendChat"] = async (
@@ -221,29 +326,38 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 		turnId,
 	) => {
 		setStreaming(true);
-		setAgentIdState(agentId);
-		setAgentNameState(agentName || null);
+		
+		// If agent name changed, tell the server first
+		if (agentId !== agentName) {
+			setAgentNameState(agentId);
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "set_agent", agent: agentId }));
+			}
+		}
 
-		const payload = { type: "send", to: agentId, text: message, id: turnId };
+		const payload = { type: "chat", content: message, id: turnId };
 
 		return new Promise((resolve, reject) => {
 			if (ws && ws.readyState === WebSocket.OPEN) {
 				ws.send(JSON.stringify(payload));
-				const timer = setTimeout(() => {
+				
+				// The server sends 'done' when finished
+				const handleMessage = (event: MessageEvent) => {
+					const data = JSON.parse(event.data);
+					if (data.type === "done" || data.type === "error") {
+						setStreaming(false);
+						ws.removeEventListener("message", handleMessage);
+						resolve(undefined);
+					}
+				};
+				ws.addEventListener("message", handleMessage);
+
+				// Fallback timeout
+				setTimeout(() => {
 					setStreaming(false);
+					ws.removeEventListener("message", handleMessage);
 					resolve(undefined);
 				}, 120000);
-
-				ws.onclose = () => {
-					clearTimeout(timer);
-					setStreaming(false);
-					reject(new Error("WebSocket closed"));
-				};
-				ws.onerror = () => {
-					clearTimeout(timer);
-					setStreaming(false);
-					reject(new Error("WebSocket error"));
-				};
 			} else {
 				setStreaming(false);
 				reject(new Error("WebSocket not connected"));
@@ -251,11 +365,12 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 		});
 	};
 
-	// @description Disconnect active agent
+	// @description Stop generation / Close socket
 	const stop = () => {
 		if (ws && ws.readyState === WebSocket.OPEN) {
-			ws.close();
-			setWs(null);
+			ws.send(JSON.stringify({ type: "stop_chat" }));
+			// We don't necessarily want to close the whole WS, 
+			// just stop the current turn.
 		}
 	};
 
@@ -294,13 +409,10 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 		}
 	};
 
-	// @description Dispatch turn message
-	dispatchTurnAgent("");
-
 	return {
 		rows: (rows ?? []) as unknown as ChatRow[],
 		streaming: streaming ?? false,
-		connected: !error,
+		connected: !!ws && ws.readyState === WebSocket.OPEN,
 		error,
 		agentName,
 		agentId,
@@ -315,7 +427,12 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 		sendChat,
 		chatPulseMeters,
 		setChatPulseMeters: setChatPulseMetersState,
-		setChatAgent: (name: string | null) => setAgentNameState(name),
+		setChatAgent: (name: string | null) => {
+			setAgentNameState(name);
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "set_agent", agent: name }));
+			}
+		},
 		setAgentIds: setAgentIdsState,
 		updateRows: setRows as any,
 		updateChatTabs: setChatTabs,
@@ -331,24 +448,53 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 			// Would reload session state if needed
 		},
 		refreshWs: async () => {
-			// Would refresh WebSocket if needed
+			await initSession();
 		},
-		chatMode: "default" as ChatSessionMode,
-		setChatMode: (_mode: ChatSessionMode) => {},
-		tokenMeter: { tokensDown: "0", tokensUp: "0", tokensTitle: "", contextPct: 0, contextTitle: "" },
+		chatMode,
+		setChatMode: (mode: ChatSessionMode) => {
+			setChatModeState(mode);
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "set_chat_mode", mode }));
+			}
+		},
+		tokenMeter,
 		clearError: () => setError(null),
-		startNewSession: () => {},
-		chatQueuePending: false,
-		chatQueueItems: [],
-		editChatQueueItem: (_id: string, _text: string) => {},
-		deleteChatQueueItem: (_id: string) => {},
-		forceChatQueueItem: (_id: string) => {},
-		reconnectWebSocket: () => {},
+		startNewSession: () => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "new_session" }));
+			}
+		},
+		chatQueuePending,
+		chatQueueItems,
+		editChatQueueItem: (id, text) => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "queue_edit", id, text }));
+			}
+		},
+		deleteChatQueueItem: (id) => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "queue_delete", id }));
+			}
+		},
+		forceChatQueueItem: (id) => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "queue_force", id }));
+			}
+		},
+		reconnectWebSocket: () => {
+			initSession();
+		},
 		effectiveModel: model,
-		logs: [],
+		logs,
 		chatAgentName: agentName,
-		setLlmModel: (_model: string) => {},
-		llmProviderFromSocket: (_socketPath?: string) => null,
-		renameChatTab: (_tabId: string, _name: string) => {},
+		setLlmModel: (m) => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({ type: "set_model", model: m }));
+			}
+		},
+		llmProviderFromSocket: () => null,
+		renameChatTab: (tabId, name) => {
+			setChatTabs(prev => prev.map(t => t.id === tabId ? { ...t, name } : t));
+		},
 	};
 }

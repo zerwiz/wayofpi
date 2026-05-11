@@ -110,6 +110,12 @@ fi
 # Set workspace root for the server
 export WOP_WORKSPACE="$ROOT"
 
+# Set ngrok domain for external access
+export WOP_NGROK_DOMAIN="unvocable-oligopoly-lorraine.ngrok-free.dev"
+export WOP_ALLOW_NGROK_SPAWN=1
+
+echo "Configured for external access via: https://$WOP_NGROK_DOMAIN"
+
 # Start servers
 if [[ "$1" == "--web" ]] || [[ "$WOP_USE_ELECTRON" == "0" ]]; then
 	echo "Starting servers at: http://localhost:5173/"

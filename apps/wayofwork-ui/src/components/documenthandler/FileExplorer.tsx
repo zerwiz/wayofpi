@@ -23,20 +23,6 @@ interface FileExplorerProps {
   error: string | null;
 }
 
-function flattenTree(
-  nodes: TreeNode[],
-  depth = 0,
-): { node: TreeNode; depth: number }[] {
-  const result: { node: TreeNode; depth: number }[] = [];
-  for (const node of nodes) {
-    result.push({ node, depth });
-    if (node.type === "dir" && node.children) {
-      result.push(...flattenTree(node.children, depth + 1));
-    }
-  }
-  return result;
-}
-
 function fileRowIcon(name: string, appearanceDark: boolean) {
   const lower = name.toLowerCase();
   const code = appearanceDark ? "text-[#858585]" : "text-[#616161]";
@@ -72,6 +58,20 @@ export function FileExplorer({
     path: string;
     isDir: boolean;
   } | null>(null);
+
+  const flatNodes = useMemo(() => {
+    function flatten(items: TreeNode[], depth = 0): { node: TreeNode; depth: number }[] {
+      const result: { node: TreeNode; depth: number }[] = [];
+      for (const node of items) {
+        result.push({ node, depth });
+        if (node.type === "dir" && !collapsedDirs.has(node.path) && node.children) {
+          result.push(...flatten(node.children, depth + 1));
+        }
+      }
+      return result;
+    }
+    return flatten(nodes);
+  }, [nodes, collapsedDirs]);
 
   const closeContextMenu = () => setContextMenu(null);
 
@@ -129,8 +129,6 @@ export function FileExplorer({
   const gitBadge = appearanceDark
     ? "bg-[#164e63] text-[#0ea5e9]"
     : "bg-[#cce0ff] text-[#0066ff]";
-
-  const flatNodes = useMemo(() => flattenTree(nodes), [nodes]);
 
   const toggleDir = (path: string) => {
     setCollapsedDirs((prev) => {

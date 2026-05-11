@@ -92,6 +92,32 @@ function ngrokHttpWebAddrSpawnArgs(): string[] {
 	return ["--web-addr", s];
 }
 
+/** When `WOP_NGROK_DOMAIN` is set, pass `--url` (v3+) or `--hostname` (v2) so the tunnel uses a static domain. */
+async function ngrokHttpDomainArgs(exe: string): Promise<string[]> {
+	const raw = process.env.WOP_NGROK_DOMAIN?.trim();
+	if (!raw) return [];
+
+	// Detect version
+	let isV3 = true;
+	try {
+		const proc = Bun.spawn([exe, "version"], { stdout: "pipe" });
+		const text = await new Response(proc.stdout).text();
+		if (text.includes("version 2.")) isV3 = false;
+	} catch {
+		/* ignore */
+	}
+
+	if (isV3) {
+		// Use --url as --domain is deprecated. Prepend https:// if it's just a domain.
+		const url = raw.includes("://") ? raw : `https://${raw}`;
+		return ["--url", url];
+	} else {
+		// Version 2 uses --hostname
+		const host = raw.replace(/^https?:\/\//, "").split("/")[0] || raw;
+		return ["--hostname", host];
+	}
+}
+
 function detachExitListener(proc: Bun.Subprocess) {
 	void proc.exited.then(() => {
 		if (wopNgrokChild === proc) wopNgrokChild = null;
@@ -211,8 +237,11 @@ export async function startNgrokTunnelDev(): Promise<NgrokTunnelActionJson> {
 		};
 	}
 	const webAddrArgs = ngrokHttpWebAddrSpawnArgs();
+	const domainArgs = await ngrokHttpDomainArgs(exe);
+	const cmd = [exe, "http", ...webAddrArgs, ...domainArgs, String(port)];
+	console.log(`[ngrok] Spawning: ${cmd.join(" ")}`);
 	try {
-		wopNgrokChild = Bun.spawn([exe, "http", ...webAddrArgs, String(port)], {
+		wopNgrokChild = Bun.spawn(cmd, {
 			cwd: process.cwd(),
 			env: { ...process.env },
 			stdout: "ignore",
@@ -225,7 +254,7 @@ export async function startNgrokTunnelDev(): Promise<NgrokTunnelActionJson> {
 		return { ok: false, message: e instanceof Error ? e.message : String(e) };
 	}
 
-	for (let i = 0; i < 50; i++) {
+	for (let i = 0; i < 100; i++) {
 		await Bun.sleep(400);
 		const url = await fetchNgrokPublicUrl(3500);
 		if (url) return { ok: true, message: "Tunnel is up.", publicUrl: url };

@@ -4,6 +4,7 @@ import {
 	Bot,
 	Braces,
 	CheckCircle2,
+	FileText,
 	GitBranch,
 	MessageSquare,
 	PanelBottom,
@@ -134,10 +135,13 @@ export function StatusBar({
 }) {
 	const technical = uiMode !== "simple";
 	const simpleLight = !technical && simpleAppearanceDark === false;
+	const isDocs = uiMode === "docs";
 
-	const barClass = simpleLight
-		? "border-t border-[#e5e5e5] bg-[#ececec] text-[#333333] h-[26px] font-sans text-[12px]"
-		: `bg-[#ea580c] text-white ${technical ? "h-[24px] font-mono text-[11px]" : "h-[26px] font-sans text-[12px]"}`;
+	const barClass = isDocs
+		? "bg-[#0f172a] text-white h-[26px] font-sans text-[12px]"
+		: simpleLight
+			? "border-t border-[#e5e5e5] bg-[#ececec] text-[#333333] h-[26px] font-sans text-[12px]"
+			: `bg-[#ea580c] text-white ${technical ? "h-[24px] font-mono text-[11px]" : "h-[26px] font-sans text-[12px]"}`;
 
 	const toolIcon = (id: BottomPanelTab) => {
 		switch (id) {
@@ -188,6 +192,14 @@ export function StatusBar({
 	return (
 		<footer className={`z-20 flex shrink-0 select-none items-center justify-between px-2 ${barClass}`}>
 			<div className="flex h-full min-w-0 items-center gap-1 sm:gap-2">
+				{isDocs && (
+					<div className="flex items-center gap-1.5 border-r border-white/20 pr-3 mr-1">
+						<div className="flex h-5 w-5 items-center justify-center rounded-sm bg-blue-500/20 text-blue-400">
+							<FileText size={12} strokeWidth={3} />
+						</div>
+						<span className="text-[10px] font-black uppercase tracking-[0.2em]">Docs</span>
+					</div>
+				)}
 				{technical && zed ? (
 					<div
 						className={`flex h-full items-center gap-0.5 ${technical ? "border-r border-white/25 pr-2" : "border-r border-zinc-300 pr-2"}`}

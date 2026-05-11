@@ -1,3 +1,40 @@
+# v1.0.71
+
+## 🛠️ Stability & Layout Fixes
+
+### 🐛 Bug Fixes
+- **WebSocket Connection Management** — Fixed a race condition in `useWayOfPiSession` that was opening multiple redundant WebSocket connections. Added a `connectingRef` and proper cleanup to ensure a single stable connection.
+- **AI Chat Protocol** — Updated the chat communication to use the correct `chat` message type and handled all streaming events (`assistant_delta`, `user_message`, etc.), restoring functional chat in Simple mode.
+- **React Root Warning** — Prevented the "container already passed to createRoot" warning in development by persisting and reusing the React root on the window object.
+- **Simple UI Layout Restored** — Fixed a regression where the chat window would fly up; it now correctly occupies the full height and stays docked at the bottom.
+- **File Tree Scrolling** — Restored independent scrolling to the Project Files sidebar by fixing flexbox overflow properties.
+- **Missing Imports & Types** — Fixed a `ReferenceError: Cpu` in Claw mode and resolved multiple TypeScript errors in the session management hook.
+
+### ✨ New Features
+- **Docs in Simple Mode** — Integrated the `documenthandler` (Docs) tab into Simple mode, allowing full document exploration and AI interaction without switching modes.
+- **Real Workspace Tree** — Connected the workspace tree to the live `/api/tree` endpoint, ensuring file lists are accurate and up-to-date across all UI modes.
+
+# v1.0.70
+
+## 🚀 Docs Mode & UI Refinements
+
+### ✨ New Features
+- **Docs Mode Overhaul** — Transformed the Docs view into a professional document management interface. Chat moved to the right, branding updated to "DOCS", and the status bar now uses a deep Slate-900 theme with a custom Docs logo.
+- **Shared Workspace Tree** — Docs mode now shares the same robust file tree as Simple mode, allowing users to browse their entire project while in document view.
+- **Default Landing Route** — Updated the application's root redirect to point to `/docs` instead of `/ide` for a smoother onboarding experience.
+- **Construction Mock Docs** — Created a `Construction Docs/` directory with high-quality mock specifications, MEP plans, and contracts to provide immediate context for new users.
+
+### 🎨 UI & UX Improvements
+- **Sidebar "Open by default"** — Sidebars in Simple and Claw modes now default to open as standard. Fixed a bug in the responsive hook that was forcing them closed on desktop.
+- **Claw Sidebar Toggles** — Added a dedicated "Close Sidebar" button to the Claw NavRail and a floating "Open Sidebar" button when the nav is hidden.
+- **ngrok Static Domains** — Added support for `WOP_NGROK_DOMAIN`. The server now automatically passes the correct flags (`--url` or `--hostname`) based on the detected ngrok version.
+- **ngrok Binary Resolution** — The server now favors system-installed ngrok v3+ over bundled versions to ensure compatibility with modern features.
+
+### 🐛 Bug Fixes
+- **Responsive Hook Fixed** — Corrected `useMaxWidthMediaQuery` usage across the codebase to properly detect desktop viewports.
+- **StatusBar ReferenceError** — Fixed a crash caused by a missing `FileText` import in the StatusBar component.
+- **ngrok Version Detection** — Added async version detection to the ngrok manager to handle breaking flag changes between v2 and v3.
+
 # v1.0.69
 
 ## 📦 Kanban Completeness (Phase 10)

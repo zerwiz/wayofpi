@@ -1,7 +1,9 @@
 import { FileEntry } from "./types/documenthandler.types";
+import { MarkdownPreviewPane } from "../MarkdownPreviewPane";
 
 interface PreviewContentProps {
 	file: FileEntry | null;
+	content?: string | null;
 	zoom: number;
 	currentPage: number;
 	appearanceDark?: boolean;
@@ -9,6 +11,7 @@ interface PreviewContentProps {
 
 export function PreviewContent({
 	file,
+	content,
 	zoom,
 	currentPage,
 	appearanceDark = true,
@@ -25,7 +28,7 @@ export function PreviewContent({
 			</div>
 		);
 
-	const ext = file.extension.toLowerCase();
+	const ext = (file.extension || "").toLowerCase();
 
 	if (ext === "pdf") {
 		return (
@@ -39,15 +42,25 @@ export function PreviewContent({
 		);
 	}
 
-	if (["txt", "tex", "md", "json", "css", "html", "js", "ts", "tsx"].includes(ext)) {
+	if (ext === "md" && content !== undefined) {
+		return (
+			<div className={`markdown-viewer h-full overflow-auto ${bg}`}>
+				<MarkdownPreviewPane 
+					markdown={content || ""} 
+					appearanceDark={appearanceDark} 
+				/>
+			</div>
+		);
+	}
+
+	if (["txt", "tex", "json", "css", "html", "js", "ts", "tsx"].includes(ext) || ext === "md") {
 		return (
 			<div
-				className={`text-preview max-h-[60vh] overflow-auto rounded-lg border p-4 ${bg} ${borderColor}`}
+				className={`text-preview max-h-full overflow-auto p-4 ${bg}`}
 				style={{ zoom: `${zoom}%` }}
 			>
-				<pre className={`text-sm ${title}`}>
-					{/* Placeholder - in real app, fetch file content */}
-					Content of {file.name} would be displayed here.
+				<pre className={`whitespace-pre-wrap text-sm font-mono ${title}`}>
+					{content || "No content available"}
 				</pre>
 			</div>
 		);

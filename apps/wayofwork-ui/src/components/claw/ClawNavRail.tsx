@@ -67,7 +67,7 @@ export function ClawNavRail({
 
 	return (
 		<nav className={`z-10 flex w-[72px] shrink-0 flex-col items-center gap-1.5 border-r px-1.5 py-5 ${rail}`}>
-			<div className="mb-6 flex flex-col items-center gap-1">
+			<div className="mb-6 flex flex-col items-center gap-1 relative">
 				<div
 					className={`flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm ${
 						appearanceDark

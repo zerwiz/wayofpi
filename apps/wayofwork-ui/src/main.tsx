@@ -44,7 +44,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 
 function RootRedirect() {
   const hasToken = !!localStorage.getItem("wop_token");
-  return <Navigate to={hasToken ? "/ide" : "/welcome"} replace />;
+  return <Navigate to={hasToken ? "/docs" : "/welcome"} replace />;
 }
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -59,7 +59,13 @@ function RequireAuth({ children }: { children: ReactNode }) {
 const el = document.getElementById("root");
 if (!el) throw new Error("Missing #root");
 
-createRoot(el).render(
+let root = (window as any)._reactRoot;
+if (!root) {
+  root = createRoot(el);
+  (window as any)._reactRoot = root;
+}
+
+root.render(
   <StrictMode>
     <BrowserRouter>
       <ErrorBoundary>

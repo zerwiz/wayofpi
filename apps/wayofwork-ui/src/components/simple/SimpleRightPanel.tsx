@@ -71,8 +71,8 @@ export function SimpleRightPanel({
 
 	return (
 		<aside className={`z-10 flex flex-col shadow-sm ${widthClass} ${aside}`}>
-			<div className={`flex min-h-0 flex-1 flex-col border-b p-5 ${sectionBorder}`}>
-				<div className="mb-4 flex items-center justify-between gap-2">
+			<div className={`flex min-h-0 flex-1 flex-col border-b ${sectionBorder}`}>
+				<div className="flex shrink-0 items-center justify-between gap-2 p-5 pb-4">
 					<h2 className={`flex min-w-0 items-center gap-2 text-[13px] font-extrabold uppercase tracking-wider ${title}`}>
 						<Folder size={16} className="shrink-0 text-[#fb923c]" />
 						<span className="truncate">Project Files</span>
@@ -101,7 +101,7 @@ export function SimpleRightPanel({
 						</button>
 					) : null}
 				</div>
-				<div className="flex min-h-0 flex-1 flex-col">
+				<div className="flex min-h-0 flex-1 flex-col px-5 pb-5">
 					{loading ? (
 						<p className={`text-sm ${muted}`}>Loading tree…</p>
 					) : error ? (

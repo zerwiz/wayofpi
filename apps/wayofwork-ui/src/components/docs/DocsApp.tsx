@@ -47,6 +47,8 @@ export function DocsApp({
 	const [rightOpen, setRightOpen] = useState(true);
 	const [docStatus, setDocStatus] = useState<"draft" | "review" | "approved" | null>(null);
 	const [showDocBrowser, setShowDocBrowser] = useState(false);
+	const [selectedContent, setSelectedContent] = useState<string | null>(null);
+	const [contentLoading, setContentLoading] = useState(false);
 
 	/** Filter tree to only show document files (.md, .txt, .doc, .docx) */
 	const docsNodes = useMemo(() => {
@@ -71,12 +73,18 @@ export function DocsApp({
 	const handleSelectFile = useCallback(
 		(path: string) => {
 			setSelectedPath(path);
-			setPreviewOpen(true);
 			// Also update the DocumentHandlerContext if available
 			try {
+				const name = path.split('/').pop() || path;
+				const extension = name.split('.').pop() || '';
 				docHandlerContext?.onSelectFile?.({ 
-					name: path.split('/').pop() || path, 
-					path 
+					id: path,
+					name, 
+					path,
+					extension,
+					size: 0,
+					modified: new Date(),
+					isDirectory: false
 				} as FileEntry);
 			} catch {
 				// Context not available - that's ok
@@ -85,15 +93,19 @@ export function DocsApp({
 		[setSelectedPath, docHandlerContext],
 	);
 
-	// Detect document status from content
+	// Detect document status and fetch content
 	useEffect(() => {
 		if (!selectedPath) {
 			setDocStatus(null);
+			setSelectedContent(null);
 			return;
 		}
-		async function detectStatus() {
+		async function fetchFile() {
+			setContentLoading(true);
 			try {
 				const content = await apiGet<string>(`/api/file?path=${encodeURIComponent(selectedPath ?? '')}`);
+				setSelectedContent(content);
+				
 				const lower = content.toLowerCase();
 				if (lower.includes("status: approved") || lower.includes("# approved")) {
 					setDocStatus("approved");
@@ -106,9 +118,12 @@ export function DocsApp({
 				}
 			} catch {
 				setDocStatus(null);
+				setSelectedContent(null);
+			} finally {
+				setContentLoading(false);
 			}
 		}
-		detectStatus();
+		fetchFile();
 	}, [selectedPath]);
 
 	const statusBadge = (status: string | null) => {
@@ -133,8 +148,21 @@ export function DocsApp({
 	const subC = "text-[#858585]";
 	const panelBg = "bg-[#252526]";
 
+	const previewFile = useMemo(() => {
+		if (!selectedPath) return null;
+		return docHandlerContext?.selectedFileForPreview || ({
+			id: selectedPath,
+			name: selectedPath.split('/').pop() || '',
+			path: selectedPath,
+			extension: selectedPath.split('.').pop() || '',
+			size: 0,
+			modified: new Date(),
+			isDirectory: false
+		} as FileEntry);
+	}, [selectedPath, docHandlerContext?.selectedFileForPreview]);
+
 	return (
-		<div className={`docs-mode flex h-full min-w-0 flex-1 flex-col overflow-hidden font-sans ${bg} overflow-y-auto`}>
+		<div className={`docs-mode flex h-full min-w-0 flex-1 flex-col overflow-hidden font-sans ${bg}`}>
 			{/* Header */}
 			<div className={`flex shrink-0 items-center justify-between border-b px-4 py-2 ${border}`}>
 				<div className="flex items-center gap-3">
@@ -148,7 +176,7 @@ export function DocsApp({
 					</button>
 					<div className="flex items-center gap-2">
 						<FileText size={18} className="text-[#fb923c]" />
-						<span className={`text-sm font-semibold ${titleC}`}>DOCS</span>
+						<span className={`text-sm font-semibold tracking-tighter ${titleC}`}>DOCS</span>
 						{statusBadge(docStatus)}
 					</div>
 				</div>
@@ -159,9 +187,9 @@ export function DocsApp({
 						type="button"
 						onClick={() => setRightOpen((v) => !v)}
 						className={`rounded p-1.5 ${subC} hover:bg-[#3c3c3c]`}
-						title="Toggle preview"
+						title="Toggle Chat"
 					>
-						<Eye size={18} />
+						<MessageSquare size={18} />
 					</button>
 				</div>
 			</div>
@@ -220,80 +248,79 @@ export function DocsApp({
 					</div>
 				)}
 
-				{/* Middle: Chat Panel */}
-				<div className={`docs-chat flex min-w-0 flex-col overflow-hidden border-r ${border}`}>
-					{/* Quick action buttons for document Q&A */}
-					{selectedPath && (
-						<div className={`flex shrink-0 gap-2 border-b px-3 py-2 ${border}`}>
-							<button
-								type="button"
-								onClick={() => sendChat(`Summarize this document: ${selectedPath}`)}
-								disabled={streaming}
-								className={`rounded px-3 py-1 text-xs transition-colors ${
-									streaming
-										? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
-										: "bg-[#ea580c] text-white hover:bg-[#c2410c]"
-								}`}
-							>
-								📝 Summarize
-							</button>
-							<button
-								type="button"
-								onClick={() => sendChat(`Extract action items from: ${selectedPath}`)}
-								disabled={streaming}
-								className={`rounded px-3 py-1 text-xs transition-colors ${
-									streaming
-										? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
-										: "bg-[#3b82f6] text-white hover:bg-[#2563eb]"
-								}`}
-							>
-								✅ Action Items
-							</button>
-							<button
-								type="button"
-								onClick={() => sendChat(`Review this document for completeness: ${selectedPath}`)}
-								disabled={streaming}
-								className={`rounded px-3 py-1 text-xs transition-colors ${
-									streaming
-										? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
-										: "bg-[#8b5cf6] text-white hover:bg-[#7c3aed]"
-								}`}
-							>
-								🔍 Review
-							</button>
-						</div>
-					)}
-					<ChatPanel
-						rows={rows}
-						streaming={streaming}
-						connected={connected}
-						onSend={sendChat}
-						onStop={stop}
-						appearanceDark={appearanceDark}
-						visible={true}
-						onToggle={() => {}}
-					/>
+				{/* Middle: Preview Panel */}
+				<div
+					className={`docs-preview flex min-w-0 flex-1 flex-col overflow-hidden border-r ${border}`}
+				>
+					<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
+						<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Preview</span>
+						{selectedPath && (
+							<span className={`text-xs ${subC}`}>{selectedPath.split("/").pop()}</span>
+						)}
+					</div>
+					<div className="min-h-0 flex-1 overflow-y-auto">
+						{contentLoading ? (
+							<div className="flex h-full items-center justify-center">
+								<div className={`animate-pulse text-sm ${subC}`}>Loading content...</div>
+							</div>
+						) : selectedPath ? (
+							<PreviewContent
+								file={previewFile}
+								content={selectedContent}
+								zoom={docHandlerContext?.currentZoom || 100}
+								currentPage={docHandlerContext?.currentPage || 1}
+								appearanceDark={appearanceDark}
+							/>
+						) : (
+							<div className="flex h-full items-center justify-center p-8 text-center text-[#858585]">
+								Select a document from the tree to preview it here.
+							</div>
+						)}
+					</div>
 				</div>
 
-				{/* Right: Preview Panel */}
+				{/* Right: Chat Panel */}
 				{rightOpen && (
-					<div
-						className={`docs-preview flex w-[45%] shrink-0 flex-col overflow-hidden ${panelBg}`}
-					>
-						<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
-							<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Preview</span>
-							{selectedPath && (
-								<span className={`text-xs ${subC}`}>{selectedPath.split("/").pop()}</span>
-							)}
-						</div>
-					<div className="min-h-0 flex-1 overflow-y-auto">
-						<PreviewModal
-							visible={previewOpen && !!selectedPath}
-							onClose={() => setPreviewOpen(false)}
-							path={selectedPath || ''}
+					<div className={`docs-chat flex w-[400px] shrink-0 flex-col overflow-hidden ${panelBg}`}>
+						{/* Quick action buttons for document Q&A */}
+						{selectedPath && (
+							<div className={`flex shrink-0 flex-wrap gap-2 border-b px-3 py-2 ${border}`}>
+								<button
+									type="button"
+									onClick={() => sendChat(`Summarize this document: ${selectedPath}`)}
+									disabled={streaming}
+									className={`rounded px-3 py-1 text-[10px] transition-colors ${
+										streaming
+											? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
+											: "bg-[#ea580c] text-white hover:bg-[#c2410c]"
+									}`}
+								>
+									📝 Summarize
+								</button>
+								<button
+									type="button"
+									onClick={() => sendChat(`Extract action items from: ${selectedPath}`)}
+									disabled={streaming}
+									className={`rounded px-3 py-1 text-[10px] transition-colors ${
+										streaming
+											? "cursor-not-allowed bg-[#3c3c3c] text-[#666]"
+											: "bg-[#3b82f6] text-white hover:bg-[#2563eb]"
+									}`}
+								>
+									✅ Actions
+								</button>
+							</div>
+						)}
+						<ChatPanel
+							rows={rows}
+							streaming={streaming}
+							connected={connected}
+							onSend={sendChat}
+							onStop={stop}
 							appearanceDark={appearanceDark}
+							visible={true}
+							onToggle={() => {}}
 						/>
-					</div>
 					</div>
 				)}
 			</div>

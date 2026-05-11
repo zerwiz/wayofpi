@@ -14,8 +14,7 @@ export type NgrokBinarySource = "WOP_NGROK_BINARY" | "PATH" | "bundled" | null;
 /**
  * Resolve the ngrok **CLI** to execute (config + http tunnel).
  *
- * Order: **`WOP_NGROK_BINARY`** (file must exist) → **`Bun.which`** → **`node_modules/ngrok/bin`** from the
- * **`ngrok`** optional npm package (postinstall downloads the platform agent when that dependency is installed).
+ * Order: **`WOP_NGROK_BINARY`** (file must exist) → **`Bun.which`** (preferring system over bundled if v3+) → **`node_modules/ngrok/bin`**.
  */
 export function resolveNgrokExecutable(): { path: string | null; source: NgrokBinarySource } {
 	const fromEnv = process.env.WOP_NGROK_BINARY?.trim();
@@ -25,6 +24,14 @@ export function resolveNgrokExecutable(): { path: string | null; source: NgrokBi
 	}
 
 	const win = process.platform === "win32";
+	
+	// Try to find a v3+ on the path first by checking /usr/bin or /usr/local/bin specifically
+	// if Bun.which just returns the one in node_modules/.bin (v2).
+	const systemCandidates = win ? ["C:\\Program Files\\ngrok\\ngrok.exe"] : ["/usr/local/bin/ngrok", "/usr/bin/ngrok"];
+	for (const c of systemCandidates) {
+		if (existsSync(c)) return { path: c, source: "PATH" };
+	}
+
 	const onPath = Bun.which(win ? "ngrok.exe" : "ngrok") ?? (win ? Bun.which("ngrok") : null);
 	if (onPath) return { path: onPath, source: "PATH" };
 

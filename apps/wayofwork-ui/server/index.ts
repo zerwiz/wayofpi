@@ -122,6 +122,21 @@ import {
 import { db } from "./db";
 import { createToken, verifyToken } from "./auth";
 import { handleTicketApi } from "./tickets-api";
+import {
+	configureNgrokAuthtokenDev,
+	getNgrokTunnelDevJson,
+	installNgrokBundledDev,
+	startNgrokTunnelDev,
+	stopNgrokTunnelDev,
+	updateNgrokBundledDev,
+} from "./ngrok-tunnel-manager";
+import {
+	applyTunnelGateDevPost,
+	getTunnelGateDevStatusJson,
+	tunnelGateAllowsBunRequest,
+	tunnelGateUnauthorizedResponse,
+} from "./tunnel-gate";
+import { getShareUrlHintsJson } from "./share-url-hints";
 
 // Integrated terminal: in production (`NODE_ENV=production`) keep opt-in via WOP_ALLOW_TERMINAL only.
 // In non-production, default on when unset so local `npm run dev` gets a real shell; disable with WOP_ALLOW_TERMINAL=0|false|no|off.
@@ -1556,6 +1571,62 @@ async function handleApi(url: URL, req: Request): Promise<Response> {
 		}
 	}
 
+	if (p === "/api/dev/ngrok-tunnel" && req.method === "GET") {
+		const data = await getNgrokTunnelDevJson();
+		return json(data);
+	}
+
+	if (p === "/api/dev/ngrok-tunnel" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ ok: false, message: "Invalid JSON" }, 400);
+		}
+		const action = String(body.action ?? "").trim().toLowerCase();
+		if (action === "start") {
+			const r = await startNgrokTunnelDev();
+			return json(r);
+		}
+		if (action === "stop") {
+			const r = await stopNgrokTunnelDev();
+			return json(r);
+		}
+		if (action === "set-authtoken") {
+			const r = await configureNgrokAuthtokenDev(String(body.authtoken ?? ""));
+			return json(r);
+		}
+		if (action === "install-bundled") {
+			const r = await installNgrokBundledDev();
+			return json(r);
+		}
+		if (action === "update-bundled") {
+			const r = await updateNgrokBundledDev();
+			return json(r);
+		}
+		return json({ ok: false, message: "Unknown action" }, 400);
+	}
+
+	if (p === "/api/dev/tunnel-gate" && req.method === "GET") {
+		return json(getTunnelGateDevStatusJson());
+	}
+
+	if (p === "/api/dev/tunnel-gate" && req.method === "POST") {
+		let body: Record<string, unknown>;
+		try {
+			body = (await req.json()) as Record<string, unknown>;
+		} catch {
+			return json({ ok: false, message: "Invalid JSON" }, 400);
+		}
+		const r = await applyTunnelGateDevPost(body);
+		return json(r);
+	}
+
+	if (p === "/api/dev/share-url-hints" && req.method === "GET") {
+		const data = await getShareUrlHintsJson();
+		return json(data);
+	}
+
 	if (p === "/api/upstream" && req.method === "GET") {
 		try {
 			return json(await collectUpstreamSnapshot());
@@ -2530,6 +2601,9 @@ function serveStatic(pathname: string): Response | null {
 const server = Bun.serve<ServerWsData>({
 	port: PORT,
 	async fetch(req, srv) {
+		if (!tunnelGateAllowsBunRequest(req)) {
+			return tunnelGateUnauthorizedResponse();
+		}
 		const url = new URL(req.url);
 
 		// DEV MODE: Allow all WebSocket upgrades when WOP_DEV_MODE=true
@@ -2921,3 +2995,17 @@ void applyAutoSync((result) => {
 });
 
 startClawScheduler();
+
+if (process.env.WOP_NGROK_DOMAIN) {
+	void (async () => {
+		// Wait a bit for Vite to potentially start, though startNgrokTunnelDev has its own probe.
+		await Bun.sleep(5000);
+		const r = await startNgrokTunnelDev();
+		if (r.ok) {
+			console.log(`[ngrok] Auto-started tunnel: ${r.publicUrl}`);
+		} else {
+			// Only log if it's not "already running" (though startNgrokTunnelDev returns ok: true for that).
+			console.warn(`[ngrok] Auto-start skipped: ${r.message}`);
+		}
+	})();
+}

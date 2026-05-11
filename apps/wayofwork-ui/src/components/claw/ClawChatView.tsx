@@ -173,7 +173,7 @@ export function ClawChatView({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const isMobile = layoutVariant === "mobile";
 	/** Desktop Claw on viewports ≤767px: nav is a drawer (matches Tailwind `md`). */
-	const narrowDesktop = useMaxWidthMediaQuery(767) && !isMobile;
+	const narrowDesktop = useMaxWidthMediaQuery(767).isAtMaxWidth && !isMobile;
 
 	const prevMenuFileFocusRev = useRef<number | null>(null);
 	useEffect(() => {

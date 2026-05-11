@@ -219,7 +219,7 @@ export function SimpleApp({
 }) {
 	const isMobile = layoutVariant === "mobile";
 	/** Desktop Simple on viewports ≤767px: nav rail is a drawer, not a permanent column (matches Tailwind `md`). */
-	const narrowDesktop = useMaxWidthMediaQuery(767) && !isMobile;
+	const narrowDesktop = useMaxWidthMediaQuery(767).isAtMaxWidth && !isMobile;
 	const [mobileFilesOpen, setMobileFilesOpen] = useState(false);
 	const [mobileEditorOpen, setMobileEditorOpen] = useState(false);
 	const [leftOpen, setLeftOpen] = useState(() => {
@@ -227,14 +227,14 @@ export function SimpleApp({
 			const stored = localStorage.getItem("wayofpi.simple.leftOpen");
 			if (stored !== null) return JSON.parse(stored) as boolean;
 		} catch { /* ignore */ }
-		return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+		return true;
 	});
 	const [rightOpen, setRightOpen] = useState(() => {
 		try {
 			const stored = localStorage.getItem("wayofpi.simple.rightOpen");
 			if (stored !== null) return JSON.parse(stored) as boolean;
 		} catch { /* ignore */ }
-		return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+		return true;
 	});
 	/** Narrow desktop (≤767px): file editor as left slide-over over chat (same idea as mobile shell). */
 	const [narrowEditorOpen, setNarrowEditorOpen] = useState(false);
@@ -263,11 +263,6 @@ export function SimpleApp({
 	useEffect(() => {
 		try { localStorage.setItem("wayofpi.simple.rightOpen", JSON.stringify(rightOpen)); } catch {}
 	}, [rightOpen]);
-
-	useEffect(() => {
-		if (isMobile) return;
-		if (narrowDesktop) setLeftOpen(false);
-	}, [isMobile, narrowDesktop]);
 
 	useEffect(() => {
 		if (!narrowDesktop || !leftOpen || isMobile) return;
@@ -973,6 +968,24 @@ export function SimpleApp({
 								recentFolders={recentFolders}
 								appearanceDark={appearanceDark}
 							/>
+							) : null}
+							{activeTab === "documenthandler" ? (
+								<div className="min-h-0 flex-1 overflow-hidden">
+									<ChatExplorer
+										appearanceDark={appearanceDark}
+										nodes={nodes}
+										selectedPath={selectedPath}
+										onSelectFile={(p) => setSelectedPath(p)}
+										loading={treeLoading}
+										error={treeError}
+										logs={logs}
+										streaming={streaming}
+										connected={connected}
+										rows={rows}
+										onSend={sendChat}
+										onStop={stop}
+									/>
+								</div>
 							) : null}
 							{activeTab === "settings" ? (
 								<SimpleSettingsView

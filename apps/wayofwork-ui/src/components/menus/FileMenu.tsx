@@ -22,7 +22,7 @@ export function FileMenu() {
   const uiViewsCatalog = useUiViewsCatalog();
   const { config, refresh: refreshServerConfig } = useServerConfig();
   const { shellMobile, setShellMobile } = useShellMobile();
-  const narrowViewport767 = useMaxWidthMediaQuery(767);
+  const { isAtMaxWidth: narrowViewport767 } = useMaxWidthMediaQuery(767);
 
   const [recentFolders] = useState(() => readRecentWorkspaceFolders());
 
