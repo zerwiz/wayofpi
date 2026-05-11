@@ -477,6 +477,7 @@ async function runChatTurn(
 	ws: { data: ChatWsData; send: (data: string) => void },
 	text: string,
 	notifyUser: boolean,
+	selectedPath?: string | null,
 ): Promise<void> {
 	const data = ws.data;
 	data.busy = true;
@@ -512,23 +513,56 @@ async function runChatTurn(
 				ws.send(logLine("INFO", "chat", "Transcript cleared (/clear)."));
 				return;
 			}
-
 			await applySlashMutations(ws, slash.mutation);
-
 			if (!slash.skipUserEcho) {
-				if (notifyUser) {
-					ws.send(JSON.stringify({ type: "user_message", content: trimmed }));
-				}
+				if (notifyUser) ws.send(JSON.stringify({ type: "user_message", content: trimmed }));
 				data.messages.push({ role: "user", content: trimmed });
-				if (data.wopSessionKey) {
-					try {
-						await appendWayofpiSessionMessage(data.wopSessionKey, "user", trimmed);
-					} catch (e) {
-						const m = e instanceof Error ? e.message : String(e);
-						ws.send(logLine("WARN", "session", `append user JSONL: ${m}`));
-					}
+				if (data.wopSessionKey) await appendWayofpiSessionMessage(data.wopSessionKey, "user", trimmed).catch(() => {});
+			}
+			ws.send(JSON.stringify({ type: "assistant_turn_start" }));
+			const reply = slash.assistantText;
+			if (reply.length > 0) {
+				ws.send(JSON.stringify({ type: "assistant_delta", content: reply }));
+				data.messages.push({ role: "assistant", content: reply });
+				if (data.wopSessionKey) await appendWayofpiSessionMessage(data.wopSessionKey, "assistant", reply).catch(() => {});
+			}
+			ws.send(JSON.stringify({ type: "done" }));
+			return;
+		}
+
+		await applySlashMutations(ws, slash.mutation);
+
+		if (!slash.skipUserEcho) {
+			const lenBeforeUserMsg = data.messages.length;
+			if (notifyUser) {
+				ws.send(JSON.stringify({ type: "user_message", content: text }));
+			}
+			
+			// Inject context about open file
+			let historyText = text;
+			if (selectedPath) {
+				historyText = `[System Context: User is viewing/editing "${selectedPath}"]\n\n${text}`;
+			}
+			data.messages.push({ role: "user", content: historyText });
+
+			if (data.wopSessionKey) {
+				try {
+					await appendWayofpiSessionMessage(data.wopSessionKey, "user", historyText);
+				} catch (e) {
+					const m = e instanceof Error ? e.message : String(e);
+					ws.send(logLine("WARN", "session", `append user JSONL: ${m}`));
 				}
 			}
+
+			/** Re-merge lead system from disk + env (planner.md, WOP_SYSTEM_PROMPT) before phrase-dispatch and the model. */
+			applyLeadFromCache(data);
+
+			const sendLog = (level: "INFO" | "WARN" | "ERROR", source: string, m: string) => {
+				ws.send(logLine(level, source, m));
+			};
+
+			// ... (Dispatch logic etc remains unchanged)
+
 
 			ws.send(JSON.stringify({ type: "assistant_turn_start" }));
 			const reply = slash.assistantText;
@@ -682,6 +716,10 @@ async function runChatTurn(
 					onStreamUsage: emitUsagePeek,
 					onLog: sendLog,
 					signal: ac.signal,
+					runtime: {
+						ollamaModel: data.ollamaModel,
+						openrouterModel: data.openrouterModel,
+					},
 				});
 				result = o.result;
 				lastStreamUsage = o.lastStreamUsage;
@@ -2958,6 +2996,7 @@ const server = Bun.serve<ServerWsData>({
 			if (msg.type !== "chat") return;
 			const text = String(msg.content ?? "").trim();
 			if (!text) return;
+			const selectedPath = (msg as any).selectedPath || null;
 
 			if (ws.data.busy) {
 				const id = crypto.randomUUID();
@@ -2967,7 +3006,7 @@ const server = Bun.serve<ServerWsData>({
 				return;
 			}
 
-			void runChatTurn(ws, text, true).catch(() => {
+			void runChatTurn(ws, text, true, selectedPath).catch(() => {
 				/* runChatTurn already reports errors to the client */
 			});
 			} catch (e) {

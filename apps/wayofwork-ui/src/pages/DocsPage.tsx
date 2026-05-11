@@ -26,27 +26,27 @@ export function DocsPage() {
         rows={session.rows}
         streaming={session.streaming}
         connected={session.connected}
-        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
+        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text, undefined, selectedPath)}
         stop={session.stop}
         error={session.error}
-        modelLabel={session.modelLabel}
+        modelLabel={session.model || ''}
         clearError={session.clearError}
-        onReopenLlmFixModal={() => {}} // Stub or wired if needed
+        onReopenLlmFixModal={() => {}} 
         chatAgentName={session.chatAgentName}
-        dispatchTurnAgent={session.dispatchTurnAgent}
-        onChatAgentChange={session.setChatAgentName}
+        dispatchTurnAgent={session.dispatchTurnAgent as any}
+        onChatAgentChange={session.setChatAgent}
         chatMode={session.chatMode}
         onChatModeChange={session.setChatMode}
-        chatStreamUiEnabled={session.chatStreamUiEnabled}
-        onChatStreamUiEnabledChange={session.setChatStreamUiEnabled}
-        chatQueuePending={session.chatQueuePending}
+        chatStreamUiEnabled={true} 
+        onChatStreamUiEnabledChange={() => {}} 
+        chatQueuePending={session.chatQueuePending ? 1 : 0}
         chatQueueItems={session.chatQueueItems}
         editChatQueueItem={session.editChatQueueItem}
         deleteChatQueueItem={session.deleteChatQueueItem}
         forceChatQueueItem={session.forceChatQueueItem}
-        contextFillPct={session.contextFillPct}
-        contextTitle={session.contextTitle}
-      />
+        contextFillPct={session.chatPulseMeters.contextFillPct ?? null}
+        contextTitle={session.tokenMeter.contextTitle ?? ''}
+        />
     </DocumentHandlerProvider>
   );
 }

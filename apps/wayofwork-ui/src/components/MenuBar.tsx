@@ -1,17 +1,23 @@
 import {
+	Activity,
 	ChevronDown,
 	ChevronLeft,
 	ChevronRight,
 	CircleDot,
+	ExternalLink,
 	Info,
 	Search,
 	TerminalSquare,
+	Zap,
+	Monitor,
+	Box,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { PiModelConfigPath } from "../constants/piModelConfigPaths";
 import { PI_MODEL_CONFIG_ENTRIES } from "../constants/piModelConfigPaths";
 import type { ServerConfig } from "../hooks/useServerConfig";
 import type { ChatSessionMode } from "../hooks/useWayOfPiSession";
+import type { useLlmModels } from "../hooks/useLlmModels";
 // UiMode typed as string
 import type {
 	BottomPanelTab,
@@ -97,11 +103,15 @@ export function MenuBar({
 	newPlanFileDisabled,
 	viewTechnical,
 	viewSimple,
+	onSelectLlmModel,
+	llmModels,
 }: {
 	modelLabel: string;
 	uiMode: string;
 	onUiModeChange: (mode: string) => void;
 	config: ServerConfig | null;
+	onSelectLlmModel?: (modelId: string) => void;
+	llmModels?: ReturnType<typeof useLlmModels>;
 	onOpenCommandPalette: () => void;
 	onSave: () => void | Promise<void>;
 	canSave: boolean;
@@ -3407,48 +3417,92 @@ WAY OF WORK
 						<ChevronDown size={12} className="shrink-0 text-[#858585]" />
 					</button>
 					{modelOpen ? (
-						<div className="absolute right-0 top-full z-50 mt-1 w-[min(320px,85vw)] border border-[#454545] bg-[#252526] p-3 shadow-xl">
-							<div className="mb-2 text-[11px] font-bold uppercase text-[#858585]">Active model (server)</div>
-							<div className="mb-2 font-mono text-[12px] text-[#9cdcfe]">{modelLabel}</div>
-							{config ? (
-								<pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded border border-[#3c3c3c] bg-[#1e1e1e] p-2 font-mono text-[10px] text-[#cccccc]">
-									{JSON.stringify(config, null, 2)}
-								</pre>
-							) : (
-								<p className="text-[12px] text-[#858585]">Loading config…</p>
-							)}
-							<p className="mt-2 text-[11px] text-[#858585]">
-								Host env: <span className="font-mono text-[#9cdcfe]">WOP_LLM_PROVIDER</span>,{" "}
-								<span className="font-mono text-[#9cdcfe]">WOP_CHAT_ENGINE</span>,{" "}
-								<span className="font-mono text-[#9cdcfe]">OLLAMA_*</span>,{" "}
-								<span className="font-mono text-[#9cdcfe]">OPENROUTER_*</span>. Pi TUI{" "}
-								<span className="font-mono text-[#9cdcfe]">/models</span> reads workspace JSON below.
-							</p>
-							{onOpenPiModelConfig ? (
-								<div className="mt-3 border-t border-[#3c3c3c] pt-2">
-									<div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#858585]">
-										Workspace provider files
-									</div>
+						<div className="absolute right-0 top-full z-50 mt-1 w-[min(320px,85vw)] flex flex-col max-h-[80vh] border border-[#454545] bg-[#252526] p-3 shadow-xl">
+							<div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase text-[#858585]">
+								<span>Available Models</span>
+								{llmModels?.loading ? (
+									<span className="text-[10px] animate-pulse">Scanning…</span>
+								) : (
+									<button 
+										type="button" 
+										className="hover:text-white transition-colors" 
+										onClick={() => llmModels?.reload()}
+										title="Refresh models"
+									>
+										<Activity size={12} />
+									</button>
+								)}
+							</div>
+							
+							<div className="flex-1 overflow-y-auto min-h-0 -mx-1 px-1">
+								{llmModels?.data?.models && llmModels.data.models.length > 0 ? (
 									<ul className="list-none space-y-0.5 p-0">
-										{PI_MODEL_CONFIG_ENTRIES.map((e) => (
-											<li key={e.id}>
+										{llmModels.data.models.map((m) => (
+											<li key={m.name}>
 												<button
 													type="button"
-													className={menuBtnClass()}
+													className={`group flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-[12px] transition-colors ${
+														modelLabel === m.name
+															? "bg-[#007acc]/40 text-white"
+															: "text-[#cccccc] hover:bg-[#3c3c3c]"
+													}`}
 													onClick={() => {
-														onOpenPiModelConfig(e.path);
+														onSelectLlmModel?.(m.name);
 														setModelOpen(false);
 													}}
-													title={e.hint}
 												>
-													<span className="font-medium">{e.label}</span>
-													<span className="mt-0.5 block font-mono text-[10px] text-[#858585]">{e.path}</span>
+													<div className="flex items-center gap-2 min-w-0">
+														{m.name.includes("llama") ? <Box size={12} className="shrink-0 text-orange-400" /> : <Monitor size={12} className="shrink-0 text-blue-400" />}
+														<span className="truncate font-mono">{m.name}</span>
+													</div>
+													{modelLabel === m.name && <CircleDot size={10} className="shrink-0 text-[#89d185]" />}
 												</button>
 											</li>
 										))}
 									</ul>
+								) : (
+									<div className="py-4 text-center">
+										<p className="text-[12px] text-[#858585]">
+											{llmModels?.loading ? "Checking Ollama models…" : "No models found."}
+										</p>
+										{!llmModels?.loading && llmModels?.data?.provider === 'ollama' && (
+											<p className="mt-1 text-[10px] text-[#858585]">
+												Ensure Ollama is running on {llmModels.data.ollamaHost}
+											</p>
+										)}
+									</div>
+								)}
+							</div>
+
+							<div className="mt-3 border-t border-[#3c3c3c] pt-2">
+								<div className="flex items-center justify-between text-[10px] text-[#858585]">
+									<span>Provider: <span className="text-[#9cdcfe] uppercase">{llmModels?.data?.provider || config?.provider || "Unknown"}</span></span>
+									{llmModels?.data?.models && (
+										<span>{llmModels.data.models.length} models</span>
+									)}
 								</div>
-							) : null}
+								
+								{onOpenPiModelConfig && (
+									<div className="mt-2 space-y-0.5">
+										<div className="mb-1 text-[9px] font-bold uppercase tracking-wider text-[#555]">Workspace providers</div>
+										{PI_MODEL_CONFIG_ENTRIES.map((e) => (
+											<button
+												key={e.id}
+												type="button"
+												className="flex w-full items-center justify-between rounded px-1.5 py-0.5 text-left text-[10px] text-[#858585] hover:bg-[#333] hover:text-[#cccccc] transition-colors"
+												onClick={() => {
+													onOpenPiModelConfig(e.path);
+													setModelOpen(false);
+												}}
+												title={e.hint}
+											>
+												<span className="truncate">{e.label}</span>
+												<ExternalLink size={8} />
+											</button>
+										))}
+									</div>
+								)}
+							</div>
 						</div>
 					) : null}
 				</div>

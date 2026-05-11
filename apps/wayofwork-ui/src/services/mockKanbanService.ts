@@ -5,7 +5,7 @@
  * the Kanban UI can be used for demos and development without
  * a backend. Data is ephemeral (lost on page refresh).
  */
-import type { Board, BoardColumn, BoardCard, BoardMember } from '../types/kanban';
+import type { Board, BoardColumn, BoardCard, BoardMember, CardTimeLog } from '../types/kanban';
 import { BOARD_TEMPLATES } from './boardTemplates';
 import type { BoardTemplate } from './boardTemplates';
 
@@ -37,11 +37,275 @@ const SEED_USERS = [
   { id: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' },
   { id: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith' },
   { id: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams' },
+  { id: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' },
+  { id: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' },
+  { id: 'demo-client', email: 'client@example.com', displayName: 'Demo Client' },
 ];
 
 // ── Seed Data ──
 function seedInitialData() {
   if (boardStore.size > 0) return; // already seeded
+
+  // Board 0: Global Planning (for Work Mode integration)
+  const b0Columns: BoardColumn[] = [
+    { id: 'b0-col-1', boardId: 'board-0', name: 'To Do', order: 0 },
+    { id: 'b0-col-2', boardId: 'board-0', name: 'In Progress', order: 1 },
+    { id: 'b0-col-3', boardId: 'board-0', name: 'Review', order: 2 },
+    { id: 'b0-col-4', boardId: 'board-0', name: 'Done', order: 3 },
+  ];
+  const board0: Board = {
+    id: 'board-0',
+    name: 'Global Planning',
+    description: 'Central task board for the entire team',
+    columns: b0Columns,
+    members: ['demo-admin', 'demo-worker', 'demo-client', 'user-1'],
+    icon: '🌍',
+    starred: true,
+    createdAt: Date.now() - 86400000 * 5,
+    updatedAt: Date.now(),
+    stats: { totalCards: 11, completedCards: 1, overdueCards: 2 },
+  };
+  boardStore.set(board0.id, board0);
+
+  const b0cards = new Map<string, BoardCard>();
+  
+  // Admin Tasks
+  b0cards.set('b0-c1', {
+    id: 'b0-c1', boardId: 'board-0', columnId: 'b0-col-1',
+    title: 'Review quarterly financial reports',
+    description: 'Verify all project margins and overhead costs for Q1.',
+    priority: 'high', 
+    startDate: new Date(Date.now() - 86400000 * 2).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 3).toISOString(),
+    order: 0, createdAt: Date.now() - 86400000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' }],
+    checklists: [
+      {
+        id: 'cl-1',
+        title: 'Review Checklist',
+        items: [
+          { id: 'cli-1', title: 'Verify project margins', completed: true },
+          { id: 'cli-2', title: 'Check overhead allocations', completed: false },
+          { id: 'cli-3', title: 'Confirm tax compliance', completed: false },
+        ]
+      }
+    ],
+    comments: [], attachments: [], tags: ['finance', 'admin'],
+    timeLogs: [
+      { id: 'log-1', userId: 'demo-admin', userName: 'Demo Admin', hours: 2, description: 'Initial review of Q1 sheets', date: new Date().toISOString().split('T')[0], createdAt: Date.now() }
+    ],
+    estimatedTime: 12,
+    estimatedTimeUnit: 'hours',
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #3b82f6, #2dd4bf)', size: 'medium' },
+    metadata: {},
+  });
+  b0cards.set('b0-c2', {
+    id: 'b0-c2', boardId: 'board-0', columnId: 'b0-col-2',
+    title: 'Update company security policies',
+    description: 'Align internal policies with new GDPR requirements.',
+    priority: 'urgent', 
+    startDate: new Date(Date.now() - 86400000 * 5).toISOString(),
+    dueDate: new Date(Date.now() + 86400000).toISOString(),
+    order: 1, createdAt: Date.now() - 172800000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' }],
+    checklists: [],
+    comments: [], attachments: [], tags: ['compliance'],
+    estimatedTime: 24,
+    estimatedTimeUnit: 'hours',
+    cover: { type: 'color', value: '#991b1b', size: 'medium' },
+    metadata: {},
+  });
+
+  // Worker Tasks
+  b0cards.set('b0-c3', {
+    id: 'b0-c3', boardId: 'board-0', columnId: 'b0-col-2',
+    title: 'Implement API rate limiting',
+    description: 'Add Redis-backed rate limiting to the main gateway.',
+    priority: 'high', 
+    startDate: new Date(Date.now() - 86400000 * 3).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
+    order: 0, createdAt: Date.now() - 259200000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [
+      {
+        id: 'cl-2',
+        title: 'Development Steps',
+        items: [
+          { id: 'cli-4', title: 'Setup Redis cluster', completed: true },
+          { id: 'cli-5', title: 'Implement rate limiting middleware', completed: true },
+          { id: 'cli-6', title: 'Add bypass for admin IPs', completed: false },
+        ]
+      }
+    ],
+    comments: [], attachments: [], tags: ['backend'],
+    timeLogs: [
+      { id: 'log-2', userId: 'demo-worker', userName: 'Demo Worker', hours: 4.5, description: 'Setting up Redis environment', date: new Date().toISOString().split('T')[0], createdAt: Date.now() }
+    ],
+    estimatedTime: 16,
+    estimatedTimeUnit: 'hours',
+    cover: { type: 'emoji', value: '⚡', size: 'medium' },
+    metadata: {},
+  });
+  b0cards.set('b0-c4', {
+    id: 'b0-c4', boardId: 'board-0', columnId: 'b0-col-1',
+    title: 'Fix CSS layout bugs on mobile',
+    description: 'Address the clipping issues in the navigation bar on small screens.',
+    priority: 'medium', 
+    startDate: new Date(Date.now() - 86400000).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 5).toISOString(),
+    order: 1, createdAt: Date.now() - 86400000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [],
+    comments: [], attachments: [], tags: ['frontend', 'mobile'],
+    estimatedTime: 8,
+    estimatedTimeUnit: 'hours',
+    cover: { type: 'image', value: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80', size: 'medium' },
+    metadata: {},
+  });
+
+  // Client Tasks/Cards
+  b0cards.set('b0-c5', {
+    id: 'b0-c5', boardId: 'board-0', columnId: 'b0-col-3',
+    title: 'Review project milestones',
+    description: 'Client needs to sign off on the Phase 1 deliverables.',
+    priority: 'medium', 
+    startDate: new Date(Date.now() - 86400000 * 4).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
+    order: 0, createdAt: Date.now() - 345600000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-client', email: 'client@example.com', displayName: 'Demo Client' }],
+    checklists: [],
+    comments: [], attachments: [], tags: ['review'],
+    estimatedTime: 4,
+    estimatedTimeUnit: 'hours',
+    metadata: {},
+  });
+  b0cards.set('b0-c6', {
+    id: 'b0-c6', boardId: 'board-0', columnId: 'b0-col-4',
+    title: 'Onboarding meeting scheduled',
+    description: 'Introductory call with the new development team.',
+    priority: 'low', 
+    startDate: new Date(Date.now() - 86400000 * 10).toISOString(),
+    dueDate: new Date(Date.now() - 86400000 * 7).toISOString(),
+    completed: true, order: 0, createdAt: Date.now() - 604800000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-client', email: 'client@example.com', displayName: 'Demo Client' }],
+    checklists: [],
+    comments: [], attachments: [], tags: ['meeting'],
+    estimatedTime: 2,
+    estimatedTimeUnit: 'hours',
+    metadata: {},
+  });
+
+  // Overdue Tasks
+  b0cards.set('b0-c7', {
+    id: 'b0-c7', boardId: 'board-0', columnId: 'b0-col-1',
+    title: 'OVERDUE: Quarterly compliance audit',
+    description: 'Internal audit must be completed before the board meeting.',
+    priority: 'critical', 
+    startDate: new Date(Date.now() - 86400000 * 10).toISOString(),
+    dueDate: new Date(Date.now() - 86400000 * 2).toISOString(),
+    order: 2, createdAt: Date.now() - 86400000 * 10, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' }],
+    checklists: [],
+    comments: [], attachments: [], tags: ['admin', 'compliance'],
+    estimatedTime: 40,
+    estimatedTimeUnit: 'hours',
+    metadata: {},
+  });
+  b0cards.set('b0-c8', {
+    id: 'b0-c8', boardId: 'board-0', columnId: 'b0-col-2',
+    title: 'OVERDUE: Critical security patch',
+    description: 'Patch CVE-2026-1234 in the authentication module.',
+    priority: 'urgent', 
+    startDate: new Date(Date.now() - 86400000 * 4).toISOString(),
+    dueDate: new Date(Date.now() - 86400000 * 1).toISOString(),
+    order: 1, createdAt: Date.now() - 86400000 * 4, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [],
+    comments: [], attachments: [], tags: ['security', 'worker'],
+    estimatedTime: 12,
+    estimatedTimeUnit: 'hours',
+    metadata: {},
+  });
+
+  // Multi-day Tasks
+  b0cards.set('b0-c9', {
+    id: 'b0-c9', boardId: 'board-0', columnId: 'b0-col-1',
+    title: 'Enterprise Architecture Blueprint',
+    description: 'Design the high-level system architecture for the next 2 years.',
+    priority: 'high', 
+    startDate: new Date(Date.now()).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 14).toISOString(),
+    order: 3, createdAt: Date.now(), updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-admin', email: 'admin@wayofwork.ai', displayName: 'Demo Admin' }],
+    checklists: [
+      {
+        id: 'cl-3',
+        title: 'Planning Phases',
+        items: [
+          { id: 'cli-7', title: 'Stakeholder interviews', completed: true },
+          { id: 'cli-8', title: 'System auditing', completed: false },
+          { id: 'cli-9', title: 'Technology selection', completed: false },
+        ]
+      }
+    ],
+    comments: [], attachments: [], tags: ['architecture', 'admin'],
+    estimatedTime: 10,
+    estimatedTimeUnit: 'days',
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #1e3a8a, #7e22ce)', size: 'medium' },
+    metadata: {},
+  });
+  b0cards.set('b0-c10', {
+    id: 'b0-c10', boardId: 'board-0', columnId: 'b0-col-2',
+    title: 'Frontend Library Migration',
+    description: 'Migrate the entire UI component library from CSS modules to Tailwind.',
+    priority: 'medium', 
+    startDate: new Date(Date.now() - 86400000 * 2).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 12).toISOString(),
+    order: 2, createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [
+      {
+        id: 'cl-4',
+        title: 'Migration Track',
+        items: [
+          { id: 'cli-10', title: 'Setup Tailwind config', completed: true },
+          { id: 'cli-11', title: 'Convert core buttons', completed: true },
+          { id: 'cli-12', title: 'Convert navigation components', completed: false },
+        ]
+      }
+    ],
+    comments: [], attachments: [], tags: ['ui', 'refactor'],
+    estimatedTime: 15,
+    estimatedTimeUnit: 'days',
+    metadata: {},
+  });
+  b0cards.set('b0-c11', {
+    id: 'b0-c11', boardId: 'board-0', columnId: 'b0-col-1',
+    title: 'Multi-Tenant Data Isolation',
+    description: 'Implement logical database partitioning for enterprise clients.',
+    priority: 'urgent', 
+    startDate: new Date(Date.now() - 86400000).toISOString(),
+    dueDate: new Date(Date.now() + 86400000 * 20).toISOString(),
+    order: 4, createdAt: Date.now() - 86400000, updatedAt: Date.now(),
+    assignees: [{ userId: 'demo-worker', email: 'worker@wayofwork.ai', displayName: 'Demo Worker' }],
+    checklists: [
+      {
+        id: 'cl-5',
+        title: 'Security Milestones',
+        items: [
+          { id: 'cli-13', title: 'Define schema boundaries', completed: true },
+          { id: 'cli-14', title: 'Implement tenant middleware', completed: false },
+          { id: 'cli-15', title: 'Encryption at rest audit', completed: false },
+        ]
+      }
+    ],
+    comments: [], attachments: [], tags: ['backend', 'security'],
+    estimatedTime: 20,
+    estimatedTimeUnit: 'days',
+    metadata: {},
+  });
+
+  cardStore.set(board0.id, b0cards);
 
   // Board 1
   const b1Columns: BoardColumn[] = [
@@ -70,7 +334,7 @@ function seedInitialData() {
     description: 'Create wireframes and mockups for the updated dashboard',
     priority: 'high', order: 0, createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 86400000,
     assignees: [{ userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' }],
-    labels: [], checklists: [], comments: [], attachments: [], tags: ['design'],
+    checklists: [], comments: [], attachments: [], tags: ['design'],
     metadata: {},
   });
   b1cards.set('b1-c2', {
@@ -80,7 +344,7 @@ function seedInitialData() {
     priority: 'urgent', dueDate: new Date(Date.now() + 86400000 * 2).toISOString(), order: 0,
     createdAt: Date.now() - 86400000 * 4, updatedAt: Date.now() - 3600000,
     assignees: [{ userId: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith' }],
-    labels: [], checklists: [], comments: [], attachments: [], tags: ['backend', 'auth'],
+    checklists: [], comments: [], attachments: [], tags: ['backend', 'auth'],
     metadata: {},
   });
   b1cards.set('b1-c3', {
@@ -89,7 +353,7 @@ function seedInitialData() {
     description: 'Configure GitHub Actions for automated builds',
     priority: 'medium', completed: true, order: 0,
     createdAt: Date.now() - 86400000 * 7, updatedAt: Date.now() - 86400000 * 2,
-    assignees: [], labels: [], checklists: [], comments: [], attachments: [],
+    assignees: [], checklists: [], comments: [], attachments: [], tags: [],
     metadata: {},
   });
   cardStore.set(board1.id, b1cards);
@@ -123,7 +387,7 @@ function seedInitialData() {
     priority: 'high', order: 0,
     createdAt: Date.now() - 86400000, updatedAt: Date.now(),
     assignees: [{ userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' }],
-    labels: [], checklists: [], comments: [], attachments: [], tags: ['bug', 'mobile'],
+    checklists: [], comments: [], attachments: [], tags: ['bug', 'mobile'],
     metadata: {},
   });
   b2cards.set('b2-c2', {
@@ -133,7 +397,7 @@ function seedInitialData() {
     priority: 'urgent', dueDate: new Date(Date.now() + 86400000).toISOString(), order: 0,
     createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 3600000,
     assignees: [{ userId: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams' }],
-    labels: [], checklists: [], comments: [], attachments: [], tags: ['bug', 'backend'],
+    checklists: [], comments: [], attachments: [], tags: ['bug', 'backend'],
     metadata: {},
   });
   cardStore.set(board2.id, b2cards);
@@ -149,7 +413,7 @@ function seedInitialData() {
   ]);
 
   _boardIdCounter = 2;
-  _cardIdCounter = 2;
+  _cardIdCounter = 11;
 }
 
 // Initialize seed data immediately
@@ -436,5 +700,25 @@ export const kanbanService = {
     if (member) {
       member.role = role as BoardMember['role'];
     }
+  },
+
+  // ── Time Logs ──
+  addCardTimeLog: async (boardId: string, cardId: string, log: Omit<CardTimeLog, 'id' | 'createdAt'>): Promise<CardTimeLog> => {
+    const cards = cardStore.get(boardId);
+    if (!cards) throw new Error('Board not found');
+    const card = cards.get(cardId);
+    if (!card) throw new Error('Card not found');
+
+    const newLog: CardTimeLog = {
+      ...log,
+      id: `log-${Date.now()}`,
+      createdAt: Date.now(),
+    };
+
+    if (!card.timeLogs) card.timeLogs = [];
+    card.timeLogs.push(newLog);
+    card.updatedAt = Date.now();
+    
+    return newLog;
   },
 };

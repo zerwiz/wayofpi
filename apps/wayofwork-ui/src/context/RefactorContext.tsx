@@ -22,6 +22,7 @@ import type { TechnicalWorkspaceCellSnapshot } from '../components/TechnicalWork
 import type { PiModelConfigPath } from '../constants/piModelConfigPaths';
 import { languageFromPath } from '../utils/appHelpers';
 import { useWorkspaceStaticAnalysis } from '../hooks/useWorkspaceStaticAnalysis';
+import { useLlmModels } from '../hooks/useLlmModels';
 
 interface RefactorContextValue {
   // UI State
@@ -120,6 +121,7 @@ interface RefactorContextValue {
   viewsCatalog: ReturnType<typeof useUiViewsCatalog>;
   debug: ReturnType<typeof useRunMenuDebugState>;
   staticAnalysis: ReturnType<typeof useWorkspaceStaticAnalysis>;
+  llmModels: ReturnType<typeof useLlmModels>;
   
   // Missing pieces found in simple shell
   rootLabel: string;
@@ -212,6 +214,7 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const debug = useRunMenuDebugState();
   const modals = useModalState(session.error);
   const staticAnalysis = useWorkspaceStaticAnalysis(technical);
+  const llmModels = useLlmModels();
 
   const rootLabel = useMemo(() => {
     if (!tree.root) return "";
@@ -280,6 +283,7 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     commandPaletteOpen, setCommandPaletteOpen,
     editor,
     tree, server, session, preferences, agents, viewsCatalog, debug, modals,
+    llmModels,
     rootLabel, workspaceOperational, recentFolders,
     simpleProviderPath, simpleProviderNonce, setSimpleProviderPath, setSimpleProviderNonce,
     reopenLlmFixModal, llmFixModalAppearanceDark,
@@ -293,6 +297,7 @@ export const RefactorProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     leftSidebarVisible, dockLayout, chrome, zenMode,
     editorMenuTick, commandPaletteOpen, editor,
     tree, server, session, preferences, agents, viewsCatalog, debug, modals,
+    llmModels,
     rootLabel, workspaceOperational, recentFolders,
     simpleProviderPath, simpleProviderNonce, reopenLlmFixModal, llmFixModalAppearanceDark,
     simpleMobileMenuFileFocusRev, staticAnalysis

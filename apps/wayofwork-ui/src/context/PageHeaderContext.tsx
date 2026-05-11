@@ -5,13 +5,16 @@ import type {
   RunMenuHandlers, SelectionMenuHandlers, SettingsMenuHandlers,
   TerminalMenuHandlers,
 } from "../types/workspaceEditor";
-import type { ViewMenuSimpleOptions, ViewMenuTechnicalOptions, ChatDockRegion } from "../types/technicalShell";
+import type { ChatDockRegion, ViewMenuSimpleOptions, ViewMenuTechnicalOptions } from "../types/technicalShell";
 import type { ServerConfig } from "../hooks/useServerConfig";
 import type { ChatSessionMode } from "../hooks/useWayOfPiSession";
+import type { useLlmModels } from "../hooks/useLlmModels";
 
 export interface PageHeaderHandlers {
   modelLabel: string;
   config: ServerConfig | null;
+  onSelectLlmModel?: (modelId: string) => void;
+  llmModels?: ReturnType<typeof useLlmModels>;
   onOpenCommandPalette: () => void;
   onSave: () => void | Promise<void>;
   canSave: boolean;
@@ -34,7 +37,7 @@ export interface PageHeaderHandlers {
   onOpenTeamsYaml: () => void;
   onCreateAgentMarkdown: () => void;
   onReloadAgents: () => void;
-  onOpenPiModelConfig: () => void;
+  onOpenPiModelConfig: (path?: string) => void;
   chatSessionControls?: {
     mode: ChatSessionMode;
     switchDisabled: boolean;

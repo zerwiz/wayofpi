@@ -10,7 +10,8 @@
  */
 
 import { createAgentSession, type AgentSession, type AgentSessionEvent } from "@earendil-works/pi-coding-agent";
-import type { StreamChatResult } from "./chat";
+import { getModel } from "@earendil-works/pi-ai";
+import type { ChatRuntimeModel, StreamChatResult } from "./chat";
 import type { StreamTokenUsage } from "./chat-usage";
 
 /**
@@ -42,6 +43,7 @@ export interface RunSdkChatTurnOpts {
   onStreamUsage?: (u: StreamTokenUsage) => void;
   onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
   signal?: AbortSignal;
+  runtime?: ChatRuntimeModel;
 }
 
 /**
@@ -69,8 +71,20 @@ export async function runSdkChatTurn(
   opts.onLog("INFO", "pi-sdk", "Creating agent session via SDK…");
 
   try {
+    const provider = (process.env.WOP_LLM_PROVIDER || "ollama").toLowerCase();
+    let model;
+    
+    if (provider === "openrouter") {
+      const modelId = opts.runtime?.openrouterModel || process.env.OPENROUTER_MODEL || "anthropic/claude-3.5-sonnet";
+      model = getModel("openrouter", modelId);
+    } else {
+      const modelId = opts.runtime?.ollamaModel || process.env.OLLAMA_MODEL || "llama3.2";
+      model = getModel("ollama", modelId);
+    }
+
     const { session } = await createAgentSession({
       cwd: opts.cwd,
+      model,
     });
 
     let fullText = "";

@@ -3,20 +3,26 @@
 ## 🎨 UI Refinement & Docs Overhaul
 
 ### ✨ New Features
-- **Docs Layout Refactored** — Completely rebuilt the Docs page layout to a stable three-panel view: **Chat | Documents | Preview**. 
-- **Simple Chat in Docs** — Integrated the high-quality `SimpleChatView` into Docs mode, providing features like agent selection, slash commands, and better message bubbles.
-- **Functional Inline Preview** — Replaced the preview modal with an inline viewer that fetches real file content and renders Markdown (with Mermaid support) matching the Simple mode experience.
-- **Claw UI Alignment** — Standardized the Claw mode sidebar toggle with a new `ClawSecondaryToolbar`, matching the "Simple" mode aesthetic and removing floating, overlapping buttons.
+- **Movable Board Columns** — Users can now manually reorder Kanban columns using a professional drag-and-drop interface. Reordering is persisted across sessions for better workflow customization.
+- **Complex Task Checklists** — Seeded detailed checklists for major planning tasks (Financials, Migration, Architecture). This allows for granular tracking of sub-tasks directly within the task cards.
+- **Multi-Day Project Initiatives** — Added support and demo data for tasks spanning multiple weeks. These initiatives include specific start/due dates and are measured in "Days" rather than just hours.
+- **Estimated Time Integration** — Every task card now includes an "Est:" label, allowing for immediate comparison between planned and actual logged hours.
+- **Overdue Task Management** — The Work Mode now automatically identifies and highlights overdue tasks with a pulsating red "OVERDUE" badge.
+- **Demo Planning Board** — Seeded a "Global Planning" board with example cards for Admin, Worker, and Client roles to provide immediate context for new users.
+- **Professional Work Branding** — Removed emojis from "WORK MODE" and updated it with a sleek Briefcase icon, matching the "DOCS" design system.
+- **Resizable Docs Panels** — Added draggable handles to the Docs page. Users can now manually adjust the width of the Chat, Documents tree, and Preview panels.
+- **Docs Layout Corrected** — Stabilized the three-panel view in the requested order: **Documents (Left) | Preview (Middle) | Chat (Right)**. 
+- **Simple Chat in Docs** — Integrated the high-quality `SimpleChatView` into Docs mode, providing features like agent selection and slash commands.
+- **Functional Inline Preview** — Replaced the preview modal with an inline viewer that fetches real file content and renders Markdown (with Mermaid support).
 
 ### 🚀 Performance Optimizations
-- **Lazy Tree Rendering** — Refactored `FileExplorer` to only flatten and render nodes for expanded directories. This drastically improves responsiveness in large projects with thousands of files.
+- **Lazy Tree Rendering** — Refactored `FileExplorer` to only flatten and render nodes for expanded directories. This drastically improves responsiveness in large projects.
 - **Focused Docs Sidebar** — The Documents view now only processes documentation-related files, reducing background rendering load.
-- **UI Memoization** — Added memoization to core navigation and toolbar components to prevent redundant re-renders and eliminate view-switching lag.
 
 ### 🐛 Bug Fixes
-- **Preview Crash Fixed** — Resolved a `TypeError` in `PreviewContent` where missing file extensions would crash the UI.
-- **Ghost Sidebars Removed** — Eliminated unwanted grey space and legacy "ADMIN" sidebars by replacing the document handler's internal chat component.
-- **Logo Stability** — Fixed an issue where the Claw logo would jump out of the sidebar or overlap UI elements when toggled.
+- **Persistent Role Badge Removed** — Completely eliminated the orange "ADMIN" floating badge by emptying the `UserRoleBadge` component. This prevents UI overlap with the chat send button.
+- **Preview Crash Fixed** — Resolved a `TypeError` in `PreviewContent` where missing file extensions or Base64 decoding issues would crash the UI.
+- **Ghost Sidebars Removed** — Eliminated unwanted grey space and legacy sidebars in Docs view.
 
 # v1.0.71
 

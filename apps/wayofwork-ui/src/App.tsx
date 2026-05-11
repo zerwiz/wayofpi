@@ -6,7 +6,6 @@ import {
   ClientDashboard, WorkerPortal
 } from "./pages";
 import { RefactorProvider, useRefactor } from "./context/RefactorContext";
-import { UserRoleBadge } from "./components/UserRoleBadge";
 import { MenuBar } from "./components/MenuBar";
 import { PageHeaderProvider, usePageHeader } from "./context/PageHeaderContext";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -60,18 +59,18 @@ function UiModeWatcher() {
   return null;
 }
 
-function RoleBadgeBar() {
-  return (
-    <div className="pointer-events-none fixed bottom-2 right-2 z-50 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
-      <UserRoleBadge />
-    </div>
-  );
-}
-
 function ConnectedMenuBar() {
-  const { uiMode, setUiMode } = useRefactor();
+  const { uiMode, setUiMode, session, llmModels } = useRefactor();
   const h = usePageHeader();
-  return <MenuBar uiMode={uiMode} onUiModeChange={setUiMode} {...h} />;
+  return (
+    <MenuBar 
+      uiMode={uiMode} 
+      onUiModeChange={setUiMode} 
+      onSelectLlmModel={session.setLlmModel}
+      llmModels={llmModels}
+      {...h} 
+    />
+  );
 }
 
 function WorkerPortalWrapper() {

@@ -112,6 +112,7 @@ export interface UseWayOfPiSessionReturn {
 		agentId: string,
 		message: string,
 		turnId?: string,
+		selectedPath?: string | null,
 	) => Promise<void>;
 	chatPulseMeters: ChatPulseMeters;
 	setChatPulseMeters: (meters: ChatPulseMeters) => void;
@@ -146,6 +147,7 @@ export interface UseWayOfPiSessionReturn {
 
 export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 	const [ws, setWs] = React.useState<WebSocket | null>(null);
+	const wsRef = React.useRef<WebSocket | null>(null);
 	const connectingRef = React.useRef<boolean>(false);
 
 	const [agentName, setAgentNameState] = React.useState<string | null>(null);
@@ -180,11 +182,26 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 	// @description Session initialization - always run on mount
 	const initSession = React.useCallback(async () => {
 		if (connectingRef.current) return;
+		
+		// Close existing if any
+		if (wsRef.current) {
+			try {
+				wsRef.current.onclose = null;
+				wsRef.current.onerror = null;
+				wsRef.current.onmessage = null;
+				wsRef.current.close();
+			} catch (e) {
+				console.warn("Error closing old WS:", e);
+			}
+		}
+
 		connectingRef.current = true;
 
 		const wsUrl =
 			(import.meta as any).env?.VITE_WAYOFPI_WS_URL || `/ws`;
 		const newWs = new WebSocket(wsUrl);
+		wsRef.current = newWs;
+
 		newWs.onopen = () => {
 			console.log("WS Connected to:", wsUrl);
 			setWs(newWs);
@@ -193,6 +210,7 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 		newWs.onclose = () => {
 			console.log("WS Disconnected");
 			setWs(null);
+			if (wsRef.current === newWs) wsRef.current = null;
 			connectingRef.current = false;
 			setError(ChatSessionError.Disconnected);
 		};
@@ -206,6 +224,8 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 			if (data.type === "ready") {
 				if (data.chatMode) setChatModeState(data.chatMode);
 				if (data.agentName) setAgentNameState(data.agentName);
+				if (data.effectiveModel) setModel(data.effectiveModel);
+			} else if (data.type === "model_set") {
 				if (data.effectiveModel) setModel(data.effectiveModel);
 			} else if (data.type === "chat_usage") {
 				setTokenMeter({
@@ -233,18 +253,22 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 			} else if (data.type === "assistant_delta") {
 				setRows(prev => {
 					const next = [...(prev || [])];
-					const last = next[next.length - 1];
+					if (next.length === 0) return next;
+					const lastIdx = next.length - 1;
+					const last = next[lastIdx];
 					if (last && (last as any).role === "assistant") {
-						(last as any).content += data.content;
+						next[lastIdx] = { ...last, content: (last as any).content + data.content };
 					}
 					return next;
 				});
 			} else if (data.type === "assistant_reasoning_delta") {
 				setRows(prev => {
 					const next = [...(prev || [])];
-					const last = next[next.length - 1];
+					if (next.length === 0) return next;
+					const lastIdx = next.length - 1;
+					const last = next[lastIdx];
 					if (last && (last as any).role === "assistant") {
-						(last as any).reasoning = ((last as any).reasoning || "") + data.content;
+						next[lastIdx] = { ...last, reasoning: ((last as any).reasoning || "") + data.content };
 					}
 					return next;
 				});
@@ -324,6 +348,7 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 		agentId,
 		message,
 		turnId,
+		selectedPath,
 	) => {
 		setStreaming(true);
 		
@@ -335,7 +360,12 @@ export function useWayOfPiSession(): UseWayOfPiSessionReturn {
 			}
 		}
 
-		const payload = { type: "chat", content: message, id: turnId };
+		const payload = { 
+			type: "chat", 
+			content: message, 
+			id: turnId,
+			selectedPath: selectedPath || null
+		};
 
 		return new Promise((resolve, reject) => {
 			if (ws && ws.readyState === WebSocket.OPEN) {

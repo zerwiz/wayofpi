@@ -27,6 +27,7 @@ export function SimplePage() {
     commandPaletteOpen, setCommandPaletteOpen,
     editor,
     tree, server, session, preferences, agents, modals,
+    llmModels,
     rootLabel, workspaceOperational, recentFolders,
     simpleProviderPath, simpleProviderNonce, setSimpleProviderPath,
     reopenLlmFixModal,
@@ -52,7 +53,7 @@ export function SimplePage() {
 
   const { simpleCommandItems } = useCommandItems();
 
-  const modelLabel = server.config?.ollamaModel || server.config?.openrouterModel || "Unknown";
+  const modelLabel = session.effectiveModel || server.config?.ollamaModel || server.config?.openrouterModel || "Unknown";
 
   const viewSimpleMenu: ViewMenuSimpleOptions = {
     onOpenAppearanceSettings: () => {}, 
@@ -188,6 +189,8 @@ export function SimplePage() {
     <PageHeaderProvider value={{
       modelLabel,
       config: server.config,
+      onSelectLlmModel: session.setLlmModel,
+      llmModels,
       onOpenCommandPalette: () => setCommandPaletteOpen(true),
       onSave: saveAndRefresh,
       canSave: !!selectedPath && editor.dirty,
@@ -214,7 +217,16 @@ export function SimplePage() {
       onOpenTeamsYaml: openTeamsYamlFromMenu,
       onCreateAgentMarkdown: () => {},
       onReloadAgents: agents.reload,
-      onOpenPiModelConfig: () => {},
+      onOpenPiModelConfig: (path?: string) => {
+        if (path) {
+          setSimpleProviderPath(path as any);
+          setSimpleProviderNonce(simpleProviderNonce + 1);
+        } else {
+          setUiMode("technical");
+          setLeftSidebarVisible(true);
+          setTechnicalActivity("settings");
+        }
+      },
       chatSessionControls: {
         mode: session.chatMode,
         switchDisabled: session.streaming,
@@ -268,7 +280,7 @@ export function SimplePage() {
         forceChatQueueItem={session.forceChatQueueItem}
         connected={session.connected}
         error={session.error}
-        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
+        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text, undefined, selectedPath)}
         stop={session.stop}
         clearError={session.clearError}
         onReopenLlmFixModal={reopenLlmFixModal}

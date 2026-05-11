@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, type CSSProperties } from "react";
 import { FolderOpen, MessageSquare, Eye, FileText, FileCheck, FileWarning, FileClock, CheckCircle, AlertCircle, Clock, Send } from "lucide-react";
 import type { TreeNode } from "../../types/tree";
 import type { ChatRow, ChatSessionMode, LogRow } from "../../hooks/useWayOfPiSession";
@@ -11,6 +11,8 @@ import { SimpleChatView } from "../simple/SimpleChatView";
 import { useAgents } from "../../hooks/useAgents";
 import { PreviewContent } from "../documenthandler/PreviewContent";
 import type { ChatQueueItem } from "../../utils/chatQueueTranscript";
+import type { FileGetResponse } from "../../types/workspaceFile";
+import { DockSplitHandle } from "../DockSplitHandle";
 
 interface DocsAppProps {
 	uiMode: string;
@@ -79,12 +81,16 @@ export function DocsApp({
 	contextFillPct = null,
 	contextTitle = "",
 }: DocsAppProps) {
-	const [leftOpen, setLeftOpen] = useState(true); // Now Chat toggle
-	const [treeOpen, setTreeOpen] = useState(true); // Now Tree toggle
+	const [chatOpen, setChatOpen] = useState(true);
+	const [treeOpen, setTreeOpen] = useState(true);
 	const [docStatus, setDocStatus] = useState<"draft" | "review" | "approved" | null>(null);
 	const [showDocBrowser, setShowDocBrowser] = useState(false);
 	const [selectedContent, setSelectedContent] = useState<string | null>(null);
 	const [contentLoading, setContentLoading] = useState(false);
+
+	// Resizing state
+	const [chatWidth, setChatWidth] = useState(400);
+	const [treeWidth, setTreeWidth] = useState(280);
 
 	const agentsApi = useAgents();
 
@@ -138,10 +144,42 @@ export function DocsApp({
 			setSelectedContent(null);
 			return;
 		}
+		
+		const ext = "." + selectedPath.split(".").pop()?.toLowerCase();
+		const isText = [".md", ".txt", ".tex", ".json", ".js", ".ts", ".tsx"].includes(ext);
+
+		function base64ToLatin1(b64: string): string {
+			try {
+				const bin = atob(b64);
+				let out = "";
+				for (let i = 0; i < bin.length; i++) {
+					out += String.fromCharCode(bin.charCodeAt(i) & 255);
+				}
+				return out;
+			} catch (e) {
+				console.error("Base64 decode failed", e);
+				return "";
+			}
+		}
+
 		async function fetchFile() {
+			if (!isText) {
+				setSelectedContent(null);
+				setDocStatus(null);
+				return;
+			}
+
 			setContentLoading(true);
 			try {
-				const content = await apiGet<string>(`/api/file?path=${encodeURIComponent(selectedPath ?? '')}`);
+				const res = await apiGet<FileGetResponse>(`/api/file?path=${encodeURIComponent(selectedPath ?? '')}`);
+				let content = "";
+				
+				if (res.encoding === "base64") {
+					content = base64ToLatin1(res.content);
+				} else {
+					content = res.content;
+				}
+
 				setSelectedContent(content);
 				
 				const lower = content.toLowerCase();
@@ -154,7 +192,8 @@ export function DocsApp({
 				} else {
 					setDocStatus(selectedPath?.includes("/plans/") ? "draft" : "review");
 				}
-			} catch {
+			} catch (e) {
+				console.error("Fetch document failed", e);
 				setDocStatus(null);
 				setSelectedContent(null);
 			} finally {
@@ -206,19 +245,19 @@ export function DocsApp({
 				<div className="flex items-center gap-3">
 					<button
 						type="button"
-						onClick={() => setLeftOpen((v) => !v)}
-						className={`rounded p-1.5 ${leftOpen ? "bg-[#ea580c] text-white" : `${subC} hover:bg-[#3c3c3c]`}`}
-						title="Toggle Chat"
-					>
-						<MessageSquare size={18} />
-					</button>
-					<button
-						type="button"
 						onClick={() => setTreeOpen((v) => !v)}
 						className={`rounded p-1.5 ${treeOpen ? "bg-[#ea580c] text-white" : `${subC} hover:bg-[#3c3c3c]`}`}
 						title="Toggle Documents"
 					>
 						<FolderOpen size={18} />
+					</button>
+					<button
+						type="button"
+						onClick={() => setChatOpen((v) => !v)}
+						className={`rounded p-1.5 ${chatOpen ? "bg-[#ea580c] text-white" : `${subC} hover:bg-[#3c3c3c]`}`}
+						title="Toggle Chat"
+					>
+						<MessageSquare size={18} />
 					</button>
 					<div className="flex items-center gap-2">
 						<FileText size={18} className="text-[#fb923c]" />
@@ -237,9 +276,10 @@ export function DocsApp({
 				
 				{/* Left: File Tree */}
 				{treeOpen && (
+					<>
 					<div
-						className={`docs-file-tree flex w-[280px] shrink-0 flex-col overflow-hidden border-r ${border} ${panelBg}`}
-						style={{ minWidth: "200px", maxWidth: "400px" }}
+						className={`docs-file-tree flex shrink-0 flex-col overflow-hidden border-r ${border} ${panelBg}`}
+						style={{ width: `${treeWidth}px` }}
 					>
 						<div className={`flex shrink-0 items-center justify-between border-b px-3 py-2 ${border}`}>
 							<span className={`text-xs font-semibold uppercase tracking-wider ${titleC}`}>Documents</span>
@@ -285,6 +325,12 @@ export function DocsApp({
 							)}
 						</div>
 					</div>
+					<DockSplitHandle
+						orientation="vertical"
+						onDelta={(dx) => setTreeWidth((w) => Math.max(160, Math.min(500, w + dx)))}
+						ariaLabel="Resize tree"
+					/>
+					</>
 				)}
 
 				{/* Middle: Preview Panel */}
@@ -319,8 +365,17 @@ export function DocsApp({
 				</div>
 
 				{/* Right: Chat Panel (Simple styled) */}
-				{leftOpen && (
-					<div className={`docs-chat flex w-[400px] shrink-0 flex-col overflow-hidden ${panelBg}`}>
+				{chatOpen && (
+					<>
+					<DockSplitHandle
+						orientation="vertical"
+						onDelta={(dx) => setChatWidth((w) => Math.max(200, Math.min(800, w - dx)))}
+						ariaLabel="Resize chat"
+					/>
+					<div 
+						className={`docs-chat flex shrink-0 flex-col overflow-hidden ${panelBg}`}
+						style={{ width: `${chatWidth}px` }}
+					>
 						<SimpleChatView
 							compactChrome={true}
 							rows={rows}
@@ -353,9 +408,9 @@ export function DocsApp({
 							onOpenPlanFileForReview={() => {}}
 						/>
 					</div>
+					</>
 				)}
 			</div>
 		</div>
 	);
 }
-

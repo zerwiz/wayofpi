@@ -115,8 +115,10 @@ export function SimpleChatView({
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
-		endRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [rows, streaming]);
+		if (rows.length > 0 || streaming) {
+			endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		}
+	}, [rows.length, streaming]);
 
 	const buildMessage = (body: string) => buildChatMessageWithAttachment(body, attachment);
 
@@ -308,7 +310,7 @@ export function SimpleChatView({
 			<div
 				className={`flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden ${appearanceDark ? "" : "bg-[#f3f3f3]"}`}
 			>
-				<div className={`mx-auto flex w-full flex-1 flex-col ${transcriptMax} ${transcriptPad} ${transcriptGap}`}>
+				<div className={`mx-auto flex w-full flex-col ${transcriptMax} ${transcriptPad} ${transcriptGap}`}>
 					{!connected ? (
 						<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
 							Connecting to server…
@@ -455,7 +457,7 @@ export function SimpleChatView({
 									)}
 								</div>
 								<span className={`px-1 text-[11px] ${appearanceDark ? "text-[#858585]" : "text-[#616161]"}`}>
-									{msg.timestamp}
+									{new Date(msg.timestamp || Date.now()).toLocaleTimeString()}
 								</span>
 							</div>
 						</div>
@@ -903,8 +905,8 @@ export function SimpleChatView({
 									? `Tell ${assistantTitle} what to do next… (Send when connected)`
 									: `Tell ${assistantTitle} what to do next…`
 							}
-							rows={1}
-							className={`max-h-40 w-full resize-none border-none bg-transparent pl-2 pr-10 font-medium outline-none ring-0 placeholder:text-[#858585] ${cx ? "min-h-[40px] py-2 pb-8 text-[14px]" : "min-h-[48px] py-3 pb-9 text-[15px]"} ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
+							rows={2}
+							className={`max-h-60 w-full resize-none border-none bg-transparent pl-2 pr-10 font-medium outline-none ring-0 placeholder:text-[#858585] ${cx ? "min-h-[50px] py-2.5 pb-9 text-[14px]" : "min-h-[64px] py-3.5 pb-11 text-[15px]"} ${appearanceDark ? "text-[#cccccc]" : "text-[#333333]"}`}
 						/>
 						<div
 							className={`pointer-events-none absolute bottom-1.5 right-1.5 z-30 flex items-center justify-center rounded-full p-0.5 shadow-sm ring-1 ring-[#555]/50 ${

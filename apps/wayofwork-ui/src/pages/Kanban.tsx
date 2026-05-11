@@ -70,6 +70,7 @@ export default function Kanban() {
   const [board, setBoard] = useState<Board | null>(null);
   const [cards, setCards] = useState<Map<string, BoardCard>>(new Map());
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDevelopmentWorkflowId, setSelectedDevelopmentWorkflowId] = useState<string | ''>('');
@@ -469,6 +470,7 @@ export default function Kanban() {
   const stats = calculateStats();
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
+    e.stopPropagation();
     setDraggedCard(cardId);
     e.dataTransfer.effectAllowed = 'move';
     if (e.target instanceof HTMLElement) {
@@ -477,17 +479,68 @@ export default function Kanban() {
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
+    e.stopPropagation();
     if (e.target instanceof HTMLElement) {
       e.target.style.opacity = '1';
     }
     setDraggedCard(null);
+    setDraggedColumn(null);
     setDraggedOverColumn(null);
   };
 
   const handleDragOver = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     setDraggedOverColumn(columnId);
+  };
+
+  const handleColumnDragStart = (e: React.DragEvent, columnId: string) => {
+    e.stopPropagation();
+    setDraggedColumn(columnId);
+    e.dataTransfer.effectAllowed = 'move';
+    if (e.target instanceof HTMLElement) {
+      e.target.style.opacity = '0.5';
+    }
+  };
+
+  const handleColumnDrop = async (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedColumn || !board || !currentBoardId || draggedColumn === targetColumnId) return;
+
+    const columnIds = board.columns.map(c => c.id);
+    const fromIndex = columnIds.indexOf(draggedColumn);
+    const toIndex = columnIds.indexOf(targetColumnId);
+
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const newColumns = [...board.columns];
+    const [movedColumn] = newColumns.splice(fromIndex, 1);
+    newColumns.splice(toIndex, 0, movedColumn!);
+
+    // Update order values
+    const orderedColumns = newColumns.map((col, idx) => ({ ...col, order: idx }));
+
+    try {
+      await kanbanService.updateBoard(currentBoardId, { columns: orderedColumns });
+      loadBoard();
+      showToast({
+        type: 'success',
+        message: 'Column reordered',
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to reorder columns:', error);
+      showToast({
+        type: 'error',
+        message: 'Failed to reorder columns',
+        duration: 3000,
+      });
+    } finally {
+      setDraggedColumn(null);
+      setDraggedOverColumn(null);
+    }
   };
 
   // Timeline drag handlers
@@ -567,6 +620,7 @@ export default function Kanban() {
 
   const handleDrop = async (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!draggedCard || !board) return;
     const card = cards.get(draggedCard);
     if (!card || card.columnId === columnId) {
@@ -1997,15 +2051,24 @@ export default function Kanban() {
             return (
               <div
                 key={column.id}
-                className={`flex-shrink-0 sm:w-auto sm:flex-1 sm:min-w-0 flex flex-col h-full ${
-                  draggedOverColumn === column.id ? 'ring-2 ring-orange-500' : ''
-                }`}
+                className={`flex-shrink-0 sm:w-auto sm:flex-1 sm:min-w-0 flex flex-col h-full transition-all ${
+                  draggedOverColumn === column.id ? 'ring-2 ring-orange-500 bg-orange-500/5' : ''
+                } ${draggedColumn === column.id ? 'opacity-50 grayscale' : ''}`}
                 style={{ width: board?.columnWidth ? `${board.columnWidth}px` : '190px' }}
+                draggable={!draggedCard}
+                onDragStart={(e) => handleColumnDragStart(e, column.id)}
+                onDragEnd={handleDragEnd}
                 onDragOver={(e) => handleDragOver(e, column.id)}
-                onDrop={(e) => handleDrop(e, column.id)}
+                onDrop={(e) => {
+                  if (draggedColumn) {
+                    handleColumnDrop(e, column.id);
+                  } else {
+                    handleDrop(e, column.id);
+                  }
+                }}
               >
                 {/* Column Header */}
-                <div className="bg-[#252526] rounded-t-lg p-3 border-b border-[#333333]">
+                <div className="bg-[#252526] rounded-t-lg p-3 border-b border-[#333333] cursor-move">
                   {editingColumnId === column.id ? (
                     <div className="flex items-center gap-2 min-w-0">
                       <input

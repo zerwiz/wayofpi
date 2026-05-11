@@ -14,7 +14,7 @@
  * - No ENOENT errors from missing pi binary
  */
 
-import type { ChatMessage, StreamChatResult } from "./chat";
+import type { ChatMessage, ChatRuntimeModel, StreamChatResult } from "./chat";
 import type { StreamTokenUsage } from "./chat-usage";
 import { isSdkAvailable, runSdkChatTurn } from "./pi-sdk-runtime";
 
@@ -86,6 +86,7 @@ export type RunPiChatTurnOpts = {
 	onStreamUsage?: (u: StreamTokenUsage) => void;
 	onLog: (level: "INFO" | "WARN" | "ERROR", source: string, msg: string) => void;
 	signal?: AbortSignal;
+	runtime?: ChatRuntimeModel;
 };
 
 export async function runPiChatTurn(
@@ -113,5 +114,6 @@ export async function runPiChatTurn(
 		onStreamUsage: opts.onStreamUsage,
 		onLog: opts.onLog,
 		signal: opts.signal,
+		runtime: opts.runtime,
 	});
 }

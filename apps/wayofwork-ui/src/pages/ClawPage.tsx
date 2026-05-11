@@ -30,6 +30,7 @@ export function ClawPage() {
     commandPaletteOpen, setCommandPaletteOpen,
     editor,
     tree, server, session, preferences, agents, modals,
+    llmModels,
     rootLabel, workspaceOperational, recentFolders,
     reopenLlmFixModal,
     line, col, onCursor, language, copyWorkspacePath,
@@ -54,7 +55,7 @@ export function ClawPage() {
 
   const { simpleCommandItems } = useCommandItems();
 
-  const modelLabel = server.config?.ollamaModel || server.config?.openrouterModel || "Unknown";
+  const modelLabel = session.effectiveModel || server.config?.ollamaModel || server.config?.openrouterModel || "Unknown";
 
   const viewTechnicalMenu: ViewMenuTechnicalOptions = {
     onOpenAppearanceSettings: () => {}, 
@@ -212,6 +213,8 @@ export function ClawPage() {
     <PageHeaderProvider value={{
       modelLabel,
       config: server.config,
+      onSelectLlmModel: session.setLlmModel,
+      llmModels,
       onOpenCommandPalette: () => setCommandPaletteOpen(true),
       onSave: saveAndRefresh,
       canSave: !!selectedPath && editor.dirty,
@@ -238,7 +241,18 @@ export function ClawPage() {
       onOpenTeamsYaml: openTeamsYamlFromMenu,
       onCreateAgentMarkdown: () => {},
       onReloadAgents: agents.reload,
-      onOpenPiModelConfig: () => {},
+      onOpenPiModelConfig: (path?: string) => {
+        if (path) {
+          // Claw mode doesn't have a direct provider file focus but we can switch to technical
+          setUiMode("technical");
+          setLeftSidebarVisible(true);
+          setTechnicalActivity("settings");
+        } else {
+          setUiMode("technical");
+          setLeftSidebarVisible(true);
+          setTechnicalActivity("settings");
+        }
+      },
       chatSessionControls: {
         mode: session.chatMode,
         switchDisabled: session.streaming,
@@ -299,7 +313,7 @@ export function ClawPage() {
         forceChatQueueItem={session.forceChatQueueItem}
         connected={session.connected}
         error={session.error}
-        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text)}
+        sendChat={(text) => void session.sendChat(session.chatAgentName ?? '', text, undefined, selectedPath)}
         stop={session.stop}
         clearError={session.clearError}
         onReopenLlmFixModal={reopenLlmFixModal}

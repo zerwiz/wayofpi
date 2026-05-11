@@ -934,10 +934,10 @@ export const CardView: React.FC<CardViewProps> = ({
         </div>
       )}
 
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="fixed inset-0 bg-black/50 z-[150]" onClick={onClose} />
+      <div className="fixed inset-0 z-[150] flex items-center justify-center p-2 sm:p-4 pointer-events-none">
         <div
-          className="bg-[#252526]/80 backdrop-blur-sm rounded-lg !max-w-[560px] w-[90vw] sm:!w-[560px] max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto border border-orange-500/30 shadow-2xl shadow-orange-500/10"
+          className="bg-[#252526]/80 backdrop-blur-sm rounded-lg !max-w-[560px] w-[90vw] sm:!w-[560px] max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto border border-orange-500/30 shadow-2xl shadow-orange-500/10 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -1713,6 +1713,56 @@ export const CardView: React.FC<CardViewProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Time Logs Section */}
+            {!isCreateMode && (
+              <div className="pt-4 border-t border-[#3c3c3c]">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Time Logs ({(card?.timeLogs || []).length})
+                  </label>
+                  <button 
+                    onClick={() => {
+                      const hours = prompt("Hours to log:");
+                      const desc = prompt("Activity description:");
+                      if (hours && desc && card) {
+                        kanbanService.addCardTimeLog(boardId, card.id, {
+                          userId: user?.id || 'demo-user',
+                          userName: user?.name || 'User',
+                          hours: parseFloat(hours),
+                          description: desc,
+                          date: new Date().toISOString().split('T')[0]
+                        }).then(() => loadCard());
+                      }
+                    }}
+                    className="text-[10px] font-bold text-[#ea580c] hover:underline"
+                  >
+                    + Log Time
+                  </button>
+                </div>
+                
+                <div className="space-y-2">
+                  {(card?.timeLogs || []).map((log) => (
+                    <div key={log.id} className="p-3 bg-[#1e1e1e]/50 border border-[#3c3c3c] rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-xs font-bold text-[#cccccc]">{log.userName}</p>
+                          <p className="text-[11px] text-[#858585] mt-0.5">{log.description}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-black text-[#ea580c]">{log.hours}h</span>
+                          <p className="text-[9px] text-[#585858] mt-0.5">{log.date}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {(card?.timeLogs || []).length === 0 && (
+                    <p className="text-xs text-[#585858] italic text-center py-2">No time logged for this task.</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Linked Source (Note/Task) */}
             <div>

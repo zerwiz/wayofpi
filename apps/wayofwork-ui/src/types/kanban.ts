@@ -38,6 +38,16 @@ export interface CardAttachment {
   uploadedAt: number;
 }
 
+export interface CardTimeLog {
+  id: string;
+  userId: string;
+  userName: string;
+  hours: number;
+  description: string;
+  date: string;
+  createdAt: number;
+}
+
 export interface CardCover {
   type: 'color' | 'image' | 'gradient' | 'emoji';
   value: string;
@@ -62,6 +72,7 @@ export interface BoardCard {
   checklists: CardChecklist[];
   comments: CardComment[];
   attachments: CardAttachment[];
+  timeLogs?: CardTimeLog[];
   cover?: CardCover;
   metadata?: Record<string, any>;
   order: number;

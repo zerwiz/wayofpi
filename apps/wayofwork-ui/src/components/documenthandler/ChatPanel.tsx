@@ -140,8 +140,8 @@ export function ChatPanel({
 						onChange={(e) => setInput(e.target.value)}
 						onKeyDown={handleKeyDown}
 						placeholder="Type a message..."
-						rows={3}
-						className={`w-full resize-none rounded-lg border px-4 py-3 ${inputBg}`}
+						rows={4}
+						className={`w-full min-h-[96px] max-h-80 resize-none rounded-lg border px-4 py-3 ${inputBg}`}
 						disabled={streaming || !connected}
 					/>
 

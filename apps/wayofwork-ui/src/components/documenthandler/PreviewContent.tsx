@@ -1,3 +1,4 @@
+import { FileText } from "lucide-react";
 import { FileEntry } from "./types/documenthandler.types";
 import { MarkdownPreviewPane } from "../MarkdownPreviewPane";
 
@@ -30,19 +31,21 @@ export function PreviewContent({
 
 	const ext = (file.extension || "").toLowerCase();
 
+	const fileUrl = `/api/file?path=${encodeURIComponent(file.path)}`;
+
 	if (ext === "pdf") {
 		return (
 			<div className="pdf-preview h-full w-full">
 				<iframe
 					title="PDF preview"
-					src={`${file.path}#zoom=${zoom}&page=${currentPage}`}
+					src={`${fileUrl}#zoom=${zoom}&page=${currentPage}`}
 					className="h-full w-full border-0"
 				/>
 			</div>
 		);
 	}
 
-	if (ext === "md" && content !== undefined) {
+	if (ext === "md" && typeof content === "string") {
 		return (
 			<div className={`markdown-viewer h-full overflow-auto ${bg}`}>
 				<MarkdownPreviewPane 
@@ -53,14 +56,15 @@ export function PreviewContent({
 		);
 	}
 
-	if (["txt", "tex", "json", "css", "html", "js", "ts", "tsx"].includes(ext) || ext === "md") {
+	if (["txt", "tex", "json", "css", "html", "js", "ts", "tsx", "md"].includes(ext)) {
+		const textContent = typeof content === "string" ? content : "Loading content...";
 		return (
 			<div
 				className={`text-preview max-h-full overflow-auto p-4 ${bg}`}
 				style={{ zoom: `${zoom}%` }}
 			>
 				<pre className={`whitespace-pre-wrap text-sm font-mono ${title}`}>
-					{content || "No content available"}
+					{textContent}
 				</pre>
 			</div>
 		);
@@ -69,14 +73,37 @@ export function PreviewContent({
 	if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext)) {
 		return (
 			<div
-				className="image-preview text-center"
+				className="image-preview flex h-full items-center justify-center p-4"
 				style={{ zoom: `${zoom}%` }}
 			>
 				<img
-					src={file.path}
+					src={fileUrl}
 					alt={file.name}
-					className="max-h-[60vh] max-w-full rounded-lg"
+					className="max-h-full max-w-full rounded-lg shadow-sm"
 				/>
+			</div>
+		);
+	}
+
+	if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(ext)) {
+		return (
+			<div
+				className={`generic-preview flex h-full flex-col items-center justify-center rounded-lg p-12 text-center ${bg}`}
+			>
+				<div className={`mb-4 flex h-20 w-16 items-center justify-center rounded-lg border-2 ${borderColor}`}>
+					<FileText size={40} className="text-[#3b82f6]" />
+				</div>
+				<h3 className={`text-xl font-bold ${title}`}>{file.name}</h3>
+				<p className={`mt-2 ${subC}`}>
+					This is a Microsoft Office document. Inline preview is limited.
+				</p>
+				<a 
+					href={fileUrl} 
+					download={file.name}
+					className="mt-6 rounded-lg bg-[#ea580c] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#c2410c]"
+				>
+					Download File
+				</a>
 			</div>
 		);
 	}
