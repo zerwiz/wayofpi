@@ -91,7 +91,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-lg font-semibold text-gray-100 mb-1 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-400" />
+                <FileText className="w-5 h-5 text-orange-400" />
                 Board Documents
               </h3>
               <p className="text-sm text-[#858585]">
@@ -100,7 +100,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
             </div>
             <button
               onClick={() => setIsLinkingMode(!isLinkingMode)}
-              className="px-4 py-2 bg-[#ea580c] hover:bg-purple-700 text-[#cccccc] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[#ea580c] hover:bg-orange-700 text-[#cccccc] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
             >
               <Link2 className="w-4 h-4" />
               {isLinkingMode ? 'Cancel Linking' : 'Link Document'}
@@ -115,7 +115,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
               placeholder="Search documents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
         </div>
@@ -140,11 +140,11 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
                   return (
                     <div
                       key={doc.id}
-                      className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-4 hover:border-purple-500 transition-colors"
+                      className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-4 hover:border-orange-500 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <FileText className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                          <FileText className="w-5 h-5 text-orange-400 flex-shrink-0" />
                           <h5 className="text-sm font-medium text-gray-100 truncate">{doc.title || 'Untitled'}</h5>
                         </div>
                       </div>
@@ -160,7 +160,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
                           {linkedToCards.map((card: BoardCard) => (
                             <span
                               key={card.id}
-                              className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30"
+                              className="text-xs px-2 py-1 bg-orange-500/20 text-orange-400 rounded border border-orange-500/30"
                             >
                               {card.title}
                             </span>
@@ -203,7 +203,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
                 {unlinked.map((doc) => (
                   <div
                     key={doc.id}
-                    className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-4 hover:border-purple-500 transition-colors cursor-pointer"
+                    className="bg-[#1e1e1e] border border-gray-700 rounded-lg p-4 hover:border-orange-500 transition-colors cursor-pointer"
                     onClick={() => {
                       if (selectedCardId) {
                         handleLinkDocument(selectedCardId, doc.id);
@@ -235,7 +235,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
                                 setSelectedCardId(card.id);
                                 handleLinkDocument(card.id, doc.id);
                               }}
-                              className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded border border-purple-500/30 hover:bg-purple-500/30"
+                              className="text-xs px-2 py-1 bg-orange-500/20 text-orange-400 rounded border border-orange-500/30 hover:bg-orange-500/30"
                             >
                               {card.title}
                             </button>
@@ -258,7 +258,7 @@ export const WorkDocsView: React.FC<BoardDocsViewProps> = ({
             <p className="mb-4">Link documents to cards to see them here.</p>
             <button
               onClick={() => setIsLinkingMode(true)}
-              className="px-4 py-2 bg-[#ea580c] hover:bg-purple-700 text-[#cccccc] rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto"
+              className="px-4 py-2 bg-[#ea580c] hover:bg-orange-700 text-[#cccccc] rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto"
             >
               <Plus className="w-4 h-4" />
               Link Document

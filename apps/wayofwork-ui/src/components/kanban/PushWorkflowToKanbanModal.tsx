@@ -254,14 +254,14 @@ export function PushWorkflowToKanbanModal({
       }}
     >
       <div
-        className="glass-card rounded-lg shadow-2xl max-w-2xl w-full border border-purple-500/30 animate-scale-in"
+        className="glass-card rounded-lg shadow-2xl max-w-2xl w-full border border-orange-500/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-purple-500/20">
+        <div className="flex items-center justify-between p-6 border-b border-orange-500/20">
           <div>
             <h2 className="text-xl font-bold gradient-text">Push Workflow to Kanban</h2>
-            <p className="text-sm text-purple-300/70 mt-1">
+            <p className="text-sm text-orange-300/70 mt-1">
               {pushMode === 'existing'
                 ? 'Create cards from workflow steps in an existing board'
                 : 'Create a new Kanban board with cards from all workflow steps'}
@@ -269,7 +269,7 @@ export function PushWorkflowToKanbanModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-400 hover:text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20 hover:shadow-lg hover:shadow-purple-500/10"
+            className="p-2 rounded-lg text-[#858585] hover:text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-orange-600/20 hover:to-orange-600/20 hover:shadow-lg hover:shadow-orange-500/10"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -279,15 +279,15 @@ export function PushWorkflowToKanbanModal({
         {/* Content */}
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Workflow Info */}
-          <div className="p-4 bg-purple-600/10 border border-purple-500/30 rounded-lg">
+          <div className="p-4 bg-orange-600/10 border border-orange-500/30 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <FileText className="w-5 h-5 text-purple-400" />
+              <FileText className="w-5 h-5 text-orange-400" />
               <h3 className="font-semibold text-white">{workflow.name}</h3>
             </div>
             {workflow.description && (
-              <p className="text-sm text-gray-300 mb-2">{workflow.description}</p>
+              <p className="text-sm text-[#a0a0a0] mb-2">{workflow.description}</p>
             )}
-            <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-[#858585]">
               <span>{workflow.steps.length} step{workflow.steps.length !== 1 ? 's' : ''}</span>
               <span>•</span>
               <span>Track: {workflow.track}</span>
@@ -303,8 +303,8 @@ export function PushWorkflowToKanbanModal({
                 onClick={() => setPushMode('existing')}
                 className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                   pushMode === 'existing'
-                    ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-white'
-                    : 'bg-gray-800/60 border-gray-700/50 text-gray-300 hover:border-gray-600'
+                    ? 'bg-gradient-to-r from-orange-600/20 to-orange-700/20 border-orange-500/50 text-white'
+                    : 'bg-[#252526]/60 border-[#333333]/50 text-[#a0a0a0] hover:border-[#444444]'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -318,8 +318,8 @@ export function PushWorkflowToKanbanModal({
                 onClick={() => setPushMode('new-board')}
                 className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                   pushMode === 'new-board'
-                    ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-white'
-                    : 'bg-gray-800/60 border-gray-700/50 text-gray-300 hover:border-gray-600'
+                    ? 'bg-gradient-to-r from-orange-600/20 to-orange-700/20 border-orange-500/50 text-white'
+                    : 'bg-[#252526]/60 border-[#333333]/50 text-[#a0a0a0] hover:border-[#444444]'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -337,15 +337,15 @@ export function PushWorkflowToKanbanModal({
               {/* Board Selector */}
               <div>
                 <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
-                    <LayoutGrid className="w-3 h-3 text-purple-400" />
+                  <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-orange-600/20 to-orange-700/20 flex items-center justify-center">
+                    <LayoutGrid className="w-3 h-3 text-orange-400" />
                   </div>
                   Select Board
                 </label>
                 <select
                   value={selectedBoardId}
                   onChange={(e) => setSelectedBoardId(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-white select transition-all hover:border-purple-500/50"
+                  className="w-full px-4 py-2 bg-[#252526]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-white select transition-all hover:border-orange-500/50"
                 >
                   <option value="">Choose a board...</option>
                   {boards.map((board) => (
@@ -360,15 +360,15 @@ export function PushWorkflowToKanbanModal({
               {selectedBoardId && (
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
-                      <Folder className="w-3 h-3 text-purple-400" />
+                    <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-orange-600/20 to-orange-700/20 flex items-center justify-center">
+                      <Folder className="w-3 h-3 text-orange-400" />
                     </div>
                     Select Column
                   </label>
                   <select
                     value={selectedColumnId}
                     onChange={(e) => setSelectedColumnId(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-800/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-white select transition-all hover:border-purple-500/50"
+                    className="w-full px-4 py-2 bg-[#252526]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-white select transition-all hover:border-orange-500/50"
                   >
                     <option value="">Choose a column...</option>
                     {columns.map((column) => (
@@ -392,7 +392,7 @@ export function PushWorkflowToKanbanModal({
                   type="text"
                   value={newBoardName}
                   onChange={(e) => setNewBoardName(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-white input-text transition-all hover:border-purple-500/50"
+                  className="w-full px-4 py-2 bg-[#252526]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-white input-text transition-all hover:border-orange-500/50"
                   placeholder="Enter board name..."
                 />
               </div>
@@ -400,15 +400,15 @@ export function PushWorkflowToKanbanModal({
               {/* Template Selector */}
               <div>
                 <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
-                    <LayoutGrid className="w-3 h-3 text-purple-400" />
+                  <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-orange-600/20 to-orange-700/20 flex items-center justify-center">
+                    <LayoutGrid className="w-3 h-3 text-orange-400" />
                   </div>
                   Board Template (Optional)
                 </label>
                 <select
                   value={newBoardTemplateId}
                   onChange={(e) => setNewBoardTemplateId(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-white select transition-all hover:border-purple-500/50"
+                  className="w-full px-4 py-2 bg-[#252526]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-white select transition-all hover:border-orange-500/50"
                 >
                   <option value="">Default (To Do, In Progress, Done)</option>
                   {BOARD_TEMPLATES.map((template) => (
@@ -417,7 +417,7 @@ export function PushWorkflowToKanbanModal({
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-[#858585] mt-1">
                   Select a template to pre-configure board columns
                 </p>
               </div>
@@ -425,20 +425,20 @@ export function PushWorkflowToKanbanModal({
           )}
 
           {/* Options */}
-          <div className="space-y-3 p-4 bg-purple-600/5 border border-purple-500/20 rounded-lg">
+          <div className="space-y-3 p-4 bg-orange-600/5 border border-orange-500/20 rounded-lg">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={createCardsForAllSteps}
                 onChange={(e) => setCreateCardsForAllSteps(e.target.checked)}
-                className="w-4 h-4 rounded border-purple-500/50 bg-gray-800/60 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
+                className="w-4 h-4 rounded border-orange-500/50 bg-[#252526]/60 text-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
               />
-              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+              <span className="text-sm text-[#a0a0a0] group-hover:text-white transition-colors">
                 Create cards for all workflow steps ({workflow.steps.length} cards)
               </span>
             </label>
             {!createCardsForAllSteps && (
-              <p className="text-xs text-gray-400 ml-7">
+              <p className="text-xs text-[#858585] ml-7">
                 A single card will be created for the workflow itself
               </p>
             )}
@@ -446,10 +446,10 @@ export function PushWorkflowToKanbanModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-purple-500/20">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-orange-500/20">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-800/60 hover:bg-gray-700/80 text-white rounded-lg transition-all duration-200 border border-gray-700/50 hover:border-gray-600"
+            className="px-4 py-2 bg-[#252526]/60 hover:bg-[#333333]/80 text-white rounded-lg transition-all duration-200 border border-[#333333]/50 hover:border-[#444444]"
           >
             Cancel
           </button>
@@ -460,7 +460,7 @@ export function PushWorkflowToKanbanModal({
               (pushMode === 'existing' && (!selectedBoardId || !selectedColumnId)) ||
               (pushMode === 'new-board' && !newBoardName.trim())
             }
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-700 text-white rounded-lg transition-all font-medium shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
             {isCreating ? (
               <>

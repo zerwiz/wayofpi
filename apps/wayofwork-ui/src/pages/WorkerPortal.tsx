@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-const useNavigate = () => (path: string) => { window.location.pathname = path; };
-import { UiModeToggle } from "../components/UiModeToggle";
 import type { UiMode } from "../hooks/useUiMode";
 
 interface WorkerCredentials {
@@ -26,7 +23,6 @@ interface WorkerTask {
 }
 
 export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode; setUiMode: (m: UiMode) => void; appHeader?: React.ReactNode }) {
-  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const token = localStorage.getItem("wop_token");
     if (!token) return false;
@@ -180,14 +176,6 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("wop_token");
-    setIsLoggedIn(false);
-    setWorkerId("");
-    setPin("");
-    window.location.pathname = "/";
-  };
-
   const handleDownload = (fileId: string) => {
     window.open(`/api/portal/download/${fileId}`, "_blank");
   };
@@ -275,7 +263,7 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
+    <div className="h-full bg-[#1e1e1e] flex flex-col">
       {appHeader}
       
       {/* Info Bar */}
@@ -290,12 +278,6 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
             className="rounded px-2 py-1 text-[10px] text-[#858585] hover:bg-[#3c3c3c] hover:text-[#cccccc] transition-colors border border-[#3c3c3c]"
           >
             Profile
-          </button>
-          <button
-            onClick={handleLogout}
-            className="rounded px-2 py-1 text-[10px] text-[#858585] hover:bg-[#3c3c3c] hover:text-red-400 transition-colors border border-[#3c3c3c]"
-          >
-            Logout
           </button>
         </div>
       </div>

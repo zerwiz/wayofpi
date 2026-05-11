@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "syncedAt": "2026-05-08T21:41:06.357Z",
-  "fileCount": 623,
+  "syncedAt": "2026-05-11T16:43:17.168Z",
+  "fileCount": 660,
   "truncated": false,
-  "merkleRoot": "df34743a2e4f5f41",
+  "merkleRoot": "af070b42a16a8e44",
   "samplePaths": [
     ".env.sample",
     ".gitignore",
@@ -49,6 +49,7 @@
     "agent/sessions/wayofpi-chat-technical.t-1777897517991-t-y9ff31m.jsonl",
     "agent/sessions/wayofpi-chat-technical.t-1777897567289-t-isvy2he.jsonl",
     "bun.lock",
+    "data/wayofpi.sqlite",
     "default/.wayofpi/index/grep-paths.txt",
     "default/.wayofpi/index/manifest.json",
     "default/.wayofpi/index/state.json",
@@ -203,7 +204,6 @@
     "server/claw-telegram-status.ts",
     "server/claw-webhook-store.ts",
     "server/claw-workspace-root.ts",
-    "server/db.ts",
-    "server/diagnostics.ts"
+    "server/db.ts"
   ]
 }

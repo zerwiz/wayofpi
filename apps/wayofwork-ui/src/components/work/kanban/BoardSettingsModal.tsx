@@ -390,12 +390,12 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                         }}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'bg-gradient-to-r from-orange-600/20 to-purple-600/20 border border-orange-500/50'
+                            ? 'bg-gradient-to-r from-orange-600/20 to-orange-600/20 border border-orange-500/50'
                             : 'bg-gray-600/40 border border-[#3c3c3c]/30 hover:border-orange-500/50'
                         }`}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <FolderKanban className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                          <FolderKanban className="w-4 h-4 text-orange-400 flex-shrink-0" />
                           <span className="text-sm text-[#cccccc] truncate">{project.name}</span>
                           {project.description && (
                             <span className="text-xs text-[#858585] truncate hidden sm:inline">

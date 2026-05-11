@@ -926,7 +926,7 @@ export const CardView: React.FC<CardViewProps> = ({
             />
             <button
               onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 p-2 bg-dark-800 hover:bg-dark-700 rounded-lg text-white transition-colors"
+              className="absolute top-4 right-4 p-2 bg-[#1e1e1e] hover:bg-[#252526] rounded-lg text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -937,18 +937,18 @@ export const CardView: React.FC<CardViewProps> = ({
       <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
         <div
-          className="bg-gray-800/80 backdrop-blur-sm rounded-lg !max-w-[560px] w-[90vw] sm:!w-[560px] max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto border border-purple-500/30 shadow-2xl shadow-purple-500/10"
+          className="bg-[#252526]/80 backdrop-blur-sm rounded-lg !max-w-[560px] w-[90vw] sm:!w-[560px] max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto border border-orange-500/30 shadow-2xl shadow-orange-500/10"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-gray-800/80 backdrop-blur-sm border-b border-purple-500/20 p-4 md:p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 z-10">
+          <div className="sticky top-0 bg-[#252526]/80 backdrop-blur-sm border-b border-orange-500/20 p-4 md:p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 z-10">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors group flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 hover:bg-[#333333]/50 rounded-lg transition-colors group flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 title="Go Back"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-purple-400" />
+                <ArrowLeft className="w-5 h-5 text-[#858585] group-hover:text-orange-400" />
               </button>
               <div className="flex-1 min-w-0">
                 {(isCreateMode || isEditing) ? (
@@ -956,14 +956,14 @@ export const CardView: React.FC<CardViewProps> = ({
                     type="text"
                     value={editedCard.title || ''}
                     onChange={(e) => setEditedCard({ ...editedCard, title: e.target.value })}
-                    className="text-xl sm:text-2xl font-bold bg-transparent border-0 border-b-2 border-purple-500 focus:outline-none w-full text-white min-h-[44px]"
+                    className="text-xl sm:text-2xl font-bold bg-transparent border-0 border-b-2 border-orange-500 focus:outline-none w-full text-white min-h-[44px]"
                     placeholder={isCreateMode ? "Enter card title..." : "Edit card title"}
                     autoFocus
                   />
                 ) : (
                   <h2 className="text-xl sm:text-2xl font-bold gradient-text truncate">{card?.title || 'Untitled'}</h2>
                 )}
-                <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                <p className="text-xs sm:text-sm text-[#858585] mt-1">
                   {isCreateMode
                     ? `Creating new card${columnId ? ` in column` : ''}`
                     : `Card in column`}
@@ -983,7 +983,7 @@ export const CardView: React.FC<CardViewProps> = ({
                   </button>
                   <button
                     onClick={onClose}
-                    className="flex-1 sm:flex-none px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm sm:text-base min-h-[44px]"
+                    className="flex-1 sm:flex-none px-4 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg transition-colors text-sm sm:text-base min-h-[44px]"
                   >
                     Cancel
                   </button>
@@ -992,7 +992,7 @@ export const CardView: React.FC<CardViewProps> = ({
                 <>
                   <button
                     onClick={handleSave}
-                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/20 text-sm sm:text-base min-h-[44px]"
+                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20 text-sm sm:text-base min-h-[44px]"
                   >
                     <Save className="w-4 h-4" />
                     <span>Save</span>
@@ -1002,7 +1002,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       setIsEditing(false);
                       loadCard();
                     }}
-                    className="flex-1 sm:flex-none px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm sm:text-base min-h-[44px]"
+                    className="flex-1 sm:flex-none px-4 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg transition-colors text-sm sm:text-base min-h-[44px]"
                   >
                     Cancel
                   </button>
@@ -1010,14 +1010,14 @@ export const CardView: React.FC<CardViewProps> = ({
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all shadow-lg shadow-purple-500/20 text-sm sm:text-base min-h-[44px]"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-700 text-white rounded-lg transition-all shadow-lg shadow-orange-500/20 text-sm sm:text-base min-h-[44px]"
                 >
                   Edit
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 hover:bg-[#333333]/50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1065,11 +1065,11 @@ export const CardView: React.FC<CardViewProps> = ({
                   value={editedCard.description || ''}
                   onChange={(e) => setEditedCard({ ...editedCard, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="Enter card description"
                 />
               ) : (
-                <p className="text-sm text-gray-300 whitespace-pre-wrap">{card?.description || 'No description'}</p>
+                <p className="text-sm text-[#a0a0a0] whitespace-pre-wrap">{card?.description || 'No description'}</p>
               )}
             </div>
 
@@ -1085,7 +1085,7 @@ export const CardView: React.FC<CardViewProps> = ({
                   <select
                     value={editedCard.priority || 'medium'}
                     onChange={(e) => setEditedCard({ ...editedCard, priority: e.target.value as any })}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="low">🟢 Low</option>
                     <option value="medium">🟡 Medium</option>
@@ -1132,7 +1132,7 @@ export const CardView: React.FC<CardViewProps> = ({
                           startDate: date,
                         });
                       }}
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                     {editedCard.startDate && (() => {
                       const date = new Date(editedCard.startDate!);
@@ -1140,14 +1140,14 @@ export const CardView: React.FC<CardViewProps> = ({
                       const monthName = date.toLocaleDateString('en-US', { month: 'long' });
                       const year = date.getFullYear();
                       return (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-[#858585] mt-1">
                           Week {weekNumber}, {monthName} {year}
                         </p>
                       );
                     })()}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-[#a0a0a0]">
                     {card?.startDate ? (() => {
                       const date = new Date(card.startDate);
                       const weekNumber = getISOWeekNumber(date);
@@ -1179,7 +1179,7 @@ export const CardView: React.FC<CardViewProps> = ({
                           dueDate: date,
                         });
                       }}
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                     {editedCard.dueDate && (() => {
                       const date = new Date(editedCard.dueDate!);
@@ -1187,14 +1187,14 @@ export const CardView: React.FC<CardViewProps> = ({
                       const monthName = date.toLocaleDateString('en-US', { month: 'long' });
                       const year = date.getFullYear();
                       return (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-[#858585] mt-1">
                           Week {weekNumber}, {monthName} {year}
                         </p>
                       );
                     })()}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-[#a0a0a0]">
                     {card?.dueDate ? (() => {
                       const date = new Date(card.dueDate);
                       const weekNumber = getISOWeekNumber(date);
@@ -1224,7 +1224,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       placeholder="8"
                       min="0"
                       step="0.5"
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                     <select
                       value={editedCard.estimatedTimeUnit || 'hours'}
@@ -1234,14 +1234,14 @@ export const CardView: React.FC<CardViewProps> = ({
                           estimatedTimeUnit: e.target.value as 'hours' | 'days',
                         })
                       }
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="hours">Hours</option>
                       <option value="days">Days</option>
                     </select>
                   </div>
                 ) : (
-                  <p className="text-sm sm:text-base text-gray-300">
+                  <p className="text-sm sm:text-base text-[#a0a0a0]">
                     {card?.estimatedTime
                       ? `${card.estimatedTime} ${card.estimatedTimeUnit === 'days' ? 'days' : 'hours'}`
                       : 'Not set'}
@@ -1259,18 +1259,18 @@ export const CardView: React.FC<CardViewProps> = ({
                 </label>
                 <button
                   onClick={() => setShowCoverPicker(!showCoverPicker)}
-                  className="w-full sm:w-auto px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-sm transition-colors text-white"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#333333] hover:bg-[#444444] border border-[#444444] rounded-lg text-sm transition-colors text-white"
                 >
                   {displayData?.cover ? 'Change Cover' : 'Add Cover'}
                 </button>
 
                 {showCoverPicker && (
-                  <div className="mt-3 p-4 bg-gray-700/40 border border-gray-600/30 rounded-lg">
+                  <div className="mt-3 p-4 bg-[#333333]/40 border border-[#444444]/30 rounded-lg">
                     <h4 className="font-medium text-sm mb-3 text-white">Choose Cover Type</h4>
                     
                     {/* Solid Colors */}
                     <div className="mb-4">
-                      <p className="text-xs text-gray-400 mb-2">Solid Colors</p>
+                      <p className="text-xs text-[#858585] mb-2">Solid Colors</p>
                       <div className="flex flex-wrap gap-1.5">
                         {boardColorOptions.filter(c => c.type === 'solid').map(colorOption => (
                           <button
@@ -1282,8 +1282,8 @@ export const CardView: React.FC<CardViewProps> = ({
                             }}
                             className={`w-10 h-10 rounded-lg border-2 transition-all flex-shrink-0 ${
                               editedCard.cover?.value === colorOption.value
-                                ? 'border-white ring-2 ring-offset-1 ring-offset-gray-800 ring-purple-500'
-                                : 'border-gray-600 hover:border-gray-500'
+                                ? 'border-white ring-2 ring-offset-1 ring-offset-gray-800 ring-orange-500'
+                                : 'border-[#444444] hover:border-gray-500'
                             }`}
                             style={{ backgroundColor: colorOption.value }}
                             title={colorOption.label || colorOption.value}
@@ -1294,7 +1294,7 @@ export const CardView: React.FC<CardViewProps> = ({
 
                     {/* Gradients */}
                     <div className="mb-4">
-                      <p className="text-xs text-gray-400 mb-2">Gradients</p>
+                      <p className="text-xs text-[#858585] mb-2">Gradients</p>
                       <div className="flex flex-wrap gap-1.5">
                         {boardColorOptions.filter(c => c.type === 'gradient').map(colorOption => (
                           <button
@@ -1306,8 +1306,8 @@ export const CardView: React.FC<CardViewProps> = ({
                             }}
                             className={`w-10 h-10 rounded-lg border-2 transition-all flex-shrink-0 ${
                               editedCard.cover?.value === colorOption.value || editedCard.cover?.value === colorOption.gradient
-                                ? 'border-white ring-2 ring-offset-1 ring-offset-gray-800 ring-purple-500'
-                                : 'border-gray-600 hover:border-gray-500'
+                                ? 'border-white ring-2 ring-offset-1 ring-offset-gray-800 ring-orange-500'
+                                : 'border-[#444444] hover:border-gray-500'
                             }`}
                             style={colorOption.gradient ? { background: colorOption.gradient } : {}}
                             title={colorOption.label || colorOption.value}
@@ -1319,7 +1319,7 @@ export const CardView: React.FC<CardViewProps> = ({
                     {/* Uploaded Images */}
                     {((editedCard.attachments?.length || 0) > 0 || (card?.attachments?.length || 0) > 0) && (
                       <div className="mb-4">
-                        <p className="text-xs text-gray-400 mb-2">Uploaded Images</p>
+                        <p className="text-xs text-[#858585] mb-2">Uploaded Images</p>
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                           {(editedCard.attachments || card?.attachments || [])
                             .filter((att) => isImageFile(att.type))
@@ -1327,7 +1327,7 @@ export const CardView: React.FC<CardViewProps> = ({
                               <button
                                 key={attachment.id}
                                 onClick={() => handleSetCoverFromAttachment(attachment.id)}
-                                className="w-full h-16 sm:h-20 rounded-lg overflow-hidden border-2 border-gray-600 hover:border-purple-500/50 transition-colors relative group"
+                                className="w-full h-16 sm:h-20 rounded-lg overflow-hidden border-2 border-[#444444] hover:border-orange-500/50 transition-colors relative group"
                               >
                                 <img
                                   src={attachment.url}
@@ -1345,7 +1345,7 @@ export const CardView: React.FC<CardViewProps> = ({
 
                     {/* Image Upload */}
                     <div className="mb-4">
-                      <p className="text-xs text-gray-400 mb-2">Upload Image</p>
+                      <p className="text-xs text-[#858585] mb-2">Upload Image</p>
                       <input
                         type="file"
                         accept="image/*"
@@ -1372,7 +1372,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       />
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-sm transition-colors text-white flex items-center justify-center gap-2"
+                        className="w-full px-4 py-2 bg-[#333333] hover:bg-[#444444] border border-[#444444] rounded-lg text-sm transition-colors text-white flex items-center justify-center gap-2"
                       >
                         <Upload className="w-4 h-4" />
                         Upload Image
@@ -1381,7 +1381,7 @@ export const CardView: React.FC<CardViewProps> = ({
 
                     {/* Emoji Covers */}
                     <div>
-                      <p className="text-xs text-gray-400 mb-2">Emoji Covers</p>
+                      <p className="text-xs text-[#858585] mb-2">Emoji Covers</p>
                       <div className="flex flex-wrap gap-1.5">
                         {boardIconOptions.map(option => (
                           <button
@@ -1393,8 +1393,8 @@ export const CardView: React.FC<CardViewProps> = ({
                             }}
                             className={`w-10 h-10 rounded-lg border-2 transition-all text-xl flex items-center justify-center flex-shrink-0 ${
                               editedCard.cover?.value === option.value
-                                ? 'border-purple-500 bg-purple-500/20'
-                                : 'border-gray-600 hover:border-gray-500 bg-gray-700'
+                                ? 'border-orange-500 bg-orange-500/20'
+                                : 'border-[#444444] hover:border-gray-500 bg-[#333333]'
                             }`}
                           >
                             {option.label}
@@ -1413,7 +1413,7 @@ export const CardView: React.FC<CardViewProps> = ({
                 <Paperclip className="w-4 h-4" />
                 Attachments
                 {((editedCard.attachments?.length || 0) > 0 || (card?.attachments?.length || 0) > 0) && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[#858585]">
                     ({editedCard.attachments?.length || card?.attachments?.length || 0})
                   </span>
                 )}
@@ -1427,11 +1427,11 @@ export const CardView: React.FC<CardViewProps> = ({
                     return (
                       <div
                         key={attachment.id}
-                        className="flex items-center gap-3 p-2 sm:p-3 bg-dark-700 rounded-lg border border-dark-600 hover:border-dark-500 transition-colors"
+                        className="flex items-center gap-3 p-2 sm:p-3 bg-[#252526] rounded-lg border border-[#444444] hover:border-[#555555] transition-colors"
                       >
                         {isImage ? (
                           <div
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer bg-dark-800"
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer bg-[#1e1e1e]"
                             onClick={() => setPreviewImage(attachment.url)}
                           >
                             <img
@@ -1441,13 +1441,13 @@ export const CardView: React.FC<CardViewProps> = ({
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-dark-800 flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-[#1e1e1e] flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-[#858585]" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-xs sm:text-sm text-white truncate font-medium">{attachment.name}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-[#858585]">
                             {(attachment.size / 1024).toFixed(1)} KB
                           </p>
                         </div>
@@ -1487,7 +1487,7 @@ export const CardView: React.FC<CardViewProps> = ({
               {/* File Upload Section */}
               {(isCreateMode || isEditing) && (
                 <div
-                  className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500/50 transition-colors cursor-pointer"
+                  className="border-2 border-dashed border-[#444444] rounded-lg p-6 text-center hover:border-orange-500/50 transition-colors cursor-pointer"
                   onDragOver={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1521,11 +1521,11 @@ export const CardView: React.FC<CardViewProps> = ({
                   {uploadingFiles ? (
                     <div className="space-y-2">
                       <Upload className="w-8 h-8 mx-auto text-blue-400 animate-pulse" />
-                      <p className="text-sm text-gray-400">Uploading files...</p>
+                      <p className="text-sm text-[#858585]">Uploading files...</p>
                       {Object.keys(uploadProgress).length > 0 && (
                         <div className="space-y-1">
                           {Object.entries(uploadProgress).map(([fileId, progress]) => (
-                            <div key={fileId} className="w-full bg-dark-800 rounded-full h-2">
+                            <div key={fileId} className="w-full bg-[#1e1e1e] rounded-full h-2">
                               <div
                                 className="bg-blue-500 h-2 rounded-full transition-all"
                                 style={{ width: `${progress}%` }}
@@ -1537,9 +1537,9 @@ export const CardView: React.FC<CardViewProps> = ({
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Upload className="w-8 h-8 mx-auto text-gray-400" />
+                      <Upload className="w-8 h-8 mx-auto text-[#858585]" />
                       <p className="text-sm text-white">Click or drag files to upload</p>
-                      <p className="text-xs text-gray-400">Images, PDFs, Documents (Max 10MB per file)</p>
+                      <p className="text-xs text-[#858585]">Images, PDFs, Documents (Max 10MB per file)</p>
                     </div>
                   )}
                 </div>
@@ -1557,10 +1557,10 @@ export const CardView: React.FC<CardViewProps> = ({
                 {(displayData?.assignees || []).map((assignee) => (
                   <div
                     key={assignee.userId}
-                    className="flex items-center justify-between p-2 bg-gray-700/40 border border-gray-600/30 rounded-lg"
+                    className="flex items-center justify-between p-2 bg-[#333333]/40 border border-[#444444]/30 rounded-lg"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center text-sm font-medium text-white flex-shrink-0">
                         {assignee.avatar ? (
                           <img
                             src={assignee.avatar}
@@ -1591,21 +1591,21 @@ export const CardView: React.FC<CardViewProps> = ({
                   <>
                     <button
                       onClick={() => setShowUserSearch(!showUserSearch)}
-                      className="w-full px-4 py-2 border-2 border-dashed border-gray-600 hover:border-purple-500/50 rounded-lg text-gray-400 hover:text-purple-400 transition-colors flex items-center justify-center gap-2 text-sm"
+                      className="w-full px-4 py-2 border-2 border-dashed border-[#444444] hover:border-orange-500/50 rounded-lg text-[#858585] hover:text-orange-400 transition-colors flex items-center justify-center gap-2 text-sm"
                     >
                       <UserPlus className="w-4 h-4" />
                       Assign User
                     </button>
 
                     {showUserSearch && (
-                      <div className="p-3 bg-gray-700/40 border border-gray-600/30 rounded-lg space-y-2">
+                      <div className="p-3 bg-[#333333]/40 border border-[#444444]/30 rounded-lg space-y-2">
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={userSearchQuery}
                             onChange={(e) => setUserSearchQuery(e.target.value)}
                             placeholder="Search by name or email..."
-                            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-500"
+                            className="flex-1 px-3 py-2 bg-[#333333] border border-[#444444] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-[#6e6e6e]"
                           />
                         </div>
 
@@ -1615,18 +1615,18 @@ export const CardView: React.FC<CardViewProps> = ({
                               <button
                                 key={user.userId}
                                 onClick={() => handleAssignUser(user)}
-                                className="w-full flex items-center gap-2 p-2 bg-gray-800 hover:bg-gray-700 rounded text-left transition-colors"
+                                className="w-full flex items-center gap-2 p-2 bg-[#252526] hover:bg-[#333333] rounded text-left transition-colors"
                               >
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs text-white">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center text-xs text-white">
                                   {user.displayName.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-white truncate">
                                     {user.displayName}
                                   </p>
-                                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                                  <p className="text-xs text-[#858585] truncate">{user.email}</p>
                                 </div>
-                                <Plus className="w-4 h-4 text-purple-400" />
+                                <Plus className="w-4 h-4 text-orange-400" />
                               </button>
                             ))}
                           </div>
@@ -1647,7 +1647,7 @@ export const CardView: React.FC<CardViewProps> = ({
 
               <div className="space-y-3">
                 {(displayData?.checklists || []).map((checklist) => (
-                  <div key={checklist.id} className="p-3 bg-gray-700/40 border border-gray-600/30 rounded-lg">
+                  <div key={checklist.id} className="p-3 bg-[#333333]/40 border border-[#444444]/30 rounded-lg">
                     <h4 className="text-sm font-medium text-white mb-2">{checklist.title}</h4>
                     <div className="space-y-1">
                       {checklist.items.map((item) => (
@@ -1656,11 +1656,11 @@ export const CardView: React.FC<CardViewProps> = ({
                             type="checkbox"
                             checked={item.completed}
                             disabled={!isEditing && !isCreateMode}
-                            className="w-4 h-4 rounded border-gray-600 text-purple-500 focus:ring-2 focus:ring-purple-500"
+                            className="w-4 h-4 rounded border-[#444444] text-orange-500 focus:ring-2 focus:ring-orange-500"
                           />
                           <span
                             className={`text-sm ${
-                              item.completed ? 'line-through text-gray-500' : 'text-gray-300'
+                              item.completed ? 'line-through text-[#6e6e6e]' : 'text-[#a0a0a0]'
                             }`}
                           >
                             {item.title}
@@ -1674,18 +1674,18 @@ export const CardView: React.FC<CardViewProps> = ({
                 {(isCreateMode || isEditing) && (
                   <>
                     {showChecklistForm ? (
-                      <div className="p-3 bg-gray-700/40 border border-gray-600/30 rounded-lg space-y-2">
+                      <div className="p-3 bg-[#333333]/40 border border-[#444444]/30 rounded-lg space-y-2">
                         <input
                           type="text"
                           value={newChecklistTitle}
                           onChange={(e) => setNewChecklistTitle(e.target.value)}
                           placeholder="Checklist title..."
-                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-500"
+                          className="w-full px-3 py-2 bg-[#333333] border border-[#444444] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-[#6e6e6e]"
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={handleAddChecklist}
-                            className="px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded text-sm transition-colors"
+                            className="px-3 py-1 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-700 text-white rounded text-sm transition-colors"
                           >
                             Add
                           </button>
@@ -1694,7 +1694,7 @@ export const CardView: React.FC<CardViewProps> = ({
                               setShowChecklistForm(false);
                               setNewChecklistTitle('');
                             }}
-                            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+                            className="px-3 py-1 bg-[#333333] hover:bg-[#444444] text-white rounded text-sm transition-colors"
                           >
                             Cancel
                           </button>
@@ -1703,7 +1703,7 @@ export const CardView: React.FC<CardViewProps> = ({
                     ) : (
                       <button
                         onClick={() => setShowChecklistForm(true)}
-                        className="w-full px-4 py-2 border-2 border-dashed border-gray-600 hover:border-purple-500/50 rounded-lg text-gray-400 hover:text-purple-400 transition-colors flex items-center justify-center gap-2 text-sm"
+                        className="w-full px-4 py-2 border-2 border-dashed border-[#444444] hover:border-orange-500/50 rounded-lg text-[#858585] hover:text-orange-400 transition-colors flex items-center justify-center gap-2 text-sm"
                       >
                         <Plus className="w-4 h-4" />
                         Add Checklist
@@ -1724,7 +1724,7 @@ export const CardView: React.FC<CardViewProps> = ({
               {/* Display existing links */}
               {((!isCreateMode && card && card.metadata && (card.metadata.noteId || card.metadata.taskIds || card.metadata.taskId || card.metadata.taskListId || card.metadata.fileId || card.metadata.calendarEventId)) ||
                 (isCreateMode && editedCard.metadata && (editedCard.metadata.noteId || editedCard.metadata.taskIds || editedCard.metadata.taskId || editedCard.metadata.taskListId || editedCard.metadata.fileId || editedCard.metadata.calendarEventId))) && (
-                <div className="p-3 bg-gray-700/40 border border-gray-600/30 rounded-lg space-y-2 mb-2">
+                <div className="p-3 bg-[#333333]/40 border border-[#444444]/30 rounded-lg space-y-2 mb-2">
                   {((!isCreateMode && card?.metadata?.noteId) || (isCreateMode && editedCard.metadata?.noteId)) && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -1792,7 +1792,7 @@ export const CardView: React.FC<CardViewProps> = ({
                   {((!isCreateMode && card?.metadata?.fileId) || (isCreateMode && editedCard.metadata?.fileId)) && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Folder className="w-4 h-4 text-purple-400" />
+                        <Folder className="w-4 h-4 text-orange-400" />
                         <span className="text-sm text-white">
                           {!isCreateMode && card?.metadata?.fileId
                             ? driveService.getFile(card.metadata.fileId)?.name || 'Linked File'
@@ -1804,7 +1804,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       <div className="flex items-center gap-2">
                         <a
                           href="/storage"
-                          className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                          className="text-sm text-orange-400 hover:text-orange-300 flex items-center gap-1"
                         >
                           View
                           <ExternalLink className="w-3 h-3" />
@@ -1920,7 +1920,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       setShowLinkFile(false);
                     }}
                     disabled={!!((!isCreateMode && card?.metadata?.noteId) || (isCreateMode && editedCard.metadata?.noteId))}
-                    className="flex-1 px-4 py-2 border-2 border-dashed border-gray-600 hover:border-blue-500/50 rounded-lg text-gray-400 hover:text-blue-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="flex-1 px-4 py-2 border-2 border-dashed border-[#444444] hover:border-blue-500/50 rounded-lg text-[#858585] hover:text-blue-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     <FileText className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">
@@ -1935,7 +1935,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       setShowLinkNote(false);
                       setShowLinkFile(false);
                     }}
-                    className="flex-1 px-4 py-2 border-2 border-dashed border-gray-600 hover:border-green-500/50 rounded-lg text-gray-400 hover:text-green-400 transition-colors flex items-center justify-center gap-2 text-sm"
+                    className="flex-1 px-4 py-2 border-2 border-dashed border-[#444444] hover:border-green-500/50 rounded-lg text-[#858585] hover:text-green-400 transition-colors flex items-center justify-center gap-2 text-sm"
                   >
                     <CheckSquare className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">
@@ -1959,7 +1959,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       setShowLinkCalendar(false);
                     }}
                     disabled={!!((!isCreateMode && card?.metadata?.fileId) || (isCreateMode && editedCard.metadata?.fileId))}
-                    className="flex-1 px-4 py-2 border-2 border-dashed border-gray-600 hover:border-purple-500/50 rounded-lg text-gray-400 hover:text-purple-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="flex-1 px-4 py-2 border-2 border-dashed border-[#444444] hover:border-orange-500/50 rounded-lg text-[#858585] hover:text-orange-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     <Folder className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">
@@ -1976,7 +1976,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       setShowLinkFile(false);
                     }}
                     disabled={!!((!isCreateMode && card?.metadata?.calendarEventId) || (isCreateMode && editedCard.metadata?.calendarEventId))}
-                    className="flex-1 px-4 py-2 border-2 border-dashed border-gray-600 hover:border-orange-500/50 rounded-lg text-gray-400 hover:text-orange-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="flex-1 px-4 py-2 border-2 border-dashed border-[#444444] hover:border-orange-500/50 rounded-lg text-[#858585] hover:text-orange-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     <Calendar className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">
@@ -1990,16 +1990,16 @@ export const CardView: React.FC<CardViewProps> = ({
 
               {/* Note Search/Select */}
               {showLinkNote && (isCreateMode || isEditing) && (
-                <div className="mt-3 p-4 bg-dark-700 border border-dark-600 rounded-lg space-y-2">
+                <div className="mt-3 p-4 bg-[#252526] border border-[#444444] rounded-lg space-y-2">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
                       <input
                         type="text"
                         value={noteSearchQuery}
                         onChange={(e) => setNoteSearchQuery(e.target.value)}
                         placeholder="Search notes..."
-                        className="w-full pl-10 pr-3 py-2 bg-dark-800 border border-dark-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                        className="w-full pl-10 pr-3 py-2 bg-[#1e1e1e] border border-[#444444] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-[#6e6e6e]"
                       />
                     </div>
                     <button
@@ -2007,7 +2007,7 @@ export const CardView: React.FC<CardViewProps> = ({
                         setShowLinkNote(false);
                         setNoteSearchQuery('');
                       }}
-                      className="px-3 py-2 bg-dark-600 hover:bg-dark-500 text-white rounded-lg text-sm"
+                      className="px-3 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg text-sm"
                     >
                       Cancel
                     </button>
@@ -2018,12 +2018,12 @@ export const CardView: React.FC<CardViewProps> = ({
                         <button
                           key={note.id}
                           onClick={() => handleLinkNote(note.id)}
-                          className="w-full flex items-center gap-2 p-2 bg-dark-800 hover:bg-dark-600 rounded text-left"
+                          className="w-full flex items-center gap-2 p-2 bg-[#1e1e1e] hover:bg-[#333333] rounded text-left"
                         >
                           <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{note.title}</p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-[#858585] truncate">
                               {note.content.substring(0, 50)}...
                             </p>
                           </div>
@@ -2032,23 +2032,23 @@ export const CardView: React.FC<CardViewProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 text-center py-2">No notes found</p>
+                    <p className="text-sm text-[#858585] text-center py-2">No notes found</p>
                   )}
                 </div>
               )}
 
               {/* Task Search/Select */}
               {showLinkTask && (isCreateMode || isEditing) && (
-                <div className="mt-3 p-4 bg-gray-700/40 border border-gray-600/30 rounded-lg space-y-2">
+                <div className="mt-3 p-4 bg-[#333333]/40 border border-[#444444]/30 rounded-lg space-y-2">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
                       <input
                         type="text"
                         value={taskSearchQuery}
                         onChange={(e) => setTaskSearchQuery(e.target.value)}
                         placeholder="Search tasks..."
-                        className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-gray-500"
+                        className="w-full pl-10 pr-3 py-2 bg-[#333333] border border-[#444444] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-[#6e6e6e]"
                       />
                     </div>
                     <button
@@ -2056,7 +2056,7 @@ export const CardView: React.FC<CardViewProps> = ({
                         setShowLinkTask(false);
                         setTaskSearchQuery('');
                       }}
-                      className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                      className="px-3 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg text-sm transition-colors"
                     >
                       Cancel
                     </button>
@@ -2067,12 +2067,12 @@ export const CardView: React.FC<CardViewProps> = ({
                         <button
                           key={task.id}
                           onClick={() => handleLinkTask(task.id)}
-                          className="w-full flex items-center gap-2 p-2 bg-gray-800 hover:bg-gray-700 rounded text-left transition-colors"
+                          className="w-full flex items-center gap-2 p-2 bg-[#252526] hover:bg-[#333333] rounded text-left transition-colors"
                         >
                           <CheckSquare className="w-4 h-4 text-green-400 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{task.title}</p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-[#858585] truncate">
                               {task.description?.substring(0, 50) || 'No description'}...
                             </p>
                           </div>
@@ -2081,23 +2081,23 @@ export const CardView: React.FC<CardViewProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 text-center py-2">No tasks found</p>
+                    <p className="text-sm text-[#858585] text-center py-2">No tasks found</p>
                   )}
                 </div>
               )}
 
               {/* File Search/Select */}
               {showLinkFile && (isCreateMode || isEditing) && (
-                <div className="mt-3 p-4 bg-dark-700 border border-dark-600 rounded-lg space-y-2">
+                <div className="mt-3 p-4 bg-[#252526] border border-[#444444] rounded-lg space-y-2">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
                       <input
                         type="text"
                         value={fileSearchQuery}
                         onChange={(e) => setFileSearchQuery(e.target.value)}
                         placeholder="Search files..."
-                        className="w-full pl-10 pr-3 py-2 bg-dark-800 border border-dark-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-500"
+                        className="w-full pl-10 pr-3 py-2 bg-[#1e1e1e] border border-[#444444] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-[#6e6e6e]"
                       />
                     </div>
                     <button
@@ -2105,7 +2105,7 @@ export const CardView: React.FC<CardViewProps> = ({
                         setShowLinkFile(false);
                         setFileSearchQuery('');
                       }}
-                      className="px-3 py-2 bg-dark-600 hover:bg-dark-500 text-white rounded-lg text-sm"
+                      className="px-3 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg text-sm"
                     >
                       Cancel
                     </button>
@@ -2116,37 +2116,37 @@ export const CardView: React.FC<CardViewProps> = ({
                         <button
                           key={file.id}
                           onClick={() => handleLinkFile(file.id)}
-                          className="w-full flex items-center gap-2 p-2 bg-dark-800 hover:bg-dark-600 rounded text-left"
+                          className="w-full flex items-center gap-2 p-2 bg-[#1e1e1e] hover:bg-[#333333] rounded text-left"
                         >
-                          <Folder className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                          <Folder className="w-4 h-4 text-orange-400 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{file.name}</p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-[#858585] truncate">
                               {file.path} {file.size ? `(${(file.size / 1024).toFixed(1)} KB)` : ''}
                             </p>
                           </div>
-                          <LinkIcon className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                          <LinkIcon className="w-4 h-4 text-orange-400 flex-shrink-0" />
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 text-center py-2">No files found</p>
+                    <p className="text-sm text-[#858585] text-center py-2">No files found</p>
                   )}
                 </div>
               )}
 
               {/* Calendar Event Search/Select */}
               {showLinkCalendar && (isCreateMode || isEditing) && (
-                <div className="mt-3 p-4 bg-dark-700 border border-dark-600 rounded-lg space-y-2">
+                <div className="mt-3 p-4 bg-[#252526] border border-[#444444] rounded-lg space-y-2">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
                       <input
                         type="text"
                         value={calendarSearchQuery}
                         onChange={(e) => setCalendarSearchQuery(e.target.value)}
                         placeholder="Search calendar events..."
-                        className="w-full pl-10 pr-3 py-2 bg-dark-800 border border-dark-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-500"
+                        className="w-full pl-10 pr-3 py-2 bg-[#1e1e1e] border border-[#444444] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-[#6e6e6e]"
                       />
                     </div>
                     <button
@@ -2154,7 +2154,7 @@ export const CardView: React.FC<CardViewProps> = ({
                         setShowLinkCalendar(false);
                         setCalendarSearchQuery('');
                       }}
-                      className="px-3 py-2 bg-dark-600 hover:bg-dark-500 text-white rounded-lg text-sm"
+                      className="px-3 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg text-sm"
                     >
                       Cancel
                     </button>
@@ -2165,12 +2165,12 @@ export const CardView: React.FC<CardViewProps> = ({
                         <button
                           key={event.id}
                           onClick={() => handleLinkCalendar(event.id)}
-                          className="w-full flex items-center gap-2 p-2 bg-dark-800 hover:bg-dark-600 rounded text-left"
+                          className="w-full flex items-center gap-2 p-2 bg-[#1e1e1e] hover:bg-[#333333] rounded text-left"
                         >
                           <Calendar className="w-4 h-4 text-orange-400 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{event.title}</p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-[#858585] truncate">
                               {event.startTime ? new Date(event.startTime).toLocaleString() : ''} - {event.endTime ? new Date(event.endTime).toLocaleString() : ''}
                             </p>
                           </div>
@@ -2179,7 +2179,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 text-center py-2">No calendar events found</p>
+                    <p className="text-sm text-[#858585] text-center py-2">No calendar events found</p>
                   )}
                 </div>
               )}
@@ -2195,14 +2195,14 @@ export const CardView: React.FC<CardViewProps> = ({
 
                 <div className="space-y-3 mb-3">
                   {(card.comments || []).map((comment) => (
-                    <div key={comment.id} className="p-3 bg-dark-700 rounded-lg">
+                    <div key={comment.id} className="p-3 bg-[#252526] rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-white">{comment.userName || 'Unknown User'}</span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-[#858585]">
                           {new Date(comment.createdAt).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-300">{comment.content || ''}</p>
+                      <p className="text-sm text-[#a0a0a0]">{comment.content || ''}</p>
                     </div>
                   ))}
                 </div>
@@ -2217,7 +2217,7 @@ export const CardView: React.FC<CardViewProps> = ({
                       if (e.key === 'Enter') handleAddComment();
                     }}
                     placeholder="Add a comment..."
-                    className="flex-1 px-4 py-2 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                    className="flex-1 px-4 py-2 bg-[#252526] border border-[#444444] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-[#6e6e6e]"
                   />
                   <button
                     onClick={handleAddComment}

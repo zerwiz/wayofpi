@@ -1,3 +1,115 @@
+# v1.0.69
+
+## 📦 Kanban Completeness (Phase 10)
+
+### ✨ New Features
+- **Mock Kanban Service rewritten** — Now properly persists boards and cards in memory so creating boards actually works. Board list shows real seed data (2 sample boards with 5 cards total) instead of always-empty list.
+- **Company Users in BoardMembers** — Board Members modal now shows a "Company Users" section that fetches users from `/api/admin/users` (real API) or falls back to seed users. Admins can add company users directly to boards with one click.
+- **Orange shading/depth** — All accent colors changed from purple/pink to orange with proper gradient depth (`from-orange-600 to-orange-700` instead of flat `to-orange-600`).
+
+### 🎨 Color Scheme
+- **All purple/pink → orange** — Replaced every `purple-*` and `pink-*` utility across all 10 kanban files with matching `orange-*` utilities.
+- **Dark theme colors fixed** — `bg-gray-900` → `bg-[#1e1e1e]`, `bg-gray-800` → `bg-[#252526]`, `bg-gray-700` → `bg-[#333333]`, `bg-gray-600` → `bg-[#444444]`, `text-gray-400` → `text-[#858585]`, etc. across all 10 kanban files.
+- **`bg-dark-*` legacy classes fixed** — CardView.tsx had `bg-dark-*` classes from an older theme; replaced with app design system equivalents.
+
+### 🐛 Bug Fixes
+- **Claw left sidebar toggle fixed** — PanelLeft button now shows on ALL desktop sizes (not just narrow). Before: if sidebar was closed on wide desktop, there was no way to reopen it. Now: button always visible when nav is closed; click toggles open/closed.
+- **Board creation works** — `mockKanbanService.createBoard()` now persists boards in memory instead of returning a one-off object that disappears on next render.
+- **`createBoard()` second param preserved** — Fixed TS error where `createBoard(data, templateId)` was called with 2 args but service only accepted 1.
+
+### 🟠 All purple/pink → orange
+- Replaced ALL remaining `purple-*`/`pink-*` references across both `components/kanban/` and `components/work/kanban/` directories. Zero purple/pink left in live code.
+- Added orange gradient shading: `from-orange-600 to-orange-700` for depth instead of flat same-color gradients.
+
+### 🏗️ Construction Templates
+- Added 4 construction board templates: Residential Construction, Commercial Construction, Renovation Project, Construction Punch List
+- Added `'construction'` category to `TemplateCategory` type
+
+### 📋 ÄTA Templates
+- Added 2 ÄTA (change order) board templates: ÄTA Workflow, ÄTA Change Order Log
+- Added `'ata'` category to `TemplateCategory` type
+
+### 📋 Issue
+- Created `issues/008-kanban-completeness.md` — full ticket for Phase 10 Kanban work.
+
+# v1.0.68
+
+## 💥 REGRESSIONS from v1.0.66 (Global Header / IdeLayout simplification)
+
+### Content hidden behind global header (all `min-h-screen` pages)
+- WorkerPortal "Signed in as Demo Worker" text is hidden behind the global MenuBar
+- AdminDashboard "Admin Console / Manage team, clients, and projects" hidden behind header
+- UserProfile "User Profile" header hidden behind header
+- SuperAdminDashboard "Developer View" header hidden behind header
+- ClientDashboard content hidden behind header
+- **Root cause**: Pages use `min-h-screen` which doesn't account for the global MenuBar height. The `flex-1` container in App.tsx is (100vh - MenuBar height), but pages try to be 100vh.
+
+### Kanban button not visible for admin role
+- **Root cause**: MenuBar header has `overflow-hidden` (line 234). The UiModeToggle now has many buttons (Simple, Claw, Docs, Workboard, Kanban, Admin, DevView, Profile, Logout) that can overflow the header width and get clipped.
+
+### Duplicate UiModeToggle still in WorkApp and DocsApp
+- WorkApp.tsx line 106 still renders its own `<UiModeToggle>` (duplicate of global header)
+- DocsApp.tsx line 167 still renders its own `<UiModeToggle>` (duplicate of global header)
+
+### Left sidebar missing from Simple page
+- **Root cause**: IdeLayout simplification removed layout chrome that SimpleApp depended on
+
+### Right sidebar missing from Claw page
+- **Root cause**: IdeLayout simplification removed layout chrome that ClawApp depended on
+
+### "Claw Meny" button placement
+- `ClawApp.tsx:549-567` shows a "Claw menu" button only in narrow/mobile viewports. The quick actions (Open Chat, New Plan, My Team, Host Doctor, Schedules, Channels, Help) should be directly visible in the mission view.
+
+## 🔧 Fixes applied (may need rollback of IdeLayout simplification)
+- Added Kanban + Logout buttons to UiModeToggle
+- Removed duplicate UiModeToggle from AdminDashboard, UserProfile, SuperAdminDashboard
+- Removed "Back to App" buttons
+- Cleaned up WorkerPortal unused imports
+- 🔧 **MenuBar restructured**: Search/model chooser moved inside h-8 top row, `UiModeToggle` moved to its own bottom row
+- 🎨 **Claw menu button styled as PanelLeft icon**: Replaced text "Claw menu" button with PanelLeft icon matching Simple's sidebar toggle style
+- 🗑️ **Removed "Project files" button from SimpleApp**: Useless narrow-desktop button removed
+- 💾 **Sidebar state persisted**: Left/right sidebar open/close state now persisted in localStorage for both SimpleApp and ClawApp (keys: `wayofpi.simple.leftOpen`, `wayofpi.simple.rightOpen`, `wayofpi.claw.navOpen`)
+- 🔧 **Claw auto-open removed**: Removed effect that forced ClawNavRail open on wide screens — user's sidebar choice is now respected
+- 🧹 **Removed `LayoutDashboard` import from UiModeToggle**: No longer used after Portal button removal
+
+
+## ⚠️ Pending fixes
+- [ ] Restore IdeLayout to full version (left sidebar, right sidebar, layout chrome)
+- [ ] Fix `min-h-screen` → `h-full` on all pages inside flex-1 container
+- [ ] Remove `overflow-hidden` from MenuBar header (if causing overflow clipping)
+- [ ] Remove duplicate UiModeToggle from WorkApp.tsx and DocsApp.tsx
+- [ ] Integrate "Claw menu" quick actions into mission view
+- [x] Sidebar state persistence (Simple + Claw) — **Done**
+- [x] Claw menu button styled as PanelLeft icon — **Done**
+- [x] Remove useless "Project files" button from Simple narrow desktop — **Done**
+
+# v1.0.66
+
+## 📦 Updates
+
+- 🏛️ **Global Consistent Header** — All pages now share the same MenuBar header (WAY OF WORK logo, File/Edit/Selection/View/Go/Terminal/Help menus) via App-level `AppLayout`. Removed per-page duplicate headers.
+- 🧭 **PageHeaderContext** — Created `PageHeaderContext` to provide menu handlers from pages (SimplePage, ClawPage) to the global MenuBar, while other pages get default stubs.
+- 🔧 **IdeLayout simplified** — Removed MenuBar from IdeLayout (now just a container). MenuBar lives at App level.
+- 🔤 **Rebranded header** — Changed "WAY OF PI" to "WAY OF WORK" in MenuBar.
+- 🚪 **Unified Login** — WelcomePage now has a single "Sign In" button instead of three separate portal logins.
+- 🧭 **Role-Based Login Redirect** — ADMIN and SUPER_ADMIN now redirect to `/ata` (Claw/ÄTA) instead of `/admin` or `/super-admin`.
+- 🔧 **Fixed crash in SimplePage** — Added missing `workspaceFolders` to `fileMenu` object (was causing `Cannot read properties of undefined (reading 'length')` in FileMenuContent).
+- 👤 **Client role fix** — UiModeToggle `isClientRole` corrected to only match `CLIENT`, not admin/super.
+- 🧭 **Technical button removed** — Technical mode button removed from UiModeToggle nav.
+- 🧭 **UiModeToggle SPA routing** — Replaced `window.location.pathname` with React Router `navigate()`.
+
+# v1.0.65
+
+## 📦 Updates
+
+- 🚪 **Unified Login** — WelcomePage now has a single "Sign In" button instead of three separate portal logins.
+- 🧭 **Role-Based Login Redirect** — ADMIN and SUPER_ADMIN now redirect to `/ata` (Claw/ÄTA) instead of `/admin` or `/super-admin`.
+- 🔧 **Fixed crash in SimplePage** — Added missing `workspaceFolders` to `fileMenu` object (was causing `Cannot read properties of undefined (reading 'length')` in FileMenuContent).
+- 👤 **Client role fix** — UiModeToggle `isClientRole` corrected to only match `CLIENT`, not admin/super.
+- 🧭 **Technical button removed** — Technical mode button removed from UiModeToggle nav.
+- 🧭 **UiModeToggle SPA routing** — Replaced `window.location.pathname` with React Router `navigate()` for proper SPA navigation.
+- 🧭 **WelcomePage** — Consolidated three portal buttons (IDE Login, Worker Portal, Client Portal) into a single "Sign In" button.
+
 # v1.0.64
 
 ## 📦 Updates

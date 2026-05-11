@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { FileText, Briefcase, Shield, User, LayoutDashboard, Code2, Bot, FileCode } from "lucide-react";
 
 interface NavItem {
@@ -40,6 +41,8 @@ const CONTEXT_NAV: NavItem[] = [
 const CLIENT_ENTRY = { id: "client", label: "Client", icon: <User size={14} />, title: "Client Dashboard (View-Only)", path: "/client", showCondition: (role?: string) => role === "client" };
 
 export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin, isProfile, userRole = null }: NavigationProps) {
+  const navigate = useNavigate();
+
   // Universal Authorization Gate: Only show navigation AFTER user is logged in
   if (!userRole) return null;
 
@@ -50,12 +53,12 @@ export function Navigation({ uiMode, onUiModeChange, isPortal, isClient, isAdmin
       window.open("http://localhost:5174", "_blank");
       return;
     }
-    if (window.location.pathname !== "/") window.location.pathname = "/";
+    if (window.location.pathname !== "/") navigate("/", { replace: true });
     onUiModeChange(mode);
   };
 
   const handleContextClick = (item: NavItem) => {
-    if (item.path) window.location.pathname = item.path;
+    if (item.path) navigate(item.path, { replace: true });
   };
 
   const isActive = (item: NavItem): boolean => {

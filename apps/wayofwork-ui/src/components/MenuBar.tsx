@@ -231,36 +231,37 @@ export function MenuBar({
 	const closeMenus = () => setOpenMenu(null);
 
 	return (
-		<header className="relative z-[60] flex h-8 shrink-0 select-none items-center justify-between overflow-hidden border-b border-[#252526] bg-[#323233] px-3">
-			<div className="flex min-w-0 items-center gap-4">
-				<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
-					<TerminalSquare size={14} className="text-[#007acc]" />
-					WAY OF PI
-					{uiMode !== "simple" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
-						<button
-							type="button"
-							title={
-								leftSidebarVisible
-									? "Hide primary sidebar (Ctrl+B)"
-									: "Show primary sidebar (Ctrl+B)"
-							}
-							aria-label={
-								leftSidebarVisible ? "Hide primary sidebar" : "Show primary sidebar"
-							}
-							aria-pressed={leftSidebarVisible}
-							onClick={() => onToggleLeftSidebar()}
-							className="-ml-0.5 flex shrink-0 items-center rounded p-0.5 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
-						>
-							{leftSidebarVisible ? (
-								<ChevronLeft size={14} strokeWidth={2} aria-hidden />
-							) : (
-								<ChevronRight size={14} strokeWidth={2} aria-hidden />
-							)}
-						</button>
-					) : null}
-				</div>
-				<UiModeToggle uiMode={uiMode} onUiModeChange={onUiModeChange} />
-				<nav ref={navRef} className="relative flex min-w-0 gap-1 text-[13px] text-[#cccccc]">
+		<header className="relative z-[60] shrink-0 select-none border-b border-[#252526] bg-[#323233]">
+			{/* Top row: logo + menus */}
+			<div className="flex h-8 items-center justify-between px-3">
+				<div className="flex min-w-0 items-center gap-4">
+					<div className="flex shrink-0 items-center gap-2 text-[13px] font-bold tracking-wide text-white">
+						<TerminalSquare size={14} className="text-[#007acc]" />
+WAY OF WORK
+						{uiMode !== "simple" && onToggleLeftSidebar != null && leftSidebarVisible != null ? (
+							<button
+								type="button"
+								title={
+									leftSidebarVisible
+										? "Hide primary sidebar (Ctrl+B)"
+										: "Show primary sidebar (Ctrl+B)"
+								}
+								aria-label={
+									leftSidebarVisible ? "Hide primary sidebar" : "Show primary sidebar"
+								}
+								aria-pressed={leftSidebarVisible}
+								onClick={() => onToggleLeftSidebar()}
+								className="-ml-0.5 flex shrink-0 items-center rounded p-0.5 text-[#c0c0c0] hover:bg-[#474747] hover:text-white"
+							>
+								{leftSidebarVisible ? (
+									<ChevronLeft size={14} strokeWidth={2} aria-hidden />
+								) : (
+									<ChevronRight size={14} strokeWidth={2} aria-hidden />
+								)}
+							</button>
+						) : null}
+					</div>
+					<nav ref={navRef} className="relative flex min-w-0 gap-1 text-[13px] text-[#cccccc]">
 					{menuLabels.map((label) => (
 						<div key={label} className="relative shrink-0">
 							<button
@@ -3379,8 +3380,7 @@ export function MenuBar({
 						</div>
 					))}
 				</nav>
-			</div>
-
+				</div>
 			<div className="flex shrink-0 items-center gap-2 sm:gap-4">
 				<button
 					type="button"
@@ -3390,7 +3390,7 @@ export function MenuBar({
 				>
 					<Search size={12} className="text-[#cccccc]" />
 					<span className="hidden text-[12px] text-[#cccccc] lg:inline">Search or command…</span>
-					<span className="ml-1 hidden font-mono text-[10px] font-bold text-[#969696] lg:inline">⌘K</span>
+					<span className="ml-1 hidden font-mono text-[#858585] lg:inline">⌘K</span>
 				</button>
 
 				<div className="relative" ref={modelRef}>
@@ -3452,6 +3452,12 @@ export function MenuBar({
 						</div>
 					) : null}
 				</div>
+			</div>
+			</div>
+
+			{/* Bottom row: mode toggles */}
+			<div className="flex items-center border-t border-[#252526] px-3 py-1">
+				<UiModeToggle uiMode={uiMode} onUiModeChange={onUiModeChange} />
 			</div>
 
 			{debugHelpOpen ? (

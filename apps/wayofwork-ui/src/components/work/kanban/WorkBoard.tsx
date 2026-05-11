@@ -1041,7 +1041,7 @@ export function WorkBoard() {
                   placeholder="Q Search boards..."
                   value={boardListSearchQuery}
                   onChange={(e) => setBoardListSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2 w-48 bg-[#1e1e1e] border border-gray-700 rounded-lg text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                  className="pl-9 pr-4 py-2 w-48 bg-[#1e1e1e] border border-gray-700 rounded-lg text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
               </div>
 
@@ -1090,7 +1090,7 @@ export function WorkBoard() {
                 onClick={() => setBoardListFilter(filter)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   boardListFilter === filter
-                    ? 'bg-gradient-to-r from-[#ea580c] to-[#c2410c] text-[#cccccc] shadow-md shadow-purple-500/20'
+                    ? 'bg-gradient-to-r from-[#ea580c] to-[#c2410c] text-[#cccccc] shadow-md shadow-orange-500/20'
                     : 'text-[#858585] hover:text-[#cccccc] hover:bg-[#252526]'
                 }`}
               >
@@ -1130,7 +1130,7 @@ export function WorkBoard() {
               {/* Use Template Card */}
               <button
                 onClick={() => setShowTemplates(true)}
-                className="p-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg text-[#cccccc] hover:shadow-lg hover:shadow-purple-500/30 transition-all cursor-pointer group hover:scale-[1.02] glass-card"
+                className="p-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-[#cccccc] hover:shadow-lg hover:shadow-orange-500/30 transition-all cursor-pointer group hover:scale-[1.02] glass-card"
               >
                 <Sparkles className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-semibold mb-2">Use Template</h3>
@@ -1148,7 +1148,7 @@ export function WorkBoard() {
                   <div
                     key={b.id}
                     onClick={() => setCurrentBoardId(b.id)}
-                    className="group relative p-6 bg-[#1e1e1e] border border-gray-700 rounded-lg hover:border-purple-600/50 hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer glass-card hover-lift"
+                    className="group relative p-6 bg-[#1e1e1e] border border-gray-700 rounded-lg hover:border-orange-600/50 hover:shadow-lg hover:shadow-orange-500/20 transition-all cursor-pointer glass-card hover-lift"
                     style={{ borderTopColor: b.color || '#8B5CF6', borderTopWidth: '4px' }}
                   >
                     {/* Header */}
@@ -1302,7 +1302,7 @@ export function WorkBoard() {
                   <div
                     key={b.id}
                     onClick={() => setCurrentBoardId(b.id)}
-                    className="group flex items-center justify-between p-4 bg-[#1e1e1e] border border-gray-700 rounded-lg hover:border-purple-600/50 hover:shadow-md transition-all cursor-pointer glass-card"
+                    className="group flex items-center justify-between p-4 bg-[#1e1e1e] border border-gray-700 rounded-lg hover:border-orange-600/50 hover:shadow-md transition-all cursor-pointer glass-card"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {b.icon && <span className="text-2xl flex-shrink-0">{b.icon}</span>}
@@ -1385,25 +1385,25 @@ export function WorkBoard() {
             }}
           >
             <div
-              className="glass-card rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-purple-500/30 animate-scale-in flex flex-col"
+              className="glass-card rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-orange-500/30 animate-scale-in flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="p-6 border-b border-purple-500/20 flex items-center justify-between flex-shrink-0">
+              <div className="p-6 border-b border-orange-500/20 flex items-center justify-between flex-shrink-0">
                 <div>
                   <h2 className="text-xl font-bold gradient-text">Board Templates</h2>
-                  <p className="text-sm text-purple-300/70 mt-1">Choose a template to create a new board</p>
+                  <p className="text-sm text-orange-300/70 mt-1">Choose a template to create a new board</p>
                 </div>
                 <button
                   onClick={() => setShowTemplates(false)}
-                  className="p-2 rounded-lg text-[#858585] hover:text-[#cccccc] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:shadow-lg hover:shadow-purple-500/10"
+                  className="p-2 rounded-lg text-[#858585] hover:text-[#cccccc] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:shadow-lg hover:shadow-orange-500/10"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Search and Filters */}
-              <div className="p-6 border-b border-purple-500/20 flex-shrink-0">
+              <div className="p-6 border-b border-orange-500/20 flex-shrink-0">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#858585]" />
@@ -1412,7 +1412,7 @@ export function WorkBoard() {
                       placeholder="Search templates..."
                       value={templatesSearchQuery}
                       onChange={(e) => setTemplatesSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] transition-all"
+                      className="w-full pl-10 pr-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] transition-all"
                     />
                   </div>
                 </div>
@@ -1423,7 +1423,7 @@ export function WorkBoard() {
                     onClick={() => setSelectedTemplateCategory(null)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
                       selectedTemplateCategory === null
-                        ? 'bg-gradient-to-r from-[#ea580c] to-[#c2410c] text-[#cccccc] shadow-lg shadow-purple-500/20'
+                        ? 'bg-gradient-to-r from-[#ea580c] to-[#c2410c] text-[#cccccc] shadow-lg shadow-orange-500/20'
                         : 'bg-[#1e1e1e]/60 text-[#cccccc] hover:bg-[#252526]/80 border border-gray-700/50'
                     }`}
                   >
@@ -1441,7 +1441,7 @@ export function WorkBoard() {
                       onClick={() => setSelectedTemplateCategory(cat.value)}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
                         selectedTemplateCategory === cat.value
-                          ? 'bg-gradient-to-r from-[#ea580c] to-[#c2410c] text-[#cccccc] shadow-lg shadow-purple-500/20'
+                          ? 'bg-gradient-to-r from-[#ea580c] to-[#c2410c] text-[#cccccc] shadow-lg shadow-orange-500/20'
                           : 'bg-[#1e1e1e]/60 text-[#cccccc] hover:bg-[#252526]/80 border border-gray-700/50'
                       }`}
                     >
@@ -1509,7 +1509,7 @@ export function WorkBoard() {
                               });
                             }
                           }}
-                          className="p-4 rounded-lg border-2 border-gray-700/50 bg-[#1e1e1e]/60 backdrop-blur-sm hover:border-purple-500/50 hover:bg-[#252526]/60 transition-all text-left hover:scale-[1.02] group"
+                          className="p-4 rounded-lg border-2 border-gray-700/50 bg-[#1e1e1e]/60 backdrop-blur-sm hover:border-orange-500/50 hover:bg-[#252526]/60 transition-all text-left hover:scale-[1.02] group"
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -1525,7 +1525,7 @@ export function WorkBoard() {
                             {template.tags?.slice(0, 3).map((tag) => (
                               <span
                                 key={tag}
-                                className="px-2 py-0.5 text-xs bg-[#ea580c]/20 text-purple-300 rounded border border-purple-500/30"
+                                className="px-2 py-0.5 text-xs bg-[#ea580c]/20 text-orange-300 rounded border border-orange-500/30"
                               >
                                 {tag}
                               </span>
@@ -1573,7 +1573,7 @@ export function WorkBoard() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs text-[#585858] hidden sm:inline">•</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-400 flex-shrink-0" />
+                    <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-400 flex-shrink-0" />
                     <span className="text-xs text-[#858585]">Linked to:</span>
                     {board.projectIds.slice(0, 2).map((projectId) => {
                       const project = projectsService.getProject(projectId);
@@ -1586,7 +1586,7 @@ export function WorkBoard() {
                             e.preventDefault();
                             navigate('/app/company-projects');
                           }}
-                          className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
+                          className="text-xs text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
                         >
                           {project.name}
                           {board.projectIds && board.projectIds.length > 2 && board.projectIds.indexOf(projectId) === 1 && (
@@ -2186,7 +2186,7 @@ export function WorkBoard() {
                                 className={`text-xs px-2 py-0.5 rounded ${
                                   tag === 'From Note' || tag === 'From Task'
                                     ? tag === 'From Note'
-                                      ? 'bg-[#ea580c]/30 text-purple-300 border border-purple-500/50'
+                                      ? 'bg-[#ea580c]/30 text-orange-300 border border-orange-500/50'
                                       : 'bg-green-600/30 text-green-300 border border-green-500/50'
                                     : 'bg-gray-600 text-[#cccccc]'
                                 }`}
@@ -2212,7 +2212,7 @@ export function WorkBoard() {
                                   e.stopPropagation();
                                   navigate(`/app/workflows/${card.metadata!.workflowId}`);
                                 }}
-                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-pink-600/20 text-pink-300 border border-pink-500/30 rounded hover:bg-pink-600/30 transition-colors"
+                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-orange-600/20 text-orange-300 border border-orange-500/30 rounded hover:bg-orange-600/30 transition-colors"
                                 title={`View workflow${card.metadata.workflowTrack ? ` (${card.metadata.workflowTrack})` : ''}`}
                               >
                                 <FolderKanban className="w-3 h-3" />
@@ -2228,7 +2228,7 @@ export function WorkBoard() {
                                   e.stopPropagation();
                                   navigate(`/app/development-workflows/${card.metadata!.developmentWorkflowId}`);
                                 }}
-                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-[#ea580c]/20 text-purple-300 border border-purple-500/30 rounded hover:bg-[#ea580c]/30 transition-colors"
+                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-[#ea580c]/20 text-orange-300 border border-orange-500/30 rounded hover:bg-[#ea580c]/30 transition-colors"
                                 title="View development workflow"
                               >
                                 <GitBranch className="w-3 h-3" />
@@ -2263,7 +2263,7 @@ export function WorkBoard() {
                                 e.stopPropagation();
                                 navigate(`/app/development-workflows/${card.metadata?.developmentWorkflowId}`);
                               }}
-                              className="flex items-center gap-1 text-xs px-2 py-0.5 bg-[#ea580c]/20 text-purple-300 rounded border border-purple-500/30 hover:bg-[#ea580c]/30 hover:border-purple-500/50 transition-colors cursor-pointer"
+                              className="flex items-center gap-1 text-xs px-2 py-0.5 bg-[#ea580c]/20 text-orange-300 rounded border border-orange-500/30 hover:bg-[#ea580c]/30 hover:border-orange-500/50 transition-colors cursor-pointer"
                               title="View development workflow"
                             >
                               <GitBranch className="w-3 h-3" />
@@ -2279,9 +2279,9 @@ export function WorkBoard() {
                                   card.metadata.developmentPhase === 'analysis'
                                     ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                     : card.metadata.developmentPhase === 'planning'
-                                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'solutioning'
-                                    ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'developing'
                                     ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'implementation'
@@ -2310,7 +2310,7 @@ export function WorkBoard() {
                                   e.stopPropagation();
                                   navigate('/app/notes');
                                 }}
-                                className="flex items-center gap-1 text-xs px-2 py-0.5 bg-[#ea580c]/20 text-purple-300 rounded border border-purple-500/30 hover:bg-[#ea580c]/30 hover:border-purple-500/50 transition-colors cursor-pointer"
+                                className="flex items-center gap-1 text-xs px-2 py-0.5 bg-[#ea580c]/20 text-orange-300 rounded border border-orange-500/30 hover:bg-[#ea580c]/30 hover:border-orange-500/50 transition-colors cursor-pointer"
                                 title="View linked note"
                               >
                                 <FileText className="w-3 h-3" />
@@ -2372,7 +2372,7 @@ export function WorkBoard() {
                         ref={(el) => { if (el) cardMenuRefs.current.set(card.id, el); }}
                       >
                         {false && (
-                          <div className="absolute right-0 top-full mt-1 w-48 glass-card rounded-lg shadow-2xl border border-purple-500/20 z-20 overflow-hidden">
+                          <div className="absolute right-0 top-full mt-1 w-48 glass-card rounded-lg shadow-2xl border border-orange-500/20 z-20 overflow-hidden">
                             <div className="p-1">
                               <button
                                 onClick={(e) => {
@@ -2382,7 +2382,7 @@ export function WorkBoard() {
                                 }}
                                 className="w-full px-3 py-2.5 text-left text-sm text-[#cccccc] hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:text-[#cccccc] rounded-lg transition-all flex items-center gap-2 group"
                               >
-                                <Edit className="w-4 h-4 text-[#858585] group-hover:text-purple-400 transition-colors" />
+                                <Edit className="w-4 h-4 text-[#858585] group-hover:text-orange-400 transition-colors" />
                                 Edit Card
                               </button>
                               <button
@@ -2390,7 +2390,7 @@ export function WorkBoard() {
                                   e.stopPropagation();
                                   handleDuplicateCard(card.id);
                                 }}
-                                className="w-full px-3 py-2.5 text-left text-sm text-[#cccccc] hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20 hover:text-[#cccccc] rounded-lg transition-all flex items-center gap-2 group"
+                                className="w-full px-3 py-2.5 text-left text-sm text-[#cccccc] hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-orange-600/20 hover:text-[#cccccc] rounded-lg transition-all flex items-center gap-2 group"
                               >
                                 <Copy className="w-4 h-4 text-[#858585] group-hover:text-blue-400 transition-colors" />
                                 Duplicate
@@ -2620,7 +2620,7 @@ export function WorkBoard() {
                                   e.stopPropagation();
                                   navigate(`/app/development-workflows/${card.metadata?.developmentWorkflowId}`);
                                 }}
-                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-[#ea580c]/20 text-purple-300 rounded border border-purple-500/30 hover:bg-[#ea580c]/30 transition-colors"
+                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-[#ea580c]/20 text-orange-300 rounded border border-orange-500/30 hover:bg-[#ea580c]/30 transition-colors"
                                 title="View development workflow"
                               >
                                 <GitBranch className="w-3 h-3" />
@@ -2633,9 +2633,9 @@ export function WorkBoard() {
                                   card.metadata.developmentPhase === 'analysis'
                                     ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                     : card.metadata.developmentPhase === 'planning'
-                                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'solutioning'
-                                    ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'developing'
                                     ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'implementation'
@@ -2850,7 +2850,7 @@ export function WorkBoard() {
                 </button>
                 <button
                   onClick={() => setSelectedMonth(new Date())}
-                  className="px-3 py-2 bg-[#ea580c] text-[#cccccc] rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                  className="px-3 py-2 bg-[#ea580c] text-[#cccccc] rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
                 >
                   Today
                 </button>
@@ -2889,10 +2889,10 @@ export function WorkBoard() {
                       <div
                         key={day}
                         className={`bg-[#1e1e1e] min-h-[100px] p-2 border-l border-t border-gray-700 ${
-                          isToday ? 'bg-purple-900/20 border-purple-600/50' : ''
+                          isToday ? 'bg-orange-900/20 border-orange-600/50' : ''
                         }`}
                       >
-                        <div className={`text-sm font-medium mb-1 ${isToday ? 'text-purple-400' : 'text-[#cccccc]'}`}>
+                        <div className={`text-sm font-medium mb-1 ${isToday ? 'text-orange-400' : 'text-[#cccccc]'}`}>
                           {day}
                         </div>
                         <div className="space-y-1">
@@ -2941,9 +2941,9 @@ export function WorkBoard() {
                                           card.metadata.developmentPhase === 'analysis'
                                             ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                             : card.metadata.developmentPhase === 'planning'
-                                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                            ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                             : card.metadata.developmentPhase === 'solutioning'
-                                            ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                            ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                             : 'bg-green-500/20 text-green-400 border-green-500/30'
                                         }`}
                                       >
@@ -2991,7 +2991,7 @@ export function WorkBoard() {
                       onClick={() => setTimelineZoom(z)}
                       className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                         timelineZoom === z
-                          ? 'bg-[#252526] text-purple-400 shadow-sm'
+                          ? 'bg-[#252526] text-orange-400 shadow-sm'
                           : 'text-[#858585] hover:text-[#cccccc]'
                       }`}
                     >
@@ -3043,7 +3043,7 @@ export function WorkBoard() {
                   </button>
                   <button
                     onClick={() => setTimelineDate(new Date())}
-                    className="px-3 py-2 bg-[#ea580c] text-[#cccccc] rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                    className="px-3 py-2 bg-[#ea580c] text-[#cccccc] rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
                   >
                     Today
                   </button>
@@ -3149,7 +3149,7 @@ export function WorkBoard() {
                         {/* Timeline Bar */}
                         <div className="flex-1 relative py-2">
                           <div
-                            className={`absolute h-10 rounded-lg overflow-hidden ${!card.cover ? getPriorityColor(card.priority) : ''} opacity-80 hover:opacity-100 transition-all shadow-md hover:shadow-lg cursor-move ${draggingTimelineCard === card.id ? 'ring-2 ring-purple-500' : ''}`}
+                            className={`absolute h-10 rounded-lg overflow-hidden ${!card.cover ? getPriorityColor(card.priority) : ''} opacity-80 hover:opacity-100 transition-all shadow-md hover:shadow-lg cursor-move ${draggingTimelineCard === card.id ? 'ring-2 ring-orange-500' : ''}`}
                             onMouseDown={(e) => handleTimelineDragStart(e, card.id)}
                             draggable={false}
                             style={{ 
@@ -3188,9 +3188,9 @@ export function WorkBoard() {
                                       card.metadata.developmentPhase === 'analysis'
                                         ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                         : card.metadata.developmentPhase === 'planning'
-                                        ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                        ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                         : card.metadata.developmentPhase === 'solutioning'
-                                        ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                        ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                         : 'bg-green-500/20 text-green-400 border-green-500/30'
                                     }`}
                                   >

@@ -9,3 +9,4 @@ export { DocsPage } from "./DocsPage";
 export { WorkPage } from "./WorkPage";
 export { SimplePage } from "./SimplePage";
 export { ClawPage } from "./ClawPage";
+export { default as KanbanPage } from "./Kanban";

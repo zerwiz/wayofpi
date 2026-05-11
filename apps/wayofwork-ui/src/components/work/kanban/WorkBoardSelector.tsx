@@ -175,7 +175,7 @@ export default function WorkBoardSelector({
                 placeholder={activeTab === 'boards' ? 'Search boards...' : 'Search templates...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-[#1e1e1e] border border-gray-700 rounded-lg text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#1e1e1e] border border-gray-700 rounded-lg text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function WorkBoardSelector({
                 {/* Create Empty Board Button */}
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-purple-600 hover:bg-[#ea580c]/10 transition-colors flex items-center justify-center gap-2 text-[#858585] hover:text-purple-400"
+                  className="w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-orange-600 hover:bg-[#ea580c]/10 transition-colors flex items-center justify-center gap-2 text-[#858585] hover:text-orange-400"
                 >
                   <Plus className="w-5 h-5" />
                   <span className="font-medium">Create New Board</span>
@@ -201,7 +201,7 @@ export default function WorkBoardSelector({
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="mt-2 text-purple-400 hover:text-purple-300"
+                        className="mt-2 text-orange-400 hover:text-orange-300"
                       >
                         Clear search
                       </button>
@@ -218,8 +218,8 @@ export default function WorkBoardSelector({
                         }}
                         className={`p-4 rounded-lg border-2 transition-all text-left hover:scale-105 ${
                           selectedBoardId === board.id
-                            ? 'border-purple-600 bg-[#ea580c]/20'
-                            : 'border-gray-700 bg-[#1e1e1e] hover:border-purple-600/50 hover:bg-[#252526]/50'
+                            ? 'border-orange-600 bg-[#ea580c]/20'
+                            : 'border-gray-700 bg-[#1e1e1e] hover:border-orange-600/50 hover:bg-[#252526]/50'
                         }`}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -268,7 +268,7 @@ export default function WorkBoardSelector({
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="mt-2 text-purple-400 hover:text-purple-300"
+                        className="mt-2 text-orange-400 hover:text-orange-300"
                       >
                         Clear search
                       </button>
@@ -280,7 +280,7 @@ export default function WorkBoardSelector({
                       <button
                         key={template.id}
                         onClick={() => handleCreateFromTemplate(template.id)}
-                        className="p-4 rounded-lg border-2 border-gray-700 bg-[#1e1e1e] hover:border-purple-600 hover:bg-[#252526]/50 transition-all text-left hover:scale-105 group"
+                        className="p-4 rounded-lg border-2 border-gray-700 bg-[#1e1e1e] hover:border-orange-600 hover:bg-[#252526]/50 transition-all text-left hover:scale-105 group"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function WorkBoardSelector({
                   handleCreateEmptyBoard();
                 }
               }}
-              className="w-full px-4 py-2 bg-[#1e1e1e] border border-gray-700 rounded-lg text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              className="w-full px-4 py-2 bg-[#1e1e1e] border border-gray-700 rounded-lg text-[#cccccc] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
               autoFocus
             />
             <div className="flex items-center gap-3">
@@ -344,7 +344,7 @@ export default function WorkBoardSelector({
               <button
                 onClick={handleCreateEmptyBoard}
                 disabled={!newBoardName.trim()}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-[#ea580c] to-[#c2410c] hover:from-purple-700 hover:to-pink-700 text-[#cccccc] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-[#ea580c] to-[#c2410c] hover:from-orange-700 hover:to-orange-700 text-[#cccccc] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create
               </button>

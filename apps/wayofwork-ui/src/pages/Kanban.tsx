@@ -891,7 +891,7 @@ export default function Kanban() {
       case 'low':
         return 'bg-green-600/20 text-green-400';
       default:
-        return 'bg-gray-600/20 text-gray-400';
+        return 'bg-[#444444]/20 text-[#858585]';
     }
   };
 
@@ -1017,16 +1017,16 @@ export default function Kanban() {
     }
 
     return (
-      <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden">
+      <div className="h-full flex flex-col bg-[#1e1e1e] text-white overflow-hidden">
         {/* Header */}
-        <div className="bg-gray-800 border-b border-gray-700 pl-4 pr-2 lg:pl-6 py-4 flex-shrink-0 glass-enhanced">
+        <div className="bg-[#252526] border-b border-[#333333] pl-4 pr-2 lg:pl-6 py-4 flex-shrink-0 glass-enhanced">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-white flex items-center gap-2 gradient-text">
                 <LayoutGrid className="w-8 h-8 text-orange-600" />
                 Boards
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-[#858585] mt-1">
                 {filteredBoards.length} {filteredBoards.length === 1 ? 'board' : 'boards'}
               </p>
             </div>
@@ -1034,24 +1034,24 @@ export default function Kanban() {
             <div className="flex items-center gap-2 flex-wrap">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
                 <input
                   type="text"
                   placeholder="Q Search boards..."
                   value={boardListSearchQuery}
                   onChange={(e) => setBoardListSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2 w-48 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                  className="pl-9 pr-4 py-2 w-48 bg-[#1e1e1e] border border-[#333333] rounded-lg text-white placeholder-[#6e6e6e] focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
               </div>
 
               {/* View Toggle */}
-              <div className="flex items-center gap-1 bg-gray-900 rounded-lg p-1 border border-gray-700">
+              <div className="flex items-center gap-1 bg-[#1e1e1e] rounded-lg p-1 border border-[#333333]">
                 <button
                   onClick={() => setBoardListViewMode('grid')}
                   className={`p-2 rounded transition-colors ${
                     boardListViewMode === 'grid'
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-orange-600 text-white shadow-md'
+                      : 'text-[#858585] hover:text-white'
                   }`}
                   title="Grid view"
                 >
@@ -1061,8 +1061,8 @@ export default function Kanban() {
                   onClick={() => setBoardListViewMode('list')}
                   className={`p-2 rounded transition-colors ${
                     boardListViewMode === 'list'
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-orange-600 text-white shadow-md'
+                      : 'text-[#858585] hover:text-white'
                   }`}
                   title="List view"
                 >
@@ -1089,8 +1089,8 @@ export default function Kanban() {
                 onClick={() => setBoardListFilter(filter)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   boardListFilter === filter
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md shadow-purple-500/20'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-md shadow-orange-500/20'
+                    : 'text-[#858585] hover:text-white hover:bg-[#333333]'
                 }`}
               >
                 {filter === 'all' && 'All Boards'}
@@ -1104,10 +1104,10 @@ export default function Kanban() {
         {/* Board Grid/List */}
         <div className="flex-1 overflow-y-auto pl-4 pr-2 lg:pl-6 py-6 scrollbar-thin">
           {filteredBoards.length === 0 && !boardListSearchQuery ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-[#6e6e6e]">
               <LayoutGrid className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <h3 className="text-xl font-semibold mb-2 text-white">No boards yet</h3>
-              <p className="mb-4 text-gray-400">
+              <p className="mb-4 text-[#858585]">
                 Create your first Kanban board to get started
               </p>
               <button
@@ -1119,17 +1119,17 @@ export default function Kanban() {
               </button>
             </div>
           ) : filteredBoards.length === 0 && boardListSearchQuery ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-[#6e6e6e]">
               <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <h3 className="text-xl font-semibold mb-2 text-white">No boards found</h3>
-              <p className="text-gray-400">Try adjusting your search</p>
+              <p className="text-[#858585]">Try adjusting your search</p>
             </div>
           ) : boardListViewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {/* Use Template Card */}
               <button
                 onClick={() => setShowTemplates(true)}
-                className="p-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all cursor-pointer group hover:scale-[1.02] glass-card"
+                className="p-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-white hover:shadow-lg hover:shadow-orange-500/30 transition-all cursor-pointer group hover:scale-[1.02] glass-card"
               >
                 <Sparkles className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-semibold mb-2">Use Template</h3>
@@ -1147,7 +1147,7 @@ export default function Kanban() {
                   <div
                     key={b.id}
                     onClick={() => setCurrentBoardId(b.id)}
-                    className="group relative p-6 bg-gray-800 border border-gray-700 rounded-lg hover:border-purple-600/50 hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer glass-card hover-lift"
+                    className="group relative p-6 bg-[#252526] border border-[#333333] rounded-lg hover:border-orange-600/50 hover:shadow-lg hover:shadow-orange-500/20 transition-all cursor-pointer glass-card hover-lift"
                     style={{ borderTopColor: b.color || '#8B5CF6', borderTopWidth: '4px' }}
                   >
                     {/* Header */}
@@ -1157,7 +1157,7 @@ export default function Kanban() {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-white truncate">{b.name}</h3>
                           {b.description && (
-                            <p className="text-sm text-gray-400 mt-1 line-clamp-2">{b.description}</p>
+                            <p className="text-sm text-[#858585] mt-1 line-clamp-2">{b.description}</p>
                           )}
                         </div>
                       </div>
@@ -1186,12 +1186,12 @@ export default function Kanban() {
                               });
                             }
                           }}
-                          className="p-1 hover:bg-gray-700 rounded transition-colors"
+                          className="p-1 hover:bg-[#333333] rounded transition-colors"
                           title={b.starred ? 'Unstar board' : 'Star board'}
                         >
                           <Star
                             className={`w-4 h-4 ${
-                              b.starred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'
+                              b.starred ? 'fill-yellow-400 text-yellow-400' : 'text-[#858585]'
                             }`}
                           />
                         </button>
@@ -1201,13 +1201,13 @@ export default function Kanban() {
                               e.stopPropagation();
                               setBoardListMenuOpen(boardListMenuOpen === b.id ? null : b.id);
                             }}
-                            className="p-1 hover:bg-gray-700 rounded transition-colors"
+                            className="p-1 hover:bg-[#333333] rounded transition-colors"
                             title="Board menu"
                           >
-                            <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                            <MoreHorizontal className="w-4 h-4 text-[#858585]" />
                           </button>
                           {boardListMenuOpen === b.id && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-50">
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-[#252526] rounded-lg shadow-lg border border-[#333333] z-50">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1215,7 +1215,7 @@ export default function Kanban() {
                                   setShowBoardSettings(true);
                                   setBoardListMenuOpen(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 flex items-center gap-2 text-gray-300"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-[#333333] flex items-center gap-2 text-[#a0a0a0]"
                               >
                                 <Settings className="w-4 h-4" />
                                 Board Settings
@@ -1227,19 +1227,19 @@ export default function Kanban() {
                                   setShowBoardMembers(true);
                                   setBoardListMenuOpen(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 flex items-center gap-2 text-gray-300"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-[#333333] flex items-center gap-2 text-[#a0a0a0]"
                               >
                                 <Users className="w-4 h-4" />
                                 Members
                               </button>
-                              <div className="border-t border-gray-700 my-1" />
+                              <div className="border-t border-[#333333] my-1" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   showToast({ type: 'info', message: 'Duplicate board coming soon' });
                                   setBoardListMenuOpen(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 flex items-center gap-2 text-gray-300"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-[#333333] flex items-center gap-2 text-[#a0a0a0]"
                               >
                                 <Copy className="w-4 h-4" />
                                 Duplicate Board
@@ -1250,12 +1250,12 @@ export default function Kanban() {
                                   showToast({ type: 'info', message: 'Archive board coming soon' });
                                   setBoardListMenuOpen(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 flex items-center gap-2 text-gray-300"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-[#333333] flex items-center gap-2 text-[#a0a0a0]"
                               >
                                 <Folder className="w-4 h-4" />
                                 Archive Board
                               </button>
-                              <div className="border-t border-gray-700 my-1" />
+                              <div className="border-t border-[#333333] my-1" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1275,14 +1275,14 @@ export default function Kanban() {
                     </div>
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-[#858585]">
                       <span>📋 {totalCards} cards</span>
                       <span>✓ {completedCards} done</span>
                       <span>👥 {totalMembers}</span>
                     </div>
 
                     {/* Last Activity */}
-                    <div className="mt-3 text-xs text-gray-500">
+                    <div className="mt-3 text-xs text-[#6e6e6e]">
                       Updated {lastUpdated}
                     </div>
                   </div>
@@ -1301,17 +1301,17 @@ export default function Kanban() {
                   <div
                     key={b.id}
                     onClick={() => setCurrentBoardId(b.id)}
-                    className="group flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-lg hover:border-purple-600/50 hover:shadow-md transition-all cursor-pointer glass-card"
+                    className="group flex items-center justify-between p-4 bg-[#252526] border border-[#333333] rounded-lg hover:border-orange-600/50 hover:shadow-md transition-all cursor-pointer glass-card"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {b.icon && <span className="text-2xl flex-shrink-0">{b.icon}</span>}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-white truncate">{b.name}</h3>
                         {b.description && (
-                          <p className="text-sm text-gray-400 mt-1 truncate">{b.description}</p>
+                          <p className="text-sm text-[#858585] mt-1 truncate">{b.description}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-6 text-sm text-gray-400">
+                      <div className="flex items-center gap-6 text-sm text-[#858585]">
                         <span>📋 {totalCards}</span>
                         <span>✓ {completedCards}</span>
                         <span>👥 {totalMembers}</span>
@@ -1340,12 +1340,12 @@ export default function Kanban() {
                             });
                           }
                         }}
-                        className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                        className="p-2 hover:bg-[#333333] rounded-lg transition-colors"
                         title={b.starred ? 'Unstar board' : 'Star board'}
                       >
                         <Star
                           className={`w-5 h-5 ${
-                            b.starred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'
+                            b.starred ? 'fill-yellow-400 text-yellow-400' : 'text-[#858585]'
                           }`}
                         />
                       </button>
@@ -1383,34 +1383,34 @@ export default function Kanban() {
             }}
           >
             <div
-              className="glass-card rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-purple-500/30 animate-scale-in flex flex-col"
+              className="glass-card rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-orange-500/30 animate-scale-in flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="p-6 border-b border-purple-500/20 flex items-center justify-between flex-shrink-0">
+              <div className="p-6 border-b border-orange-500/20 flex items-center justify-between flex-shrink-0">
                 <div>
                   <h2 className="text-xl font-bold gradient-text">Board Templates</h2>
-                  <p className="text-sm text-purple-300/70 mt-1">Choose a template to create a new board</p>
+                  <p className="text-sm text-orange-300/70 mt-1">Choose a template to create a new board</p>
                 </div>
                 <button
                   onClick={() => setShowTemplates(false)}
-                  className="p-2 rounded-lg text-gray-400 hover:text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20 hover:shadow-lg hover:shadow-purple-500/10"
+                  className="p-2 rounded-lg text-[#858585] hover:text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-orange-600/20 hover:to-orange-600/20 hover:shadow-lg hover:shadow-orange-500/10"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Search and Filters */}
-              <div className="p-6 border-b border-purple-500/20 flex-shrink-0">
+              <div className="p-6 border-b border-orange-500/20 flex-shrink-0">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#858585]" />
                     <input
                       type="text"
                       placeholder="Search templates..."
                       value={templatesSearchQuery}
                       onChange={(e) => setTemplatesSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-gray-800/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-white transition-all"
+                      className="w-full pl-10 pr-4 py-2 bg-[#252526]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-white transition-all"
                     />
                   </div>
                 </div>
@@ -1421,8 +1421,8 @@ export default function Kanban() {
                     onClick={() => setSelectedTemplateCategory(null)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
                       selectedTemplateCategory === null
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20'
-                        : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50'
+                        ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg shadow-orange-500/20'
+                        : 'bg-[#252526]/60 text-[#a0a0a0] hover:bg-[#333333]/80 border border-[#333333]/50'
                     }`}
                   >
                     All
@@ -1439,8 +1439,8 @@ export default function Kanban() {
                       onClick={() => setSelectedTemplateCategory(cat.value)}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
                         selectedTemplateCategory === cat.value
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20'
-                          : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50'
+                          ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg shadow-orange-500/20'
+                          : 'bg-[#252526]/60 text-[#a0a0a0] hover:bg-[#333333]/80 border border-[#333333]/50'
                       }`}
                     >
                       {cat.label}
@@ -1468,7 +1468,7 @@ export default function Kanban() {
 
                   if (filteredTemplates.length === 0) {
                     return (
-                      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                      <div className="flex flex-col items-center justify-center py-12 text-[#858585]">
                         <LayoutGrid className="w-16 h-16 mb-4 opacity-50" />
                         <p className="text-lg mb-2">No templates found</p>
                         <p className="text-sm">Try adjusting your search or filter</p>
@@ -1507,7 +1507,7 @@ export default function Kanban() {
                               });
                             }
                           }}
-                          className="p-4 rounded-lg border-2 border-gray-700/50 bg-gray-800/60 backdrop-blur-sm hover:border-purple-500/50 hover:bg-gray-700/60 transition-all text-left hover:scale-[1.02] group"
+                          className="p-4 rounded-lg border-2 border-[#333333]/50 bg-[#252526]/60 backdrop-blur-sm hover:border-orange-500/50 hover:bg-[#333333]/60 transition-all text-left hover:scale-[1.02] group"
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -1518,18 +1518,18 @@ export default function Kanban() {
                               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                             )}
                           </div>
-                          <p className="text-sm text-gray-400 mb-3 line-clamp-2">{template.description}</p>
+                          <p className="text-sm text-[#858585] mb-3 line-clamp-2">{template.description}</p>
                           <div className="flex items-center gap-2 flex-wrap mb-2">
                             {template.tags?.slice(0, 3).map((tag) => (
                               <span
                                 key={tag}
-                                className="px-2 py-0.5 text-xs bg-purple-600/20 text-purple-300 rounded border border-purple-500/30"
+                                className="px-2 py-0.5 text-xs bg-orange-600/20 text-orange-300 rounded border border-orange-500/30"
                               >
                                 {tag}
                               </span>
                             ))}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-[#6e6e6e]">
                             <span>{template.columns.length} columns</span>
                           </div>
                         </button>
@@ -1554,9 +1554,9 @@ export default function Kanban() {
   });
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden">
+    <div className="h-full flex flex-col bg-[#1e1e1e] text-white overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 pl-3 pr-2 sm:pl-4 lg:pl-6 py-3 sm:py-4 flex-shrink-0">
+      <div className="bg-[#252526] border-b border-[#333333] pl-3 pr-2 sm:pl-4 lg:pl-6 py-3 sm:py-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 truncate">
@@ -1566,13 +1566,13 @@ export default function Kanban() {
               <span className="truncate">{board.name}</span>
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-1">
-              <p className="text-xs sm:text-sm text-gray-400">Manage tasks with Kanban board</p>
+              <p className="text-xs sm:text-sm text-[#858585]">Manage tasks with Kanban board</p>
               {board.projectIds && board.projectIds.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-gray-500 hidden sm:inline">•</span>
+                  <span className="text-xs text-[#6e6e6e] hidden sm:inline">•</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-400 flex-shrink-0" />
-                    <span className="text-xs text-gray-400">Linked to:</span>
+                    <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-400 flex-shrink-0" />
+                    <span className="text-xs text-[#858585]">Linked to:</span>
                     {board.projectIds.slice(0, 2).map((projectId) => {
                       const project = projectsService.getProject(projectId);
                       if (!project) return null;
@@ -1584,11 +1584,11 @@ export default function Kanban() {
                             e.preventDefault();
                             navigate('/app/company-projects');
                           }}
-                          className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
+                          className="text-xs text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
                         >
                           {project.name}
                           {board.projectIds && board.projectIds.length > 2 && board.projectIds.indexOf(projectId) === 1 && (
-                            <span className="text-gray-500">+{board.projectIds.length - 2}</span>
+                            <span className="text-[#6e6e6e]">+{board.projectIds.length - 2}</span>
                           )}
                         </a>
                       );
@@ -1609,7 +1609,7 @@ export default function Kanban() {
                   // Navigate to board overview (deselect current board to show list)
                   setCurrentBoardId(null);
                 }}
-                className="px-2 sm:px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 flex-shrink-0"
+                className="px-2 sm:px-4 py-2 bg-[#333333] text-white rounded-lg hover:bg-[#444444] transition-colors flex items-center gap-2 flex-shrink-0"
                 title="Go to Boards Overview"
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -1617,13 +1617,13 @@ export default function Kanban() {
               </button>
 
               {/* View Switcher */}
-              <div className="flex items-center gap-1 bg-gray-700 rounded-lg p-1 border border-gray-600 overflow-x-auto flex-1 min-w-0">
+              <div className="flex items-center gap-1 bg-[#333333] rounded-lg p-1 border border-[#444444] overflow-x-auto flex-1 min-w-0">
                 <button
                   onClick={() => setViewType('kanban')}
                   className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0 ${
                     viewType === 'kanban'
                       ? 'bg-orange-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      : 'text-[#858585] hover:text-white hover:bg-[#444444]'
                   }`}
                   title="Kanban View"
                 >
@@ -1635,7 +1635,7 @@ export default function Kanban() {
                   className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0 ${
                     viewType === 'list'
                       ? 'bg-orange-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      : 'text-[#858585] hover:text-white hover:bg-[#444444]'
                   }`}
                   title="List View"
                 >
@@ -1647,7 +1647,7 @@ export default function Kanban() {
                   className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0 ${
                     viewType === 'calendar'
                       ? 'bg-orange-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      : 'text-[#858585] hover:text-white hover:bg-[#444444]'
                   }`}
                   title="Calendar View"
                 >
@@ -1659,7 +1659,7 @@ export default function Kanban() {
                   className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0 ${
                     viewType === 'timeline'
                       ? 'bg-orange-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      : 'text-[#858585] hover:text-white hover:bg-[#444444]'
                   }`}
                   title="Timeline View"
                 >
@@ -1671,7 +1671,7 @@ export default function Kanban() {
                   className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0 ${
                     viewType === 'docs'
                       ? 'bg-orange-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      : 'text-[#858585] hover:text-white hover:bg-[#444444]'
                   }`}
                   title="Docs View"
                 >
@@ -1683,7 +1683,7 @@ export default function Kanban() {
                   className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-1.5 flex-shrink-0 ${
                     viewType === 'drive'
                       ? 'bg-orange-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                      : 'text-[#858585] hover:text-white hover:bg-[#444444]'
                   }`}
                   title="Drive View"
                 >
@@ -1708,13 +1708,13 @@ export default function Kanban() {
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               {/* Search */}
               <div className="relative flex-1 min-w-[150px] sm:min-w-[200px]">
-                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#858585]" />
                 <input
                   type="text"
                   placeholder="Search cards..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  className="w-full bg-[#333333] border border-[#444444] rounded-lg pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-white placeholder-[#6e6e6e] focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
               </div>
 
@@ -1724,7 +1724,7 @@ export default function Kanban() {
                   <select
                     value={selectedDevelopmentWorkflowId}
                     onChange={(e) => setSelectedDevelopmentWorkflowId(e.target.value)}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-[#333333] border border-[#444444] rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
                   >
                     <option value="">All Workflows</option>
                     {availableWorkflows.map((workflow) => (
@@ -1737,7 +1737,7 @@ export default function Kanban() {
                     <select
                       value={selectedDevelopmentPhase}
                       onChange={(e) => setSelectedDevelopmentPhase(e.target.value as DevelopmentPhase | '')}
-                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[100px] sm:min-w-0"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-[#333333] border border-[#444444] rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[100px] sm:min-w-0"
                     >
                       <option value="">All Phases</option>
                       <option value="analysis">Analysis</option>
@@ -1754,7 +1754,7 @@ export default function Kanban() {
                         setSelectedDevelopmentWorkflowId('');
                         setSelectedDevelopmentPhase('');
                       }}
-                      className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-[#858585] hover:text-white transition-colors whitespace-nowrap"
                       title="Clear Development Workflow Filters"
                     >
                       Clear
@@ -1768,7 +1768,7 @@ export default function Kanban() {
                 <select
                   value={selectedNSRFolder}
                   onChange={(e) => setSelectedNSRFolder(e.target.value as NSRFolder | '')}
-                  className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 bg-[#333333] border border-[#444444] rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
                 >
                   <option value="">All NSR Folders</option>
                   {NSR_MANDATORY_FOLDERS.map((folder) => (
@@ -1780,7 +1780,7 @@ export default function Kanban() {
                 {selectedNSRFolder && (
                   <button
                     onClick={() => setSelectedNSRFolder('')}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-[#858585] hover:text-white transition-colors whitespace-nowrap"
                     title="Clear NSR Folder Filter"
                   >
                     Clear
@@ -1799,7 +1799,7 @@ export default function Kanban() {
                       setSelectedWorkflowId('');
                       setSelectedEnterprisePhase('');
                     }}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-[#333333] border border-[#444444] rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
                   >
                     <option value="">All Tracks</option>
                     <option value="quick-flow">Quick Flow</option>
@@ -1811,7 +1811,7 @@ export default function Kanban() {
                     <select
                       value={selectedWorkflowId}
                       onChange={(e) => setSelectedWorkflowId(e.target.value)}
-                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-[#333333] border border-[#444444] rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[120px] sm:min-w-0"
                     >
                       <option value="">All Workflows</option>
                       {availableWorkflowTracks
@@ -1829,7 +1829,7 @@ export default function Kanban() {
                     <select
                       value={selectedEnterprisePhase}
                       onChange={(e) => setSelectedEnterprisePhase(e.target.value)}
-                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[100px] sm:min-w-0"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 bg-[#333333] border border-[#444444] rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[100px] sm:min-w-0"
                     >
                       <option value="">All Phases</option>
                       {(() => {
@@ -1855,7 +1855,7 @@ export default function Kanban() {
                         setSelectedWorkflowId('');
                         setSelectedEnterprisePhase('');
                       }}
-                      className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-[#858585] hover:text-white transition-colors whitespace-nowrap"
                       title="Clear Workflow Track Filters"
                     >
                       Clear
@@ -1868,7 +1868,7 @@ export default function Kanban() {
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <button
                   onClick={() => {}}
-                  className="p-2 sm:px-4 sm:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                  className="p-2 sm:px-4 sm:py-2 bg-[#333333] text-white rounded-lg hover:bg-[#444444] transition-colors flex items-center justify-center gap-2"
                   title="Filter"
                 >
                   <Filter className="w-4 h-4" />
@@ -1876,7 +1876,7 @@ export default function Kanban() {
                 </button>
                 <button
                   onClick={() => setShowBoardMembers(true)}
-                  className="p-2 sm:px-4 sm:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                  className="p-2 sm:px-4 sm:py-2 bg-[#333333] text-white rounded-lg hover:bg-[#444444] transition-colors flex items-center justify-center gap-2"
                   title="Members"
                 >
                   <Users className="w-4 h-4" />
@@ -1884,7 +1884,7 @@ export default function Kanban() {
                 </button>
                 <button
                   onClick={() => setShowBoardSettings(true)}
-                  className="p-2 sm:px-4 sm:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                  className="p-2 sm:px-4 sm:py-2 bg-[#333333] text-white rounded-lg hover:bg-[#444444] transition-colors flex items-center justify-center gap-2"
                   title="Board Settings"
                 >
                   <Settings className="w-4 h-4" />
@@ -1896,31 +1896,31 @@ export default function Kanban() {
         </div>
 
         {/* Statistics Bar */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm border-t border-gray-700 pt-3 sm:pt-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm border-t border-[#333333] pt-3 sm:pt-4">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Circle className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
             <span className="font-medium">{stats.total}</span>
-            <span className="text-gray-400 hidden sm:inline">Total</span>
+            <span className="text-[#858585] hidden sm:inline">Total</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
             <span className="font-medium">{stats.completed}</span>
-            <span className="text-gray-400 hidden sm:inline">Completed</span>
+            <span className="text-[#858585] hidden sm:inline">Completed</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 flex-shrink-0" />
             <span className="font-medium">{stats.inProgress}</span>
-            <span className="text-gray-400 hidden sm:inline">In Progress</span>
+            <span className="text-[#858585] hidden sm:inline">In Progress</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 flex-shrink-0" />
             <span className="font-medium">{stats.overdue}</span>
-            <span className="text-gray-400 hidden sm:inline">Overdue</span>
+            <span className="text-[#858585] hidden sm:inline">Overdue</span>
           </div>
         </div>
 
         {showCreateColumn && (
-          <div className="mt-4 p-4 bg-gray-700 rounded-lg flex items-center gap-2">
+          <div className="mt-4 p-4 bg-[#333333] rounded-lg flex items-center gap-2">
             <input
               type="text"
               placeholder="Column name"
@@ -1931,7 +1931,7 @@ export default function Kanban() {
                   handleCreateColumn();
                 }
               }}
-              className="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex-1 bg-[#252526] border border-[#444444] rounded px-3 py-2 text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500"
               autoFocus
             />
             <button
@@ -1945,7 +1945,7 @@ export default function Kanban() {
                 setShowCreateColumn(false);
                 setNewColumnName('');
               }}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
+              className="px-4 py-2 bg-[#444444] text-white rounded hover:bg-gray-500"
             >
               Cancel
             </button>
@@ -2005,7 +2005,7 @@ export default function Kanban() {
                 onDrop={(e) => handleDrop(e, column.id)}
               >
                 {/* Column Header */}
-                <div className="bg-gray-800 rounded-t-lg p-3 border-b border-gray-700">
+                <div className="bg-[#252526] rounded-t-lg p-3 border-b border-[#333333]">
                   {editingColumnId === column.id ? (
                     <div className="flex items-center gap-2 min-w-0">
                       <input
@@ -2020,7 +2020,7 @@ export default function Kanban() {
                             setEditingColumnName('');
                           }
                         }}
-                        className="flex-1 min-w-0 bg-gray-700 border border-orange-500 rounded px-2 py-1 text-white text-sm font-semibold focus:outline-none"
+                        className="flex-1 min-w-0 bg-[#333333] border border-orange-500 rounded px-2 py-1 text-white text-sm font-semibold focus:outline-none"
                         autoFocus
                       />
                       <button
@@ -2056,7 +2056,7 @@ export default function Kanban() {
                           </h3>
                         </div>
                         {column.wip !== undefined && column.wip > 0 && (
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-[#858585]">
                             WIP Limit: {columnCards.length}/{column.wip}
                           </div>
                         )}
@@ -2068,20 +2068,20 @@ export default function Kanban() {
                               e.stopPropagation();
                               setColumnMenuOpen(columnMenuOpen === column.id ? null : column.id);
                             }}
-                            className="p-1 text-gray-400 hover:text-white transition-colors"
+                            className="p-1 text-[#858585] hover:text-white transition-colors"
                             title="Column menu"
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
                           {columnMenuOpen === column.id && (
-                            <div className="absolute right-0 top-full mt-1 w-40 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-20">
+                            <div className="absolute right-0 top-full mt-1 w-40 bg-[#252526] rounded-lg shadow-lg border border-[#333333] z-20">
                               <button
                                 onClick={() => {
                                   setEditingColumnId(column.id);
                                   setEditingColumnName(column.name);
                                   setColumnMenuOpen(null);
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-[#333333] flex items-center gap-2"
                               >
                                 <Edit className="w-3 h-3" />
                                 Rename
@@ -2102,7 +2102,7 @@ export default function Kanban() {
                 </div>
 
                 {/* Cards Container */}
-                <div className="flex-1 bg-gray-800/50 rounded-b-lg p-2 sm:p-3 space-y-2 overflow-y-auto min-h-0">
+                <div className="flex-1 bg-[#252526]/50 rounded-b-lg p-2 sm:p-3 space-y-2 overflow-y-auto min-h-0">
 
                   {columnCards.map((card) => (
                     <div
@@ -2111,7 +2111,7 @@ export default function Kanban() {
                       onDragStart={(e) => handleDragStart(e, card.id)}
                       onDragEnd={handleDragEnd}
                       onClick={() => handleOpenCardView(card.id)}
-                      className={`group relative bg-gray-700 rounded-lg overflow-hidden cursor-move hover:bg-gray-600 transition-colors border border-gray-600 ${
+                      className={`group relative bg-[#333333] rounded-lg overflow-hidden cursor-move hover:bg-[#444444] transition-colors border border-[#444444] ${
                         draggedCard === card.id ? 'opacity-40' : ''
                       }`}
                     >
@@ -2149,7 +2149,7 @@ export default function Kanban() {
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm sm:text-base text-white font-medium mb-1 break-words line-clamp-2">{card.title}</h4>
                             {card.description && (
-                              <p className="text-xs text-gray-400 line-clamp-2">{card.description}</p>
+                              <p className="text-xs text-[#858585] line-clamp-2">{card.description}</p>
                             )}
                           </div>
                         </div>
@@ -2165,7 +2165,7 @@ export default function Kanban() {
                         {card.dueDate && (
                           <div
                             className={`flex items-center gap-1 text-xs ${
-                              isOverdue(card.dueDate) ? 'text-red-400' : 'text-gray-400'
+                              isOverdue(card.dueDate) ? 'text-red-400' : 'text-[#858585]'
                             }`}
                           >
                             <Clock className="w-3 h-3" />
@@ -2184,16 +2184,16 @@ export default function Kanban() {
                                 className={`text-xs px-2 py-0.5 rounded ${
                                   tag === 'From Note' || tag === 'From Task'
                                     ? tag === 'From Note'
-                                      ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50'
+                                      ? 'bg-orange-600/30 text-orange-300 border border-orange-500/50'
                                       : 'bg-green-600/30 text-green-300 border border-green-500/50'
-                                    : 'bg-gray-600 text-gray-300'
+                                    : 'bg-[#444444] text-[#a0a0a0]'
                                 }`}
                               >
                                 {tag}
                               </span>
                             ))}
                             {card.tags.length > 3 && (
-                              <span className="text-xs px-2 py-0.5 bg-gray-600 text-gray-300 rounded">
+                              <span className="text-xs px-2 py-0.5 bg-[#444444] text-[#a0a0a0] rounded">
                                 +{card.tags.length - 3}
                               </span>
                             )}
@@ -2210,7 +2210,7 @@ export default function Kanban() {
                                   e.stopPropagation();
                                   navigate(`/app/workflows/${card.metadata!.workflowId}`);
                                 }}
-                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-pink-600/20 text-pink-300 border border-pink-500/30 rounded hover:bg-pink-600/30 transition-colors"
+                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-orange-600/20 text-orange-300 border border-orange-500/30 rounded hover:bg-orange-600/30 transition-colors"
                                 title={`View workflow${card.metadata.workflowTrack ? ` (${card.metadata.workflowTrack})` : ''}`}
                               >
                                 <FolderKanban className="w-3 h-3" />
@@ -2226,7 +2226,7 @@ export default function Kanban() {
                                   e.stopPropagation();
                                   navigate(`/app/development-workflows/${card.metadata!.developmentWorkflowId}`);
                                 }}
-                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded hover:bg-purple-600/30 transition-colors"
+                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-orange-600/20 text-orange-300 border border-orange-500/30 rounded hover:bg-orange-600/30 transition-colors"
                                 title="View development workflow"
                               >
                                 <GitBranch className="w-3 h-3" />
@@ -2262,7 +2262,7 @@ export default function Kanban() {
                                 e.stopPropagation();
                                 navigate(`/app/development-workflows/${card.metadata?.developmentWorkflowId}`);
                               }}
-                              className="flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-600/20 text-purple-300 rounded border border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 transition-colors cursor-pointer"
+                              className="flex items-center gap-1 text-xs px-2 py-0.5 bg-orange-600/20 text-orange-300 rounded border border-orange-500/30 hover:bg-orange-600/30 hover:border-orange-500/50 transition-colors cursor-pointer"
                               title="View development workflow"
                             >
                               <GitBranch className="w-3 h-3" />
@@ -2278,9 +2278,9 @@ export default function Kanban() {
                                   card.metadata.developmentPhase === 'analysis'
                                     ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                     : card.metadata.developmentPhase === 'planning'
-                                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'solutioning'
-                                    ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'developing'
                                     ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'implementation'
@@ -2309,7 +2309,7 @@ export default function Kanban() {
                                   e.stopPropagation();
                                   navigate('/app/notes');
                                 }}
-                                className="flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-600/20 text-purple-300 rounded border border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 transition-colors cursor-pointer"
+                                className="flex items-center gap-1 text-xs px-2 py-0.5 bg-orange-600/20 text-orange-300 rounded border border-orange-500/30 hover:bg-orange-600/30 hover:border-orange-500/50 transition-colors cursor-pointer"
                                 title="View linked note"
                               >
                                 <FileText className="w-3 h-3" />
@@ -2357,7 +2357,7 @@ export default function Kanban() {
 
                         {/* Attachment Count */}
                         {card.attachments && card.attachments.length > 0 && (
-                          <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
+                          <div className="flex items-center gap-1 text-xs text-[#858585] mt-2">
                             <FileText className="w-3 h-3" />
                             <span>{card.attachments.length} attachment{card.attachments.length !== 1 ? 's' : ''}</span>
                           </div>
@@ -2371,7 +2371,7 @@ export default function Kanban() {
                         ref={(el) => { if (el) cardMenuRefs.current.set(card.id, el); }}
                       >
                         {false && (
-                          <div className="absolute right-0 top-full mt-1 w-48 glass-card rounded-lg shadow-2xl border border-purple-500/20 z-20 overflow-hidden">
+                          <div className="absolute right-0 top-full mt-1 w-48 glass-card rounded-lg shadow-2xl border border-orange-500/20 z-20 overflow-hidden">
                             <div className="p-1">
                               <button
                                 onClick={(e) => {
@@ -2379,9 +2379,9 @@ export default function Kanban() {
                                   handleOpenCardView(card.id);
                                   setCardMenuOpen(null);
                                 }}
-                                className="w-full px-3 py-2.5 text-left text-sm text-gray-300 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20 hover:text-white rounded-lg transition-all flex items-center gap-2 group"
+                                className="w-full px-3 py-2.5 text-left text-sm text-[#a0a0a0] hover:bg-gradient-to-r hover:from-orange-600/20 hover:to-orange-600/20 hover:text-white rounded-lg transition-all flex items-center gap-2 group"
                               >
-                                <Edit className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                                <Edit className="w-4 h-4 text-[#858585] group-hover:text-orange-400 transition-colors" />
                                 Edit Card
                               </button>
                               <button
@@ -2389,18 +2389,18 @@ export default function Kanban() {
                                   e.stopPropagation();
                                   handleDuplicateCard(card.id);
                                 }}
-                                className="w-full px-3 py-2.5 text-left text-sm text-gray-300 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20 hover:text-white rounded-lg transition-all flex items-center gap-2 group"
+                                className="w-full px-3 py-2.5 text-left text-sm text-[#a0a0a0] hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-orange-600/20 hover:text-white rounded-lg transition-all flex items-center gap-2 group"
                               >
-                                <Copy className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                                <Copy className="w-4 h-4 text-[#858585] group-hover:text-blue-400 transition-colors" />
                                 Duplicate
                               </button>
-                              <div className="border-t border-gray-700/50 my-1" />
+                              <div className="border-t border-[#333333]/50 my-1" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteCard(card.id);
                                 }}
-                                className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:bg-gradient-to-r hover:from-red-600/20 hover:to-pink-600/20 hover:text-red-300 rounded-lg transition-all flex items-center gap-2 group"
+                                className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:bg-gradient-to-r hover:from-red-600/20 hover:to-orange-600/20 hover:text-red-300 rounded-lg transition-all flex items-center gap-2 group"
                               >
                                 <Trash2 className="w-4 h-4 text-red-400 group-hover:text-red-300 transition-colors" />
                                 Delete
@@ -2413,7 +2413,7 @@ export default function Kanban() {
                   ))}
 
                   {columnCards.length === 0 && (
-                    <div className="text-center text-gray-500 text-sm py-8">
+                    <div className="text-center text-[#6e6e6e] text-sm py-8">
                       Drop cards here or click + to add
                     </div>
                   )}
@@ -2422,7 +2422,7 @@ export default function Kanban() {
                 {/* Add Card Button - At Bottom */}
                 <button
                   onClick={() => handleCreateCard(column.id)}
-                  className="mt-2 p-3 bg-gray-700/50 hover:bg-gray-700 rounded-b-lg text-sm font-medium text-gray-400 hover:text-white flex items-center justify-center gap-2 transition-colors border-t border-gray-700"
+                  className="mt-2 p-3 bg-[#333333]/50 hover:bg-[#333333] rounded-b-lg text-sm font-medium text-[#858585] hover:text-white flex items-center justify-center gap-2 transition-colors border-t border-[#333333]"
                 >
                   <Plus className="w-4 h-4" />
                   Add Card
@@ -2436,13 +2436,13 @@ export default function Kanban() {
 
       {viewType === 'list' && (
         <div className="flex-1 overflow-y-auto pl-4 pr-2 lg:pl-6 py-4">
-          <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="bg-[#252526] rounded-lg border border-[#333333] overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 p-3 bg-gray-800 border-b border-gray-700 font-semibold text-sm text-gray-300 sticky top-0 z-10">
+            <div className="grid grid-cols-12 gap-4 p-3 bg-[#252526] border-b border-[#333333] font-semibold text-sm text-[#a0a0a0] sticky top-0 z-10">
               <div className="col-span-1 flex items-center">
                         <input
                           type="checkbox"
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-orange-600 focus:ring-orange-500"
+                          className="w-4 h-4 rounded border-[#444444] bg-[#333333] text-orange-600 focus:ring-orange-500"
                           onChange={() => {
                             // TODO: Select all cards
                           }}
@@ -2512,7 +2512,7 @@ export default function Kanban() {
                             e.stopPropagation();
                             // TODO: Toggle completion
                           }}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-orange-600 focus:ring-orange-500"
+                          className="w-4 h-4 rounded border-[#444444] bg-[#333333] text-orange-600 focus:ring-orange-500"
                           onClick={(e) => e.stopPropagation()}
                         />
                       </div>
@@ -2546,8 +2546,8 @@ export default function Kanban() {
                             )}
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded flex-shrink-0 bg-gray-700 flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">No cover</span>
+                          <div className="w-12 h-12 rounded flex-shrink-0 bg-[#333333] flex items-center justify-center">
+                            <span className="text-[#6e6e6e] text-xs">No cover</span>
                           </div>
                         )}
                       </div>
@@ -2556,7 +2556,7 @@ export default function Kanban() {
                       <div className="col-span-2 flex items-center">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`font-medium text-white truncate ${card.completed ? 'line-through text-gray-500' : ''}`}>
+                            <span className={`font-medium text-white truncate ${card.completed ? 'line-through text-[#6e6e6e]' : ''}`}>
                               {card.title || 'Untitled'}
                             </span>
                             {/* Development Workflow Indicator */}
@@ -2566,7 +2566,7 @@ export default function Kanban() {
                                   e.stopPropagation();
                                   navigate(`/app/development-workflows/${card.metadata?.developmentWorkflowId}`);
                                 }}
-                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-purple-600/20 text-purple-300 rounded border border-purple-500/30 hover:bg-purple-600/30 transition-colors"
+                                className="flex items-center gap-1 text-xs px-1.5 py-0.5 bg-orange-600/20 text-orange-300 rounded border border-orange-500/30 hover:bg-orange-600/30 transition-colors"
                                 title="View development workflow"
                               >
                                 <GitBranch className="w-3 h-3" />
@@ -2579,9 +2579,9 @@ export default function Kanban() {
                                   card.metadata.developmentPhase === 'analysis'
                                     ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                     : card.metadata.developmentPhase === 'planning'
-                                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'solutioning'
-                                    ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'developing'
                                     ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                     : card.metadata.developmentPhase === 'implementation'
@@ -2599,14 +2599,14 @@ export default function Kanban() {
                             )}
                           </div>
                           {card.description && (
-                            <p className="text-xs text-gray-400 truncate mt-1">{card.description}</p>
+                            <p className="text-xs text-[#858585] truncate mt-1">{card.description}</p>
                           )}
                         </div>
                       </div>
 
                       {/* Status (Column) */}
                       <div className="col-span-2 flex items-center">
-                        <span className="text-sm text-gray-300">{column?.name || 'Unknown'}</span>
+                        <span className="text-sm text-[#a0a0a0]">{column?.name || 'Unknown'}</span>
                       </div>
 
                       {/* Priority */}
@@ -2636,22 +2636,22 @@ export default function Kanban() {
                               </div>
                             ))}
                             {card.assignees.length > 3 && (
-                              <span className="text-xs text-gray-400">+{card.assignees.length - 3}</span>
+                              <span className="text-xs text-[#858585]">+{card.assignees.length - 3}</span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-500">Unassigned</span>
+                          <span className="text-xs text-[#6e6e6e]">Unassigned</span>
                         )}
                       </div>
 
                       {/* Due Date */}
                       <div className="col-span-1 flex items-center">
                         {card.dueDate ? (
-                          <span className={`text-xs ${isOverdue(card.dueDate) ? 'text-red-400' : 'text-gray-400'}`}>
+                          <span className={`text-xs ${isOverdue(card.dueDate) ? 'text-red-400' : 'text-[#858585]'}`}>
                             {formatDate(card.dueDate)}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-500">—</span>
+                          <span className="text-xs text-[#6e6e6e]">—</span>
                         )}
                       </div>
 
@@ -2659,18 +2659,18 @@ export default function Kanban() {
                       <div className="col-span-1 flex items-center">
                         {card.checklists && card.checklists.length > 0 ? (
                           <div className="flex items-center gap-2 w-full">
-                            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-[#333333] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-orange-600 transition-all"
                                 style={{ width: `${checklistProgress * 100}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-400 w-10 text-right">
+                            <span className="text-xs text-[#858585] w-10 text-right">
                               {Math.round(checklistProgress * 100)}%
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-500">—</span>
+                          <span className="text-xs text-[#6e6e6e]">—</span>
                         )}
                       </div>
 
@@ -2681,9 +2681,9 @@ export default function Kanban() {
                             e.stopPropagation();
                             setCardMenuOpen(cardMenuOpen === card.id ? null : card.id);
                           }}
-                          className="p-1 hover:bg-gray-700 rounded transition-colors"
+                          className="p-1 hover:bg-[#333333] rounded transition-colors"
                         >
-                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                          <MoreHorizontal className="w-4 h-4 text-[#858585]" />
                         </button>
                       </div>
                     </div>
@@ -2722,7 +2722,7 @@ export default function Kanban() {
                 }
                 return true;
               }).length === 0 && (
-                <div className="p-8 text-center text-gray-400">
+                <div className="p-8 text-center text-[#858585]">
                   <List className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>No cards found. Create a card to get started.</p>
                 </div>
@@ -2765,7 +2765,7 @@ export default function Kanban() {
         return (
           <div className="flex-1 flex flex-col overflow-hidden pl-4 pr-2 lg:pl-6">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-[#333333] flex-shrink-0">
               <div className="flex items-center gap-4">
                 <h3 className="text-lg font-semibold text-gray-100">Calendar View</h3>
               </div>
@@ -2777,11 +2777,11 @@ export default function Kanban() {
                     newDate.setMonth(newDate.getMonth() - 1);
                     setSelectedMonth(newDate);
                   }}
-                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#333333] rounded-lg transition-colors"
                 >
-                  <ChevronLeft className="w-5 h-5 text-gray-400" />
+                  <ChevronLeft className="w-5 h-5 text-[#858585]" />
                 </button>
-                <span className="text-sm font-medium min-w-[180px] text-center text-gray-300">
+                <span className="text-sm font-medium min-w-[180px] text-center text-[#a0a0a0]">
                   {selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </span>
                 <button
@@ -2790,13 +2790,13 @@ export default function Kanban() {
                     newDate.setMonth(newDate.getMonth() + 1);
                     setSelectedMonth(newDate);
                   }}
-                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#333333] rounded-lg transition-colors"
                 >
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                  <ChevronRight className="w-5 h-5 text-[#858585]" />
                 </button>
                 <button
                   onClick={() => setSelectedMonth(new Date())}
-                  className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                  className="px-3 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
                 >
                   Today
                 </button>
@@ -2805,21 +2805,21 @@ export default function Kanban() {
 
             {/* Calendar Grid */}
             <div className="flex-1 overflow-auto">
-              <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+              <div className="bg-[#252526] rounded-lg border border-[#333333] overflow-hidden">
                 {/* Week Day Headers */}
-                <div className="grid grid-cols-7 gap-px bg-gray-700">
+                <div className="grid grid-cols-7 gap-px bg-[#333333]">
                   {weekDays.map((day) => (
-                    <div key={day} className="bg-gray-800 p-2 text-center text-sm font-semibold text-gray-300">
+                    <div key={day} className="bg-[#252526] p-2 text-center text-sm font-semibold text-[#a0a0a0]">
                       {day}
                     </div>
                   ))}
                 </div>
 
                 {/* Calendar Days */}
-                <div className="grid grid-cols-7 gap-px bg-gray-700">
+                <div className="grid grid-cols-7 gap-px bg-[#333333]">
                   {/* Empty cells for days before month starts */}
                   {Array.from({ length: startingDayOfWeek }).map((_, i) => (
-                    <div key={`empty-${i}`} className="bg-gray-800 min-h-[100px]" />
+                    <div key={`empty-${i}`} className="bg-[#252526] min-h-[100px]" />
                   ))}
 
                   {/* Days of the month */}
@@ -2834,11 +2834,11 @@ export default function Kanban() {
                     return (
                       <div
                         key={day}
-                        className={`bg-gray-800 min-h-[100px] p-2 border-l border-t border-gray-700 ${
-                          isToday ? 'bg-purple-900/20 border-purple-600/50' : ''
+                        className={`bg-[#252526] min-h-[100px] p-2 border-l border-t border-[#333333] ${
+                          isToday ? 'bg-orange-900/20 border-orange-600/50' : ''
                         }`}
                       >
-                        <div className={`text-sm font-medium mb-1 ${isToday ? 'text-purple-400' : 'text-gray-300'}`}>
+                        <div className={`text-sm font-medium mb-1 ${isToday ? 'text-orange-400' : 'text-[#a0a0a0]'}`}>
                           {day}
                         </div>
                         <div className="space-y-1">
@@ -2878,7 +2878,7 @@ export default function Kanban() {
                                     )}
                                   </div>
                                 )}
-                                <div className={`text-xs p-1.5 ${card.cover ? 'bg-gray-700' : getPriorityColor(card.priority)}`}>
+                                <div className={`text-xs p-1.5 ${card.cover ? 'bg-[#333333]' : getPriorityColor(card.priority)}`}>
                                   <div className="flex items-center gap-1 flex-wrap">
                                     <span className="truncate flex-1 min-w-0 text-white font-medium">{card.title}</span>
                                     {card.metadata?.developmentPhase && (
@@ -2887,9 +2887,9 @@ export default function Kanban() {
                                           card.metadata.developmentPhase === 'analysis'
                                             ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                             : card.metadata.developmentPhase === 'planning'
-                                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                            ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                             : card.metadata.developmentPhase === 'solutioning'
-                                            ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                            ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                             : 'bg-green-500/20 text-green-400 border-green-500/30'
                                         }`}
                                       >
@@ -2905,7 +2905,7 @@ export default function Kanban() {
                             );
                           })}
                           {dayCards.length > 3 && (
-                            <div className="text-xs text-gray-500 px-1.5">
+                            <div className="text-xs text-[#6e6e6e] px-1.5">
                               +{dayCards.length - 3} more
                             </div>
                           )}
@@ -2923,22 +2923,22 @@ export default function Kanban() {
       {viewType === 'timeline' && (
           <div className="flex-1 flex flex-col overflow-hidden pl-4 pr-2 lg:pl-6">
             {/* Timeline Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-[#333333] flex-shrink-0">
               <div className="flex items-center gap-4">
                 <h3 className="text-lg font-semibold text-gray-100">Timeline View</h3>
               </div>
 
               <div className="flex items-center gap-4">
                 {/* Zoom Controls */}
-                <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1">
+                <div className="flex items-center gap-2 bg-[#252526] rounded-lg p-1">
                   {(['day', 'week', 'month'] as const).map((z) => (
                     <button
                       key={z}
                       onClick={() => setTimelineZoom(z)}
                       className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                         timelineZoom === z
-                          ? 'bg-gray-700 text-purple-400 shadow-sm'
-                          : 'text-gray-400 hover:text-gray-300'
+                          ? 'bg-[#333333] text-orange-400 shadow-sm'
+                          : 'text-[#858585] hover:text-[#a0a0a0]'
                       }`}
                     >
                       {z.charAt(0).toUpperCase() + z.slice(1)}
@@ -2960,11 +2960,11 @@ export default function Kanban() {
                       }
                       setTimelineDate(newDate);
                     }}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#333333] rounded-lg transition-colors"
                   >
-                    <ChevronLeft className="w-5 h-5 text-gray-400" />
+                    <ChevronLeft className="w-5 h-5 text-[#858585]" />
                   </button>
-                  <span className="text-sm font-medium min-w-[180px] text-center text-gray-300">
+                  <span className="text-sm font-medium min-w-[180px] text-center text-[#a0a0a0]">
                     {timelineZoom === 'month'
                       ? timelineDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
                       : timelineZoom === 'week'
@@ -2983,13 +2983,13 @@ export default function Kanban() {
                       }
                       setTimelineDate(newDate);
                     }}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#333333] rounded-lg transition-colors"
                   >
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                    <ChevronRight className="w-5 h-5 text-[#858585]" />
                   </button>
                   <button
                     onClick={() => setTimelineDate(new Date())}
-                    className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                    className="px-3 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
                   >
                     Today
                   </button>
@@ -3006,10 +3006,10 @@ export default function Kanban() {
             >
               <div className="min-w-[1200px]">
                 {/* Date Headers */}
-                <div className="sticky top-0 z-10 bg-gray-800 border-b border-gray-700">
+                <div className="sticky top-0 z-10 bg-[#252526] border-b border-[#333333]">
                   <div className="flex">
-                    <div className="w-64 flex-shrink-0 px-4 py-2 font-semibold text-sm text-gray-300">Card</div>
-                    <div className="w-24 flex-shrink-0 px-4 py-2 font-semibold text-sm text-center text-gray-300">Duration</div>
+                    <div className="w-64 flex-shrink-0 px-4 py-2 font-semibold text-sm text-[#a0a0a0]">Card</div>
+                    <div className="w-24 flex-shrink-0 px-4 py-2 font-semibold text-sm text-center text-[#a0a0a0]">Duration</div>
                     <div className="flex-1 flex">
                       {generateTimelineDates.map((date, i) => {
                         let displayText = '';
@@ -3033,11 +3033,11 @@ export default function Kanban() {
                         return (
                           <div
                             key={i}
-                            className="flex-1 text-center py-2 border-l border-gray-700"
+                            className="flex-1 text-center py-2 border-l border-[#333333]"
                           >
-                            <div className="text-xs font-semibold text-gray-300">{displayText}</div>
+                            <div className="text-xs font-semibold text-[#a0a0a0]">{displayText}</div>
                             {subText && (
-                              <div className="text-[10px] text-gray-500 mt-0.5">{subText}</div>
+                              <div className="text-[10px] text-[#6e6e6e] mt-0.5">{subText}</div>
                             )}
                           </div>
                         );
@@ -3054,7 +3054,7 @@ export default function Kanban() {
                     return (
                       <div
                         key={card.id}
-                        className="flex items-center hover:bg-gray-800/50 group cursor-pointer"
+                        className="flex items-center hover:bg-[#252526]/50 group cursor-pointer"
                         onClick={() => {
                           setCardViewCardId(card.id);
                           setCardViewColumnId(card.columnId);
@@ -3072,8 +3072,8 @@ export default function Kanban() {
                           </div>
                           {card.assignees && card.assignees.length > 0 && (
                             <div className="flex items-center gap-1 mt-1">
-                              <Users className="w-3 h-3 text-gray-500" />
-                              <span className="text-xs text-gray-500">
+                              <Users className="w-3 h-3 text-[#6e6e6e]" />
+                              <span className="text-xs text-[#6e6e6e]">
                                 {card.assignees.map((u) => u.displayName).join(', ')}
                               </span>
                             </div>
@@ -3086,7 +3086,7 @@ export default function Kanban() {
                             <span className="text-sm font-bold text-gray-100">
                               {position.duration}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-[#6e6e6e]">
                               {position.duration === 1 ? 'day' : 'days'}
                             </span>
                           </div>
@@ -3095,7 +3095,7 @@ export default function Kanban() {
                         {/* Timeline Bar */}
                         <div className="flex-1 relative py-2">
                           <div
-                            className={`absolute h-10 rounded-lg overflow-hidden ${!card.cover ? getPriorityColor(card.priority) : ''} opacity-80 hover:opacity-100 transition-all shadow-md hover:shadow-lg cursor-move ${draggingTimelineCard === card.id ? 'ring-2 ring-purple-500' : ''}`}
+                            className={`absolute h-10 rounded-lg overflow-hidden ${!card.cover ? getPriorityColor(card.priority) : ''} opacity-80 hover:opacity-100 transition-all shadow-md hover:shadow-lg cursor-move ${draggingTimelineCard === card.id ? 'ring-2 ring-orange-500' : ''}`}
                             onMouseDown={(e) => handleTimelineDragStart(e, card.id)}
                             draggable={false}
                             style={{ 
@@ -3134,9 +3134,9 @@ export default function Kanban() {
                                       card.metadata.developmentPhase === 'analysis'
                                         ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                         : card.metadata.developmentPhase === 'planning'
-                                        ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                        ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                         : card.metadata.developmentPhase === 'solutioning'
-                                        ? 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                                        ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
                                         : 'bg-green-500/20 text-green-400 border-green-500/30'
                                     }`}
                                   >
@@ -3159,7 +3159,7 @@ export default function Kanban() {
                 </div>
 
                 {cardsWithDates.length === 0 && (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-[#6e6e6e]">
                     <Clock className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <h3 className="text-xl font-semibold mb-2">No cards with dates</h3>
                     <p>Add start dates or due dates to cards to see them on the timeline.</p>

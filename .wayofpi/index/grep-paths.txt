@@ -29025,6 +29025,7 @@ apps/wayofwork-ui/src/constants/mitLicenseText.ts
 apps/wayofwork-ui/src/constants/piModelConfigPaths.ts
 apps/wayofwork-ui/src/constants/workspaceEditorChrome.ts
 apps/wayofwork-ui/src/context/AuthContext.tsx
+apps/wayofwork-ui/src/context/PageHeaderContext.tsx
 apps/wayofwork-ui/src/context/RefactorContext.tsx
 apps/wayofwork-ui/src/context/ToastContext.tsx
 apps/wayofwork-ui/src/context/WorkspaceStaticAnalysisContext.tsx
@@ -30205,6 +30206,7 @@ issues/004-financial-dashboard.md
 issues/005-invoice-system.md
 issues/006-multi-currency.md
 issues/007-financial-reports.md
+issues/008-kanban-completeness.md
 issues/prd-financial-system.md
 justfile
 LICENSE

@@ -127,15 +127,15 @@ export default function BoardSelector({
       {/* Modal Container */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-gray-700 animate-scale-in"
+          className="bg-[#252526] rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-[#333333] animate-scale-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between p-6 border-b border-[#333333] flex-shrink-0">
             <h2 className="text-xl font-semibold text-white">Select Board</h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-[#858585] hover:text-white hover:bg-[#333333] rounded-lg transition-colors"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -143,13 +143,13 @@ export default function BoardSelector({
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-4 px-6 pt-4 border-b border-gray-700 flex-shrink-0">
+          <div className="flex items-center gap-4 px-6 pt-4 border-b border-[#333333] flex-shrink-0">
             <button
               onClick={() => setActiveTab('boards')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'boards'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  ? 'bg-orange-600 text-white'
+                  : 'text-[#858585] hover:text-white hover:bg-[#333333]'
               }`}
             >
               My Boards ({boards.length})
@@ -158,8 +158,8 @@ export default function BoardSelector({
               onClick={() => setActiveTab('templates')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'templates'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  ? 'bg-orange-600 text-white'
+                  : 'text-[#858585] hover:text-white hover:bg-[#333333]'
               }`}
             >
               Templates ({templates.length})
@@ -169,13 +169,13 @@ export default function BoardSelector({
           {/* Search Bar */}
           <div className="p-4 flex-shrink-0">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#858585]" />
               <input
                 type="text"
                 placeholder={activeTab === 'boards' ? 'Search boards...' : 'Search templates...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#1e1e1e] border border-[#333333] rounded-lg text-white placeholder-[#6e6e6e] focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function BoardSelector({
                 {/* Create Empty Board Button */}
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="w-full p-4 border-2 border-dashed border-gray-700 rounded-lg hover:border-purple-600 hover:bg-purple-600/10 transition-colors flex items-center justify-center gap-2 text-gray-400 hover:text-purple-400"
+                  className="w-full p-4 border-2 border-dashed border-[#333333] rounded-lg hover:border-orange-600 hover:bg-orange-600/10 transition-colors flex items-center justify-center gap-2 text-[#858585] hover:text-orange-400"
                 >
                   <Plus className="w-5 h-5" />
                   <span className="font-medium">Create New Board</span>
@@ -195,13 +195,13 @@ export default function BoardSelector({
 
                 {/* Boards Grid */}
                 {filteredBoards.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-[#6e6e6e]">
                     <LayoutGrid className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p>No boards found</p>
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="mt-2 text-purple-400 hover:text-purple-300"
+                        className="mt-2 text-orange-400 hover:text-orange-300"
                       >
                         Clear search
                       </button>
@@ -218,8 +218,8 @@ export default function BoardSelector({
                         }}
                         className={`p-4 rounded-lg border-2 transition-all text-left hover:scale-105 ${
                           selectedBoardId === board.id
-                            ? 'border-purple-600 bg-purple-600/20'
-                            : 'border-gray-700 bg-gray-800 hover:border-purple-600/50 hover:bg-gray-700/50'
+                            ? 'border-orange-600 bg-orange-600/20'
+                            : 'border-[#333333] bg-[#252526] hover:border-orange-600/50 hover:bg-[#333333]/50'
                         }`}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -230,9 +230,9 @@ export default function BoardSelector({
                           {board.starred && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
                         </div>
                         {board.description && (
-                          <p className="text-sm text-gray-400 mb-2 line-clamp-2">{board.description}</p>
+                          <p className="text-sm text-[#858585] mb-2 line-clamp-2">{board.description}</p>
                         )}
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex items-center gap-4 text-xs text-[#6e6e6e]">
                           <span>{board.columns.length} columns</span>
                           {board.stats && <span>{board.stats.totalCards} cards</span>}
                         </div>
@@ -251,8 +251,8 @@ export default function BoardSelector({
                       onClick={() => setSelectedCategory(cat.value || null)}
                       className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                         (selectedCategory || '') === cat.value
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          ? 'bg-orange-600 text-white'
+                          : 'bg-[#333333] text-[#a0a0a0] hover:bg-[#444444]'
                       }`}
                     >
                       {cat.label}
@@ -262,13 +262,13 @@ export default function BoardSelector({
 
                 {/* Templates Grid */}
                 {filteredTemplates.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-[#6e6e6e]">
                     <LayoutGrid className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p>No templates found</p>
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="mt-2 text-purple-400 hover:text-purple-300"
+                        className="mt-2 text-orange-400 hover:text-orange-300"
                       >
                         Clear search
                       </button>
@@ -280,7 +280,7 @@ export default function BoardSelector({
                       <button
                         key={template.id}
                         onClick={() => handleCreateFromTemplate(template.id)}
-                        className="p-4 rounded-lg border-2 border-gray-700 bg-gray-800 hover:border-purple-600 hover:bg-gray-700/50 transition-all text-left hover:scale-105 group"
+                        className="p-4 rounded-lg border-2 border-[#333333] bg-[#252526] hover:border-orange-600 hover:bg-[#333333]/50 transition-all text-left hover:scale-105 group"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -291,18 +291,18 @@ export default function BoardSelector({
                             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                           )}
                         </div>
-                        <p className="text-sm text-gray-400 mb-3 line-clamp-2">{template.description}</p>
+                        <p className="text-sm text-[#858585] mb-3 line-clamp-2">{template.description}</p>
                         <div className="flex items-center gap-2 flex-wrap mb-2">
                           {template.tags?.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-0.5 text-xs bg-gray-700 text-gray-300 rounded"
+                              className="px-2 py-0.5 text-xs bg-[#333333] text-[#a0a0a0] rounded"
                             >
                               {tag}
                             </span>
                           ))}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-[#6e6e6e]">
                           {template.columns.length} columns
                         </div>
                       </button>
@@ -319,7 +319,7 @@ export default function BoardSelector({
       {showCreateModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
-          <div className="relative bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-6 border border-gray-700">
+          <div className="relative bg-[#252526] rounded-lg shadow-2xl max-w-md w-full p-6 border border-[#333333]">
             <h3 className="text-lg font-semibold text-white mb-4">Create New Board</h3>
             <input
               type="text"
@@ -331,20 +331,20 @@ export default function BoardSelector({
                   handleCreateEmptyBoard();
                 }
               }}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              className="w-full px-4 py-2 bg-[#1e1e1e] border border-[#333333] rounded-lg text-white placeholder-[#6e6e6e] focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
               autoFocus
             />
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateEmptyBoard}
                 disabled={!newBoardName.trim()}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create
               </button>

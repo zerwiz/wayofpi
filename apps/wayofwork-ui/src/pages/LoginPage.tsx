@@ -29,8 +29,7 @@ export function LoginPage() {
     const r = role.toUpperCase();
     if (r === "CLIENT") navigate("/client", { replace: true });
     else if (r === "WORKER" || r === "LEADER") navigate("/portal", { replace: true });
-    else if (r === "ADMIN") navigate("/admin", { replace: true });
-    else if (r === "SUPER_ADMIN") navigate("/super-admin", { replace: true });
+    else if (r === "ADMIN" || r === "SUPER_ADMIN") navigate("/ata", { replace: true });
     else navigate("/", { replace: true });
   };
 

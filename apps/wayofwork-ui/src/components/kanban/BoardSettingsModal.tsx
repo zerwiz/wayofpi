@@ -204,7 +204,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
               type="text"
               value={boardName}
               onChange={(e) => setBoardName(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="Enter board name"
             />
           </div>
@@ -216,7 +216,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
               value={boardDescription}
               onChange={(e) => setBoardDescription(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="Enter board description"
             />
           </div>
@@ -232,7 +232,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                   className={`w-10 h-10 text-xl rounded-lg border-2 transition-colors flex-shrink-0 ${
                     boardIcon === icon.value
                       ? 'border-orange-500 bg-orange-500/20'
-                      : 'border-gray-600 hover:border-gray-500 bg-gray-700'
+                      : 'border-[#444444] hover:border-gray-500 bg-[#333333]'
                   }`}
                 >
                   {icon.label}
@@ -255,7 +255,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                     key={colorOption.value}
                     onClick={() => setBoardColor(colorOption.value)}
                     className={`w-10 h-10 rounded-lg border-2 transition-all flex-shrink-0 ${
-                      isSelected ? 'border-white ring-2 ring-offset-1 ring-offset-gray-800 ring-orange-500' : 'border-gray-600 hover:border-gray-500'
+                      isSelected ? 'border-white ring-2 ring-offset-1 ring-offset-gray-800 ring-orange-500' : 'border-[#444444] hover:border-gray-500'
                     }`}
                     style={
                       colorOption.type === 'gradient' && colorOption.gradient
@@ -278,7 +278,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
             <select
               value={defaultView}
               onChange={(e) => setDefaultView(e.target.value as BoardViewType)}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               {viewOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -300,7 +300,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                 className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                   visibility === 'private'
                     ? 'bg-orange-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-[#333333] text-[#a0a0a0] hover:bg-[#444444]'
                 }`}
               >
                 <EyeOff className="w-4 h-4" />
@@ -311,7 +311,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                 className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                   visibility === 'public'
                     ? 'bg-orange-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-[#333333] text-[#a0a0a0] hover:bg-[#444444]'
                 }`}
               >
                 <Eye className="w-4 h-4" />
@@ -329,7 +329,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
             <select
               value={columnWidth}
               onChange={(e) => setColumnWidth(Number(e.target.value))}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               {columnWidthOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -350,11 +350,11 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                 <button
                   key={option.value}
                   onClick={() => handleViewSelect(option.value)}
-                  className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white hover:bg-gray-600/50 transition-colors text-left flex items-center justify-between opacity-75"
+                  className="w-full px-4 py-2 bg-[#333333]/50 border border-[#444444]/50 rounded-lg text-white hover:bg-[#444444]/50 transition-colors text-left flex items-center justify-between opacity-75"
                   title="Coming Soon"
                 >
                   <span>{option.label}</span>
-                  <span className="text-xs text-gray-400">Coming Soon</span>
+                  <span className="text-xs text-[#858585]">Coming Soon</span>
                 </button>
               ))}
             </div>
@@ -366,12 +366,12 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
               <FolderKanban className="w-4 h-4" />
               Company Projects
             </label>
-            <div className="px-4 py-3 bg-gray-700/40 border border-gray-600/30 rounded-lg">
+            <div className="px-4 py-3 bg-[#333333]/40 border border-[#444444]/30 rounded-lg">
               {availableProjects.length === 0 ? (
                 <div className="text-center py-4">
-                  <FolderKanban className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">No projects available</p>
-                  <p className="text-xs text-gray-500 mt-1">Create a project in Company Projects first</p>
+                  <FolderKanban className="w-8 h-8 text-[#858585] mx-auto mb-2" />
+                  <p className="text-sm text-[#858585]">No projects available</p>
+                  <p className="text-xs text-[#6e6e6e] mt-1">Create a project in Company Projects first</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
@@ -390,15 +390,15 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                         }}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'bg-gradient-to-r from-orange-600/20 to-purple-600/20 border border-orange-500/50'
-                            : 'bg-gray-600/40 border border-gray-600/30 hover:border-orange-500/50'
+                            ? 'bg-gradient-to-r from-orange-600/20 to-orange-700/20 border border-orange-500/50'
+                            : 'bg-[#444444]/40 border border-[#444444]/30 hover:border-orange-500/50'
                         }`}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <FolderKanban className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                          <FolderKanban className="w-4 h-4 text-orange-400 flex-shrink-0" />
                           <span className="text-sm text-white truncate">{project.name}</span>
                           {project.description && (
-                            <span className="text-xs text-gray-400 truncate hidden sm:inline">
+                            <span className="text-xs text-[#858585] truncate hidden sm:inline">
                               - {project.description}
                             </span>
                           )}
@@ -412,8 +412,8 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
                 </div>
               )}
               {selectedProjectIds.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-600/30">
-                  <p className="text-xs text-gray-400 mb-2">
+                <div className="mt-3 pt-3 border-t border-[#444444]/30">
+                  <p className="text-xs text-[#858585] mb-2">
                     {selectedProjectIds.length} project{selectedProjectIds.length !== 1 ? 's' : ''} linked
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -437,12 +437,12 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
           </div>
 
           {/* Danger Zone */}
-          <div className="pt-6 border-t border-gray-700 space-y-3">
+          <div className="pt-6 border-t border-[#333333] space-y-3">
             <h3 className="text-lg font-semibold text-red-400">Danger Zone</h3>
             
             <button
               onClick={handleArchiveClick}
-              className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Archive className="w-4 h-4" />
               Archive Board
@@ -458,10 +458,10 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-700">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#333333]">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              className="px-4 py-2 bg-[#333333] text-white rounded-lg hover:bg-[#444444] transition-colors"
             >
               Cancel
             </button>

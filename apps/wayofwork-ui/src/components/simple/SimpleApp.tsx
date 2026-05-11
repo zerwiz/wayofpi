@@ -222,12 +222,20 @@ export function SimpleApp({
 	const narrowDesktop = useMaxWidthMediaQuery(767) && !isMobile;
 	const [mobileFilesOpen, setMobileFilesOpen] = useState(false);
 	const [mobileEditorOpen, setMobileEditorOpen] = useState(false);
-	const [leftOpen, setLeftOpen] = useState(() =>
-		typeof window !== "undefined" ? window.innerWidth >= 768 : true,
-	);
-	const [rightOpen, setRightOpen] = useState(() =>
-		typeof window !== "undefined" ? window.innerWidth >= 768 : true,
-	);
+	const [leftOpen, setLeftOpen] = useState(() => {
+		try {
+			const stored = localStorage.getItem("wayofpi.simple.leftOpen");
+			if (stored !== null) return JSON.parse(stored) as boolean;
+		} catch { /* ignore */ }
+		return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+	});
+	const [rightOpen, setRightOpen] = useState(() => {
+		try {
+			const stored = localStorage.getItem("wayofpi.simple.rightOpen");
+			if (stored !== null) return JSON.parse(stored) as boolean;
+		} catch { /* ignore */ }
+		return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+	});
 	/** Narrow desktop (≤767px): file editor as left slide-over over chat (same idea as mobile shell). */
 	const [narrowEditorOpen, setNarrowEditorOpen] = useState(false);
 	const {
@@ -247,6 +255,14 @@ export function SimpleApp({
 		applyChatSplitDelta,
 	} = useSimpleChatWorkspaceLayout();
 	const agentsApi = useAgents();
+
+	/* Persist sidebar open/closed state */
+	useEffect(() => {
+		try { localStorage.setItem("wayofpi.simple.leftOpen", JSON.stringify(leftOpen)); } catch {}
+	}, [leftOpen]);
+	useEffect(() => {
+		try { localStorage.setItem("wayofpi.simple.rightOpen", JSON.stringify(rightOpen)); } catch {}
+	}, [rightOpen]);
 
 	useEffect(() => {
 		if (isMobile) return;
@@ -725,11 +741,8 @@ export function SimpleApp({
 
 					<div className="flex min-h-0 flex-1 overflow-hidden">
 						<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-							{narrowDesktop && activeTab === "chat" ? (
+							{narrowDesktop && activeTab === "chat" && (selectedPath || narrowEditorOpen) ? (
 								<div className={`flex shrink-0 flex-wrap items-center gap-2 border-b px-2 py-1.5 ${mobileStripBg}`}>
-									<button type="button" className={mobileBtn} onClick={() => setRightOpen(true)}>
-										Project files
-									</button>
 									{selectedPath ? (
 										<button type="button" className={mobileBtn} onClick={() => setNarrowEditorOpen(true)}>
 											Open file

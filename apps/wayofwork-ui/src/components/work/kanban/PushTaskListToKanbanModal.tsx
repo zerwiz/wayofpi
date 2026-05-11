@@ -202,20 +202,20 @@ export function PushTaskListToKanbanModal({
       }}
     >
       <div
-        className="glass-card rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] border border-purple-500/30 animate-scale-in flex flex-col"
+        className="glass-card rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] border border-orange-500/30 animate-scale-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-purple-500/20 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-orange-500/20 flex-shrink-0">
           <div>
             <h2 className="text-xl font-bold gradient-text">Push Task List to Kanban Board</h2>
-            <p className="text-sm text-purple-300/70 mt-1">
+            <p className="text-sm text-orange-300/70 mt-1">
               Create cards from tasks in "{taskList.title}"
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-[#858585] hover:text-[#cccccc] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:shadow-lg hover:shadow-purple-500/10"
+            className="p-2 rounded-lg text-[#858585] hover:text-[#cccccc] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:shadow-lg hover:shadow-orange-500/10"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -228,14 +228,14 @@ export function PushTaskListToKanbanModal({
           <div>
             <label className="block text-sm font-semibold text-[#cccccc] mb-2 flex items-center gap-2">
               <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-[#ea580c]/20 to-[#c2410c]/20 flex items-center justify-center">
-                <LayoutGrid className="w-3 h-3 text-purple-400" />
+                <LayoutGrid className="w-3 h-3 text-orange-400" />
               </div>
               Select Board
             </label>
             <select
               value={selectedBoardId}
               onChange={(e) => setSelectedBoardId(e.target.value)}
-              className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] select transition-all hover:border-purple-500/50"
+              className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] select transition-all hover:border-orange-500/50"
             >
               <option value="">Choose a board...</option>
               {boards.map((board) => (
@@ -251,14 +251,14 @@ export function PushTaskListToKanbanModal({
             <div>
               <label className="block text-sm font-semibold text-[#cccccc] mb-2 flex items-center gap-2">
                 <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-[#ea580c]/20 to-[#c2410c]/20 flex items-center justify-center">
-                  <Folder className="w-3 h-3 text-purple-400" />
+                  <Folder className="w-3 h-3 text-orange-400" />
                 </div>
                 Select Column
               </label>
               <select
                 value={selectedColumnId}
                 onChange={(e) => setSelectedColumnId(e.target.value)}
-                className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] select transition-all hover:border-purple-500/50"
+                className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] select transition-all hover:border-orange-500/50"
               >
                 <option value="">Choose a column...</option>
                 {columns.map((column) => (
@@ -295,7 +295,7 @@ export function PushTaskListToKanbanModal({
                   </button>
                 </div>
               </div>
-              <div className="max-h-64 overflow-y-auto space-y-2 border border-purple-500/30 rounded-lg p-3 bg-[#1e1e1e]/30">
+              <div className="max-h-64 overflow-y-auto space-y-2 border border-orange-500/30 rounded-lg p-3 bg-[#1e1e1e]/30">
                 {tasksInList.map((task) => {
                   const isSelected = selectedTasks.includes(task.id);
                   return (
@@ -303,7 +303,7 @@ export function PushTaskListToKanbanModal({
                       key={task.id}
                       className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-gradient-to-r from-[#ea580c]/20 to-[#c2410c]/20 border border-purple-500/50'
+                          ? 'bg-gradient-to-r from-[#ea580c]/20 to-[#c2410c]/20 border border-orange-500/50'
                           : 'bg-[#1e1e1e]/60 border border-gray-700/50 hover:border-[#3c3c3c]'
                       }`}
                     >
@@ -311,7 +311,7 @@ export function PushTaskListToKanbanModal({
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleTask(task.id)}
-                        className="w-4 h-4 rounded border-purple-500/50 bg-[#1e1e1e]/60 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
+                        className="w-4 h-4 rounded border-orange-500/50 bg-[#1e1e1e]/60 text-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-[#cccccc]">{task.title}</div>
@@ -357,7 +357,7 @@ export function PushTaskListToKanbanModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-purple-500/20 flex-shrink-0">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-orange-500/20 flex-shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-[#1e1e1e]/60 hover:bg-[#252526]/80 text-[#cccccc] rounded-lg transition-all duration-200 border border-gray-700/50 hover:border-[#3c3c3c]"
@@ -372,7 +372,7 @@ export function PushTaskListToKanbanModal({
               !selectedColumnId ||
               selectedTasks.length === 0
             }
-            className="px-4 py-2 bg-gradient-to-r from-[#ea580c] to-[#c2410c] hover:from-purple-700 hover:to-pink-700 text-[#cccccc] rounded-lg transition-all font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#ea580c] to-[#c2410c] hover:from-orange-700 hover:to-orange-700 text-[#cccccc] rounded-lg transition-all font-medium shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
             {isCreating ? (
               <>

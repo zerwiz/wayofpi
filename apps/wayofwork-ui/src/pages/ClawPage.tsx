@@ -8,6 +8,7 @@ import { useWorkspaceActions } from "../hooks/useWorkspaceActions";
 import { useEditorCommandHandlers } from "../hooks/useEditorCommandHandlers";
 import { useNavigationHandlers } from "../hooks/useNavigationHandlers";
 import { useCommandItems } from "../hooks/useCommandItems";
+import { PageHeaderProvider } from "../context/PageHeaderContext";
 import type { ViewMenuTechnicalOptions } from "../types/technicalShell";
 import { WorkspaceStaticAnalysisProvider } from "../context/WorkspaceStaticAnalysisContext";
 import type { WorkspaceStaticAnalysisContextValue } from "../context/WorkspaceStaticAnalysisContext";
@@ -208,49 +209,49 @@ export function ClawPage() {
   }), [staticAnalysis]);
 
   return (
+    <PageHeaderProvider value={{
+      modelLabel,
+      config: server.config,
+      onOpenCommandPalette: () => setCommandPaletteOpen(true),
+      onSave: saveAndRefresh,
+      canSave: !!selectedPath && editor.dirty,
+      onRevertFile: () => void reloadFocusedOrMain(),
+      canRevert: !!selectedPath && editor.dirty,
+      onRefreshWorkspace: tree.refresh,
+      onCopyWorkspacePath: copyWorkspacePath,
+      onSelectActivity: (a: any) => {
+        setUiMode("technical");
+        setLeftSidebarVisible(true);
+        setTechnicalActivity(a);
+      },
+      onFocusBottomTab: () => {},
+      fileMenu,
+      editMenu,
+      selectionMenu,
+      goMenu,
+      runMenu,
+      terminalMenu,
+      helpMenu,
+      onOpenAgentSetup: () => {},
+      onOpenAgentPermissions: () => setCommandPaletteOpen(true),
+      settingsMenu: settingsMenuHandlers,
+      onOpenTeamsYaml: openTeamsYamlFromMenu,
+      onCreateAgentMarkdown: () => {},
+      onReloadAgents: agents.reload,
+      onOpenPiModelConfig: () => {},
+      chatSessionControls: {
+        mode: session.chatMode,
+        switchDisabled: session.streaming,
+        onSetMode: session.setChatMode,
+      },
+      onNewPlanFile: () => void handleNewPlanFile(),
+      newPlanFileDisabled: !workspaceOperational,
+      viewTechnical: viewTechnicalMenu,
+    }}>
     <WorkspaceStaticAnalysisProvider value={staticAnalysisValue}>
     <IdeLayout
       workspaceFileInputRef={{ current: null }} 
       onWorkspaceFileChange={() => {}} 
-      modelLabel={modelLabel}
-      uiMode={uiMode}
-      onUiModeChange={setUiMode}
-      config={server.config}
-      onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-      onSave={saveAndRefresh}
-      canSave={!!selectedPath && editor.dirty}
-      onRevertFile={() => void reloadFocusedOrMain()}
-      canRevert={!!selectedPath && editor.dirty}
-      onRefreshWorkspace={tree.refresh}
-      onCopyWorkspacePath={copyWorkspacePath}
-      onSelectActivity={(a) => {
-        setUiMode("technical");
-        setLeftSidebarVisible(true);
-        setTechnicalActivity(a);
-      }}
-      onFocusBottomTab={() => {}} 
-      fileMenu={fileMenu}
-      editMenu={editMenu}
-      selectionMenu={selectionMenu}
-      goMenu={goMenu}
-      runMenu={runMenu}
-      terminalMenu={terminalMenu}
-      helpMenu={helpMenu}
-      onOpenAgentSetup={() => {}} 
-      onOpenAgentPermissions={() => setCommandPaletteOpen(true)} 
-      settingsMenu={settingsMenuHandlers}
-      onOpenTeamsYaml={openTeamsYamlFromMenu}
-      onCreateAgentMarkdown={() => {}} 
-      onReloadAgents={agents.reload}
-      onOpenPiModelConfig={() => {}} 
-      chatSessionControls={{
-        mode: session.chatMode,
-        switchDisabled: session.streaming,
-        onSetMode: session.setChatMode,
-      }}
-      onNewPlanFile={() => void handleNewPlanFile()}
-      newPlanFileDisabled={!workspaceOperational}
-      viewTechnical={viewTechnicalMenu}
     >
       <ClawApp
         uiMode={uiMode}
@@ -392,5 +393,6 @@ export function ClawPage() {
       onFocusClawChatTab={() => setClawTab("chat")}
     />
     </WorkspaceStaticAnalysisProvider>
+    </PageHeaderProvider>
   );
 }

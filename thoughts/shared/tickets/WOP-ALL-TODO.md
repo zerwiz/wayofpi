@@ -148,7 +148,15 @@ Root: Way of Pi (project)
 
 ---
 
-## Phase 9: Production Delivery (WOP-009) — FOR OTHER AGENT
+## Phase 9: Production Delivery (WOP-009) — IN PROGRESS
+
+- [x] **Unified Login** — WelcomePage single Sign In button replaces three separate portal logins.
+- [x] **Role-Based Redirect** — ADMIN/SUPER_ADMIN → `/ata`, WORKER → `/portal`, CLIENT → `/client`.
+- [x] **Fixed SimplePage crash** — Added missing `workspaceFolders` to fileMenu (fixes FileMenuContent `.length` error).
+- [x] **Nav consistency** — WorkerPortal and ClientDashboard now show UiModeToggle nav bar.
+- [x] **Client role visibility** — UiModeToggle client button only shows for CLIENT role.
+- [x] **Technical button removed** — Technical mode removed from nav (standalone app now).
+- [x] **UiModeToggle SPA navigation** — Uses React Router `navigate()` instead of `window.location.pathname`.
 
 ---
 
@@ -165,4 +173,86 @@ Root: Way of Pi (project)
 - WOP-015 Phase 8 Claw Leadership Modules — **DONE ✅** (OpenCode)
 - WOP-010 Phase 6 Full Kanban Integration — **DONE ✅** (OpenCode)
 
-_Generated from WOP-001 through WOP-018. Update this file when tickets change._
+---
+
+## Phase 9: Global Header & UI Consistency — 8/10 FIXED ✅ 2 LEFT
+
+### Context
+- `IdeLayout` simplification (removing MenuBar + layout chrome) was **CORRECT for Way of Work** — this is a work portal app, not an IDE. The full `IdeLayout` with file tree, activity bar, etc. belongs in the **standalone IDE app** at `apps/wayofpi/technicalIDE/`.
+- However, SimplePage's **left sidebar** and ClawPage's **right sidebar** were **CUSTOM-MADE for those pages**, not part of the IDE. They were lost when IdeLayout was stripped. They must be restored.
+
+### ✅ Fixed (8/10)
+
+| # | Fix | Files Changed |
+|---|-----|-------------|
+| 1+10 | Route collision fixed: separated `/workboard` (WorkPage) from `/kanban` (KanbanPage) | `App.tsx`, `pages/index.ts` |
+| 2 | `min-h-screen` → `h-full` on all pages inside flex-1 | WorkerPortal, AdminDashboard, UserProfile, SuperAdminDashboard, ClientDashboard, DocsApp |
+| 5 | Removed duplicate `<UiModeToggle>` from WorkApp header | `WorkApp.tsx` |
+| 6 | Removed duplicate `<UiModeToggle>` from DocsApp header | `DocsApp.tsx` |
+| 8 | Changed `h-screen` → `h-full` in IdeLayout | `IdeLayout.tsx` |
+| 9 | Added `defaultMenuStubs` at App-level PageHeaderProvider (all menu handlers with no-ops) | `App.tsx` |
+| — | MenuBar restructured (search/model on top row, UiModeToggle in bottom row) | `MenuBar.tsx` |
+| — | Claw menu button styled as PanelLeft icon (matching Simple toggle) | `ClawApp.tsx` |
+| — | Sidebar state persisted in localStorage (Simple left/right, Claw nav) | `SimpleApp.tsx`, `ClawApp.tsx` |
+| — | Removed useless "Project files" button from Simple narrow desktop | `SimpleApp.tsx` |
+| — | KanbanPage exported and wired to `/kanban` route (was orphaned file) | `pages/index.ts`, `App.tsx` |
+| — | `ToastProvider` added to App component tree (required by Kanban) | `App.tsx` |
+
+### 🔴 Still Needs Work (2/10)
+
+| # | Issue | File | Notes |
+|---|-------|------|-------|
+| 3 | Left sidebar for Simple page | `SimpleApp.tsx` | Sidebar state persisted. Needs verification if layout works. |
+| 7 | Docs chat in middle column | `DocsApp.tsx` | Need to move ChatPanel from middle column into right preview column |
+
+### 💡 Investigation Results
+- **SimpleApp** already renders `SimpleNavRail` (left sidebar) and `SimpleRightPanel` (right sidebar) within itself — they are NOT dependent on IdeLayout. The sidebars should work now that `min-h-screen`/`h-screen` is fixed.
+- **ClawApp** renders `ClawNavRail` (left sidebar) within itself. Claw nav state persisted; "Claw menu" button fixed.
+
+---
+
+## Phase 10: Kanban Feature Completeness — ✅ DONE
+
+### Context
+The Kanban page (`src/pages/Kanban.tsx`) was ported from `ref/kanban/Kanban.tsx` with the full component tree. During Phase 10 the following was completed:
+
+### ✅ Done
+- [x] Main Kanban page ported (3300 lines, complete)
+- [x] All 9 sub-components ported (CardView, BoardSettingsModal, BoardMembers, BoardSelector, BoardDocsView, BoardDriveView, PushToKanbanModal, PushWorkflowToKanbanModal, PushTaskListToKanbanModal)
+- [x] Mock services created (mockKanbanService, mockNotesService, mockTasksService, mockDriveService, mockCalendarService, mockProjectsService, mockDevelopmentWorkflowService, mockWorkflowsService)
+- [x] Type definitions created (kanban, developmentWorkflow, workflows, nsrCompliance, drive, projects)
+- [x] Contexts created (ToastContext, AuthContext)
+- [x] Type errors fixed (550+ TS errors resolved)
+- [x] Route wired: `/kanban` → `KanbanPage` (separated from `/workboard` → `WorkPage`)
+- [x] `ToastProvider` added to App component tree
+- [x] `BOARD_TEMPLATES` populated with 19 real template definitions across 7 categories (incl. construction + ata)
+- [x] **Color scheme fixed** — All `bg-gray-*`, `text-gray-*`, `border-gray-*`, `placeholder-gray-*` replaced with app design system (`bg-[#1e1e1e]`, `text-[#cccccc]`, `text-[#858585]`, `border-[#333333]`)
+- [x] **Purple/pink → orange accent** — All `purple-*` and `pink-*` utilities replaced with `orange-*` across all 10 kanban files
+- [x] **Orange shading/depth** — Flat `from-orange-600 to-orange-600` gradients fixed to `from-orange-600 to-orange-700` for visual depth
+- [x] **`bg-dark-*` legacy classes** in CardView.tsx replaced with app design system
+- [x] **Mock service rewritten** — `mockKanbanService.ts` now persists boards and cards in memory. Board creation works. Seed data with 2 boards, 5 cards, and members.
+- [x] **Company Users in BoardMembers** — Fetches company users from `/api/admin/users` API with fallback seed users. "Add" button to add company users directly to boards.
+- [x] **Claw left sidebar toggle fixed** — PanelLeft button shows on all desktop sizes when nav is closed (was only showing on narrow desktop). Click toggles open/closed.
+- [x] **Build passes** ✅
+- [x] **Issue created** — `issues/008-kanban-completeness.md`
+
+### Remaining (low priority / future)
+- [ ] Card attachments (Drive/Docs views) — BoardDriveView and BoardDocsView need real Drive/Docs integration
+- [ ] Workflow push modals — PushToKanbanModal/PushWorkflowToKanbanModal/PushTaskListToKanbanModal need real workflow integration
+
+---
+
+## Completed
+
+- WOP-001, WOP-003, WOP-005 — terminal persistence
+- WOP-011 — Agentic OS Shell & Unified Routing — **DONE ✅**
+- WOP-016 Technical IDE extraction — **DONE ✅**
+- WOP-017 Rename wayofpi-ui → wayofwork-ui — **DONE ✅**
+- WOP-018 Rename wayofpi-server → wayofwork-server — **DONE ✅**
+- WOP-004 Phase 4 SDK Migration — **DONE ✅** (OpenCode)
+- WOP-006 Phase 5 Pi.dev Version Pinning & Startup Logging — **DONE ✅** (OpenCode)
+- WOP-012 Phase 7 ÄTA Ticket System — **DONE ✅** (OpenCode)
+- WOP-015 Phase 8 Claw Leadership Modules — **DONE ✅** (OpenCode)
+- WOP-010 Phase 6 Full Kanban Integration — **DONE ✅** (OpenCode) — File structure ported, routing still needed fixing
+
+_Last updated: 2026-05-11. Update this file when tickets change._

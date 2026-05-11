@@ -248,7 +248,7 @@ export default function ClientDashboard({ uiMode, setUiMode, appHeader }: { uiMo
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] text-[#cccccc] flex flex-col">
+    <div className="h-full bg-[#1e1e1e] text-[#cccccc] flex flex-col">
       {appHeader}
 
       {/* Info Bar */}

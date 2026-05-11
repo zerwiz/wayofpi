@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 // UiMode typed as string
-import { UiModeToggle } from "../components/UiModeToggle";
 
 interface Certificate {
   id: string;
@@ -350,21 +349,12 @@ export function UserProfilePage({
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] overflow-y-auto">
+    <div className="h-full bg-[#1e1e1e] overflow-y-auto">
       <div className="mx-auto max-w-4xl p-6 pb-20">
         <div className="flex items-center justify-between mb-8 border-b border-[#3c3c3c] pb-4">
         <div className="flex items-center gap-6">
-          <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
           <h1 className="text-2xl font-bold text-[#cccccc]">User Profile</h1>
         </div>
-        <button
-          onClick={() => {
-            window.location.pathname = "/";
-          }}
-          className="rounded px-3 py-1.5 text-xs text-[#858585] hover:bg-[#3c3c3c]"
-        >
-          ← Back to App
-        </button>
       </div>
 
       <div className="max-w-2xl mx-auto rounded-lg border border-[#3c3c3c] bg-[#252526] p-6">

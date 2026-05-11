@@ -1,26 +1,440 @@
-import type { Board, BoardColumn } from '../types/kanban';
+/**
+ * Mock Kanban Service — In-Memory Persistence
+ * 
+ * This mock service stores boards and cards in memory so that
+ * the Kanban UI can be used for demos and development without
+ * a backend. Data is ephemeral (lost on page refresh).
+ */
+import type { Board, BoardColumn, BoardCard, BoardMember } from '../types/kanban';
+import { BOARD_TEMPLATES } from './boardTemplates';
+import type { BoardTemplate } from './boardTemplates';
 
-export type KanbanBoard = Board;
-export type KanbanColumn = BoardColumn;
+// ── In-Memory Stores ──
+let boardStore: Map<string, Board> = new Map();
+let cardStore: Map<string, Map<string, BoardCard>> = new Map(); // boardId → Map<cardId, card>
+let memberStore: Map<string, BoardMember[]> = new Map(); // boardId → members
 
+// ── Helpers ──
+let _boardIdCounter = 100;
+let _cardIdCounter = 1000;
+
+function nextBoardId(): string {
+  return `board-${++_boardIdCounter}`;
+}
+
+function nextCardId(): string {
+  return `card-${++_cardIdCounter}`;
+}
+
+const DEFAULT_COLUMNS: Omit<BoardColumn, 'boardId'>[] = [
+  { id: 'col-todo', name: 'To Do', order: 0 },
+  { id: 'col-inprogress', name: 'In Progress', order: 1 },
+  { id: 'col-review', name: 'Review', order: 2 },
+  { id: 'col-done', name: 'Done', order: 3 },
+];
+
+const SEED_USERS = [
+  { id: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' },
+  { id: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith' },
+  { id: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams' },
+];
+
+// ── Seed Data ──
+function seedInitialData() {
+  if (boardStore.size > 0) return; // already seeded
+
+  // Board 1
+  const b1Columns: BoardColumn[] = [
+    { id: 'b1-col-1', boardId: 'board-1', name: 'To Do', order: 0 },
+    { id: 'b1-col-2', boardId: 'board-1', name: 'In Progress', order: 1 },
+    { id: 'b1-col-3', boardId: 'board-1', name: 'Done', order: 2 },
+  ];
+  const board1: Board = {
+    id: 'board-1',
+    name: 'Sprint 24',
+    description: 'Current sprint backlog and tasks',
+    columns: b1Columns,
+    members: ['user-1', 'user-2'],
+    icon: '🏃',
+    starred: true,
+    createdAt: Date.now() - 86400000 * 3,
+    updatedAt: Date.now() - 3600000,
+    stats: { totalCards: 3, completedCards: 1 },
+  };
+  boardStore.set(board1.id, board1);
+
+  const b1cards = new Map<string, BoardCard>();
+  b1cards.set('b1-c1', {
+    id: 'b1-c1', boardId: 'board-1', columnId: 'b1-col-1',
+    title: 'Design new dashboard layout',
+    description: 'Create wireframes and mockups for the updated dashboard',
+    priority: 'high', order: 0, createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 86400000,
+    assignees: [{ userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' }],
+    labels: [], checklists: [], comments: [], attachments: [], tags: ['design'],
+    metadata: {},
+  });
+  b1cards.set('b1-c2', {
+    id: 'b1-c2', boardId: 'board-1', columnId: 'b1-col-2',
+    title: 'Implement user authentication',
+    description: 'Add login/signup with JWT tokens',
+    priority: 'urgent', dueDate: new Date(Date.now() + 86400000 * 2).toISOString(), order: 0,
+    createdAt: Date.now() - 86400000 * 4, updatedAt: Date.now() - 3600000,
+    assignees: [{ userId: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith' }],
+    labels: [], checklists: [], comments: [], attachments: [], tags: ['backend', 'auth'],
+    metadata: {},
+  });
+  b1cards.set('b1-c3', {
+    id: 'b1-c3', boardId: 'board-1', columnId: 'b1-col-3',
+    title: 'Set up CI/CD pipeline',
+    description: 'Configure GitHub Actions for automated builds',
+    priority: 'medium', completed: true, order: 0,
+    createdAt: Date.now() - 86400000 * 7, updatedAt: Date.now() - 86400000 * 2,
+    assignees: [], labels: [], checklists: [], comments: [], attachments: [],
+    metadata: {},
+  });
+  cardStore.set(board1.id, b1cards);
+
+  // Board 2
+  const b2Columns: BoardColumn[] = [
+    { id: 'b2-col-1', boardId: 'board-2', name: 'Backlog', order: 0 },
+    { id: 'b2-col-2', boardId: 'board-2', name: 'In Progress', order: 1 },
+    { id: 'b2-col-3', boardId: 'board-2', name: 'Review', order: 2 },
+    { id: 'b2-col-4', boardId: 'board-2', name: 'Done', order: 3 },
+  ];
+  const board2: Board = {
+    id: 'board-2',
+    name: 'Bug Tracking',
+    description: 'Track reported bugs and issues',
+    columns: b2Columns,
+    members: ['user-1', 'user-3'],
+    icon: '🐛',
+    starred: true,
+    createdAt: Date.now() - 86400000 * 10,
+    updatedAt: Date.now() - 7200000,
+    stats: { totalCards: 2, completedCards: 0 },
+  };
+  boardStore.set(board2.id, board2);
+
+  const b2cards = new Map<string, BoardCard>();
+  b2cards.set('b2-c1', {
+    id: 'b2-c1', boardId: 'board-2', columnId: 'b2-col-1',
+    title: 'Login page broken on mobile',
+    description: 'Submit button not visible on iPhone SE',
+    priority: 'high', order: 0,
+    createdAt: Date.now() - 86400000, updatedAt: Date.now(),
+    assignees: [{ userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson' }],
+    labels: [], checklists: [], comments: [], attachments: [], tags: ['bug', 'mobile'],
+    metadata: {},
+  });
+  b2cards.set('b2-c2', {
+    id: 'b2-c2', boardId: 'board-2', columnId: 'b2-col-2',
+    title: 'API timeout on large uploads',
+    description: 'Files >10MB cause 30s timeout',
+    priority: 'urgent', dueDate: new Date(Date.now() + 86400000).toISOString(), order: 0,
+    createdAt: Date.now() - 86400000 * 2, updatedAt: Date.now() - 3600000,
+    assignees: [{ userId: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams' }],
+    labels: [], checklists: [], comments: [], attachments: [], tags: ['bug', 'backend'],
+    metadata: {},
+  });
+  cardStore.set(board2.id, b2cards);
+
+  // Members
+  memberStore.set('board-1', [
+    { id: 'mem-1', userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson', role: 'admin', addedAt: Date.now() - 86400000 * 7 },
+    { id: 'mem-2', userId: 'user-2', email: 'bob@example.com', displayName: 'Bob Smith', role: 'member', addedAt: Date.now() - 86400000 * 5 },
+  ]);
+  memberStore.set('board-2', [
+    { id: 'mem-3', userId: 'user-1', email: 'alice@example.com', displayName: 'Alice Johnson', role: 'owner', addedAt: Date.now() - 86400000 * 10 },
+    { id: 'mem-4', userId: 'user-3', email: 'carol@example.com', displayName: 'Carol Williams', role: 'member', addedAt: Date.now() - 86400000 * 8 },
+  ]);
+
+  _boardIdCounter = 2;
+  _cardIdCounter = 2;
+}
+
+// Initialize seed data immediately
+seedInitialData();
+
+// ── Service Implementation ──
 export const kanbanService = {
-  getBoards: async (): Promise<Board[]> => [],
-  getBoard: async (_id: string): Promise<Board | null> => null,
-  getAllBoards: async (): Promise<Board[]> => [],
-  getAllCardsForBoard: async (_boardId: string): Promise<any[]> => [],
-  getCard: async (_boardId: string, _cardId: string): Promise<any> => null,
-  getBoardMembers: async (_boardId: string): Promise<any[]> => [],
-  inviteBoardMember: async (_boardId: string, _email: string, _role: string): Promise<void> => {},
-  removeBoardMember: async (_boardId: string, _memberId: string): Promise<void> => {},
-  updateBoardMemberRole: async (_boardId: string, _memberId: string, _role: string): Promise<void> => {},
-  createBoardFromTemplate: async (_template: any, _name?: string): Promise<Board> => ({ id: 'new-board', name: _name || 'New Board', columns: [], members: [], createdAt: Date.now() } as Board),
-  createBoard: async (_data: any, _templateId?: string): Promise<Board> => ({ id: 'new-board', name: _data?.name || 'New Board', columns: [], members: [], createdAt: Date.now() } as Board),
-  updateBoard: async (_id: string, _data: Partial<Board>): Promise<void> => {},
-  deleteBoard: async (_id: string): Promise<void> => {},
-  createColumn: async (_boardId: string, _column: Partial<BoardColumn>): Promise<void> => {},
-  deleteColumn: async (_boardId: string, _columnId: string): Promise<void> => {},
-  createCard: async (_boardId: string, _card: any): Promise<any> => ({ id: 'new-card', title: '' }),
-  updateCard: async (_boardId: string, _cardId: string, _data: any): Promise<void> => {},
-  deleteCard: async (_cardId: string): Promise<void> => {},
-  moveCard: async (_boardId: string, _cardId: string, _targetColumnId: string, _index: number): Promise<void> => {},
+  // ── Boards ──
+  getAllBoards: async (): Promise<Board[]> => {
+    return Array.from(boardStore.values());
+  },
+
+  getBoard: async (id: string): Promise<Board | null> => {
+    return boardStore.get(id) || null;
+  },
+
+  createBoard: async (data: Partial<Board>, templateId?: string): Promise<Board> => {
+    // If templateId is provided, delegate to createBoardFromTemplate
+    if (templateId) {
+      const board = await kanbanService.createBoardFromTemplate(templateId, data.name);
+      if (data.description) {
+        board.description = data.description;
+      }
+      return board;
+    }
+    const id = nextBoardId();
+    const now = Date.now();
+    const columns: BoardColumn[] = (data.columns && data.columns.length > 0
+      ? data.columns
+      : DEFAULT_COLUMNS
+    ).map((col, i) => ({
+      id: col.id || `col-${id}-${i}`,
+      boardId: id,
+      name: col.name,
+      order: col.order ?? i,
+      wip: col.wip,
+    }));
+
+    const board: Board = {
+      id,
+      name: data.name || 'Untitled Board',
+      description: data.description || '',
+      columns,
+      members: data.members || [],
+      icon: data.icon || '📋',
+      starred: data.starred || false,
+      archived: data.archived || false,
+      createdAt: now,
+      updatedAt: now,
+      stats: { totalCards: 0, completedCards: 0 },
+    };
+
+    boardStore.set(id, board);
+    cardStore.set(id, new Map());
+    return board;
+  },
+
+  createBoardFromTemplate: async (templateIdOrData: string | BoardTemplate, nameOverride?: string): Promise<Board> => {
+    const template = typeof templateIdOrData === 'string'
+      ? BOARD_TEMPLATES.find(t => t.id === templateIdOrData)
+      : templateIdOrData;
+
+    if (!template) {
+      // Fallback: create board with default columns
+      return kanbanService.createBoard({ name: nameOverride || 'New Board' });
+    }
+
+    const id = nextBoardId();
+    const now = Date.now();
+    const columns: BoardColumn[] = template.columns.map((colName, i) => ({
+      id: `col-${id}-${i}`,
+      boardId: id,
+      name: colName,
+      order: i,
+    }));
+
+    const board: Board = {
+      id,
+      name: nameOverride || template.name,
+      description: template.description,
+      columns,
+      members: [],
+      icon: template.icon || '📋',
+      starred: false,
+      createdAt: now,
+      updatedAt: now,
+      stats: { totalCards: 0, completedCards: 0 },
+    };
+
+    boardStore.set(id, board);
+    cardStore.set(id, new Map());
+    return board;
+  },
+
+  updateBoard: async (id: string, data: Partial<Board>): Promise<void> => {
+    const existing = boardStore.get(id);
+    if (!existing) return;
+    boardStore.set(id, { ...existing, ...data, updatedAt: Date.now() });
+  },
+
+  deleteBoard: async (id: string): Promise<void> => {
+    boardStore.delete(id);
+    cardStore.delete(id);
+    memberStore.delete(id);
+  },
+
+  // ── Columns ──
+  createColumn: async (boardId: string, column: Partial<BoardColumn>): Promise<void> => {
+    const board = boardStore.get(boardId);
+    if (!board) return;
+    const maxOrder = board.columns.reduce((max, c) => Math.max(max, c.order), -1);
+    const newCol: BoardColumn = {
+      id: column.id || `col-${boardId}-${board.columns.length}`,
+      boardId,
+      name: column.name || 'New Column',
+      order: column.order ?? maxOrder + 1,
+      wip: column.wip,
+    };
+    board.columns.push(newCol);
+    board.updatedAt = Date.now();
+  },
+
+  deleteColumn: async (boardId: string, columnId: string): Promise<void> => {
+    const board = boardStore.get(boardId);
+    if (!board) return;
+    board.columns = board.columns.filter(c => c.id !== columnId);
+    board.updatedAt = Date.now();
+
+    // Delete cards in the deleted column
+    const cards = cardStore.get(boardId);
+    if (cards) {
+      for (const [cid, card] of cards) {
+        if (card.columnId === columnId) cards.delete(cid);
+      }
+    }
+  },
+
+  // ── Cards ──
+  getAllCardsForBoard: async (boardId: string): Promise<BoardCard[]> => {
+    const cards = cardStore.get(boardId);
+    return cards ? Array.from(cards.values()) : [];
+  },
+
+  getCard: async (boardId: string, cardId: string): Promise<BoardCard | null> => {
+    const cards = cardStore.get(boardId);
+    return cards ? cards.get(cardId) || null : null;
+  },
+
+  createCard: async (boardId: string, cardData: Partial<BoardCard>): Promise<BoardCard> => {
+    const id = nextCardId();
+    const now = Date.now();
+    const cards = cardStore.get(boardId) || new Map();
+    cardStore.set(boardId, cards);
+
+    // Determine order: place at end of column
+    const sameColumn = Array.from(cards.values()).filter(c => c.columnId === cardData.columnId);
+    const order = sameColumn.length;
+
+    const card: BoardCard = {
+      id,
+      boardId,
+      columnId: cardData.columnId || 'col-default',
+      title: cardData.title || 'Untitled Card',
+      description: cardData.description || '',
+      priority: cardData.priority || 'medium',
+      startDate: cardData.startDate,
+      dueDate: cardData.dueDate,
+      estimatedTime: cardData.estimatedTime,
+      estimatedTimeUnit: cardData.estimatedTimeUnit || 'hours',
+      assignees: cardData.assignees || [],
+      labels: cardData.labels || [],
+      tags: cardData.tags || [],
+      completed: cardData.completed || false,
+      checklists: cardData.checklists || [],
+      comments: cardData.comments || [],
+      attachments: cardData.attachments || [],
+      cover: cardData.cover,
+      metadata: cardData.metadata || {},
+      order: cardData.order ?? order,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    cards.set(id, card);
+
+    // Update board stats
+    const board = boardStore.get(boardId);
+    if (board) {
+      const totalCards = cards.size;
+      const completedCards = Array.from(cards.values()).filter(c => c.completed).length;
+      board.stats = { totalCards, completedCards };
+      board.updatedAt = now;
+    }
+
+    return card;
+  },
+
+  updateCard: async (boardId: string, cardId: string, data: Partial<BoardCard>): Promise<void> => {
+    const cards = cardStore.get(boardId);
+    if (!cards) return;
+    const existing = cards.get(cardId);
+    if (!existing) return;
+    const updated = { ...existing, ...data, updatedAt: Date.now() };
+    cards.set(cardId, updated);
+  },
+
+  deleteCard: async (cardId: string): Promise<void> => {
+    for (const [boardId, cards] of cardStore) {
+      if (cards.has(cardId)) {
+        cards.delete(cardId);
+        // Update board stats
+        const board = boardStore.get(boardId);
+        if (board) {
+          const totalCards = cards.size;
+          const completedCards = Array.from(cards.values()).filter(c => c.completed).length;
+          board.stats = { totalCards, completedCards };
+          board.updatedAt = Date.now();
+        }
+        return;
+      }
+    }
+  },
+
+  moveCard: async (boardId: string, cardId: string, targetColumnId: string, index: number): Promise<void> => {
+    const cards = cardStore.get(boardId);
+    if (!cards) return;
+    const card = cards.get(cardId);
+    if (!card) return;
+    card.columnId = targetColumnId;
+    card.order = index;
+    card.updatedAt = Date.now();
+  },
+
+  // ── Members ──
+  getBoardMembers: async (boardId: string): Promise<BoardMember[]> => {
+    return memberStore.get(boardId) || [];
+  },
+
+  inviteBoardMember: async (boardId: string, email: string, role: string): Promise<void> => {
+    const members = memberStore.get(boardId) || [];
+    const existingUser = SEED_USERS.find(u => u.email === email);
+    if (!existingUser) return;
+    // Don't add duplicates
+    if (members.some(m => m.email === email)) return;
+    const newMember: BoardMember = {
+      id: `mem-${boardId}-${members.length + 1}`,
+      userId: existingUser.id,
+      email: existingUser.email,
+      displayName: existingUser.displayName,
+      role: role as BoardMember['role'],
+      addedAt: Date.now(),
+    };
+    members.push(newMember);
+    memberStore.set(boardId, members);
+
+    // Add user to board members list
+    const board = boardStore.get(boardId);
+    if (board) {
+      if (!board.members.includes(existingUser.id)) {
+        board.members.push(existingUser.id);
+      }
+    }
+  },
+
+  removeBoardMember: async (boardId: string, memberId: string): Promise<void> => {
+    const members = memberStore.get(boardId);
+    if (!members) return;
+    const member = members.find(m => m.id === memberId);
+    memberStore.set(boardId, members.filter(m => m.id !== memberId));
+
+    // Remove from board members list
+    if (member) {
+      const board = boardStore.get(boardId);
+      if (board) {
+        board.members = board.members.filter(id => id !== member.userId);
+      }
+    }
+  },
+
+  updateBoardMemberRole: async (boardId: string, memberId: string, role: string): Promise<void> => {
+    const members = memberStore.get(boardId);
+    if (!members) return;
+    const member = members.find(m => m.id === memberId);
+    if (member) {
+      member.role = role as BoardMember['role'];
+    }
+  },
 };

@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-const useNavigate = () => (path: string) => { window.location.pathname = path; };
-import { UiModeToggle } from "../components/UiModeToggle";
 // UiMode typed as string
 
 interface Tenant {
@@ -41,7 +38,6 @@ interface User {
 }
 
 export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: string; setUiMode: (m: string) => void }) {
-  const navigate = useNavigate();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<SystemStats>({ tenants: 0, users: 0, projects: 0, tasks: 0, time_entries: 0 });
@@ -146,23 +142,16 @@ export default function SuperAdminDashboard({ uiMode, setUiMode }: { uiMode: str
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] text-[#cccccc]">
+    <div className="h-full bg-[#1e1e1e] text-[#cccccc]">
       {/* Header */}
       <div className="bg-[#252526] border-b border-[#3c3c3c] px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <UiModeToggle uiMode={uiMode} onUiModeChange={setUiMode} />
             <div>
               <h1 className="text-2xl font-bold text-white">Developer View</h1>
               <p className="text-sm text-[#999] mt-1">System-wide management console</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate("/")}
-            className="px-4 py-2 bg-[#3c3c3c] hover:bg-[#4a4a4a] rounded text-sm"
-          >
-            Back to App
-          </button>
         </div>
       </div>
 

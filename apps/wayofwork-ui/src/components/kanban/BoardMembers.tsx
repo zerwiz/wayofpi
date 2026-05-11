@@ -4,11 +4,21 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, UserPlus, Mail, Search, Shield, Eye, User, Trash2 } from 'lucide-react';
+import { X, UserPlus, Mail, Search, Shield, Eye, User, Trash2, Building2 } from 'lucide-react';
 import type { Board, BoardMember } from '../../types/kanban';
 import { kanbanService } from '../../services/mockKanbanService';
 import { useToast } from '../../contexts/ToastContext';
 import ConfirmationModal from '../modals/ConfirmationModal';
+
+/* Company user shape returned by /api/admin/users */
+interface CompanyUser {
+  id: string;
+  username: string;
+  full_name: string;
+  email?: string;
+  role: string;
+  job_title?: string;
+}
 
 interface BoardMembersProps {
   board: Board;
@@ -24,6 +34,8 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member');
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
+  const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
+  const [companyUserSearch, setCompanyUserSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
@@ -31,8 +43,57 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
   useEffect(() => {
     if (isOpen && board) {
       loadMembers();
+      loadCompanyUsers();
     }
   }, [isOpen, board]);
+
+  const loadCompanyUsers = async () => {
+    try {
+      const token = localStorage.getItem('wop_token');
+      const res = await fetch('/api/admin/users', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data: CompanyUser[] = await res.json();
+        setCompanyUsers(data);
+      } else {
+        // Fallback: seed users from mockKanbanService
+        setCompanyUsers([
+          { id: 'user-1', username: 'alice', full_name: 'Alice Johnson', email: 'alice@example.com', role: 'ADMIN', job_title: 'Project Manager' },
+          { id: 'user-2', username: 'bob', full_name: 'Bob Smith', email: 'bob@example.com', role: 'WORKER', job_title: 'Developer' },
+          { id: 'user-3', username: 'carol', full_name: 'Carol Williams', email: 'carol@example.com', role: 'WORKER', job_title: 'Designer' },
+          { id: 'user-4', username: 'dave', full_name: 'Dave Brown', email: 'dave@example.com', role: 'CLIENT', job_title: 'Client' },
+        ]);
+      }
+    } catch {
+      // Fallback on network error
+      setCompanyUsers([
+        { id: 'user-1', username: 'alice', full_name: 'Alice Johnson', email: 'alice@example.com', role: 'ADMIN' },
+        { id: 'user-2', username: 'bob', full_name: 'Bob Smith', email: 'bob@example.com', role: 'WORKER' },
+        { id: 'user-3', username: 'carol', full_name: 'Carol Williams', email: 'carol@example.com', role: 'WORKER' },
+        { id: 'user-4', username: 'dave', full_name: 'Dave Brown', email: 'dave@example.com', role: 'CLIENT' },
+      ]);
+    }
+  };
+
+  const handleAddCompanyUser = async (user: CompanyUser) => {
+    if (members.some(m => m.userId === user.id)) {
+      showToast({ type: 'info', message: `${user.full_name} is already a member`, duration: 2000 });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await kanbanService.inviteBoardMember(board.id, user.email || `${user.username}@example.com`, 'member');
+      showToast({ type: 'success', message: `${user.full_name} added to board`, duration: 2000 });
+      loadMembers();
+      if (onUpdated) onUpdated();
+    } catch (error) {
+      console.error('Failed to add user:', error);
+      showToast({ type: 'error', message: 'Failed to add user', duration: 3000 });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadMembers = async () => {
     try {
@@ -42,7 +103,7 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
         const ownerMember: BoardMember = {
           id: `member-${board.createdBy}`,
           userId: board.createdBy,
-          email: `${board.createdBy}@example.com`, // Mock email
+          email: `${board.createdBy}@example.com`,
           displayName: 'Board Owner',
           role: 'owner',
           addedAt: board.createdAt || new Date().toISOString(),
@@ -165,9 +226,9 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
       case 'admin':
         return <Shield className="w-4 h-4 text-blue-500" />;
       case 'viewer':
-        return <Eye className="w-4 h-4 text-gray-400" />;
+        return <Eye className="w-4 h-4 text-[#858585]" />;
       default:
-        return <User className="w-4 h-4 text-gray-400" />;
+        return <User className="w-4 h-4 text-[#858585]" />;
     }
   };
 
@@ -192,21 +253,21 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
       }}
     >
       <div
-        className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700"
+        className="bg-[#252526] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#333333]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-[#252526] border-b border-[#333333] p-6 flex items-center justify-between z-10">
           <div>
             <h2 className="text-2xl font-bold text-white">Board Members</h2>
-            <p className="text-sm text-gray-400 mt-1">Manage who can access this board</p>
+            <p className="text-sm text-[#858585] mt-1">Manage who can access this board</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#333333] rounded-lg transition-colors"
             title="Close"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-[#858585]" />
           </button>
         </div>
 
@@ -215,13 +276,13 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
           {/* Search and Invite */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
               <input
                 type="text"
                 placeholder="Search members..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#333333] border border-[#444444] rounded-lg text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
             <button
@@ -235,9 +296,9 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
 
           {/* Invite Form */}
           {showInviteForm && (
-            <div className="p-4 bg-gray-700 rounded-lg border border-gray-600">
+            <div className="p-4 bg-[#333333] rounded-lg border border-[#444444]">
               <div className="flex items-center gap-2 mb-3">
-                <Mail className="w-4 h-4 text-gray-400" />
+                <Mail className="w-4 h-4 text-[#858585]" />
                 <label className="text-sm font-semibold text-white">Invite by Email</label>
               </div>
               <div className="space-y-3">
@@ -251,13 +312,13 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
                       if (e.key === 'Enter' && !isLoading) handleInvite();
                     }}
                     disabled={isLoading}
-                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-[#252526] border border-[#444444] rounded-lg text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
                   />
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')}
                     disabled={isLoading}
-                    className="px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                    className="px-3 py-2 bg-[#252526] border border-[#444444] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
                   >
                     <option value="admin">Admin</option>
                     <option value="member">Member</option>
@@ -279,7 +340,7 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
                       setInviteRole('member');
                     }}
                     disabled={isLoading}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-[#444444] text-white rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -291,7 +352,7 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
           {/* Members List */}
           <div className="space-y-2">
             {filteredMembers.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-[#858585]">
                 <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No members found</p>
               </div>
@@ -299,7 +360,7 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
               filteredMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-650 transition-colors"
+                  className="flex items-center justify-between p-3 bg-[#333333] rounded-lg hover:bg-gray-650 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Avatar */}
@@ -316,9 +377,9 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
                       <div className="flex items-center gap-2">
                         <span className="text-white font-medium truncate">{member.displayName}</span>
                         {getRoleIcon(member.role)}
-                        <span className="text-xs text-gray-400">{getRoleLabel(member.role)}</span>
+                        <span className="text-xs text-[#858585]">{getRoleLabel(member.role)}</span>
                       </div>
-                      <p className="text-xs text-gray-400 truncate">{member.email}</p>
+                      <p className="text-xs text-[#858585] truncate">{member.email}</p>
                     </div>
                   </div>
 
@@ -330,7 +391,7 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
                         onChange={(e) =>
                           handleChangeRole(member.id, e.target.value as 'admin' | 'member' | 'viewer')
                         }
-                        className="px-3 py-1 bg-gray-800 border border-gray-600 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="px-3 py-1 bg-[#252526] border border-[#444444] rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                       >
                         <option value="admin">Admin</option>
                         <option value="member">Member</option>
@@ -349,6 +410,74 @@ export const BoardMembers: React.FC<BoardMembersProps> = ({ board, isOpen, onClo
                 </div>
               ))
             )}
+          </div>
+
+          {/* Company Users Section */}
+          <div className="pt-4 border-t border-[#333333]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-orange-400" />
+                <h3 className="text-sm font-semibold text-white">Company Users</h3>
+              </div>
+              <span className="text-xs text-[#858585]">{companyUsers.length} users</span>
+            </div>
+
+            {/* Search */}
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#858585]" />
+              <input
+                type="text"
+                placeholder="Search company users..."
+                value={companyUserSearch}
+                onChange={(e) => setCompanyUserSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-1.5 bg-[#333333] border border-[#444444] rounded-lg text-white placeholder-[#858585] focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+              />
+            </div>
+
+            {/* Users List */}
+            <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin">
+              {companyUsers
+                .filter(u =>
+                  u.full_name.toLowerCase().includes(companyUserSearch.toLowerCase()) ||
+                  u.username.toLowerCase().includes(companyUserSearch.toLowerCase()) ||
+                  (u.email || '').toLowerCase().includes(companyUserSearch.toLowerCase())
+                )
+                .map((user) => {
+                  const isMember = members.some(m => m.userId === user.id);
+                  return (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-[#333333] transition-colors"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                          {user.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white truncate font-medium">{user.full_name}</p>
+                          <p className="text-xs text-[#858585] truncate">
+                            {user.job_title || user.role} {user.email ? `• ${user.email}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      {isMember ? (
+                        <span className="text-xs text-orange-400 px-2 py-1 flex-shrink-0">Added</span>
+                      ) : (
+                        <button
+                          onClick={() => handleAddCompanyUser(user)}
+                          disabled={isLoading}
+                          className="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors disabled:opacity-50 flex-shrink-0"
+                        >
+                          Add
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              {companyUsers.length === 0 && (
+                <p className="text-sm text-[#858585] text-center py-4">No company users found</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { FileText, Briefcase, Shield, User, LayoutDashboard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FileText, Briefcase, Shield, User, LogOut, Columns3 } from "lucide-react";
 
 /** Same control as in the technical `MenuBar` (IDE chrome). */
 export function UiModeToggle({
@@ -9,6 +10,7 @@ export function UiModeToggle({
 	uiMode: string;
 	onUiModeChange: (mode: string) => void;
 }) {
+	const navigate = useNavigate();
 	const [role, setRole] = useState<string>("");
 
 	useEffect(() => {
@@ -28,7 +30,7 @@ export function UiModeToggle({
 	const isAdminRole = role === "ADMIN" || isSuperAdminRole;
 	const isLeaderRole = role === "LEADER" || isAdminRole;
 	const isWorkerRole = role === "WORKER" || isLeaderRole;
-	const isClientRole = role === "CLIENT" || isAdminRole;
+	const isClientRole = role === "CLIENT";
 
 	const isClientPage = window.location.pathname.startsWith("/client");
 	const isAdminPage = window.location.pathname.startsWith("/admin");
@@ -43,7 +45,7 @@ export function UiModeToggle({
 			<button
 				type="button"
 				onClick={() => {
-					if (window.location.pathname !== "/") window.location.pathname = "/";
+					if (window.location.pathname !== "/") navigate("/", { replace: true });
 					onUiModeChange("simple");
 				}}
 				className={`rounded px-1.5 py-0.5 transition-colors ${
@@ -54,27 +56,11 @@ export function UiModeToggle({
 				Simple
 			</button>
 
-			{isWorkerRole && (
-				<button
-					type="button"
-					onClick={() => {
-						if (window.location.pathname !== "/") window.location.pathname = "/";
-						onUiModeChange("technical");
-					}}
-					className={`rounded px-1.5 py-0.5 transition-colors ${
-						uiMode === "technical" && !anyPageActive ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
-					}`}
-					title="IDE-style chrome and technical labels"
-				>
-					Technical
-				</button>
-			)}
-
 			{isLeaderRole && (
 				<button
 					type="button"
 					onClick={() => {
-						if (window.location.pathname !== "/") window.location.pathname = "/";
+						if (window.location.pathname !== "/") navigate("/", { replace: true });
 						onUiModeChange("claw");
 					}}
 					className={`rounded px-1.5 py-0.5 transition-colors ${
@@ -91,7 +77,7 @@ export function UiModeToggle({
 			<button
 				type="button"
 				onClick={() => {
-					if (window.location.pathname !== "/") window.location.pathname = "/";
+					if (window.location.pathname !== "/") navigate("/", { replace: true });
 					onUiModeChange("docs");
 				}}
 				className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
@@ -106,7 +92,7 @@ export function UiModeToggle({
 			<button
 				type="button"
 				onClick={() => {
-					if (window.location.pathname !== "/") window.location.pathname = "/";
+					if (window.location.pathname !== "/") navigate("/", { replace: true });
 					onUiModeChange("work");
 				}}
 				className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
@@ -118,12 +104,27 @@ export function UiModeToggle({
 				Workboard
 			</button>
 
+			<button
+				type="button"
+				onClick={() => {
+					if (window.location.pathname !== "/") navigate("/", { replace: true });
+					onUiModeChange("kanban");
+				}}
+				className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
+					uiMode === "kanban" && !anyPageActive ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
+				}`}
+				title="Kanban Board"
+			>
+				<Columns3 size={12} />
+				Kanban
+			</button>
+
 			<div className="mx-1 h-3 w-[1px] bg-[#454545]" />
 
 			{isClientRole && (
 				<button
 					type="button"
-					onClick={() => window.location.pathname = "/client"}
+					onClick={() => navigate("/client", { replace: true })}
 					className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
 						isClientPage ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
 					}`}
@@ -134,24 +135,10 @@ export function UiModeToggle({
 				</button>
 			)}
 
-			{isWorkerRole && (
-				<button
-					type="button"
-					onClick={() => window.location.pathname = "/portal"}
-					className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
-						isPortalPage ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
-					}`}
-					title="Worker Portal"
-				>
-					<LayoutDashboard size={12} />
-					Portal
-				</button>
-			)}
-
 			{isAdminRole && (
 				<button
 					type="button"
-					onClick={() => window.location.pathname = "/admin"}
+					onClick={() => navigate("/admin", { replace: true })}
 					className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
 						isAdminPage ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
 					}`}
@@ -165,7 +152,7 @@ export function UiModeToggle({
 			{isSuperAdminRole && (
 				<button
 					type="button"
-					onClick={() => window.location.pathname = "/super-admin"}
+					onClick={() => navigate("/super-admin", { replace: true })}
 					className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
 						isSuperAdminPage ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
 					}`}
@@ -178,7 +165,7 @@ export function UiModeToggle({
 
 			<button
 				type="button"
-				onClick={() => window.location.pathname = "/profile"}
+				onClick={() => navigate("/profile", { replace: true })}
 				className={`flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors ${
 					isProfilePage ? "bg-[#ea580c] text-white" : "text-[#858585] hover:text-[#cccccc]"
 				}`}
@@ -186,6 +173,21 @@ export function UiModeToggle({
 			>
 				<User size={12} />
 				Profile
+			</button>
+
+			<div className="mx-1 h-3 w-[1px] bg-[#454545]" />
+
+			<button
+				type="button"
+				onClick={() => {
+					localStorage.removeItem("wop_token");
+					navigate("/login", { replace: true });
+				}}
+				className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[#858585] transition-colors hover:text-[#cccccc]"
+				title="Logout"
+			>
+				<LogOut size={12} />
+				Logout
 			</button>
 		</div>
 	);

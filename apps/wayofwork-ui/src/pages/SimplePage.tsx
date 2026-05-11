@@ -8,6 +8,7 @@ import { useWorkspaceActions } from "../hooks/useWorkspaceActions";
 import { useEditorCommandHandlers } from "../hooks/useEditorCommandHandlers";
 import { useNavigationHandlers } from "../hooks/useNavigationHandlers";
 import { useCommandItems } from "../hooks/useCommandItems";
+import { PageHeaderProvider } from "../context/PageHeaderContext";
 import type { ViewMenuSimpleOptions } from "../types/technicalShell";
 
 const WOP_PUBLIC_REPO_URL = "https://github.com/zerwiz/wayofpi";
@@ -86,6 +87,20 @@ export function SimplePage() {
     onCopyWorkspacePath: copyWorkspacePath as any,
     onNewPlanMarkdown: handleNewPlanFile,
     onExit: () => {},
+    workspaceFolders: tree.folders || [],
+    hasOpenFile: !!selectedPath,
+    canSaveFile: !!selectedPath && editor.dirty,
+    canRevertFile: !!selectedPath && editor.dirty,
+    dirty: !!editor.dirty,
+    onOpenRecentFolder: () => {},
+    onOpenFolder: () => {},
+    onAddFolderToWorkspace: () => {},
+    onOpenWorkspaceFromFile: () => {},
+    onSaveWorkspaceAs: () => {},
+    onDuplicateWorkspace: () => {},
+    onPreferencesOpen: () => {},
+    onShareCopyLink: () => {},
+    onRemoveWorkspaceFolder: () => {},
   } as any;
 
   const editMenu = {
@@ -170,49 +185,48 @@ export function SimplePage() {
   } as any;
 
   return (
-    <>
-    <IdeLayout
-      workspaceFileInputRef={{ current: null }} 
-      onWorkspaceFileChange={() => {}} 
-      modelLabel={modelLabel}
-      uiMode={uiMode}
-      onUiModeChange={setUiMode}
-      config={server.config}
-      onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-      onSave={saveAndRefresh}
-      canSave={!!selectedPath && editor.dirty}
-      onRevertFile={() => void reloadFocusedOrMain()}
-      canRevert={!!selectedPath && editor.dirty}
-      onRefreshWorkspace={tree.refresh}
-      onCopyWorkspacePath={copyWorkspacePath}
-      onSelectActivity={(a) => {
+    <PageHeaderProvider value={{
+      modelLabel,
+      config: server.config,
+      onOpenCommandPalette: () => setCommandPaletteOpen(true),
+      onSave: saveAndRefresh,
+      canSave: !!selectedPath && editor.dirty,
+      onRevertFile: () => void reloadFocusedOrMain(),
+      canRevert: !!selectedPath && editor.dirty,
+      onRefreshWorkspace: tree.refresh,
+      onCopyWorkspacePath: copyWorkspacePath,
+      onSelectActivity: (a) => {
         setUiMode("technical");
         setLeftSidebarVisible(true);
         setTechnicalActivity(a);
-      }}
-      onFocusBottomTab={() => {}} 
-      fileMenu={fileMenu}
-      editMenu={editMenu}
-      selectionMenu={selectionMenu}
-      goMenu={goMenu}
-      runMenu={runMenu}
-      terminalMenu={terminalMenu}
-      helpMenu={helpMenu}
-      onOpenAgentSetup={() => {}} 
-      onOpenAgentPermissions={() => modals.setAgentPermissionsOpen(true)}
-      settingsMenu={settingsMenuHandlers}
-      onOpenTeamsYaml={openTeamsYamlFromMenu}
-      onCreateAgentMarkdown={() => {}} 
-      onReloadAgents={agents.reload}
-      onOpenPiModelConfig={() => {}} 
-      chatSessionControls={{
+      },
+      onFocusBottomTab: () => {},
+      fileMenu,
+      editMenu,
+      selectionMenu,
+      goMenu,
+      runMenu,
+      terminalMenu,
+      helpMenu,
+      onOpenAgentSetup: () => {},
+      onOpenAgentPermissions: () => modals.setAgentPermissionsOpen(true),
+      settingsMenu: settingsMenuHandlers,
+      onOpenTeamsYaml: openTeamsYamlFromMenu,
+      onCreateAgentMarkdown: () => {},
+      onReloadAgents: agents.reload,
+      onOpenPiModelConfig: () => {},
+      chatSessionControls: {
         mode: session.chatMode,
         switchDisabled: session.streaming,
         onSetMode: session.setChatMode,
-      }}
-      onNewPlanFile={() => void handleNewPlanFile()}
-      newPlanFileDisabled={!workspaceOperational}
-      viewSimple={viewSimpleMenu}
+      },
+      onNewPlanFile: () => void handleNewPlanFile(),
+      newPlanFileDisabled: !workspaceOperational,
+      viewSimple: viewSimpleMenu,
+    }}>
+    <IdeLayout
+      workspaceFileInputRef={{ current: null }} 
+      onWorkspaceFileChange={() => {}} 
     >
       <SimpleApp
         uiMode={uiMode}
@@ -355,6 +369,6 @@ export function SimplePage() {
       onGoToTelegramChannels={() => {}}
       onFocusClawChatTab={() => {}}
     />
-    </>
+    </PageHeaderProvider>
   );
 }

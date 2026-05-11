@@ -324,14 +324,14 @@ export function PushToKanbanModal({
       }}
     >
       <div
-        className="glass-card rounded-lg shadow-2xl max-w-md w-full border border-purple-500/30 animate-scale-in"
+        className="glass-card rounded-lg shadow-2xl max-w-md w-full border border-orange-500/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-purple-500/20">
+        <div className="flex items-center justify-between p-6 border-b border-orange-500/20">
           <div>
             <h2 className="text-xl font-bold gradient-text">Push to Kanban Board</h2>
-            <p className="text-sm text-purple-300/70 mt-1">
+            <p className="text-sm text-orange-300/70 mt-1">
               {pushMode === 'new'
                 ? `Create a card from this ${sourceType === 'task' ? 'task' : sourceType === 'calendar' ? 'calendar event' : sourceType === 'developmentStep' ? 'development step' : 'note'}`
                 : `Push this ${sourceType === 'task' ? 'task' : sourceType === 'calendar' ? 'calendar event' : sourceType === 'developmentStep' ? 'development step' : 'note'} to an existing card`}
@@ -339,7 +339,7 @@ export function PushToKanbanModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-[#858585] hover:text-[#cccccc] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:shadow-lg hover:shadow-purple-500/10"
+            className="p-2 rounded-lg text-[#858585] hover:text-[#cccccc] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#ea580c]/20 hover:to-[#c2410c]/20 hover:shadow-lg hover:shadow-orange-500/10"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -360,7 +360,7 @@ export function PushToKanbanModal({
                 }}
                 className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                   pushMode === 'new'
-                    ? 'bg-gradient-to-r from-[#ea580c]/20 to-[#c2410c]/20 border-purple-500/50 text-[#cccccc]'
+                    ? 'bg-gradient-to-r from-[#ea580c]/20 to-[#c2410c]/20 border-orange-500/50 text-[#cccccc]'
                     : 'bg-[#1e1e1e]/60 border-gray-700/50 text-[#cccccc] hover:border-[#3c3c3c]'
                 }`}
               >
@@ -377,7 +377,7 @@ export function PushToKanbanModal({
                 }}
                 className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                   pushMode === 'existing'
-                    ? 'bg-gradient-to-r from-[#ea580c]/20 to-[#c2410c]/20 border-purple-500/50 text-[#cccccc]'
+                    ? 'bg-gradient-to-r from-[#ea580c]/20 to-[#c2410c]/20 border-orange-500/50 text-[#cccccc]'
                     : 'bg-[#1e1e1e]/60 border-gray-700/50 text-[#cccccc] hover:border-[#3c3c3c]'
                 }`}
               >
@@ -393,14 +393,14 @@ export function PushToKanbanModal({
           <div>
             <label className="block text-sm font-semibold text-[#cccccc] mb-2 flex items-center gap-2">
               <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-[#ea580c]/20 to-[#c2410c]/20 flex items-center justify-center">
-                <LayoutGrid className="w-3 h-3 text-purple-400" />
+                <LayoutGrid className="w-3 h-3 text-orange-400" />
               </div>
               Select Board
             </label>
             <select
               value={selectedBoardId}
               onChange={(e) => setSelectedBoardId(e.target.value)}
-              className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] select transition-all hover:border-purple-500/50"
+              className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] select transition-all hover:border-orange-500/50"
             >
               <option value="">Choose a board...</option>
               {boards.map((board) => (
@@ -416,14 +416,14 @@ export function PushToKanbanModal({
             <div>
               <label className="block text-sm font-semibold text-[#cccccc] mb-2 flex items-center gap-2">
                 <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-[#ea580c]/20 to-[#c2410c]/20 flex items-center justify-center">
-                  <Folder className="w-3 h-3 text-purple-400" />
+                  <Folder className="w-3 h-3 text-orange-400" />
                 </div>
                 Select Column
               </label>
               <select
                 value={selectedColumnId}
                 onChange={(e) => setSelectedColumnId(e.target.value)}
-                className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] select transition-all hover:border-purple-500/50"
+                className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] select transition-all hover:border-orange-500/50"
               >
                 <option value="">Choose a column...</option>
                 {columns.map((column) => (
@@ -440,19 +440,19 @@ export function PushToKanbanModal({
             <div>
               <label className="block text-sm font-semibold text-[#cccccc] mb-2 flex items-center gap-2">
                 <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-[#ea580c]/20 to-[#c2410c]/20 flex items-center justify-center">
-                  <FileText className="w-3 h-3 text-purple-400" />
+                  <FileText className="w-3 h-3 text-orange-400" />
                 </div>
                 Select Card
               </label>
               {availableCards.length === 0 ? (
-                <div className="px-4 py-3 bg-[#1e1e1e]/60 border border-purple-500/30 rounded-lg text-center text-[#858585]">
+                <div className="px-4 py-3 bg-[#1e1e1e]/60 border border-orange-500/30 rounded-lg text-center text-[#858585]">
                   No cards available in this column
                 </div>
               ) : (
                 <select
                   value={selectedCardId}
                   onChange={(e) => setSelectedCardId(e.target.value)}
-                  className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] select transition-all hover:border-purple-500/50"
+                  className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] select transition-all hover:border-orange-500/50"
                 >
                   <option value="">Choose a card...</option>
                   {availableCards.map((card) => (
@@ -473,7 +473,7 @@ export function PushToKanbanModal({
                 type="text"
                 value={cardTitle}
                 onChange={(e) => setCardTitle(e.target.value)}
-                className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] input-text transition-all hover:border-purple-500/50"
+                className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] input-text transition-all hover:border-orange-500/50"
                 placeholder="Enter card title..."
               />
             </div>
@@ -488,7 +488,7 @@ export function PushToKanbanModal({
               value={cardDescription}
               onChange={(e) => setCardDescription(e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 text-[#cccccc] input-text transition-all hover:border-purple-500/50 resize-none"
+              className="w-full px-4 py-2 bg-[#1e1e1e]/60 backdrop-blur-sm border border-orange-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 text-[#cccccc] input-text transition-all hover:border-orange-500/50 resize-none"
               placeholder={pushMode === 'existing' ? 'Enter content to add to the card...' : 'Enter card description...'}
             />
             {pushMode === 'existing' && (
@@ -499,13 +499,13 @@ export function PushToKanbanModal({
           </div>
 
           {/* Options */}
-          <div className="space-y-3 p-4 bg-[#ea580c]/5 border border-purple-500/20 rounded-lg">
+          <div className="space-y-3 p-4 bg-[#ea580c]/5 border border-orange-500/20 rounded-lg">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={includeAttachments}
                 onChange={(e) => setIncludeAttachments(e.target.checked)}
-                className="w-4 h-4 rounded border-purple-500/50 bg-[#1e1e1e]/60 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
+                className="w-4 h-4 rounded border-orange-500/50 bg-[#1e1e1e]/60 text-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
               />
               <span className="text-sm text-[#cccccc] group-hover:text-[#cccccc] transition-colors">
                 Include attachments ({sourceAttachments?.length || 0} file{sourceAttachments?.length !== 1 ? 's' : ''})
@@ -517,7 +517,7 @@ export function PushToKanbanModal({
                 type="checkbox"
                 checked={linkToSource}
                 onChange={(e) => setLinkToSource(e.target.checked)}
-                className="w-4 h-4 rounded border-purple-500/50 bg-[#1e1e1e]/60 text-purple-500 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
+                className="w-4 h-4 rounded border-orange-500/50 bg-[#1e1e1e]/60 text-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all"
               />
               <span className="text-sm text-[#cccccc] group-hover:text-[#cccccc] transition-colors">
                 Link back to {sourceType === 'task' ? 'task' : 'note'} (bidirectional link)
@@ -527,7 +527,7 @@ export function PushToKanbanModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-purple-500/20">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-orange-500/20">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-[#1e1e1e]/60 hover:bg-[#252526]/80 text-[#cccccc] rounded-lg transition-all duration-200 border border-gray-700/50 hover:border-[#3c3c3c]"
@@ -543,7 +543,7 @@ export function PushToKanbanModal({
               (pushMode === 'new' && !cardTitle.trim()) ||
               (pushMode === 'existing' && !selectedCardId)
             }
-            className="px-4 py-2 bg-gradient-to-r from-[#ea580c] to-[#c2410c] hover:from-purple-700 hover:to-pink-700 text-[#cccccc] rounded-lg transition-all font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#ea580c] to-[#c2410c] hover:from-orange-700 hover:to-orange-700 text-[#cccccc] rounded-lg transition-all font-medium shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
             {isCreating ? (
               <>
