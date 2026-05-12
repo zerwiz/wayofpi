@@ -29015,6 +29015,8 @@ apps/wayofwork-ui/src/components/work/TeamDashboard.tsx
 apps/wayofwork-ui/src/components/work/TimeEntryForm.tsx
 apps/wayofwork-ui/src/components/work/TimeReport.tsx
 apps/wayofwork-ui/src/components/work/WorkApp.tsx
+apps/wayofwork-ui/src/components/work/WorkLogActivityModal.tsx
+apps/wayofwork-ui/src/components/work/WorkTimeCalendar.tsx
 apps/wayofwork-ui/src/components/WorkspaceAgentTeamPane.tsx
 apps/wayofwork-ui/src/components/WorkspaceCellDropSurface.tsx
 apps/wayofwork-ui/src/components/WorkspaceDropOverlay.tsx
