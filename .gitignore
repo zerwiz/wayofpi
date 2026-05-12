@@ -13,6 +13,15 @@ agent/auth.json
 # ngrok dashboard authtoken — local one-line file only (never commit)
 apps/wayofwork-ui/.ngrok-authtoken.local
 
+# OpenRouter API keys — never commit credentials
+.pi/agent-sessions/**/*.json
+.pi/agent/models.json
+
+# Other API key files
+.pi/agent/auth.json
+.deps/**/*.json
+.cache/**/auth.json
+
 .pi/agent-sessions/
 
 # Local Pi agent state (machine-specific; do not publish chat logs)
@@ -39,6 +48,21 @@ ref/
 
 # Machine-local playground link marker — never commit (belongs under `<project>/.pi/` when linked)
 /.playground-from
+
+# Session files (machine-specific runtime state)
+.pi/agent-sessions/*.json
+apps/wayofpi-ui/agent/sessions/*.json
+storage/sessions/*.json
+
+# Local agent state files
+agent/sessions/
+agent/bin/
+storage/
+
+# Chronicle session ledger
+.pi/chronicle/
+.pi/storage/sessions/
+chronicle/
 
 # Pi UI state under repo root (not `.pi/storage/`)
 storage/
