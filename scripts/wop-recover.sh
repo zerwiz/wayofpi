@@ -65,14 +65,14 @@ is_broken() {
         return 0
     fi
     
-    # Check if apps/wayofpi-ui exists
-    if [ ! -d "apps/wayofpi-ui" ]; then
+    # Check if apps/wayofwork-ui exists
+    if [ ! -d "apps/wayofwork-ui" ]; then
         echo "UI directory missing"
         return 0
     fi
     
     # Check if dependencies are installed
-    if [ ! -f "apps/wayofpi-ui/node_modules/.package-lock.json" ]; then
+    if [ ! -f "apps/wayofwork-ui/node_modules/.package-lock.json" ]; then
         echo "Dependencies missing"
         return 0
     fi
@@ -125,7 +125,7 @@ create_backup() {
     cp -r docs/ "$new_backup/" 2>/dev/null || true
     cp -r scripts/ "$new_backup/" 2>/dev/null || true
     cp -r projects/ "$new_backup/" 2>/dev/null || true
-    cp -r apps/wayofpi-ui/ "$new_backup/" 2>/dev/null || true
+    cp -r apps/wayofwork-ui/ "$new_backup/" 2>/dev/null || true
     
     # Copy configuration files
     [ -f ".env" ] && cp .env "$new_backup/" || true
@@ -235,7 +235,7 @@ reinstall_deps() {
     echo -e "${GREEN}Root dependencies installed${NC}"
     
     # UI dependencies
-    cd apps/wayofpi-ui
+    cd apps/wayofwork-ui
     npm install
     echo -e "${GREEN}UI dependencies installed${NC}"
     
@@ -274,9 +274,9 @@ auto_fix() {
     fi
     
     # Check dependencies
-    if [ ! -f "apps/wayofpi-ui/node_modules/.package-lock.json" ]; then
+    if [ ! -f "apps/wayofwork-ui/node_modules/.package-lock.json" ]; then
         echo -e "${YELLOW}Dependencies missing, installing...${NC}"
-        cd apps/wayofpi-ui && npm install && cd ..
+        cd apps/wayofwork-ui && npm install && cd ..
     fi
     
     # Check extensions shims

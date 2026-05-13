@@ -201,7 +201,7 @@ Files: .
 Copyright: 2022-2024 Zero
  License: Apache-2.0
 
-Files: apps/wayofpi-ui/*
+Files: apps/wayofwork-ui/*
  Copyright: 2022-2024 Zero
  License: MIT
 

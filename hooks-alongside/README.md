@@ -11,7 +11,7 @@ This directory contains custom React hooks extracted from the monolithic `App.ts
 ## 🎯 Phase 1 Strategy
 
 ### Goal
-Extract all custom `use*` hooks from `apps/wayofpi-ui/src/App.tsx` and place them alongside the original file for incremental development.
+Extract all custom `use*` hooks from `apps/wayofwork-ui/src/App.tsx` and place them alongside the original file for incremental development.
 
 ### Current State
 - ✅ All hook signatures identified in original App.tsx

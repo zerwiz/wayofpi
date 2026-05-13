@@ -1,0 +1,17 @@
+# Hermes Model Configuration
+model:
+  provider: openrouter
+  default: meta-llama/llama-3.3-70b-instruct
+  context_window: 32768
+  # Available models (same as Honcho):
+  - meta-llama/llama-3.3-70b-instruct (128k context)
+  - mistralai/mistral-8x2b-nemo-expert-2409 (128k context)
+  - google/gemini-2.5-pro-exp-03-25 (131k context)
+model:
+  provider: openrouter
+  default: meta-llama/llama-3.3-70b-instruct
+  context_window: 32768
+  # Available models (same as Honcho):
+  - meta-llama/llama-3.3-70b-instruct (128k context)
+  - mistralai/mistral-8x2b-nemo-expert-2409 (128k context)
+  - google/gemini-2.5-pro-exp-03-25 (131k context)

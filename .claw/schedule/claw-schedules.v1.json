@@ -14,6 +14,20 @@
       "lastRun": null,
       "lastResult": null,
       "createdAt": "2026-04-21T21:50:29.297Z"
+    },
+    {
+      "id": "sched-1778249113649-crvog",
+      "name": "weekly news on crypto",
+      "description": "sadfdsaf",
+      "cron": "0 9 1 * *",
+      "triggerMode": "cron",
+      "runOnceAt": null,
+      "agentName": "biz-business-analyst",
+      "prompt": "fsdfdsfds",
+      "status": "enabled",
+      "lastRun": null,
+      "lastResult": null,
+      "createdAt": "2026-05-08T14:05:13.649Z"
     }
   ]
 }

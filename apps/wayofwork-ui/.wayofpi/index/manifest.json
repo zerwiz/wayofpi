@@ -1,0 +1,3305 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": ".env.sample",
+      "size": 6082,
+      "mtimeMs": 1778336330972
+    },
+    {
+      "path": ".gitignore",
+      "size": 234,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": ".ngrok-authtoken.local.example",
+      "size": 638,
+      "mtimeMs": 1776875652000
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777894998590-c-ql0i7dd.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777896873869-c-1rb2wij.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777897388668-c-v95kq73.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-claw.t-1777897517991-c-o23b851.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897050573-d-q8mth35.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897388668-d-in0vuet.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897517991-d-xdrlhsh.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777897567289-d-jr9s3x3.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-docs.t-1777898752375-d-nwhekdz.jsonl",
+      "size": 206,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777890724162-s-l6aklwh.jsonl",
+      "size": 1244,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777893381469-s-p607orz.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777894998590-s-w2xbovj.jsonl",
+      "size": 1013,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777895350982-s-qsmh55l.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777895514241-s-77b26tk.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777895970477-s-sh41g6m.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994984
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896873868-s-sq1y0t5.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994984
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896958413-s-s8dmjhv.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896991912-s-7rtppjm.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777896991913-s-7m1g9ya.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897005054-s-ktu5124.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897046809-s-3li92xp.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897050573-s-fe7qqjg.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897241760-s-i29z2i6.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897241775-s-7eue18b.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897379639-s-yus30ye.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994984
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897388668-s-7m9o85i.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994984
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897517991-s-z0pgytq.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994984
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897562322-s-os38k64.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777897567289-s-sdvwmai.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777898752375-s-x42ntpt.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-simple.t-1777898755408-s-jn2up8x.jsonl",
+      "size": 208,
+      "mtimeMs": 1778335994984
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775884819707-0lq5n9x.jsonl",
+      "size": 199,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775884828469-o2mrtqn.jsonl",
+      "size": 199,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775884851201-wrjx7go.jsonl",
+      "size": 199,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-t-1775956306884-fdq14tr.jsonl",
+      "size": 199,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777894998590-t-1xx9y0w.jsonl",
+      "size": 211,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777896873869-t-2mhvnz6.jsonl",
+      "size": 211,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777897388668-t-cw2yx7b.jsonl",
+      "size": 211,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777897517991-t-y9ff31m.jsonl",
+      "size": 211,
+      "mtimeMs": 1778335994985
+    },
+    {
+      "path": "agent/sessions/wayofpi-chat-technical.t-1777897567289-t-isvy2he.jsonl",
+      "size": 211,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "bun.lock",
+      "size": 195372,
+      "mtimeMs": 1778335994992
+    },
+    {
+      "path": "data/wayofpi.sqlite",
+      "size": 94208,
+      "mtimeMs": 1778515773921
+    },
+    {
+      "path": "default/.wayofpi/index/grep-paths.txt",
+      "size": 7748,
+      "mtimeMs": 1778156773658
+    },
+    {
+      "path": "default/.wayofpi/index/manifest.json",
+      "size": 17143,
+      "mtimeMs": 1778156773658
+    },
+    {
+      "path": "default/.wayofpi/index/state.json",
+      "size": 8728,
+      "mtimeMs": 1778156773658
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919040410-c-r6ep0rt.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919087912-c-6bc79et.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919149372-c-7z9oif7.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919149492-c-hg6f1h8.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919162686-c-1l3shaj.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919162721-c-m5brrcs.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919344527-c-058zh2j.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919344587-c-9eedh5w.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919599015-c-4beucfz.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919599141-c-r0zox5h.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919781002-c-xejltzn.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777919781103-c-6mvft3p.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777920497542-c-ehmlnif.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777920497685-c-3cnqv2k.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777920522005-c-kv8htm9.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777920522053-c-xucervo.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777922827418-c-gp0ukwk.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777923495517-c-1xglh12.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777926595899-c-l8rnlb7.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777926613388-c-cnvus3q.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777937256987-c-5s3bf5b.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777937257126-c-p963b9p.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777937379661-c-mxx04uf.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777937588929-c-g1nzxlj.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777937592440-c-3s1597n.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777938764210-c-257p0le.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777977394071-c-xnmb81h.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777977394112-c-n8h34v0.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777977425360-c-dpzqp87.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777977716954-c-ft3msm7.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777977730376-c-7wdqlkd.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777983956518-c-tboclbn.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-claw.t-1777984679936-c-nnxfuum.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777919599141-d-9pnv8l2.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777919781103-d-zylpxnd.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777926595899-d-9e68kqz.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777926613388-d-qg73de2.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777937256987-d-s7cmv8c.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777937786696-d-nc7nr6r.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777938764210-d-5ll9syt.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777983956518-d-0o0p9s6.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-docs.t-1777984679936-d-450mex6.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777919599141-s-znv92np.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777919781103-s-g64i37d.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777926595899-s-ihe1v05.jsonl",
+      "size": 338,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777926613388-s-v4to5hp.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937256987-s-g7p7ohr.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937570104-s-sbrbrpl.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937611899-s-0haojc9.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937665940-s-4kxoiot.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937704557-s-4r53i6s.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937786696-s-2csmvnw.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777937853406-s-h4s3wss.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938017164-s-0bgedi7.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938057116-s-2zdk94k.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938684054-s-4iu34vv.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938687014-s-v9jtlrh.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938687901-s-a9lcsz9.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938689551-s-y8asnbx.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938705212-s-2371z5s.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938706943-s-an0dpmw.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938709537-s-arc2z9i.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938712603-s-9rue9nu.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938750043-s-srhs3xd.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938760329-s-fyksg76.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938764210-s-6h2ezl9.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938773347-s-pmymuly.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777938775368-s-gekgv3y.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777977394070-s-0a3skpl.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777977394112-s-12brvxf.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777977425360-s-s5ihyr3.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777977737167-s-q9i3b76.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777977744253-s-c0oq134.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983851828-s-cd6zoxd.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983856941-s-9j42s3s.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983857925-s-2q86ifv.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983862781-s-5759ptn.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983933493-s-lm7fprj.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983956518-s-gplwguz.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777983992031-s-x10e6xj.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984006841-s-quyo57d.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984008100-s-ivcp5jv.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984011348-s-e7751gm.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984012739-s-z4a148w.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984045430-s-x60aum7.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984298118-s-8st7s8p.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984298124-s-7nnwrkw.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984346774-s-o9z9d9m.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1777984679935-s-yw83qmq.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1778019558951-s-1kdgu2x.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1778155755206-s-azb5tx5.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-simple.t-1778156170136-s-vy3gavl.jsonl",
+      "size": 216,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777919599141-t-cl9weh1.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777922827418-t-odimwky.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777926595899-t-mafhhwd.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777926613388-t-7nihxy9.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777937256987-t-dr3929j.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777938764210-t-zsl51hg.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777977394112-t-4dbusbz.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994982
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777977425360-t-qzs5b4g.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1777984679936-t-nmge51x.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-technical.t-1778156778653-t-bu8qa02.jsonl",
+      "size": 219,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777938705212-w-xu50f3z.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777938709537-w-tfx87e4.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777938712604-w-fmewg3g.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777938750043-w-fim1zzw.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777938764210-w-2hcasq9.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777938775368-w-8hnv080.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777977394112-w-jpzy3x5.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777977425360-w-q0j3fae.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777977730376-w-k6hkr63.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777977737167-w-nffp47x.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994980
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777980210074-yjdox3h.jsonl",
+      "size": 212,
+      "mtimeMs": 1778335994981
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777983933493-w-luyo1dx.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777983956518-w-rzo9fr2.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994977
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777984006841-w-nawczat.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777984011348-w-gdt3jiw.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994978
+    },
+    {
+      "path": "default/agent/sessions/wayofpi-chat-work.t-1777984012739-w-wquomwq.jsonl",
+      "size": 214,
+      "mtimeMs": 1778335994979
+    },
+    {
+      "path": "deps/wopi.desktop",
+      "size": 292,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "docker-compose.yml",
+      "size": 432,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "Dockerfile",
+      "size": 771,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "electron/build/generate-macos-icns.sh",
+      "size": 1118,
+      "mtimeMs": 1778336190495
+    },
+    {
+      "path": "electron/electron-main.mjs",
+      "size": 12569,
+      "mtimeMs": 1778336190495
+    },
+    {
+      "path": "electron/preload.cjs",
+      "size": 728,
+      "mtimeMs": 1778336190495
+    },
+    {
+      "path": "electron/wait-prod.mjs",
+      "size": 848,
+      "mtimeMs": 1778336190495
+    },
+    {
+      "path": "index.html",
+      "size": 476,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "package-lock.json",
+      "size": 203225,
+      "mtimeMs": 1778335994983
+    },
+    {
+      "path": "package.json",
+      "size": 2792,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "postcss.config.js",
+      "size": 75,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "public/wayofpi-icon.svg",
+      "size": 1228,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "README.md",
+      "size": 1325,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "server/.pi/db/.keep",
+      "size": 0,
+      "mtimeMs": 1777921839794
+    },
+    {
+      "path": "server/.pi/db/wayofpi.sqlite",
+      "size": 4096,
+      "mtimeMs": 1777921839794
+    },
+    {
+      "path": "server/.pi/db/wayofpi.sqlite-shm",
+      "size": 32768,
+      "mtimeMs": 1778022001033
+    },
+    {
+      "path": "server/.pi/db/wayofpi.sqlite-wal",
+      "size": 387312,
+      "mtimeMs": 1777921839794
+    },
+    {
+      "path": "server/agents.ts",
+      "size": 6584,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/auth.ts",
+      "size": 575,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/chat-context-budget.ts",
+      "size": 4126,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/chat-orchestrator-tools.ts",
+      "size": 16345,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/chat-slash-commands.ts",
+      "size": 9476,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/chat-usage.ts",
+      "size": 3956,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/chat.ts",
+      "size": 10250,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/claw-automation-status.ts",
+      "size": 1741,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/claw-mission-events.ts",
+      "size": 2704,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/claw-schedule-executor.ts",
+      "size": 4215,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/claw-scheduler.ts",
+      "size": 2951,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/claw-schedules-store.ts",
+      "size": 6116,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/claw-telegram-status copy.ts",
+      "size": 2791,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/claw-telegram-status.ts",
+      "size": 2791,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/claw-webhook-store.ts",
+      "size": 2865,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/claw-workspace-root.ts",
+      "size": 3780,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "server/db.ts",
+      "size": 5090,
+      "mtimeMs": 1778511184609
+    },
+    {
+      "path": "server/diagnostics.ts",
+      "size": 18450,
+      "mtimeMs": 1778506913829
+    },
+    {
+      "path": "server/git.ts",
+      "size": 8365,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/github-connection.ts",
+      "size": 4066,
+      "mtimeMs": 1778335994986
+    },
+    {
+      "path": "server/index.ts",
+      "size": 101803,
+      "mtimeMs": 1778511301501
+    },
+    {
+      "path": "server/init-db.ts",
+      "size": 1022,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/llm-models.ts",
+      "size": 2014,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/native-file-dialog.ts",
+      "size": 4806,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/ngrok-binary.ts",
+      "size": 1485,
+      "mtimeMs": 1778506817581
+    },
+    {
+      "path": "server/ngrok-inspector.ts",
+      "size": 1950,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/ngrok-tunnel-manager.ts",
+      "size": 13183,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/orchestrator-dispatch-intent.ts",
+      "size": 5017,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/orchestrator-git-tools.ts",
+      "size": 17831,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/orchestrator-tools-exec.ts",
+      "size": 23319,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/package-scripts.ts",
+      "size": 584,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "server/paths.ts",
+      "size": 1727,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/pi-agent-runtime.ts",
+      "size": 3751,
+      "mtimeMs": 1778515762627
+    },
+    {
+      "path": "server/pi-ollama-env.ts",
+      "size": 3142,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/pi-sdk-runtime.ts",
+      "size": 4743,
+      "mtimeMs": 1778498476593
+    },
+    {
+      "path": "server/plans-catalog.ts",
+      "size": 2282,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/schema.sql",
+      "size": 9492,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/session-prompts.ts",
+      "size": 17983,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/share-url-hints.ts",
+      "size": 1883,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/tcp-probe.ts",
+      "size": 665,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/teams-yaml-mutate.ts",
+      "size": 6806,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/terminal-ws.ts",
+      "size": 8324,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/tickets-api.ts",
+      "size": 17804,
+      "mtimeMs": 1778511309861
+    },
+    {
+      "path": "server/tool-log-broadcast.ts",
+      "size": 1002,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/tree.ts",
+      "size": 4583,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/tunnel-gate.ts",
+      "size": 11190,
+      "mtimeMs": 1778335994987
+    },
+    {
+      "path": "server/ui-views-catalog.ts",
+      "size": 5977,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/wayofpi.sqlite",
+      "size": 0,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/web-manifest.ts",
+      "size": 2834,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/wop-session-jsonl.ts",
+      "size": 5075,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "server/workspace-file-mime.ts",
+      "size": 429,
+      "mtimeMs": 1778335994988
+    },
+    {
+      "path": "server/workspace-index.ts",
+      "size": 17697,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/workspace-problems.ts",
+      "size": 7117,
+      "mtimeMs": 1778335994989
+    },
+    {
+      "path": "server/workspace-state.ts",
+      "size": 10367,
+      "mtimeMs": 1778335994990
+    },
+    {
+      "path": "shared/chat-usage.ts",
+      "size": 3956,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-automation-status.ts",
+      "size": 1749,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-mission-events.ts",
+      "size": 2712,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-schedule-cron.ts",
+      "size": 3085,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-schedule-executor.ts",
+      "size": 4192,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-scheduler.ts",
+      "size": 2951,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-schedules-store.ts",
+      "size": 6124,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-schedules-types.ts",
+      "size": 1096,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-telegram-status copy.ts",
+      "size": 4179,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-telegram-status.ts",
+      "size": 1829,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-webhook-store.ts",
+      "size": 2873,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/claw-workspace-root.ts",
+      "size": 3788,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/code-workspace-file.ts",
+      "size": 2236,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/session-log-metadata.ts",
+      "size": 3380,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "shared/ticket-types.ts",
+      "size": 3033,
+      "mtimeMs": 1778335994991
+    },
+    {
+      "path": "src/api/client.ts",
+      "size": 1619,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/api/nativeDialog.ts",
+      "size": 1252,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/api/workspace.ts",
+      "size": 727,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/App.tsx",
+      "size": 3459,
+      "mtimeMs": 1778517448946
+    },
+    {
+      "path": "src/App.tsx.backup-1",
+      "size": 176905,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/App.tsx.backup-2",
+      "size": 162119,
+      "mtimeMs": 1778339538474
+    },
+    {
+      "path": "src/AppContainer.tsx",
+      "size": 1771,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/apps ref 2.md",
+      "size": 9913,
+      "mtimeMs": 1778335994975
+    },
+    {
+      "path": "src/claw/clawUiModules.ts",
+      "size": 2693,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/claw/clawUserUiModules.tsx",
+      "size": 15462,
+      "mtimeMs": 1778511459746
+    },
+    {
+      "path": "src/components/ActivityBar.tsx",
+      "size": 1626,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/AgentPermissionsModal.tsx",
+      "size": 5796,
+      "mtimeMs": 1778335994959
+    },
+    {
+      "path": "src/components/AgentTeamPulseGrid.tsx",
+      "size": 11475,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/ai-model-dropdown.tsx",
+      "size": 2620,
+      "mtimeMs": 1778335994959
+    },
+    {
+      "path": "src/components/ChatPanel.tsx",
+      "size": 49904,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/ChatQueueModal.tsx",
+      "size": 6101,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/claw/ClawApp.tsx",
+      "size": 37020,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/claw/ClawChannelsView.tsx",
+      "size": 22159,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawChatView.tsx",
+      "size": 22208,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawHelpModal.tsx",
+      "size": 40961,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawMissionView.tsx",
+      "size": 25219,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawNavRail.tsx",
+      "size": 3702,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawScheduleMonthCalendar.tsx",
+      "size": 9400,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawSchedulesView.tsx",
+      "size": 35470,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/claw/ClawSessionSidebar.tsx",
+      "size": 7259,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawSessionStrip.tsx",
+      "size": 3246,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawWorkspaceCard.tsx",
+      "size": 7297,
+      "mtimeMs": 1778335994948
+    },
+    {
+      "path": "src/components/claw/ClawWorkspaceOnboardingModal.tsx",
+      "size": 7102,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/CommandPalette.tsx",
+      "size": 3564,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/ContextUsageRing.tsx",
+      "size": 2068,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/development/DevelopmentWorkflowSelector.tsx",
+      "size": 548,
+      "mtimeMs": 1778513165409
+    },
+    {
+      "path": "src/components/development/NSRComplianceBadge.tsx",
+      "size": 695,
+      "mtimeMs": 1778512835988
+    },
+    {
+      "path": "src/components/development/NSRFolderBadge.tsx",
+      "size": 495,
+      "mtimeMs": 1778514060325
+    },
+    {
+      "path": "src/components/DockRegionTitleBar.tsx",
+      "size": 1281,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/DockSplitHandle.tsx",
+      "size": 2728,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/dockToolAddMenu.tsx",
+      "size": 12025,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/docs/DocsApp.tsx",
+      "size": 10116,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/docs/DocumentBrowser.css",
+      "size": 1863,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/docs/DocumentBrowser.tsx",
+      "size": 5554,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/docs/DocumentEvaluationPanel.tsx",
+      "size": 7565,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/docs/DocumentViewer.tsx",
+      "size": 2000,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/docs/index.ts",
+      "size": 218,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/docs/PMChatPanel.tsx",
+      "size": 2625,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/documenthandler/Chat.tsx",
+      "size": 4545,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/ChatExplorer.tsx",
+      "size": 1599,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/ChatMessages.tsx",
+      "size": 1907,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/ChatPanel.tsx",
+      "size": 5189,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/context/DocumentHandlerContext.tsx",
+      "size": 5133,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/FileExplorer.tsx",
+      "size": 9438,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/FileIcons.tsx",
+      "size": 2097,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/FileItem.tsx",
+      "size": 2274,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/hooks/useChatMessages.ts",
+      "size": 758,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/hooks/useDocumentHandler.ts",
+      "size": 1711,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/hooks/useFileExplorer.ts",
+      "size": 2457,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/index.ts",
+      "size": 124,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/ListGridToggle.tsx",
+      "size": 1308,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/PageControls.tsx",
+      "size": 2469,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/PreviewContent.tsx",
+      "size": 2233,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/PreviewFooter.tsx",
+      "size": 819,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/PreviewHeader.tsx",
+      "size": 756,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/PreviewModal.tsx",
+      "size": 3743,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/SearchBar.tsx",
+      "size": 958,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/SortControls.tsx",
+      "size": 1417,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/styles/ChatExplorer.css",
+      "size": 11455,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/documenthandler/types/documenthandler.types.ts",
+      "size": 621,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/documenthandler/ZoomControls.tsx",
+      "size": 1733,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/EditorFindBar.tsx",
+      "size": 2361,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/EmbeddedTerminal.tsx",
+      "size": 1986,
+      "mtimeMs": 1778335994961
+    },
+    {
+      "path": "src/components/ExplorerSidebar.tsx",
+      "size": 10180,
+      "mtimeMs": 1778335994961
+    },
+    {
+      "path": "src/components/FileChangeReview.tsx",
+      "size": 8453,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/FileMenuContent.tsx",
+      "size": 10413,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/FileTree.tsx",
+      "size": 13991,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/GitExplorerStatusBadge.tsx",
+      "size": 7655,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/GithubManageSettingsCard.tsx",
+      "size": 11665,
+      "mtimeMs": 1778335994961
+    },
+    {
+      "path": "src/components/hermes/HermesFileBrowser.tsx",
+      "size": 13826,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/hermes/HermesTerminalView.tsx",
+      "size": 6493,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/HonchoSettingsModal.tsx",
+      "size": 9420,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/HostDoctorModal.tsx",
+      "size": 25179,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/HostDoctorWorkspaceFileEditor.tsx",
+      "size": 5458,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/HowToUseModal.tsx",
+      "size": 47542,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/IdeLayout.tsx",
+      "size": 4860,
+      "mtimeMs": 1778517260186
+    },
+    {
+      "path": "src/components/IndexingDocsModal.tsx",
+      "size": 14408,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/InstallDebuggersModal.tsx",
+      "size": 8388,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/kanban/BoardDocsView.tsx",
+      "size": 11082,
+      "mtimeMs": 1778514103700
+    },
+    {
+      "path": "src/components/kanban/BoardDriveView.tsx",
+      "size": 14960,
+      "mtimeMs": 1778514109687
+    },
+    {
+      "path": "src/components/kanban/BoardMembers.tsx",
+      "size": 13976,
+      "mtimeMs": 1778514113583
+    },
+    {
+      "path": "src/components/kanban/BoardSelector.tsx",
+      "size": 14880,
+      "mtimeMs": 1778514113583
+    },
+    {
+      "path": "src/components/kanban/BoardSettingsModal.tsx",
+      "size": 20104,
+      "mtimeMs": 1778513302139
+    },
+    {
+      "path": "src/components/kanban/CardView.tsx",
+      "size": 99935,
+      "mtimeMs": 1778513282519
+    },
+    {
+      "path": "src/components/kanban/PushTaskListToKanbanModal.tsx",
+      "size": 15256,
+      "mtimeMs": 1778513090447
+    },
+    {
+      "path": "src/components/kanban/PushToKanbanModal.tsx",
+      "size": 23766,
+      "mtimeMs": 1778513486951
+    },
+    {
+      "path": "src/components/kanban/PushWorkflowToKanbanModal.tsx",
+      "size": 19708,
+      "mtimeMs": 1778513146730
+    },
+    {
+      "path": "src/components/LaunchConfigAddModal.tsx",
+      "size": 3260,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/LlmFixModal.tsx",
+      "size": 5758,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/MarkdownPreviewPane.tsx",
+      "size": 4290,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/MenuBar.tsx",
+      "size": 121123,
+      "mtimeMs": 1778517251850
+    },
+    {
+      "path": "src/components/menus/EditMenu.tsx",
+      "size": 3053,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/menus/FileMenu.tsx",
+      "size": 4018,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/menus/GoMenu.tsx",
+      "size": 4504,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/menus/HelpMenu.tsx",
+      "size": 1566,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/menus/MenuBar.tsx",
+      "size": 2441,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/menus/RunMenu.tsx",
+      "size": 5604,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/menus/ViewMenu.tsx",
+      "size": 4109,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/MermaidPreviewPane.tsx",
+      "size": 2073,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/MitLicenseModal.tsx",
+      "size": 3821,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/mobile/chrome/MobileChrome.tsx",
+      "size": 1420,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/claw/ClawMobileTabBar.tsx",
+      "size": 4089,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/index.ts",
+      "size": 348,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/MobileChatExplorer.tsx",
+      "size": 5804,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/README.md",
+      "size": 1320,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/simple/SimpleMobileTabBar.tsx",
+      "size": 3336,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/technical/MobileTechnicalShell.tsx",
+      "size": 904,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/mobile/useShellMobile.ts",
+      "size": 2289,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/modals/ConfirmationModal.tsx",
+      "size": 1652,
+      "mtimeMs": 1778513813139
+    },
+    {
+      "path": "src/components/modals/HowToUseModal.tsx",
+      "size": 10882,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/modals/Modal.tsx",
+      "size": 1149,
+      "mtimeMs": 1778513226539
+    },
+    {
+      "path": "src/components/ModalsRenderer.tsx",
+      "size": 6626,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/ModelSelectorModal.tsx",
+      "size": 4997,
+      "mtimeMs": 1778335994958
+    },
+    {
+      "path": "src/components/Navigation.tsx",
+      "size": 5886,
+      "mtimeMs": 1778516648904
+    },
+    {
+      "path": "src/components/Navigation/Navigation.tsx",
+      "size": 6560,
+      "mtimeMs": 1778335994961
+    },
+    {
+      "path": "src/components/NewAgentModal.tsx",
+      "size": 4983,
+      "mtimeMs": 1778335994959
+    },
+    {
+      "path": "src/components/NewPlanFileModal.tsx",
+      "size": 4704,
+      "mtimeMs": 1778335994951
+    },
+    {
+      "path": "src/components/NewWorkspaceFileModal.tsx",
+      "size": 4483,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/NgrokSettingsModal.tsx",
+      "size": 62199,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/PanelDockBand.tsx",
+      "size": 9204,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/ProblemsPanelBody.tsx",
+      "size": 11463,
+      "mtimeMs": 1778335994959
+    },
+    {
+      "path": "src/components/ProviderConfigEditor.tsx",
+      "size": 8271,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/RestartServerModal.tsx",
+      "size": 9326,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/simple/SimpleApp.tsx",
+      "size": 36253,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/simple/SimpleChatView.tsx",
+      "size": 37425,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleFilePanel.tsx",
+      "size": 12682,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleFileTree.tsx",
+      "size": 14474,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/simple/SimpleModelsView.tsx",
+      "size": 24601,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleNavRail.tsx",
+      "size": 3559,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/simple/SimplePlanWorkspacePane.tsx",
+      "size": 3398,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleProjectsView.tsx",
+      "size": 5718,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/simple/SimpleRightPanel.tsx",
+      "size": 6896,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleRunScriptsModal.tsx",
+      "size": 4756,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleSecondaryToolbar.tsx",
+      "size": 2548,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleSettingsView.tsx",
+      "size": 11237,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/simple/SimpleTeamView.tsx",
+      "size": 21493,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/StatusBar.tsx",
+      "size": 15940,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/StripFilePreview.tsx",
+      "size": 2419,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/TeamsGuiEditorModal.tsx",
+      "size": 20332,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/technical/CommandPalette.tsx",
+      "size": 3564,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/technical/DebugPanel.tsx",
+      "size": 1044,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/technical/PlanReview.tsx",
+      "size": 1069,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/technical/TechnicalChatPanel.tsx",
+      "size": 3651,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/technical/TechnicalEditorColumn.tsx",
+      "size": 3584,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/technical/TechnicalPrimarySidebar.tsx",
+      "size": 678,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/technical/TechnicalSidePanels.tsx",
+      "size": 41721,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/technical/TechnicalWorkspaceGrid.tsx",
+      "size": 26890,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "src/components/technical/TerminalSettingsSection.tsx",
+      "size": 7875,
+      "mtimeMs": 1778335994946
+    },
+    {
+      "path": "src/components/TechnicalEditorColumn.tsx",
+      "size": 3571,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/TechnicalPrimarySidebar.tsx",
+      "size": 678,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/TechnicalSidePanels.tsx",
+      "size": 41690,
+      "mtimeMs": 1778335994952
+    },
+    {
+      "path": "src/components/TechnicalWorkspaceGrid.tsx",
+      "size": 24044,
+      "mtimeMs": 1778335994947
+    },
+    {
+      "path": "src/components/terminal/TerminalMenu.tsx",
+      "size": 2806,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/TerminalSettingsSection.tsx",
+      "size": 7863,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/ToolPanelBody.tsx",
+      "size": 5350,
+      "mtimeMs": 1778335994949
+    },
+    {
+      "path": "src/components/ui/Badge.d.ts",
+      "size": 628,
+      "mtimeMs": 1778335994956
+    },
+    {
+      "path": "src/components/ui/Badge.tsx",
+      "size": 1420,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/button.css",
+      "size": 271,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Button.d.ts",
+      "size": 455,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Button.tsx",
+      "size": 1691,
+      "mtimeMs": 1778335994956
+    },
+    {
+      "path": "src/components/ui/Card.tsx",
+      "size": 1747,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/CodeArea.tsx",
+      "size": 7493,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/DropdownMenu.d.ts",
+      "size": 2534,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/DropdownMenu.tsx",
+      "size": 2679,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/index.ts",
+      "size": 35,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Input.d.ts",
+      "size": 392,
+      "mtimeMs": 1778335994956
+    },
+    {
+      "path": "src/components/ui/Input.tsx",
+      "size": 1269,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Label.d.ts",
+      "size": 488,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Label.tsx",
+      "size": 917,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Overview.tsx",
+      "size": 22535,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/PlanReview.tsx",
+      "size": 14685,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/ScrollArea.d.ts",
+      "size": 430,
+      "mtimeMs": 1778335994956
+    },
+    {
+      "path": "src/components/ui/ScrollArea.tsx",
+      "size": 1588,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Scrollbar.tsx",
+      "size": 740,
+      "mtimeMs": 1778335994956
+    },
+    {
+      "path": "src/components/ui/Textarea.d.ts",
+      "size": 440,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/ui/Textarea.tsx",
+      "size": 1225,
+      "mtimeMs": 1778335994957
+    },
+    {
+      "path": "src/components/UiModeToggle.tsx",
+      "size": 5495,
+      "mtimeMs": 1778517460217
+    },
+    {
+      "path": "src/components/UserRoleBadge.tsx",
+      "size": 893,
+      "mtimeMs": 1778496266307
+    },
+    {
+      "path": "src/components/work/index.ts",
+      "size": 301,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/work/kanban/BoardSettingsModal.tsx",
+      "size": 20240,
+      "mtimeMs": 1778513304038
+    },
+    {
+      "path": "src/components/work/kanban/PushTaskListToKanbanModal.tsx",
+      "size": 15336,
+      "mtimeMs": 1778513172313
+    },
+    {
+      "path": "src/components/work/kanban/PushToKanbanModal.tsx",
+      "size": 23879,
+      "mtimeMs": 1778513497449
+    },
+    {
+      "path": "src/components/work/kanban/PushWorkflowToKanbanModal.tsx",
+      "size": 19807,
+      "mtimeMs": 1778513243721
+    },
+    {
+      "path": "src/components/work/kanban/WorkBoard.tsx",
+      "size": 157218,
+      "mtimeMs": 1778513647879
+    },
+    {
+      "path": "src/components/work/kanban/WorkBoardSelector.tsx",
+      "size": 14971,
+      "mtimeMs": 1778514119926
+    },
+    {
+      "path": "src/components/work/kanban/WorkDocsView.tsx",
+      "size": 11146,
+      "mtimeMs": 1778514162622
+    },
+    {
+      "path": "src/components/work/kanban/WorkFilesView.tsx",
+      "size": 15002,
+      "mtimeMs": 1778514124757
+    },
+    {
+      "path": "src/components/work/kanban/WorkTaskCard.tsx",
+      "size": 969,
+      "mtimeMs": 1778335994956
+    },
+    {
+      "path": "src/components/work/kanban/WorkTaskCard.tsx.bak",
+      "size": 101106,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/kanban/WorkTeamView.tsx",
+      "size": 14058,
+      "mtimeMs": 1778514191500
+    },
+    {
+      "path": "src/components/work/LeaderActions.tsx",
+      "size": 3944,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/TaskForm.tsx",
+      "size": 2693,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/TaskList.tsx",
+      "size": 3323,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/work/TeamBrowser.tsx",
+      "size": 2552,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/TeamDashboard.tsx",
+      "size": 3349,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/TimeEntryForm.tsx",
+      "size": 2341,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/TimeReport.tsx",
+      "size": 3455,
+      "mtimeMs": 1778335994954
+    },
+    {
+      "path": "src/components/work/WorkApp.tsx",
+      "size": 10698,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/WorkspaceAgentTeamPane.tsx",
+      "size": 9102,
+      "mtimeMs": 1778335994961
+    },
+    {
+      "path": "src/components/WorkspaceCellDropSurface.tsx",
+      "size": 3061,
+      "mtimeMs": 1778335994960
+    },
+    {
+      "path": "src/components/WorkspaceDropOverlay.tsx",
+      "size": 954,
+      "mtimeMs": 1778335994959
+    },
+    {
+      "path": "src/components/WorkspaceGridLayoutPicker.tsx",
+      "size": 3271,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/components/WorkspacePane.tsx",
+      "size": 42333,
+      "mtimeMs": 1778335994950
+    },
+    {
+      "path": "src/components/WorkspaceSvgPreview.tsx",
+      "size": 600,
+      "mtimeMs": 1778335994959
+    },
+    {
+      "path": "src/components/WorkspaceTextBuffer.tsx",
+      "size": 31810,
+      "mtimeMs": 1778335994953
+    },
+    {
+      "path": "src/constants.ts",
+      "size": 459,
+      "mtimeMs": 1778335994962
+    },
+    {
+      "path": "src/constants/mitLicenseText.ts",
+      "size": 1196,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "src/constants/piModelConfigPaths.ts",
+      "size": 683,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "src/constants/workspaceEditorChrome.ts",
+      "size": 1169,
+      "mtimeMs": 1778335994976
+    },
+    {
+      "path": "src/context/AuthContext.tsx",
+      "size": 984,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/context/RefactorContext.tsx",
+      "size": 12633,
+      "mtimeMs": 1778343290495
+    },
+    {
+      "path": "src/context/ToastContext.tsx",
+      "size": 981,
+      "mtimeMs": 1778513061759
+    },
+    {
+      "path": "src/context/WorkspaceStaticAnalysisContext.tsx",
+      "size": 1418,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/contexts/AuthContext.tsx",
+      "size": 561,
+      "mtimeMs": 1778512829100
+    },
+    {
+      "path": "src/contexts/ToastContext.tsx",
+      "size": 1637,
+      "mtimeMs": 1778512827237
+    },
+    {
+      "path": "src/extentions/damage-control-rules.yaml",
+      "size": 8707,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/globals.d.ts",
+      "size": 421,
+      "mtimeMs": 1778336011279
+    },
+    {
+      "path": "src/hooks/concat.ts",
+      "size": 193,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useAgents.ts",
+      "size": 6305,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useAIPredictions.ts",
+      "size": 4620,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useClawAutomationStatus.ts",
+      "size": 2433,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useClawHostFileTree.ts",
+      "size": 2394,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useClawMissionEvents.ts",
+      "size": 875,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useClawSchedules.ts",
+      "size": 7649,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useClawTelegramStatus.ts",
+      "size": 3022,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useClawWorkspace.ts",
+      "size": 7533,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useCommandItems.ts",
+      "size": 6978,
+      "mtimeMs": 1778343690384
+    },
+    {
+      "path": "src/hooks/useDebouncedUndoRedo.ts",
+      "size": 2329,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useEditMenuState.ts",
+      "size": 284,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useEditorCommandHandlers.ts",
+      "size": 902,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useFileEditor.ts",
+      "size": 5316,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useGithubConnection.ts",
+      "size": 1225,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useHelpMenuState.ts",
+      "size": 266,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useLlmModels.ts",
+      "size": 1137,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useLocalToday.ts",
+      "size": 1256,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useMaxWidthMediaQuery.ts",
+      "size": 1450,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useModalState.ts",
+      "size": 2718,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useNavigationHandlers.ts",
+      "size": 2318,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useNavigationState.ts",
+      "size": 201,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/usePackageScripts.ts",
+      "size": 724,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/usePlanHandoffSelection.ts",
+      "size": 2795,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useRunMenuDebugState.ts",
+      "size": 955,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useRunMenuState.ts",
+      "size": 983,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useSelectionMenuState.ts",
+      "size": 222,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useServerConfig.ts",
+      "size": 5562,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useShellMobile.ts",
+      "size": 1209,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useSimpleChatWorkspaceLayout.ts",
+      "size": 1770,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useSimplePreferences.ts",
+      "size": 4347,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useTechnicalWorkspaceState.ts",
+      "size": 220,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/hooks/useTerminalMenuState.ts",
+      "size": 457,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useTerminalUiPreferences.ts",
+      "size": 1414,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/hooks/useTicketApi.ts",
+      "size": 2773,
+      "mtimeMs": 1778511399466
+    },
+    {
+      "path": "src/hooks/useUiMode.ts",
+      "size": 1203,
+      "mtimeMs": 1778342619383
+    },
+    {
+      "path": "src/hooks/useUiViewsCatalog.ts",
+      "size": 3604,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useUserRole.ts",
+      "size": 838,
+      "mtimeMs": 1778496235749
+    },
+    {
+      "path": "src/hooks/useWayOfPiSession.ts",
+      "size": 9805,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useWebManifest.ts",
+      "size": 1181,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useWorkspaceActions.ts",
+      "size": 6351,
+      "mtimeMs": 1778341277589
+    },
+    {
+      "path": "src/hooks/useWorkspaceStaticAnalysis.ts",
+      "size": 5487,
+      "mtimeMs": 1778335994967
+    },
+    {
+      "path": "src/hooks/useWorkspaceTree.ts",
+      "size": 10374,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/index.css",
+      "size": 3396,
+      "mtimeMs": 1778335994962
+    },
+    {
+      "path": "src/interfaces/agent.ts",
+      "size": 1428,
+      "mtimeMs": 1778335994962
+    },
+    {
+      "path": "src/lib/chatAttachment.ts",
+      "size": 466,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/lib/flattenFilePaths.ts",
+      "size": 375,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/lib/parseMessageSegments.ts",
+      "size": 1596,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/lib/SessionManagerClient.ts",
+      "size": 2939,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "size": 118,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/logs/index.tsx",
+      "size": 269,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/LogsPanel.tsx",
+      "size": 2309,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/TerminalBuffer.jsx",
+      "size": 1276,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/TerminalBuffer.tsx",
+      "size": 2271,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/TerminalInput.jsx",
+      "size": 6312,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/TerminalInput.tsx",
+      "size": 2466,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/TerminalRow.jsx",
+      "size": 1678,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/logs/TerminalRow.tsx",
+      "size": 2690,
+      "mtimeMs": 1778335994974
+    },
+    {
+      "path": "src/main.tsx",
+      "size": 2766,
+      "mtimeMs": 1778495590674
+    },
+    {
+      "path": "src/modals/ConfirmationModal.tsx",
+      "size": 3175,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/modals/ErrorModal.tsx",
+      "size": 2316,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/modals/InputModal.tsx",
+      "size": 4782,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/modals/InternetAccessModal.tsx",
+      "size": 10068,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/modals/Modal.tsx",
+      "size": 3949,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/modals/SuccessModal.tsx",
+      "size": 1707,
+      "mtimeMs": 1778335994963
+    },
+    {
+      "path": "src/pages/AdminDashboard.tsx",
+      "size": 16297,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/pages/ClawPage.tsx",
+      "size": 14877,
+      "mtimeMs": 1778344368389
+    },
+    {
+      "path": "src/pages/ClientDashboard.tsx",
+      "size": 17295,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/pages/Dashboard.tsx",
+      "size": 27987,
+      "mtimeMs": 1778335994968
+    },
+    {
+      "path": "src/pages/DocsPage.tsx",
+      "size": 963,
+      "mtimeMs": 1778343389905
+    },
+    {
+      "path": "src/pages/index.ts",
+      "size": 555,
+      "mtimeMs": 1778337667075
+    },
+    {
+      "path": "src/pages/Kanban.tsx",
+      "size": 153173,
+      "mtimeMs": 1778514108940
+    },
+    {
+      "path": "src/pages/LoginPage.tsx",
+      "size": 6345,
+      "mtimeMs": 1778516473513
+    },
+    {
+      "path": "src/pages/SimplePage.tsx",
+      "size": 13887,
+      "mtimeMs": 1778516456940
+    },
+    {
+      "path": "src/pages/SuperAdminDashboard.tsx",
+      "size": 17908,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/pages/UserProfile.tsx",
+      "size": 23871,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/pages/WelcomePage.tsx",
+      "size": 1533,
+      "mtimeMs": 1778516237789
+    },
+    {
+      "path": "src/pages/WorkerPortal.tsx",
+      "size": 18234,
+      "mtimeMs": 1778335994969
+    },
+    {
+      "path": "src/pages/WorkPage.tsx",
+      "size": 243,
+      "mtimeMs": 1778343086818
+    },
+    {
+      "path": "src/ReferenceApp.tsx",
+      "size": 204843,
+      "mtimeMs": 1778335994962
+    },
+    {
+      "path": "src/services/boardMembersService.ts",
+      "size": 70,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/services/boardTemplates.ts",
+      "size": 552,
+      "mtimeMs": 1778512873909
+    },
+    {
+      "path": "src/services/calendarService.ts",
+      "size": 65,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/services/developmentWorkflowService.ts",
+      "size": 388,
+      "mtimeMs": 1778513586757
+    },
+    {
+      "path": "src/services/driveService.ts",
+      "size": 61,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/services/kanbanService.ts",
+      "size": 120,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/services/mockCalendarService.ts",
+      "size": 344,
+      "mtimeMs": 1778512769197
+    },
+    {
+      "path": "src/services/mockDevelopmentWorkflowService.ts",
+      "size": 710,
+      "mtimeMs": 1778514058791
+    },
+    {
+      "path": "src/services/mockDriveService.ts",
+      "size": 455,
+      "mtimeMs": 1778512766508
+    },
+    {
+      "path": "src/services/mockKanbanService.ts",
+      "size": 1900,
+      "mtimeMs": 1778513448216
+    },
+    {
+      "path": "src/services/mockNotesService.ts",
+      "size": 414,
+      "mtimeMs": 1778512764641
+    },
+    {
+      "path": "src/services/mockProjectsService.ts",
+      "size": 391,
+      "mtimeMs": 1778512770698
+    },
+    {
+      "path": "src/services/mockTasksService.ts",
+      "size": 490,
+      "mtimeMs": 1778513459720
+    },
+    {
+      "path": "src/services/mockWorkflowsService.ts",
+      "size": 104,
+      "mtimeMs": 1778514057310
+    },
+    {
+      "path": "src/services/notesService.ts",
+      "size": 61,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/services/tasksService.ts",
+      "size": 61,
+      "mtimeMs": 1778335994966
+    },
+    {
+      "path": "src/services/workflowsService.ts",
+      "size": 72,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/shell/AppShell.tsx",
+      "size": 7610,
+      "mtimeMs": 1778343325964
+    },
+    {
+      "path": "src/shell/GlobalAISidebar.tsx",
+      "size": 464,
+      "mtimeMs": 1778336949535
+    },
+    {
+      "path": "src/types/calendar.d.ts",
+      "size": 75,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/calendar.ts",
+      "size": 177,
+      "mtimeMs": 1778513169297
+    },
+    {
+      "path": "src/types/chat.ts",
+      "size": 453,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/commands.ts",
+      "size": 1221,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/developmentWorkflow.ts",
+      "size": 407,
+      "mtimeMs": 1778512856217
+    },
+    {
+      "path": "src/types/drive.d.ts",
+      "size": 103,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/drive.ts",
+      "size": 202,
+      "mtimeMs": 1778513447088
+    },
+    {
+      "path": "src/types/fileMenu.ts",
+      "size": 1095,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/hermes.d.ts",
+      "size": 59,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/hermes.ts",
+      "size": 287,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/hostDoctor.ts",
+      "size": 1177,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/kanban.d.ts",
+      "size": 364,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/kanban.ts",
+      "size": 2371,
+      "mtimeMs": 1778513221178
+    },
+    {
+      "path": "src/types/notes.d.ts",
+      "size": 69,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/notes.ts",
+      "size": 101,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/nsrCompliance.ts",
+      "size": 156,
+      "mtimeMs": 1778513419068
+    },
+    {
+      "path": "src/types/projects.ts",
+      "size": 112,
+      "mtimeMs": 1778513221440
+    },
+    {
+      "path": "src/types/tasks.d.ts",
+      "size": 68,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/tasks.ts",
+      "size": 269,
+      "mtimeMs": 1778512864182
+    },
+    {
+      "path": "src/types/technicalShell.ts",
+      "size": 2179,
+      "mtimeMs": 1778343623392
+    },
+    {
+      "path": "src/types/tree.ts",
+      "size": 691,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/uiViewsCatalog.ts",
+      "size": 671,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/workflows.ts",
+      "size": 205,
+      "mtimeMs": 1778513433827
+    },
+    {
+      "path": "src/types/workspaceEditor.ts",
+      "size": 7953,
+      "mtimeMs": 1778335994965
+    },
+    {
+      "path": "src/types/workspaceFile.ts",
+      "size": 514,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/workspaceIndex.ts",
+      "size": 863,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/types/workspaceProblems.ts",
+      "size": 432,
+      "mtimeMs": 1778335994964
+    },
+    {
+      "path": "src/utils/agentPermissionsStorage.ts",
+      "size": 3076,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/appHelpers.ts",
+      "size": 2156,
+      "mtimeMs": 1778338871381
+    },
+    {
+      "path": "src/utils/boardConstants.ts",
+      "size": 594,
+      "mtimeMs": 1778513171121
+    },
+    {
+      "path": "src/utils/chatComposerInjectBus.ts",
+      "size": 629,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/chatErrorModelHint.ts",
+      "size": 1067,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/chatQueueTranscript.ts",
+      "size": 3548,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/chatSlashAutocomplete.ts",
+      "size": 2519,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/chromePreferences.ts",
+      "size": 1739,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/clawScheduleCronDay.ts",
+      "size": 1906,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/clawScheduleDayMatch.ts",
+      "size": 961,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/clawTelegramSetupPrompt.ts",
+      "size": 872,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/clawWorkspaceOnboardingStorage.ts",
+      "size": 1385,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/clawWorkspaceTemplates.ts",
+      "size": 9719,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/codeWorkspaceFile.ts",
+      "size": 159,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/dataTransferTypes.ts",
+      "size": 324,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/dockChrome.ts",
+      "size": 875,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/editorPreferences.ts",
+      "size": 397,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/editorSelection.ts",
+      "size": 5994,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/editorSyntaxHighlight.ts",
+      "size": 3680,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/editorTextComments.ts",
+      "size": 2967,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/fileDiffHunks.ts",
+      "size": 3715,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/utils/filterTreeByQuery.ts",
+      "size": 816,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/flattenTree.ts",
+      "size": 2302,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/gitStatusUi.ts",
+      "size": 2953,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/launchJsonMutate.ts",
+      "size": 2874,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/localCalendarDate.ts",
+      "size": 3226,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/panelDockLayout.ts",
+      "size": 18292,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/piSettingsJson.ts",
+      "size": 1030,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/utils/planHandoffPersistence.ts",
+      "size": 1143,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/planModeArtifacts.ts",
+      "size": 1106,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/planModeComposerTemplates.ts",
+      "size": 774,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/utils/planModeHeuristics.ts",
+      "size": 785,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/planModeWorkspace.ts",
+      "size": 676,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/posixPath.ts",
+      "size": 921,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/showModelThinkingPreference.ts",
+      "size": 864,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/simpleWorkspaceLayoutStorage.ts",
+      "size": 3036,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/sortTreeNodes.ts",
+      "size": 502,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/teamsYaml.ts",
+      "size": 1280,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/technicalLayoutStorage.ts",
+      "size": 5542,
+      "mtimeMs": 1778335994970
+    },
+    {
+      "path": "src/utils/terminalConnectionManager.ts",
+      "size": 4159,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/terminalInputBridge.ts",
+      "size": 511,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/terminalRunCommands.ts",
+      "size": 1515,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/terminalUiPreferences.ts",
+      "size": 1677,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/tokenMeterFormat.ts",
+      "size": 602,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/wayofpiDevApiWarmup.ts",
+      "size": 3238,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/workspace.ts",
+      "size": 435,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/workspaceAgentDisplay.ts",
+      "size": 976,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/workspaceChatAgentPicker.ts",
+      "size": 1081,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/workspaceDiskPath.ts",
+      "size": 1831,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/workspaceDropZones.ts",
+      "size": 1276,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/workspaceEditorChrome.ts",
+      "size": 493,
+      "mtimeMs": 1778335994971
+    },
+    {
+      "path": "src/utils/workspaceFilePreview.ts",
+      "size": 1703,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/utils/workspaceGridStorage.ts",
+      "size": 12345,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "src/utils/workspaceRecent.ts",
+      "size": 713,
+      "mtimeMs": 1778335994972
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "size": 1082,
+      "mtimeMs": 1778335994973
+    },
+    {
+      "path": "tailwind.config.js",
+      "size": 164,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "tsconfig.app.json",
+      "size": 1014,
+      "mtimeMs": 1778511658032
+    },
+    {
+      "path": "tsconfig.json",
+      "size": 107,
+      "mtimeMs": 1778335994944
+    },
+    {
+      "path": "tsconfig.node.json",
+      "size": 287,
+      "mtimeMs": 1778335994945
+    },
+    {
+      "path": "vite.config.ts",
+      "size": 931,
+      "mtimeMs": 1778335994986
+    }
+  ]
+}

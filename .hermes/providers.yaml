@@ -1,0 +1,223 @@
+providers:
+  ollama:
+    api: openai-completions
+    apiKey: ollama
+    baseUrl: http://127.0.0.1:11434/v1
+    models:
+      - id: nemotron-cascade-2:30b
+        name: "Nemotron Cascade 2:30B"
+        contextWindow: 262144
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: nemotron-3-nano:4b
+        name: "Nemotron 3 Nano:4B"
+        contextWindow: 262144
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: qwen3.5:9b-32k
+        name: "Qwen3.5:9B (32k)"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+      
+      - id: unsloth-qwen3-30b
+        name: "Unsloth Qwen3:30B"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+      
+      - id: minimax-m2.5:cloud
+        name: "MiniMax M2.5:cloud"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+      
+      - id: qwen3.5:27b
+        name: "Qwen3.5:27B"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+      
+      - id: devstral-small-2:24b
+        name: "Devstral Small 2:24B"
+        contextWindow: 15000
+        input: ["text"]
+        reasoning: true
+      
+      - id: qwen3.5:9b
+        name: "Qwen3.5:9B"
+        contextWindow: 32768
+        input: ["text"]
+        reasoning: true
+      
+      - id: qwen2.5-coder:latest
+        name: "Qwen2.5 Coder"
+        contextWindow: 32768
+        input: ["text"]
+        reasoning: true
+      
+      - id: qwen3.5:27b
+        name: "Qwen3.5:27B"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+      
+      - id: unsloth-qwen3-30b:latest
+        name: "Unsloth Qwen3:30B"
+        contextWindow: 15000
+        input: ["text"]
+        reasoning: true
+      
+      - id: nomic-embed-text:latest
+        name: "Nomic Embed Text"
+        contextWindow: 8192
+        input: ["text"]
+        reasoning: false
+      
+      - id: mxbai-embed-large:latest
+        name: "MxBai Embed Large"
+        contextWindow: 8192
+        input: ["text"]
+        reasoning: false
+      
+      - id: llama3.1:latest
+        name: "Llama 3.1"
+        contextWindow: 32768
+        input: ["text"]
+        reasoning: true
+      
+      - id: unsloth-r1-8b:latest
+        name: "Unsloth R1:8B"
+        contextWindow: 128000
+        input: ["text"]
+        reasoning: true
+      
+      - id: ds-r1-8b:latest
+        name: "DS R1:8B"
+        contextWindow: 128000
+        input: ["text"]
+        reasoning: true
+      
+      - id: qwen2.5-coder:14b-instruct
+        name: "Qwen2.5 Coder 14B"
+        contextWindow: 32768
+        input: ["text"]
+        reasoning: true
+      
+      - id: qwen-7b-gpu:latest
+        name: "Qwen-7B GPU"
+        contextWindow: 32768
+        input: ["text"]
+        reasoning: true
+  
+  ollama_remote:
+    api: openai-completions
+    apiKey: ollama
+    baseUrl: http://192.168.68.103:5173/v1
+    models:
+      - id: gemma4:e4b
+        name: "Gemma4 e4B"
+        contextWindow: 32768
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: gemma4:26b
+        name: "Gemma4 26B"
+        contextWindow: 32768
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: qwen3.5:9b
+        name: "Qwen3.5:9B"
+        contextWindow: 32768
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: qwen-4bit:latest
+        name: "Qwen 4bit"
+        contextWindow: 8192
+        input: ["text"]
+        reasoning: true
+      
+      - id: deepseek-r1:8b
+        name: "DeepSeek R1:8B"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+      
+      - id: MFDoom/deepseek-r1-tool-calling:8b
+        name: "DeepSeek R1 Tool Calling"
+        contextWindow: 262144
+        input: ["text"]
+        reasoning: true
+
+  openai:
+    api: openai-chat
+    apiKey: sk-no-key-required
+    baseUrl: https://minisforum-ai.craigema.com/v1
+    models:
+      - id: Nemotron-Cascade-2-30B-A3B.Q8_0.gguf
+        name: "remote Nemotron"
+        contextWindow: 131072
+        input: ["text", "image"]
+        reasoning: true
+
+  openrouter:
+    api: openai-completions
+    apiKey: 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
+    baseUrl: https://openrouter.ai/api/v1
+    models:
+      - id: meta-llama/llama-3.3-70b-instruct
+        name: "Llama 3.3 70B"
+        contextWindow: 128000
+        input: ["text"]
+        reasoning: true
+      
+      - id: mistralai/mistral-8x2b-nemo-expert-2409
+        name: "Mistral 8x2b-Nemo"
+        contextWindow: 131072
+        input: ["text"]
+        reasoning: true
+      
+      - id: google/gemini-2.5-pro-exp-03-25
+        name: "Google Gemini 2.5 Pro"
+        contextWindow: 131072
+        input: ["text"]
+        reasoning: true
+
+  google:
+    api: google-generative-ai
+    apiKey: AIzaSyD61r-cqLINMVyiC4KfnwmgdK-rmXJ8WIs
+    baseUrl: https://generativelanguage.googleapis.com/v1beta
+    models:
+      - id: gemini-3-flash-preview
+        name: "Gemini 3 Flash"
+        contextWindow: 1048576
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: gemini-2.5-flash
+        name: "Gemini 2.5 Flash"
+        contextWindow: 1048576
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: gemini-2.5-flash-lite
+        name: "Gemini 2.5 Flash-Lite"
+        contextWindow: 1048576
+        input: ["text", "image"]
+        reasoning: false
+      
+      - id: gemini-3.1-pro-preview
+        name: "Gemini 3.1 Pro"
+        contextWindow: 1048576
+        input: ["text", "image"]
+        reasoning: true
+      
+      - id: gemini-2.5-pro
+        name: "Gemini 2.5 Pro"
+        contextWindow: 1048576
+        input: ["text", "image"]
+        reasoning: true

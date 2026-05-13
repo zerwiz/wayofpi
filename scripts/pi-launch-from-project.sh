@@ -113,7 +113,12 @@ fi
 
 trap on_exit EXIT INT TERM HUP
 set +e
-pi "${abs_args[@]}"
+PI_BIN="pi"
+if [[ -f "$PLAYGROUND_ROOT/node_modules/.bin/pi" ]]; then
+    PI_BIN="$PLAYGROUND_ROOT/node_modules/.bin/pi"
+fi
+export PI_CODING_AGENT_DIR="$PLAYGROUND_ROOT/.pi/agent"
+"$PI_BIN" "${abs_args[@]}"
 rc=$?
 set -e
 exit "$rc"

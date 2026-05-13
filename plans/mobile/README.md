@@ -17,7 +17,7 @@
 ## Current State
 
 ```
-apps/wayofpi-ui/src/components/mobile/
+apps/wayofwork-ui/src/components/mobile/
 ├── chrome/
 │   └── MobileChrome.tsx               # Shared header + Desktop escape
 ├── claw/
@@ -36,8 +36,8 @@ apps/wayofpi-ui/src/components/mobile/
 |------|---------|
 | [`docs/WOP_MOBILE_UI_PLAN.md`](../../../docs/WOP_MOBILE_UI_PLAN.md) | High-level UI plan; tracks + non-goals |
 | [`docs/WOP_TECHNICAL_UI.md`](../../../docs/WOP_TECHNICAL_UI.md) | Desktop shell reference |
-| [`apps/wayofpi-ui/README.md`](../../../apps/wayofpi-ui/README.md) | Shell entry points |
-| [`apps/wayofpi-ui/src/components/mobile/README.md`](README.md) | This document |
+| [`apps/wayofwork-ui/README.md`](../../../apps/wayofwork-ui/README.md) | Shell entry points |
+| [`apps/wayofwork-ui/src/components/mobile/README.md`](README.md) | This document |
 
 ## Mobile Principles
 

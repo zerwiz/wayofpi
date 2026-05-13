@@ -2,7 +2,7 @@
 Type=Application
 Version=1.5
 Name=Way of Pi
-Comment=Way of Pi web shell (Bun + Vite; browser or Electron via env)
+Comment=Way of Pi Desktop (Electron-first AI workspace)
 Exec=/bin/bash "@REPO@/linux/wayofpi-launch.sh"
 Icon=wayofpi
 Terminal=false

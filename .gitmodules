@@ -1,0 +1,4 @@
+[submodule "pip"]
+	path = pip
+	url = https://github.com/zerwiz/pip
+	branch = 17

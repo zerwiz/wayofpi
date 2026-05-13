@@ -4,12 +4,6 @@
     "../.claude/commands"
   ],
   "extensions": [
-    ".pi/extensions/web-tools.ts",
-    ".pi/extensions/session-memory.ts",
-    ".pi/extensions/github-management.ts",
-    ".pi/extensions/session-saver.ts",
-    ".pi/extensions/context-local-hints.ts",
-    ".pi/extensions/forge-session_saver.shim",
-    ".pi/extensions/context-loader.ts"
+    ".pi/extensions/util/pi-loader.ts"
   ]
 }

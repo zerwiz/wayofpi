@@ -8,23 +8,23 @@ Use the **split guides** for detail:
 
 | Doc | Focus |
 |-----|--------|
-| **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** | `~/.hermes/config.yaml`, toolsets, env vars, `hermes honcho *`, `just hermes-*` |
-| **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** | Docker stack, `~/.honcho/config.json`, API URL, deriver/dreaming, `just honcho-*` |
+| **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)** | `${USER_HOME}/.hermes/config.yaml`, toolsets, env vars, `hermes honcho *`, `just hermes-*` |
+| **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** | Docker stack, `${USER_HOME}/.honcho/config.json`, API URL, deriver/dreaming, `just honcho-*` |
 
 ---
 
 ## Minimal happy path
 
-1. **Start Honcho** — `cd ~/honcho-server && just honcho-up` or `docker compose up -d database redis api deriver` in **`~/honcho-server`**.
-2. **Check API** — `cd ~/honcho-server && just honcho-status` or `curl http://localhost:18000/`.
-3. **Align configs** — Same URL in **`~/.honcho/config.json`** (`baseUrl`) and **`~/.hermes/config.yaml`** (`honcho.base_url`); `toolsets` includes **`honcho`**.
+1. **Start Honcho** — `cd ${USER_HOME}/honcho-server && just honcho-up` or `docker compose up -d database redis api deriver` in **`${USER_HOME}/honcho-server`**.
+2. **Check API** — `cd ${USER_HOME}/honcho-server && just honcho-status` or `curl http://localhost:18000/`.
+3. **Align configs** — Same URL in **`${USER_HOME}/.honcho/config.json`** (`baseUrl`) and **`${USER_HOME}/.hermes/config.yaml`** (`honcho.base_url`); `toolsets` includes **`honcho`**.
 4. **Verify Hermes** — `just hermes-honcho-status`; if broken, `just hermes-honcho-setup`.
 
 ---
 
 ## Out of scope: Pi
 
-**Pi** does not use *this* Hermes YAML bridge. Pi-first local AI (memory, **honcho-mirror**, launchers) is **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)**. Pi-native memory alone: **[AGENT_MEMORY.md](AGENT_MEMORY.md)**. Honcho **server + mirror**: **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**. If **Hermes** and **Pi** share one Honcho, keep **`honcho.base_url`** / **`baseUrl`** and **workspace / peers** aligned across **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)**, **`~/.honcho/config.json`**, and Pi **`HONCHO_*`** env.
+**Pi** does not use *this* Hermes YAML bridge. Pi-first local AI (memory, **honcho-mirror**, launchers) is **[PI_LOCAL_AI.md](PI_LOCAL_AI.md)**. Pi-native memory alone: **[AGENT_MEMORY.md](AGENT_MEMORY.md)**. Honcho **server + mirror**: **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)**. If **Hermes** and **Pi** share one Honcho, keep **`honcho.base_url`** / **`baseUrl`** and **workspace / peers** aligned across **[HERMES_INTEGRATION.md](HERMES_INTEGRATION.md)**, **`${USER_HOME}/.honcho/config.json`**, and Pi **`HONCHO_*`** env.
 
 ---
 

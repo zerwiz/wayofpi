@@ -1,0 +1,12 @@
+{
+  "name": "@pi/damage-control-core",
+  "version": "1.0.0",
+  "description": "Pi framework core - extension base classes",
+  "main": "extension.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["pi", "framework", "extensions"],
+  "license": "MIT"
+}

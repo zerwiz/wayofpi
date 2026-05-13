@@ -1,0 +1,7 @@
+#!/bin/bash
+HERMES_BIN="/home/zerwiz/CodeP/Way of pi/.hermes/bin/hermes"
+HERMES_HOME="/home/zerwiz/CodeP/Way of pi/.hermes/hermes-agent"
+HERMES_PYENV="/home/zerwiz/CodeP/Way of pi/.hermes/.venv/bin"
+export PYTHONPATH="hermes_cli:$PYTHONPATH"
+cd "$HERMES_HOME"
+"$HERMES_PYENV/python" hermes_cli/main.py "$@"

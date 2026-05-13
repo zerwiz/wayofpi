@@ -2,7 +2,7 @@
 #
 # Optional: install the ngrok agent on the host (Debian/Ubuntu apt) or print copy-paste hints.
 # Way of Pi does not require ngrok for local use — Settings → ngrok can still use the npm
-# optionalDependency in apps/wayofpi-ui after `npm install` there.
+# optionalDependency in apps/wayofwork-ui after `npm install` there.
 #
 # Usage (from repo root):
 #   ./scripts/install-ngrok-optional.sh              # print apt + brew + next steps (no sudo)
@@ -12,7 +12,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UI_DIR="$ROOT/apps/wayofpi-ui"
+UI_DIR="$ROOT/apps/wayofwork-ui"
 
 INSTALL=0
 YES=0
@@ -71,7 +71,7 @@ if [[ "$INSTALL" != "1" ]]; then
 	echo "   https://dashboard.ngrok.com/get-started/your-authtoken"
 	echo "3. Start the tunnel from that dialog (dev), or run: ngrok http <port>"
 	echo ""
-	echo "Without system ngrok: (cd apps/wayofpi-ui && npm install) installs optional npm package ngrok → node_modules/ngrok/bin"
+	echo "Without system ngrok: (cd apps/wayofwork-ui && npm install) installs optional npm package ngrok → node_modules/ngrok/bin"
 	echo ""
 	echo "To run the apt commands automatically on this Linux host: $0 --install   (add -y to skip confirm)"
 	exit 0

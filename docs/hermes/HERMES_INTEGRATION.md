@@ -31,7 +31,7 @@
    ```
 
 5. **Configure Hermes in Way of Pi:**
-   - Create config: `~/.hermes/config.yaml`
+   - Create config: `${USER_HOME}/.hermes/config.yaml`
    - Set `HONCHO_BASE_URL` environment variable
    - Verify with: `hermes status`
 
@@ -52,7 +52,7 @@ After installation at **`/home/zerwiz/CodeP/Way of pi/.hermes/`**:
 From any directory:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
-source ~/.bashrc
+source ${USER_HOME}/.bashrc
 hermes
 ```
 
@@ -64,7 +64,7 @@ mkdir -p .hermes
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 ```
 
-**Note:** Hermes installation uses `~/.hermes` as the default config directory. After installation, we'll symlink or configure it to work with the Way of Pi project at `.hermes`.
+**Note:** Hermes installation uses `${USER_HOME}/.hermes` as the default config directory. After installation, we'll symlink or configure it to work with the Way of Pi project at `.hermes`.
 
 ### UI Layout Specification
 
@@ -168,11 +168,11 @@ If Honcho is down, Hermes often reports something like **`Honcho init failed: Co
 
 ## 🎨 Hermes UI Shared Header & Menu
 
-**Located in:** `apps/wayofpi-ui/src/layouts/WayOfPiLayout.tsx`
+**Located in:** `apps/wayofwork-ui/src/layouts/WayOfPiLayout.tsx`
 
 The Hermes page uses the same header and menu as other Way of Pi pages:
 
-**Installation Path Note:** Hermes installs into `~/.hermes` (user home directory) by default. For Way of Pi integration, we create a symlink or configure the project to use `/home/zerwiz/CodeP/Way of pi/.hermes/` as the project workspace.
+**Installation Path Note:** Hermes installs into `${USER_HOME}/.hermes` (user home directory) by default. For Way of Pi integration, we create a symlink or configure the project to use `/home/zerwiz/CodeP/Way of pi/.hermes/` as the project workspace.
 
 To set up the Way of Pi hermes workspace:
 
@@ -185,7 +185,7 @@ mkdir -p /home/zerwiz/CodeP/Way\ of\ pi/.hermes
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 
 # Configure to use Way of Pi hermes directory
-ln -s ~/.hermes /home/zerwiz/CodeP/Way\ of\ pi/.hermes
+ln -s ${USER_HOME}/.hermes /home/zerwiz/CodeP/Way\ of\ pi/.hermes
 ```
 
 The `.hermes` directory is the standard Hermes installation location and should be used for all Hermes CLI operations.
@@ -193,7 +193,7 @@ The `.hermes` directory is the standard Hermes installation location and should 
 ### Shared Header & Menu Features:
 ### Shared Header & Menu Features:
 
-Hermes reads project/user config from **`~/.hermes/`**. The pieces that matter for Honcho usually include:
+Hermes reads project/user config from **`${USER_HOME}/.hermes/`**. The pieces that matter for Honcho usually include:
 
 | Key / section | Role |
 |---------------|-------|
@@ -205,7 +205,7 @@ Hermes reads project/user config from **`~/.hermes/`**. The pieces that matter f
 | **`honcho.session_id`** | Session id Hermes uses when talking to Honcho (may tie to a project or machine). |
 - Toolsets must include **`honcho`** (and whatever else you use, e.g. **`hermes-cli`**).
 
-**Precedence note:** If **`~/.honcho/config.json`** sets **`baseUrl`**, it can override or shadow what Hermes YAML says for the SDK path Hermes uses—keep them aligned. See **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §2.
+**Precedence note:** If **`${USER_HOME}/.honcho/config.json`** sets **`baseUrl`**, it can override or shadow what Hermes YAML says for the SDK path Hermes uses—keep them aligned. See **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §2.
 
 ### Example snippet (adjust all values)
 
@@ -233,13 +233,13 @@ Your shell may export variables consumed by Hermes or helper scripts, for exampl
 | `HONCHO_PEER_ID` | User peer id. |
 | `HERMES_TOOL_PARSER` | Parser mode (e.g. `hermes`)—set per your install docs. |
 
-After changing **`~/.bashrc`** (or similar), reload the shell or re-source the file.
+After changing **`${USER_HOME}/.bashrc`** (or similar), reload the shell or re-source the file.
 
 ---
 
 ## 4. Commands and `just` recipes (this repo)
 
-From the playground **`justfile`** (paths assume Hermes venv under **`~/.hermes/hermes-agent/venv/`**—edit if yours differs):
+From the playground **`justfile`** (paths assume Hermes venv under **`${USER_HOME}/.hermes/hermes-agent/venv/`**—edit if yours differs):
 
 | Recipe | What it does |
 |--------|----------------|
@@ -247,7 +247,7 @@ From the playground **`justfile`** (paths assume Hermes venv under **`~/.hermes/
 | **`just hermes-honcho-status`** | `hermes honcho status` — good sanity check that Hermes sees Honcho |
 | **`just hermes-honcho-setup`** | `hermes honcho setup` — repair / re-init path when connection or config drift |
 
-Start Honcho before expecting these to succeed: **`cd ~/honcho-server && just honcho-up`** or **`just honcho-up-api`** (from **`~/honcho-server`**).
+Start Honcho before expecting these to succeed: **`cd ${USER_HOME}/honcho-server && just honcho-up`** or **`just honcho-up-api`** (from **`${USER_HOME}/honcho-server`**).
 
 ---
 
@@ -267,7 +267,7 @@ You can use both: Pi for coding-agent sessions in this repo, Hermes for CLI flow
 | Symptom | Check |
 |---------|-------|
 | `Connection refused` | Honcho API not running — **[HONCHO_INTEGRATION.md](HONCHO_INTEGRATION.md)** §4–5. |
-| Wrong workspace / peer | `honcho.*` keys in **`config.yaml`** vs **`~/.honcho/config.json`**. |
+| Wrong workspace / peer | `honcho.*` keys in **`config.yaml`** vs **`${USER_HOME}/.honcho/config.json`**. |
 | Toolset missing | `toolsets` includes **`honcho`**. |
 | Stale URL | Port changed in Docker — update YAML, SDK JSON, and env vars together. |
 

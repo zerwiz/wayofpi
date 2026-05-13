@@ -1,0 +1,15 @@
+{
+  "name": "example-agent",
+  "version": "1.0.0",
+  "description": "Example multi-specialist agent following all Pi agent rules",
+  "main": "index.js",
+  "type": "module",
+  "pi": {
+    "agents": [
+      "./SYSTEM.md",
+      "./AGENTS.md",
+      "./agents.md"
+    ],
+    "type": "agent"
+  }
+}

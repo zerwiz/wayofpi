@@ -1,0 +1,22 @@
+{
+  "name": "Way of Pi — Technical IDE Launcher",
+  "short_name": "WOP-IDE",
+  "description": "A standalone Technical IDE launcher for Way of Pi (Terminal + VSCode)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "display_override": ["standalone", "minimal-ui"],
+  "theme_color": "#007aff",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

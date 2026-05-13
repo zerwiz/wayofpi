@@ -9,15 +9,22 @@ OUTPUT_DIR="$(dirname "${BASH_SOURCE[0]}")/release/wayofpi-release-v1.0.1-amd64"
 [ -d "$OUTPUT_DIR" ] && rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-# Copy essential directories
-cp -r "$SOURCE_DIR"/{agent,apps,docs,extensions,scripts,images} "$OUTPUT_DIR/" 2>/dev/null || true
+# Copy essential directories (allowlist)
+cp -r "$SOURCE_DIR"/{agent,apps,extensions,scripts,images} "$OUTPUT_DIR/" 2>/dev/null || true
 
-# Copy essential files (handle missing)
+# Copy essential root files (allowlist)
 [ -f "$SOURCE_DIR/README.md" ] && cp "$SOURCE_DIR/README.md" "$OUTPUT_DIR/"
 [ -f "$SOURCE_DIR/CHANGELOG.md" ] && cp "$SOURCE_DIR/CHANGELOG.md" "$OUTPUT_DIR/"
 [ -f "$SOURCE_DIR/justfile" ] && cp "$SOURCE_DIR/justfile" "$OUTPUT_DIR/"
-[ -f "$SOURCE_DIR/PI_VS_OPEN_CODE.md" ] && cp "$SOURCE_DIR/PI_VS_OPEN_CODE.md" "$OUTPUT_DIR/"
-[ -f "$SOURCE_DIR/PI_VS_OPEN_CODE.sh" ] && cp "$SOURCE_DIR/PI_VS_OPEN_CODE.sh" "$OUTPUT_DIR/"
+[ -f "$SOURCE_DIR/LICENSE" ] && cp "$SOURCE_DIR/LICENSE" "$OUTPUT_DIR/"
+[ -f "$SOURCE_DIR/pienv" ] && cp "$SOURCE_DIR/pienv" "$OUTPUT_DIR/"
+
+# Copy selective user manuals
+mkdir -p "$OUTPUT_DIR/docs"
+cp "$SOURCE_DIR/docs"/{HOW_TO_USE_AGENTS.md,HOW_TO_USE_EXTENSIONS.md,HOW_TO_USE_SKILLS.md,HOW_TO_USE_TOOLS.md,STARTUP_GUIDE.md} "$OUTPUT_DIR/docs/" 2>/dev/null || true
+[ -f "$SOURCE_DIR/PI-COMMANDS.md" ] && cp "$SOURCE_DIR/PI-COMMANDS.md" "$OUTPUT_DIR/docs/"
+[ -f "$SOURCE_DIR/AGENTS.md" ] && cp "$SOURCE_DIR/AGENTS.md" "$OUTPUT_DIR/docs/"
+[ -f "$SOURCE_DIR/plans/TERMINAL_USAGE_GUIDE.md" ] && cp "$SOURCE_DIR/plans/TERMINAL_USAGE_GUIDE.md" "$OUTPUT_DIR/docs/"
 
 # Copy .env files
 [ -f "$SOURCE_DIR/.env" ] && cp "$SOURCE_DIR/.env" "$OUTPUT_DIR/"
@@ -61,7 +68,8 @@ chmod +x "$OUTPUT_DIR/start-wayofpi-electron.sh"
 
 # Copy main start scripts
 [ -f "$SOURCE_DIR/start-wayofpi-electron.sh" ] && cp "$SOURCE_DIR/start-wayofpi-electron.sh" "$OUTPUT_DIR/"
-[ -f "$SOURCE_DIR/start-wayofpi-ui.sh" ] && cp "$SOURCE_DIR/start-wayofpi-ui.sh" "$OUTPUT_DIR/"
+[ -f "$SOURCE_DIR/start-wayofwork-ui.sh" ] && cp "$SOURCE_DIR/start-wayofwork-ui.sh" "$OUTPUT_DIR/"
+[ -f "$SOURCE_DIR/start-wayofpi.sh" ] && cp "$SOURCE_DIR/start-wayofpi.sh" "$OUTPUT_DIR/"
 
 # Copy LICENSE if exists
 [ -f "$SOURCE_DIR/LICENSE" ] && cp "$SOURCE_DIR/LICENSE" "$OUTPUT_DIR/"

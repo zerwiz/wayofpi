@@ -18,11 +18,4 @@ _wop_notify() {
 	fi
 }
 
-# Second launch while Vite is still on 5173 fails silently (Terminal=false). Nudge before we exec.
-if curl -sf -m 1 "http://127.0.0.1:5173/" >/dev/null 2>&1; then
-	_wop_notify "Something is already using http://127.0.0.1:5173/ (often another Way of Pi dev window). Close that dev server or its terminal, then try again. Log: ~/.local/share/wayofpi/launch.log"
-	exit 1
-fi
-
-export WOP_USE_ELECTRON="${WOP_USE_ELECTRON:-1}"
-exec "$ROOT/start-wayofpi-ui.sh" "$@"
+exec "$ROOT/start-wayofpi.sh" "$@"

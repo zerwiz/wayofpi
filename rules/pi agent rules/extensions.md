@@ -1,202 +1,452 @@
-# Extension Development Guidelines
+# Extension Creation Rules
 
 ## Overview
 
-Extensions are `pi-type: ["extension"]` packages that provide custom tools and integrations within the PI framework. They are distinct from skills (which have input/output schemas) and run in a special lifecycle after all skills are installed.
+This document describes how to **create, register, and distribute programmatic Extensions** for the Pi Coding Agent (`pi.dev`). Unlike Skills (which provide context via Markdown), **Extensions are executable TypeScript modules (`.ts`)** that **hook directly into the agent's lifecycle**, allowing you to:
+
+- ✅ Add custom tools callable by the LLM
+- ✅ Integrate external APIs
+- ✅ Intercept agent events
+- ✅ Perform background tasks
+- ✅ Modify state across sessions
 
 ---
 
-## Package Structure
+## Directory Structure
 
-### Required Fields (package.json)
+Extensions are automatically discovered in the following locations:
+
+| Context | Path | Purpose |
+|---------|------|---|
+| **Global Extensions** | `~/.pi/extensions/` | System-wide extension registry |
+| **Workspace Extensions** | `./.pi/extensions/` | Project-specific extensions (relative to project root) |
+| **Manual Loading** | `(any path)` | Via CLI: `pi run --extension ./ext.ts` |
+
+---
+
+## Extension Anatomy
+
+Every extension **must** export a default `activate` function. This function receives the `ExtensionAPI` instance, which is the **primary bridge** between your code and the Pi agent.
+
+### Required Structure
+
+```typescript
+import type { ExtensionAPI } from '@pi/sdk';
+
+export default function activate(api: ExtensionAPI) {
+  // 1. Register Tools
+  // 2. Attach Event Listeners  
+  // 3. Initialize State
+  // 4. Handle Cleanup
+}
+```
+
+---
+
+## Creation Guidelines
+
+### 1. Tool Registration (`api.registerTool`)
+
+Tools are functions that the LLM can call via `api.registerTool()`. They **must** be rigorously defined using **JSON Schema**.
+
+#### Required Fields
+
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| `name` | String | ✅ Yes | snake_case (e.g., `fetch_jira_ticket`, `analyze_ast`). Max 64 chars. |
+| `description` | String | ✅ Yes | Crucial for LLM routing - explain exactly what the tool does and when the agent should use it |
+| `schema` | Object | ✅ Yes | Strict JSON Schema defining expected arguments |
+| `execute` | Async Function | ✅ Yes | Receives args and context, returns object |
+
+#### Schema Format
 
 ```json
 {
-  "name": "<extension-name>",
-  "version": ">=1.0.0",
-  "pi-type": ["extension"],
-  "author": "<author>",
-  "license": "MIT",
-  "pi-config": {
-    "type": "extension",
-    "description": "Description of extension functionality",
-    "hooks": ["pre-start", "post-start"],
-    "integrations": ["integration1", "integration2"],
-    "environment": ["PI_*, <custom_vars>"]
+  "type": "object",
+  "properties": {
+    "endpoint": {
+      "type": "string",
+      "description": "The API endpoint to query"
+    },
+    "params": {
+      "type": "object",
+      "description": "Query parameters"
+    }
   },
-  "scripts": {
-    "init": "initialize extension",
-    "hooks": "register hooks",
-    "clean": "cleanup resources"
-  },
-  "dependencies": {
-    "external-package": "^1.0.0",
-    "@internal/pack": ">=1.2.0"
-  }
+  "required": ["endpoint"]
 }
+```
+
+#### Execution Rules
+
+1. **Always Return an Object**: Use standard format:
+   ```typescript
+   return {
+     success: true,
+     data: any,
+     error?: string  // Only if success: false
+   };
+   ```
+
+2. **Manage Context Size**: Do **not** return massive strings (like entire minified JS files). **Truncate, summarize, or paginate** outputs:
+   ```typescript
+   const MAX_OUTPUT_SIZE = 4096;
+   if (result.length > MAX_OUTPUT_SIZE) {
+     return {
+       success: true,
+       data: result.substring(0, MAX_OUTPUT_SIZE) +
+        `\n\n... (truncated, full output available on request)`
+     };
+   }
+   ```
+
+3. **Validate Inputs**: Even if JSON Schema is strict, **LLMs sometimes hallucinate properties**. Validate within your execute block:
+   ```typescript
+   async function safeExecute(args: any) {
+     if (!args.endpoint || typeof args.endpoint !== 'string') {
+       return { success: false, error: "Endpoint must be a valid URL string" };
+     }
+     // ... rest of logic
+   }
+   ```
+
+---
+
+### 2. Event Hooks
+
+Extensions can listen to the agent's lifecycle to perform background tasks or modify state.
+
+#### Available Events
+
+| Event | Description | When Fired |
+|-------|-------------|------------|
+| `onSessionStart` | New chat begins | First message of session |
+| `onMessage` | Message received | Both user and agent messages |
+| `onToolCall` | Tool invocation | Before tool execution |
+
+#### Event Registration
+
+```typescript
+api.on('onSessionStart', async (context) => {
+  console.log('[Session]', 'New chat initialized');
+  // Initialize session memory if needed
+});
+
+api.on('onMessage', async (message) => {
+  if (message.role === 'user') {
+    // Log or process user messages
+    await processMessage(message);
+  }
+});
+
+api.on('onToolCall', async (toolInfo) => {
+  // Pre-execution validation
+  if (!toolInfo.arguments) {
+    return { success: false, error: "No arguments provided" };
+  }
+});
+```
+
+#### Custom Event Handlers
+
+Create event handlers for additional lifecycle events:
+
+```typescript
+const handlers = {
+  preStart: async () => {
+    // Validate environment
+    await checkEnvironment();
+  },
+  postStart: async () => {
+    // Register plugins after start
+    await loadPlugins();
+  },
+  cleanup: async () => {
+    // Cleanup on session end
+    await cleanupResources();
+  }
+};
+
+await registerAllEvents(handlers);
 ```
 
 ---
 
-## Installation Location
+### 3. Error Handling
 
-Extensions are installed to:
+**Never crash the agent.** Wrap your `execute` logic in `try/catch` blocks:
 
-```
-/home/zerwiz/.pi/agent/rules/<extension-name>/
-```
+#### Error Handling Pattern
 
----
-
-## Lifecycle & Activation
-
-### Rule P1.11: Extension Activation
-
-1. **Load After Skills**: Extensions are loaded after all skills are installed
-2. **Initialize Hooks**: All registered hooks must be initialized
-3. **Register with Registry**: Extension must register itself with the PI registry
-4. **Enable/Disable**: Can be enabled or disabled via CLI
-
-### Hook Registration
-
-```json
-// pi-config.hooks example
-"hooks": {
-  "pre-start": {
-    "action": "validate_environment",
-    "args": ["env-check"],
-    "enabled": true
-  },
-  "post-start": {
-    "action": "load_plugins",
-    "args": ["plugin-list"]
+```typescript
+async function executeTool(args: any) {
+  try {
+    // Implementation logic
+    const result = await makeApiCall(args.endpoint);
+    
+    return { 
+      success: true, 
+      data: formatResult(result) 
+    };
+  } catch (error) {
+    // Return graceful error so LLM can self-correct
+    return { 
+      success: false, 
+      error: `Failed to ${args.action}: ${error.message}` 
+    };
   }
 }
 ```
 
+#### Error Response Examples
+
+```typescript
+// API rate limit exceeded
+return { 
+  success: false, 
+  error: "API rate limit exceeded. Try again in 60s." 
+};
+
+// Missing authentication
+return { 
+  success: false, 
+  error: "API authentication required. Check PI_API_KEY environment variable." 
+};
+
+// Invalid response
+return { 
+  success: false, 
+  error: "Response format invalid. Expected JSON, received plain text." 
+};
+```
+
 ---
 
-## Development Workflow
+## 4. Context Management (Required)
 
-### Step 1: Create Directory
+All tools **must** implement output truncation to prevent overwhelming the LLM's context window:
 
-```bash
-mkdir -p /home/zerwiz/.pi/agent/rules/<extension-name>
-cd /home/zerwiz/.pi/agent/rules/<extension-name>
-```
-
-### Step 2: Initialize package.json
-
-```bash
-{
-  "name": "tools-extension",
-  "version": "1.0.0",
-  "pi-type": ["extension"],
-  "author": "zerwiz",
-  "license": "MIT",
-  "pi-config": {
-    "type": "extension",
-    "description": "Custom extension tools"
-  }
-}
-```
-
-### Step 3: Implement Scripts
-
-```javascript
-// scripts/init.js
-const fs = require('fs');
-
-function initialize() {
-  // Load configuration
-  const config = require('../config');
+```typescript
+const truncateOutput = (data: string, maxSize: number = 4096) => {
+  if (data.length <= maxSize) return data;
   
-  // Setup hooks
-  hooks.add('pre-start', () => {
-    // Pre-start logic
+  const truncated = data.substring(0, maxSize - 50) +
+   `\n\n...(output truncated, see full result in logs)`;
+  
+  return {
+    success: true,
+    data: truncated,
+    truncated: true
+  };
+};
+
+async function analyzeProject() {
+  const fullOutput = await doAnalysis();
+  return truncateOutput(JSON.stringify(fullOutput, null, 2));
+}
+```
+
+---
+
+## 5. Cancellation Support (Required)
+
+Implement graceful cancellation handling:
+
+```typescript
+const cleanup = async () => {
+  // Cleanup on cancellation
+  await api.stop();
+};
+
+async function longOperation() {
+  try {
+    return await api.withCancellation(async () => {
+      // ... long operation with timeout
+      return { success: true };
+    });
+  } catch (e) {
+    if (e.canceled) await cleanup();
+    throw e;
+  }
+}
+```
+
+---
+
+## Working with Skills
+
+Skills and Extensions are designed to work **seamlessly together** to create powerful workflows:
+
+### Extension = "Brawn" (Raw Capabilities)
+- Registers tools the LLM can call
+- Handles direct API integrations
+- Performs heavy computations
+
+### Skill = "Brains" (Knowledge & Instructions)
+- Contains procedural knowledge
+- Instructs agent when to use Extension tools
+- Provides context and guardrails
+
+### Synergy Example
+
+**Extension** (`jira-extension.ts`):
+```typescript
+api.registerTool('create_jira_ticket', {
+  description: 'Creates a Jira ticket for bug tracking',
+  schema: { ... },
+  execute: async (args) => {
+    return await createJiraTicket(args);
+  }
+});
+```
+
+**Skill** (`SKILL.md`):
+```markdown
+# Jira Ticket Creation Skill
+
+When a user asks to log a bug, you must:
+1. Ask for steps to reproduce
+2. Call the `create_jira_ticket` tool
+3. Include the reproduction steps in the ticket
+
+Do not create tickets without the reproduction steps.
+```
+
+**Result**: The Skill "starts" the Extension by directing the LLM to invoke the Extension's registered tool. Use this pattern to chain complex, multi-step automated workflows.
+
+---
+
+## Full Extension Definition Example
+
+A complete production-ready extension:
+
+```typescript
+import type { ExtensionAPI } from '@pi/sdk';
+import { MAX_OUTPUT_SIZE } from './config';
+
+export default async function activate(api: ExtensionAPI) {
+  // Register cleanup handler
+  const cleanup = async () => {
+    // Cleanup on cancellation
+    await api.stop();
+  };
+
+  // Register main tool
+  api.registerTool('analyze_project_structure', {
+    name: 'analyze_project_structure',
+    description: 'Analyzes the specified directory and returns a high-level summary of the project structure and tech stack. Use this when the user asks about the overall architecture of a folder.',
+    schema: {
+      type: 'object',
+      properties: {
+        targetPath: { 
+          type: 'string', 
+          description: 'The relative path to analyze. Defaults to the current working directory.' 
+        },
+        maxDepth: { 
+          type: 'number', 
+          description: 'Maximum folder depth to scan. Default is 2.' 
+        },
+        includeFiles: {
+          type: 'boolean',
+          description: 'Include file contents in analysis. Default is false.',
+          default: false
+        }
+      },
+      required: [] 
+    },
+    execute: async (args, context) => {
+      try {
+        // Validate inputs
+        const path = args.targetPath || './';
+        const depth = args.maxDepth || 2;
+        
+        // Implement logic (e.g., fs traversal)
+        const summary = scanProject(path, depth, args.includeFiles);
+        
+        // Truncate output if needed
+        const output = JSON.stringify(summary, null, 2);
+        if (output.length > MAX_OUTPUT_SIZE) {
+          return {
+            success: true,
+            data: output.substring(0, MAX_OUTPUT_SIZE - 50) +
+             `\n\n...(output truncated, see full analysis in logs)`
+          };
+        }
+
+        return { 
+          success: true, 
+          data: summary 
+        };
+      } catch (error) {
+        return { 
+          success: false, 
+          error: `Failed to analyze project: ${error instanceof Error ? error.message : String(error)}` 
+        };
+      }
+    }
   });
-  
-  hooks.add('post-start', () => {
-    // Post-start logic
+
+  // Register event listeners
+  api.on('onSessionStart', async () => {
+    console.log('[Session]', 'Project analyzer extension initialized');
   });
-  
-  // Register with PI registry
-  registry.register(config.name);
-  
-  return config;
+
+  api.on('onMessage', async (message) => {
+    if (message.role === 'user' && message.text.includes('analyze')) {
+      console.log('[Analyzer]', 'User requested project analysis');
+    }
+  });
+
+  // Cleanup handler
+  api.on('cleanup', async () => {
+    await cleanup();
+  });
 }
 ```
 
-### Step 4: Install Dependencies
+---
+
+## Distribution & Installation
+
+Extensions are distributed as **standard NPM packages**.
+
+### Packaging
+
+1. **Compile TypeScript** to CommonJS or ESM:
+   ```bash
+   npm run build
+   # or
+   tsc
+   ```
+
+2. **Publish to npm**:
+   ```json
+   {
+     "name": "@your-username/pi-awesome-tools",
+     "version": "1.0.0",
+     "pi-type": ["extension"],
+     "author": "your-name",
+     "license": "MIT"
+   }
+   ```
+
+### Installation
+
+Users install and run your extension via the CLI:
 
 ```bash
-# Install from npm
-pi install npm:openai
+# Install globally
+pi install npm:@your-username/pi-awesome-tools
 
-# Install from git
-pi install git:https://github.com/user/repo
+# Install with version constraint
+pi install npm:@your-username/pi-awesome-tools@>=1.0.0
+
+# Run ad-hoc from local file
+pi run --extension ./my-local-ext.ts
 
 # Install local package
 pi install -l ../../tools
-
-# Install with version constraints
-pi install npm:@openai/python>=1.0.0
 ```
-
-### Step 5: Validate Schema
-
-```bash
-pi install --validate <extension-name>
-```
-
----
-
-## Error Handling for Extensions
-
-### Rule E1.1-E1.16 Apply: All errors must follow these rules
-
-| Error Type | Return Code | Action Required |
-|------------|-------------|-----------------|
-| Invalid extension type | 1 | Correct `pi-type` array |
-| Schema validation failed | 7 | Fix `package.json` fields |
-| No `input_schema` | 7 | Add schemas for skills |
-| Agent failed to start | 2 | Check dependencies and init |
-| Module not found | 6 | Verify dependencies installed |
-| Hook failed to execute | 2 | Review hook registration |
-
-### Error Example Output
-
-```json
-{
-  "code": {
-    "error_code": "E1.11",
-    "title": "Missing Schema Field"
-  },
-  "message": "extension 'tools-extension' is missing required field: input_schema",
-  "detail": "Expected: { \"type\": \"object\", \"properties\": {...} }",
-  "suggestion": "Add `input_schema` to package.json for validation"
-}
-```
-
----
-
-## Extension Capabilities
-
-### Allowed Functions
-
-- **File system**: Read/write with permission checks
-- **Network operations**: With timeout and retry limits
-- **Memory management**: Monitor for OOM conditions
-- **Agent hooks**: Pre-start and post-start events
-- **Registry management**: Enable/disable extensions
-- **Validation**: Schema verification before activation
-
-### Forbidden Actions
-
-- **Auto-recovery**: Do not auto-recover from crashes (Rule E1.14)
-- **Silent failures**: All errors must be logged (Rule E1.15)
-- **Model spawning without hooks**: Only after extension init
-- **Bypassing validation**: Always return proper error codes
 
 ---
 
@@ -213,6 +463,8 @@ pi install --validate <extension-name>
 - [ ] External registry verified
 - [ ] All hooks registered
 - [ ] Error handling implemented
+- [ ] Context truncation implemented
+- [ ] Cancellation support implemented
 
 ### Test Commands
 
@@ -227,117 +479,84 @@ pi install -e <extension-name>
 pi install --list
 
 # View logs
-tail -f /home/zerwiz/.pi/logs/<extension-name>.log
+tail -f ~/.pi/logs/<extension-name>.log
 ```
-
----
-
-## Logging Requirements
-
-All extension activities must be logged with:
-
-```
-{
-  "timestamp": <unix-timestamp>,
-  "error_code": <code>,
-  "stack_trace": <debug mode enabled>,
-  "environment": {
-    "PI_MODEL": "<model>",
-    "PI_VERSION": "<version>"
-  },
-  "action": "<action>",
-  "level": "debug|info|warn|error"
-}
-```
-
----
-
-## Recovery Protocols
-
-When extensions fail:
-
-1. **Log the error**: Include timestamp and error code
-2. **Trigger alert**: If critical (return code 2 or higher)
-3. **Disable operation**: Stop the extension
-4. **Suggest admin action**: Don't auto-recover
-5. **Continue operation**: Allow other extensions to work
 
 ---
 
 ## Best Practices
 
-1. **Modular Design**: Each extension should be self-contained
-2. **Fail-safe**: Always handle errors with proper exit codes
-3. **Timeout-aware**: Add timeouts to prevent hanging
-4. **Memory-conscious**: Monitor for OOM before failing
-5. **Clean on Exit**: Remove stale files when disabled
-6. **Environment-aware**: Check PI_ variables before action
+### ✅ DO:
 
----
+- **Use TypeScript** for strict type checking during development
+- **Keep tool descriptions concise but highly descriptive** of their purpose
+- **Use environment variables** (`process.env`) for API keys; **never hardcode secrets**
+- **Validate inputs** within your execute block, even if JSON Schema is strict (LLMs sometimes hallucinate properties)
+- **Pair complex extensions with a SKILL.md** to ensure the agent knows exactly how and when to use your new tools
+- **Handle errors gracefully** with meaningful messages
+- **Log all actions** with timestamps and error codes
+- **Implement timeouts** on all async operations
 
-## Examples
+### ❌ DON'T:
 
-### Example 1: File System Extension
-
-```json
-{
-  "name": "file-tools",
-  "version": "1.0.0",
-  "pi-type": ["extension"],
-  "author": "zerwiz",
-  "license": "MIT",
-  "pi-config": {
-    "type": "extension",
-    "description": "File system operations"
-  }
-}
-```
-
-### Example 2: Network Extension
-
-```json
-{
-  "name": "network-api",
-  "version": "1.0.0",
-  "pi-type": ["extension"],
-  "author": "zerwiz",
-  "license": "Apache-2.0",
-  "pi-config": {
-    "type": "extension",
-    "description": "External API integrations",
-    "environment": ["HTTP_TIMEOUT=30"]
-  }
-}
-```
+- **Block the main thread** with heavy synchronous operations (always use `async/await` for File System or Network calls)
+- **Output excessive console logs** - this pollutes the CLI interface for the user. Use `api.logger` if available
+- **Register generic tool names** like `do_stuff` - be specific (e.g., `aws_s3_upload`, `fetch_jira_ticket`)
+- **Return huge outputs** - always truncate or summarize
+- **Auto-recover from crashes** - suggest admin action instead
+- **Silently fail** - always log errors
 
 ---
 
 ## Versioning
 
-Extensions must follow semantic versioning:
+Extensions must follow **semantic versioning**:
 
-- **Major**: Incompatible with existing versions
-- **Minor**: Functional additions
-- **Patch**: Bug fixes
+| Version | Action |
+|---------|---|
+| **MAJOR** | Incompatible with existing versions |
+| **MINOR** | Functional additions |
+| **PATCH** | Bug fixes |
 
-**Example:**
+### Example Version History
 
 | Version | Notes |
-|---------|-------|
+|---------|---|
 | 1.0.0 | Initial release |
 | 1.1.0 | Add API hooks |
 | 1.1.1 | Fix file permissions |
+| 2.0.0 | Breaking changes to tool schema |
 
 ---
 
-## Final Notes
+## Quick Reference
 
-Extensions must:
+| Topic | File Reference |
+|-------|-----|
+| **Architecture & Setup** | `architecture.md` |
+| **Mode Rules** | `modes.md` |
+| **Package Management** | `packages.md` |
+| **Extensions** | `extensions.md` |
+| **Skills** | `skills.md` |
+| **Best Practices** | `bestpractices.md` |
 
-- Follow all Package Management Rules (Rule P1.1-E1.13)
-- Implement proper error handling (Rule E1.1-E1.16)
-- Respect the agent lifecycle (Rule P1.11)
-- Log all actions (Rule E1.15)
-- Not auto-recover from crashes (Rule E1.14)
+---
 
-**Remember**: Extensions are powerful, so handle failures gracefully!
+## 🔗 Official References
+
+- **Pi Dev Docs**: https://www.pi.dev
+- **Pi Coding Agent (npm)**: https://www.npmjs.com/package/@mariozechner/pi-coding-agent
+- **GitHub**: https://github.com/badlogic
+- **Pi-Mono**: https://github.com/badlogic/pi-mono
+
+---
+
+## 📝 License
+
+MIT License - See LICENSE file for details
+
+---
+
+## 📝 Last Updated
+
+2025

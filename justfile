@@ -10,10 +10,10 @@ wop-upstream-check:
 wop-upstream-sync *args:
     bun scripts/wop-pi-upstream.ts sync {{args}}
 
-# Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofpi-ui `npm run dev`
-
+# Way of Pi web shell — Bun API + WebSocket (:3333) and Vite (:5173); same as apps/wayofwork-ui `npm run dev`
+wayofpi-full:
     set -euo pipefail
-    exec "{{justfile_directory()}}/start-full-system.sh"
+    exec "{{justfile_directory()}}/start-wayofpi.sh --web"
 
 # Way of Pi web shell in an Electron window (same stack as wayofpi-full; no default browser open)
 wayofpi-electron:
@@ -23,18 +23,54 @@ wayofpi-electron:
 
 # g1
 
-# 1. default pi (always load playground .env so OPENROUTER_API_KEY is set)
-pi:
+# Internal helper to run pi with the dynamic loader
+# This ensures we only use ONE -e flag, which is more stable in 0.70.5
+run-pi stack *args: pi-verify
     #!/usr/bin/env bash
     set -euo pipefail
     ROOT="{{justfile_directory()}}"
+    export PI_STACK="{{ stack }}"
+    export PI_CODING_AGENT_DIR="$ROOT/.pi/agent"
+    # Always load playground .env
     if [[ -f "$ROOT/.env" ]]; then
         set -a
-        # shellcheck source=/dev/null
         source "$ROOT/.env"
         set +a
     fi
-    exec pi "$@"
+    exec "$ROOT/node_modules/.bin/pi" -e .pi/extensions/util/pi-loader.ts "$@"
+
+# g1
+
+# 1. default pi (always load playground .env so OPENROUTER_API_KEY is set)
+pi *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    export PI_CODING_AGENT_DIR="$ROOT/.pi/agent"
+    if [[ -f "$ROOT/.env" ]]; then
+        set -a
+        source "$ROOT/.env"
+        set +a
+    fi
+    exec "$ROOT/node_modules/.bin/pi" "$@"
+
+# Verify pi version matches PI_PINNED_VERSION
+pi-verify:
+    @./scripts/pi-version-check.sh
+
+# Run startup diagnostics log for all pi.dev integration points
+pi-log:
+    @./scripts/pi-startup-log.sh
+
+# Reinstall pinned pi version to resolve conflicts/broken updates
+pi-fix-version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    echo "Reinstalling project-local pi..."
+    bun install
+    echo "✅ Done. Local pi version:"
+    "$ROOT/node_modules/.bin/pi" --version
 
 # 1a. Standard Pi (upstream minimal harness): no project extension/skill/theme/prompt discovery — `scripts/pi-standard` (optional leading `.`)
 pi-standard *args:
@@ -54,113 +90,121 @@ pi-picker-ollama-free-or:
 
 # 2. Pure focus pi: strip footer and status line entirely
 ext-pure-focus:
-    pi -e extensions/pure-focus.ts
+    @just run-pi "pure-focus"
 
 # 3. Minimal pi: model name + 10-block context meter
 ext-minimal:
-    pi -e extensions/minimal.ts -e extensions/theme-cycler.ts
+    @just run-pi "minimal,theme-cycler"
 
 # 4. Cross-agent pi: load commands from .claude/, .gemini/, .codex/ dirs
 ext-cross-agent:
-    pi -e extensions/cross-agent.ts -e extensions/minimal.ts
+    @just run-pi "cross-agent,minimal"
 
 # 5. Purpose gate pi: declare intent before working, persistent widget, focus the system prompt on the ONE PURPOSE for this agent
 ext-purpose-gate:
-    pi -e extensions/purpose-gate.ts -e extensions/minimal.ts
+    @just run-pi "purpose-gate,minimal"
 
 # 6. Customized footer pi: Tool counter, model, branch, cwd, cost, etc.
 ext-tool-counter:
-    pi -e extensions/tool-counter.ts
+    @just run-pi "tool-counter"
 
 # 7. Tool counter widget: tool call counts in a below-editor widget
 ext-tool-counter-widget:
-    pi -e extensions/tool-counter-widget.ts -e extensions/minimal.ts
+    @just run-pi "tool-counter-widget,minimal"
 
 # 8. Subagent widget: /sub <task> with live streaming progress
 ext-subagent-widget:
-    pi -e extensions/subagent-widget.ts -e extensions/pure-focus.ts -e extensions/theme-cycler.ts
+    @just run-pi "subagent-widget,pure-focus,theme-cycler"
 
 # 9. TillDone: task-driven discipline — define tasks before working
 ext-tilldone:
-    pi -e extensions/tilldone.ts -e extensions/theme-cycler.ts
+    @just run-pi "tilldone,theme-cycler"
 
-#g2
+# g2
 
 # 10. Agent team: dispatcher orchestrator with team select and grid dashboard (incl. build-orchestra roster)
 ext-agent-team:
-
+    @just run-pi "agent-team,theme-cycler"
 
 # 10b. Builder-orchestra dispatcher (separate -e entry from ext-agent-team — starts on team build-orchestra)
 ext-builder-team:
-    pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/agent-team-build-orchestra.ts -e extensions/theme-cycler.ts
+    @just run-pi "session-memory,agent-team,theme-cycler"
 
 # 11. System select: /system to pick an agent persona as system prompt
 ext-system-select:
-    pi -e extensions/system-select.ts -e extensions/minimal.ts -e extensions/theme-cycler.ts
+    @just run-pi "system-select,minimal,theme-cycler"
 
 # 12. Launch with Damage-Control safety auditing
 ext-damage-control:
-    pi -e extensions/damage-control.ts -e extensions/minimal.ts -e extensions/theme-cycler.ts
+    @just run-pi "damage-control,minimal,theme-cycler"
 
 # 13. Agent chain: sequential pipeline orchestrator
 ext-agent-chain:
-    pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/agent-chain.ts -e extensions/theme-cycler.ts
+    @just run-pi "session-memory,agent-chain,theme-cycler"
 
-#g3
+
+# g3
 
 # 14. Pi Pi: meta-agent that builds Pi agents with parallel expert research
 ext-pi-pi:
-    pi -e extensions/pi-pi.ts -e extensions/theme-cycler.ts
+    @just run-pi "pi-pi,theme-cycler"
 
-#ext
+# ext
 
 # 15. Session Replay: scrollable timeline overlay of session history (legit)
 ext-session-replay:
-    pi -e extensions/session-replay.ts -e extensions/minimal.ts
+    @just run-pi "session-replay,minimal"
 
 # 16. Theme cycler: Ctrl+X forward, Ctrl+Q backward, /theme picker
 ext-theme-cycler:
-    pi -e extensions/theme-cycler.ts -e extensions/minimal.ts
+    @just run-pi "theme-cycler,minimal"
 
 # 17. Extension picker: /extensions from installed Pi packages; /remember /memory
 ext-extension-picker:
-    pi -e extensions/extension-picker.ts -e extensions/minimal.ts
+    @just run-pi "extension-picker,minimal"
 
 # 18. Session memory: reinject recent chat into system prompt (/sessionmemory)
 ext-session-memory:
-	pi -e extensions/session-memory.ts -e extensions/minimal.ts
+    @just run-pi "session-memory,minimal"
 
 # 18b. Session memory + local context awareness only (+ minimal). For agent-team / agent-chain use those recipes (they include this stack).
 ext-context-local-hints:
-	pi -e extensions/session-memory.ts -e extensions/context-local-hints.ts -e extensions/minimal.ts
+    @just run-pi "session-memory,context-local-hints,minimal"
 
 # 19. Session saver: auto-save + /save /list /show /load
 ext-session-saver:
-    pi -e extensions/sessions/index.ts -e extensions/minimal.ts
+    @just run-pi "sessions,minimal"
 
 # 20. Chronicle: workflow ledger + chronicle_* tools + /chronicle
 ext-chronicle:
-    pi -e extensions/chronicle.ts -e extensions/minimal.ts
+    @just run-pi "chronicle,minimal"
 
 # 21. Agent Forge: forge_list / forge_create (writes extensions/forge-*.ts)
 ext-agent-forge:
-    pi -e extensions/agent-forge.ts -e extensions/minimal.ts
+    @just run-pi "agent-forge,minimal"
 
 # 22. Dynamic loader: /extension-hint for pi -e stacks
 ext-dynamic-loader:
-    pi -e extensions/dynamic-loader.ts -e extensions/minimal.ts
+    @just run-pi "dynamic-loader,minimal"
 
 # 23. Pi doctor: /doctor health checks (bun, configs, extensions, skills)
 ext-pi-doctor:
-    pi -e extensions/pi-doctor.ts -e extensions/minimal.ts
+    @just run-pi "pi-doctor,minimal"
 
 # 24. Web tools: web_search + web_fetch (Brave optional; pair with web-searcher agent)
 ext-web-tools:
-    pi -e extensions/web-tools.ts -e extensions/minimal.ts
+    @just run-pi "web-tools,minimal"
 
 # 25. Ralph: todo/inprogress/done ticket queue + ralph_queue_status + /ralph
 ext-ralph:
-    pi -e extensions/ralph.ts -e extensions/minimal.ts
+    @just run-pi "ralph,minimal"
+
+# 26. Sync agile extensions from PIP reference
+pip-sync:
+    @echo "🔄 Syncing agile extensions from PIP..."
+    @mkdir -p .pi/extensions/fluent
+    @cp -v /home/zerwiz/pip/ref/extensions/*.ts .pi/extensions/fluent/ || true
+    @echo "✅ PIP sync complete"
 
 # Hermes (Honcho stack / UI live in ~/honcho-server — see that repo’s justfile + scripts/install-honcho-bin.sh)
 hermes-status:
@@ -178,8 +222,6 @@ hermes-honcho-setup:
 doctor *args:
     ./doctor.sh {{args}}
 
-
-
 # Probe OS/CPU and installed tools; print install hints (pass flags by running the script directly)
 bootstrap-wayofpi:
     @./scripts/bootstrap-wayofpi-environment.sh
@@ -193,38 +235,38 @@ install-ngrok-optional:
 # Use: `just pi-e`
 # Input: numbers separated by space/comma (e.g. `1 3 17`) or `all`
 # Keep "agent-team" and "agent-team (build-orchestra)" as consecutive options so the builder line is always N+1 after regular agent-team (e.g. 12 then 13 with the current list).
-
-
+pi-e:
+    #!/usr/bin/env bash
+    set -euo pipefail
     PLAYGROUND_ROOT="{{justfile_directory()}}"
     PROJECT_DIR="${PI_E_PROJECT_DIR:-$PWD}"
 
     options=(
         "enable-playground FULL (all playground extensions + skills/themes — busy UI)|__ENABLE_PLAYGROUND__"
         "project-local .pi + playground agents/skills/themes (extensions[] empty — stack via menu)|__PROJECT_LOCAL_PI__"
-        "pure-focus|extensions/pure-focus.ts"
-        "minimal|extensions/minimal.ts"
-        "theme-cycler|extensions/theme-cycler.ts"
-        "cross-agent|extensions/cross-agent.ts"
-        "purpose-gate|extensions/purpose-gate.ts"
-        "tool-counter|extensions/tool-counter.ts"
-        "tool-counter-widget|extensions/tool-counter-widget.ts"
-        "subagent-widget|extensions/subagent-widget.ts"
-        "tilldone|extensions/tilldone.ts"
-        # Adjacent: standard dispatcher first, builder-orchestra next (do not insert other menu lines between these two).
-        "agent-team|extensions/agent-team.ts"
-        "agent-team (build-orchestra)|extensions/agent-team-build-orchestra.ts"
-        "system-select|extensions/system-select.ts"
-        "damage-control|extensions/damage-control.ts"
-        "agent-chain|extensions/agent-chain.ts"
-        "pi-pi|extensions/pi-pi.ts"
-        "session-replay|extensions/session-replay.ts"
-        "extension-picker|extensions/extension-picker.ts"
-        "session-memory|extensions/session-memory.ts"
-        "session-saver|extensions/sessions/index.ts"
-        "chronicle|extensions/chronicle.ts"
-        "agent-forge|extensions/agent-forge.ts"
-        "dynamic-loader|extensions/dynamic-loader.ts"
-        "pi-doctor|extensions/pi-doctor.ts"
+        "pure-focus|pure-focus"
+        "minimal|minimal"
+        "theme-cycler|theme-cycler"
+        "cross-agent|cross-agent"
+        "purpose-gate|purpose-gate"
+        "tool-counter|tool-counter"
+        "tool-counter-widget|tool-counter-widget"
+        "subagent-widget|subagent-widget"
+        "tilldone|tilldone"
+        "agent-team|agent-team"
+        "agent-team (build-orchestra)|agent-team-build-orchestra"
+        "system-select|system-select"
+        "damage-control|damage-control"
+        "agent-chain|agent-chain"
+        "pi-pi|pi-pi"
+        "session-replay|session-replay"
+        "extension-picker|extension-picker"
+        "session-memory|session-memory"
+        "session-saver|sessions"
+        "chronicle|chronicle"
+        "agent-forge|agent-forge"
+        "dynamic-loader|dynamic-loader"
+        "pi-doctor|pi-doctor"
     )
 
     echo "Pick one or more items (stacked in one Pi session)."
@@ -251,31 +293,28 @@ install-ngrok-optional:
     fi
 
     declare -A seen=()
-    pi_args=()
+    pi_stack=()
     LINK_SELECTED=0
     PLAYGROUND_FULL_ENABLE=0
-    # Any menu line 3+ (real extension) or `all` — Pi should load only stacked -e, not full JSON.
     HAD_MENU_EXTENSION=0
 
-    add_file() {
-        local f="$1"
-        if [[ -z "$f" ]]; then return; fi
-        # Pseudo-option: enable this playground's resources (extensions/skills/prompts)
-        # in the current project by writing .pi/settings.json (opt-in).
-        if [[ "$f" == "__ENABLE_PLAYGROUND__" ]]; then
+    add_ext() {
+        local e="$1"
+        if [[ -z "$e" ]]; then return; fi
+        if [[ "$e" == "__ENABLE_PLAYGROUND__" ]]; then
             "$PLAYGROUND_ROOT/scripts/enable-playground-in-project" "$PROJECT_DIR"
             LINK_SELECTED=1
             PLAYGROUND_FULL_ENABLE=1
             return
         fi
-        if [[ "$f" == "__PROJECT_LOCAL_PI__" ]]; then
+        if [[ "$e" == "__PROJECT_LOCAL_PI__" ]]; then
             "$PLAYGROUND_ROOT/scripts/init-project-local-pi-env.sh" "$PROJECT_DIR" "$PLAYGROUND_ROOT"
             LINK_SELECTED=1
             return
         fi
-        if [[ -z "${seen[$f]+x}" ]]; then
-            seen["$f"]=1
-            pi_args+=(-e "$f")
+        if [[ -z "${seen[$e]+x}" ]]; then
+            seen["$e"]=1
+            pi_stack+=("$e")
         fi
     }
 
@@ -284,7 +323,7 @@ install-ngrok-optional:
         for opt in "${options[@]}"; do
             IFS='|' read -r _label file <<< "$opt"
             [[ "$file" == __* ]] && continue
-            add_file "$file"
+            add_ext "$file"
         done
     else
         n_opts="${#options[@]}"
@@ -299,7 +338,7 @@ install-ngrok-optional:
                     idx=$((num - 1))
                     if (( idx >= 0 && idx < n_opts )); then
                         IFS='|' read -r _label file <<< "${options[$idx]}"
-                        add_file "$file"
+                        add_ext "$file"
                     else
                         echo "Ignoring out-of-range selection: $num"
                     fi
@@ -311,7 +350,7 @@ install-ngrok-optional:
                         if [[ "$file" != __* ]]; then
                             HAD_MENU_EXTENSION=1
                         fi
-                        add_file "$file"
+                        add_ext "$file"
                         break
                     fi
                 done
@@ -320,71 +359,38 @@ install-ngrok-optional:
     fi
 
     # agent-team / agent-chain: prepend session-memory + context-local-hints if missing.
-    if [[ -n "${seen[extensions/agent-team.ts]+x}" || -n "${seen[extensions/agent-team-build-orchestra.ts]+x}" || -n "${seen[extensions/agent-chain.ts]+x}" ]]; then
-        prepend=()
-        if [[ -z "${seen[extensions/session-memory.ts]+x}" ]]; then
-            prepend+=(-e "extensions/session-memory.ts")
-            seen["extensions/session-memory.ts"]=1
+    if [[ -n "${seen[agent-team]+x}" || -n "${seen[agent-team-build-orchestra]+x}" || -n "${seen[agent-chain]+x}" ]]; then
+        if [[ -z "${seen[session-memory]+x}" ]]; then
+            pi_stack=("session-memory" "${pi_stack[@]}")
+            seen["session-memory"]=1
         fi
-        if [[ -z "${seen[extensions/context-local-hints.ts]+x}" ]]; then
-            prepend+=(-e "extensions/context-local-hints.ts")
-            seen["extensions/context-local-hints.ts"]=1
-        fi
-        if [[ ${#prepend[@]} -gt 0 ]]; then
-            pi_args=("${prepend[@]}" "${pi_args[@]}")
+        if [[ -z "${seen[context-local-hints]+x}" ]]; then
+            # (Note: context-local-hints usually follows session-memory)
+            pi_stack=("session-memory" "context-local-hints" "${pi_stack[@]}")
+            seen["context-local-hints"]=1
         fi
     fi
 
     # If user didn't choose a base footer, default to `minimal` unless an extension
-    # already brings its own chrome (pure-focus hides chrome; agent-team is grid UI).
+    # already brings its own chrome.
     has_pure_focus=false
     has_agent_team=false
-    for f in "${!seen[@]}"; do
-        if [[ "$f" == "extensions/pure-focus.ts" ]]; then
-            has_pure_focus=true
-        fi
-        if [[ "$f" == "extensions/agent-team.ts" || "$f" == "extensions/agent-team-build-orchestra.ts" ]]; then
-            has_agent_team=true
-        fi
-    done
+    [[ -n "${seen[pure-focus]+x}" ]] && has_pure_focus=true
+    [[ -n "${seen[agent-team]+x}" || -n "${seen[agent-team-build-orchestra]+x}" ]] && has_agent_team=true
 
-    # Option 1 only (no menu extension lines): JSON already lists extensions — skip auto minimal.
-    # Option 1 + extension picks (e.g. 1 12): use CLI stack only; auto minimal unless pure-focus / agent-team.
     if [[ "$PLAYGROUND_FULL_ENABLE" == "1" && "$HAD_MENU_EXTENSION" == "0" ]]; then
         :
     elif ! $has_pure_focus && ! $has_agent_team; then
-        add_file "extensions/minimal.ts"
-    fi
-
-    # Keep JSON extensions[] only for "setup only": 1 and/or 2 with no menu line 3+.
-    # 1 + 12 → clear for this run (link/settings on disk, but Pi loads only -e). PIE_KEEP_* overrides.
-    if [[ "${PIE_KEEP_SETTINGS_EXTENSIONS:-0}" == "1" ]]; then
-        export PIE_CLEAR_SETTINGS_EXTENSIONS=0
-    elif [[ "$PLAYGROUND_FULL_ENABLE" == "1" && "$HAD_MENU_EXTENSION" == "0" ]]; then
-        export PIE_CLEAR_SETTINGS_EXTENSIONS=0
-    else
-        export PIE_CLEAR_SETTINGS_EXTENSIONS=1
-    fi
-
-    # Run Pi in PROJECT_DIR with absolute -e paths; when playground link (option 1 or 2) ran,
-    # default to shadowing ./tools for this session so upstream Pi skips legacy-tools nag.
-    if [[ "$LINK_SELECTED" == 1 ]]; then
-        export PI_SHADOW_LEGACY_PROJECT_TOOLS="${PI_SHADOW_LEGACY_PROJECT_TOOLS:-1}"
-    fi
-    echo
-    if [[ "$PIE_CLEAR_SETTINGS_EXTENSIONS" == 1 ]]; then
-        if [[ "$PLAYGROUND_FULL_ENABLE" == "1" ]]; then
-            echo "FULL setup on disk, but you picked extension lines — only your -e stack loads this run (extensions[] cleared until exit)."
-        else
-            echo "Project-scoped: ignoring extensions[] in .pi/settings.json for this run (restored on exit) — only your -e list loads."
+        if [[ -z "${seen[minimal]+x}" ]]; then
+             pi_stack+=("minimal")
         fi
-    elif [[ "${PIE_KEEP_SETTINGS_EXTENSIONS:-0}" == "1" ]]; then
-        echo "PIE_KEEP_SETTINGS_EXTENSIONS=1: merging extensions[] from .pi/settings.json with your -e list."
-    elif [[ "$PLAYGROUND_FULL_ENABLE" == "1" ]]; then
-        echo "FULL link only (no menu extension lines 3+): using extensions[] from .pi/settings.json (full playground)."
     fi
-    echo "Launching from $PROJECT_DIR: pi ${pi_args[*]}"
-    exec "$PLAYGROUND_ROOT/scripts/pi-launch-from-project.sh" "$PROJECT_DIR" "$PLAYGROUND_ROOT" "${pi_args[@]}"
+
+    stack_str=$(IFS=,; echo "${pi_stack[*]}")
+    echo "Launching from $PROJECT_DIR with stack: $stack_str"
+    export PI_STACK="$stack_str"
+    exec "$PLAYGROUND_ROOT/scripts/pi-launch-from-project.sh" "$PROJECT_DIR" "$PLAYGROUND_ROOT" -e .pi/extensions/util/pi-loader.ts
+
 
 # Open pi with one or more stacked extensions in a new terminal: just open minimal tool-counter
 open +exts:

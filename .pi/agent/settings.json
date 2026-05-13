@@ -1,12 +1,20 @@
 {
   "defaultModel": "qwen3.5:9b-32k",
   "defaultProvider": "ollama",
-  "lastChangelogVersion": "0.62.0",
+  "lastChangelogVersion": "0.74.0",
+  "defaultThinkingLevel": "high",
   "packages": [
-    "npm:pi-subagents",
-    "git:github.com/tmustier/pi-extensions"
+    "npm:@samfp/pi-memory",
+    "npm:@sinclair/typebox",
+    "npm:koffi",
+    "npm:pi-web-access",
+    "git:github.com/NerfEko/PiBuddy",
+    "npm:@tintinweb/pi-subagents",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "git:github.com/apmantza/pi-lens",
+    "npm:@earendil-works/pi-ai",
+    "npm:@earendil-works/pi-tui"
   ],
-  "theme": "everforest",
-  "hideThinkingBlock": false,
-  "defaultThinkingLevel": "medium"
+  "theme": "catppuccin-mocha",
+  "hideThinkingBlock": false
 }

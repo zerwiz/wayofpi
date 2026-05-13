@@ -13,7 +13,7 @@
 # CI: fail if Bun / git / node / npm missing or Bun below UI minimum (1.1.x)
 ./scripts/bootstrap-wayofpi-environment.sh --check-only
 
-# Install Bun (official installer) + npm install in apps/wayofpi-ui (non-interactive)
+# Install Bun (official installer) + npm install in apps/wayofwork-ui (non-interactive)
 ./scripts/bootstrap-wayofpi-environment.sh --install -y
 
 # Create .env from .env.sample if missing
@@ -48,7 +48,7 @@ just install-ngrok-optional
 
 After install: open **Way of Pi → Settings → ngrok (optional)** → paste **Your Authtoken** from the ngrok dashboard → **Save** → start the tunnel (dev), or run **`ngrok http <port>`** yourself. The UI tunnels **Vite’s port** (default **5173**), not **80**, unless you changed your dev layout.
 
-**Alternative without apt:** **`(cd apps/wayofpi-ui && npm install)`** installs optional npm package **`ngrok`** → **`node_modules/ngrok/bin`** (skip with **`npm install --omit=optional`**).
+**Alternative without apt:** **`(cd apps/wayofwork-ui && npm install)`** installs optional npm package **`ngrok`** → **`node_modules/ngrok/bin`** (skip with **`npm install --omit=optional`**).
 
 ---
 
@@ -177,7 +177,7 @@ bun scripts/pi-models-scoped-priority.ts
 
 ## Way of Pi upstream (Pi GitHub / npm)
 
-- **`scripts/wop-pi-upstream.ts`** — **`check`**: compares **`badlogic/pi-mono`** tags and **`@mariozechner/pi-coding-agent`** npm **`latest`** to **`wop.upstream.lock.json`** (no downloads). **`sync`**: optional tarball of a **tag** into **`vendor/wop-upstream/`** with path rewrites (**`--dry-run`** | **`--apply`**). See **`scripts/wop-upstream/README.md`**, **`docs/WOP_UPSTREAM_SYNC.md`**.
+- **`scripts/wop-pi-upstream.ts`** — **`check`**: compares **`earendil-works/pi-mono`** tags and **`@earendil-works/pi-coding-agent`** npm **`latest`** to **`wop.upstream.lock.json`** (no downloads). **`sync`**: optional tarball of a **tag** into **`vendor/wop-upstream/`** with path rewrites (**`--dry-run`** | **`--apply`**). See **`scripts/wop-upstream/README.md`**, **`docs/WOP_UPSTREAM_SYNC.md`**.
 - **`just wop-upstream-check`** · **`just wop-upstream-sync --source pi-mono --ref v0.66.1 --dry-run`**
 
 ## `./doctor.sh` (repo root) — portable paths
