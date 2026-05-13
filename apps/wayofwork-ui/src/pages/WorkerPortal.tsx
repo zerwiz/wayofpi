@@ -180,6 +180,11 @@ export function WorkerPortal({ uiMode, setUiMode, appHeader }: { uiMode: UiMode;
     window.open(`/api/portal/download/${fileId}`, "_blank");
   };
 
+  if (isLoggedIn) {
+    window.location.pathname = "/workboard";
+    return null;
+  }
+
   if (!isLoggedIn) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e]">
